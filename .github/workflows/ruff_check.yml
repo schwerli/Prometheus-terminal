@@ -24,4 +24,4 @@ jobs:
           pip install .[test]
 
       - name: Run ruff check
-        run: ruff check --output-format=github .
+        run: ruff format --check
