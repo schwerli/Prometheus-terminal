@@ -9,12 +9,11 @@ requires-pytho = ">= 3.11"
 
 [project.optional-dependencies]
 test = [
-  "pyink==24.8.0",
-  "isort==5.13.2"
+  "ruff==0.6.9",
 ]
 
-[tool.pyink]
-pyink-indentation = 2
+[tool.ruff]
+indent-width = 2
 
-[tool.isort]
-profile = "google"
+[tool.ruff.lint.pydocstyle]
+convention = "google"
