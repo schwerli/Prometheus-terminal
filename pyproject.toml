@@ -14,7 +14,7 @@ test = [
 ]
 
 [tool.pyink]
-pyink-identation = 2
+pyink-indentation = 2
 
 [tool.isort]
 profile = "google"

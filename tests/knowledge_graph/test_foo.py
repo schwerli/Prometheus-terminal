@@ -1,4 +1,2 @@
-
-
 def foo():
   assert True
