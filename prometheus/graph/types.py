@@ -1,6 +1,5 @@
 """Type definition for nodes and edges in the knowledge graph."""
 
-
 import dataclasses
 import enum
 from typing import TypedDict, Union

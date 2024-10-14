@@ -1,4 +1,4 @@
-from prometheus.knowledge_graph.types import (
+from prometheus.graph.types import (
   ASTNode,
   FileNode,
   KnowledgeGraphEdge,
