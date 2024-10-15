@@ -56,9 +56,10 @@ def test_to_neo4j_ast_node():
 
 def test_to_neo4j_text_node():
   text = "Hello world"
+  metadata = "metadata"
   node_id = 1
 
-  text_node = TextNode(text)
+  text_node = TextNode(text, metadata)
   knowldege_graph_node = KnowledgeGraphNode(node_id, text_node)
   neo4j_text_node = knowldege_graph_node.to_neo4j_node()
 
@@ -66,9 +67,11 @@ def test_to_neo4j_text_node():
 
   assert "node_id" in neo4j_text_node
   assert "text" in neo4j_text_node
+  assert "metadata" in neo4j_text_node
 
   assert neo4j_text_node["node_id"] == node_id
   assert neo4j_text_node["text"] == text
+  assert neo4j_text_node["metadata"] == metadata
 
 
 def test_to_neo4j_has_file_edge():
@@ -172,11 +175,12 @@ def test_to_neo4j_has_text_edge():
   source_relative_path = "foo/bar/source.py"
   source_node_id = 1
   target_text = "Hello world"
+  target_metadata = "metadata"
   target_node_id = 10
 
   source_file_node = FileNode(source_basename, source_relative_path)
   source_knowledge_graph_node = KnowledgeGraphNode(source_node_id, source_file_node)
-  target_text_node = TextNode(target_text)
+  target_text_node = TextNode(target_text, target_metadata)
   target_knowledge_graph_node = KnowledgeGraphNode(target_node_id, target_text_node)
   knowledge_graph_edge = KnowledgeGraphEdge(
     source_knowledge_graph_node,
@@ -196,13 +200,15 @@ def test_to_neo4j_has_text_edge():
 
 def test_to_neo4j_next_chunk_edge():
   source_text = "Hello"
+  source_metadata = "meta"
   source_node_id = 1
   target_text = "world"
+  target_metadata = "data"
   target_node_id = 10
 
-  source_text_node = TextNode(source_text)
+  source_text_node = TextNode(source_text, source_metadata)
   source_knowledge_graph_node = KnowledgeGraphNode(source_node_id, source_text_node)
-  target_text_node = TextNode(target_text)
+  target_text_node = TextNode(target_text, target_metadata)
   target_knowledge_graph_node = KnowledgeGraphNode(target_node_id, target_text_node)
   knowledge_graph_edge = KnowledgeGraphEdge(
     source_knowledge_graph_node,
