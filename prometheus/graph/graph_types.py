@@ -1,6 +1,5 @@
 """Type definition for nodes and edges in the knowledge graph."""
 
-
 import dataclasses
 import enum
 from typing import TypedDict, Union
@@ -42,9 +41,11 @@ class TextNode:
 
   Attributes:
     text: A string.
+    metadata: The metadata about the string.
   """
 
   text: str
+  metadata: str
 
 
 @dataclasses.dataclass
@@ -77,7 +78,9 @@ class KnowledgeGraphNode:
           text=self.node.text,
         )
       case TextNode():
-        return Neo4jTextNode(node_id=self.node_id, text=self.node.text)
+        return Neo4jTextNode(
+          node_id=self.node_id, text=self.node.text, metadata=self.node.metadata
+        )
       case _:
         raise ValueError("Unknown KnowledgeGraphNode.node type")
 
@@ -163,6 +166,7 @@ class Neo4jASTNode(TypedDict):
 class Neo4jTextNode(TypedDict):
   node_id: int
   text: str
+  metadata: str
 
 
 class Neo4jHasFileEdge(TypedDict):
