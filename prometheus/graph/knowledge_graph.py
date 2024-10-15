@@ -1,3 +1,22 @@
+"""The in-memory knowledge graph representation of a codebase.
+
+In the knowledgegraph, we have the following node types:
+* FileNode: Represent a file/dir
+* ASTNode: Represent a tree-sitter node
+* TextNode: Represent a string
+
+and the following edge types:
+* HAS_FILE: Relationship between two FileNode, if one FileNode is the parent dir of another FileNode.
+* HAS_AST: Relationship between FileNode and ASTNode, if the ASTNode is the root AST node for FileNode.
+* HAS_TEXT: Relationship between FileNode and TextNode, if the TextNode is chunk of text from FileNode.
+* PARENT_OF: Relationship between two ASTNode, if one ASTNode is the parent of another ASTNode.
+* NEXT_CHUNK: Relationship between two TextNode, if one TextNode is the next chunk of text of another TextNode.
+
+In this way, we have all the directory structure, source code, and text information in a single knowledge graph.
+This knowledge graph will be persisted in a graph database (neo4j), where an AI can use it to traverse the
+codebase to find the most relevant context for the user query.
+"""
+
 from collections import deque
 import logging
 from pathlib import Path
@@ -24,6 +43,12 @@ from prometheus.graph.graph_types import (
 
 class KnowledgeGraph:
   def __init__(self, root_dir: Path, max_ast_depth: int):
+    """
+    Args:
+      root_dir: The root directory of the codebase.
+      max_ast_depth: The maximum depth AST that we traverse. This can be used to limit
+        the number of nodes in the knowledge graph.
+    """
     self.max_ast_depth = max_ast_depth
     self._next_node_id = 0
     self._root_node = None
@@ -35,6 +60,12 @@ class KnowledgeGraph:
     self._build_graph(root_dir)
 
   def _build_graph(self, root_dir: Path):
+    """Builds knowledege graph for a codebase at a location.
+
+    Args:
+      root_dir: The codebase root directory.
+    """
+    # The root node for the whole graph
     root_dir_node = FileNode(basename=root_dir.name, relative_path=".")
     kg_root_dir_node = KnowledgeGraphNode(self._next_node_id, root_dir_node)
     self._next_node_id += 1
@@ -44,9 +75,11 @@ class KnowledgeGraph:
     file_stack = deque()
     file_stack.append((root_dir, kg_root_dir_node))
 
+    # Now we traverse the file system to parse all the files and create all relationships
     while file_stack:
       file, kg_file_path_node = file_stack.pop()
 
+      # The file is a directory, we create FileNode for all children files.
       if file.is_dir():
         for child_file in sorted(file.iterdir()):
           child_file_node = FileNode(
@@ -65,6 +98,8 @@ class KnowledgeGraph:
           file_stack.append((child_file, kg_child_file_node))
         continue
 
+      # The file is a file that file_graph_builder supports, it means that we can
+      # build a knowledge graph over it.
       if self._file_graph_builder.supports_file(file):
         next_node_id, kg_nodes, kg_edges = self._file_graph_builder.build_file_graph(
           kg_file_path_node, file, self._next_node_id
@@ -74,6 +109,7 @@ class KnowledgeGraph:
         self._knowledge_graph_edges.extend(kg_edges)
         continue
 
+      # This can only happend for files that are not supported by file_graph_builder.
       self._logger.info(f"Skip parsing {file} because it is not supported.")
 
   def get_file_nodes(self) -> Sequence[KnowledgeGraphNode]:

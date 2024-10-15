@@ -1,3 +1,5 @@
+"""Building knowledge graph for a single file."""
+
 from collections import deque
 from pathlib import Path
 from typing import Sequence, Tuple
@@ -20,6 +22,7 @@ class FileGraphBuilder:
     self.max_ast_depth = max_ast_depth
 
   def supports_file(self, file: Path) -> bool:
+    """Checks if we support building knowledge graph for this file."""
     if tree_sitter_parser.supports_file(file):
       return True
 
@@ -31,6 +34,20 @@ class FileGraphBuilder:
   def build_file_graph(
     self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
   ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
+    """Build knowledge graph for a single file.
+
+    Args:
+      parent_node: The parent knowledge graph node that represent the file.
+        The node attribute should have type FileNode.
+      file: The file to build knowledge graph.
+      next_node_id: The next available node id.
+
+    Returns:
+      A tuple of (next_node_id, kg_nodes, kg_edges), where next_node_id is the
+      new next_node_id, kg_nodes is a list of all nodes created for the file,
+      and kg_edges is a list of all edges created for this file.
+    """
+    # In this case, it is a file that tree sitter can parse (source code)
     if tree_sitter_parser.supports_file(file):
       return self._tree_sitter_file_graph(parent_node, file, next_node_id)
 
@@ -40,6 +57,25 @@ class FileGraphBuilder:
   def _tree_sitter_file_graph(
     self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
   ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
+    """Parse a file to a tree-sitter graph.
+
+    Tree-sitter is an abstract syntax tree (AST) parser to parse source code. We simply
+    use the tree representation as the knowledge graph to represent this file.
+    In the AST, nodes have PARENT_OF relationship, if one node is a parent of another
+    node. For example, 'class_definition' can be a parent of 'function_definition'.
+    The root ASTNode is connected to the parent_node using the HAS_AST relationship.
+
+    Args:
+      parent_node: The parent knowledge graph node that represent the file.
+        The node attribute should have type FileNode.
+      file: The file to build knowledge graph.
+      next_node_id: The next available node id.
+
+    Returns:
+      A tuple of (next_node_id, kg_nodes, kg_edges), where next_node_id is the
+      new next_node_id, kg_nodes is a list of all nodes created for the file,
+      and kg_edges is a list of all edges created for this file.
+    """
     tree_sitter_nodes = []
     tree_sitter_edges = []
 
@@ -91,6 +127,21 @@ class FileGraphBuilder:
   def _markdown_file_graph(
     self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
   ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
+    """Parse markdown file to a knowledge graph.
+
+    We use the langchain markdown parser to chunk the markdown file.
+
+    Args:
+      parent_node: The parent knowledge graph node that represent the file.
+        The node attribute should have type FileNode.
+      file: The file to build knowledge graph.
+      next_node_id: The next available node id.
+
+    Returns:
+      A tuple of (next_node_id, kg_nodes, kg_edges), where next_node_id is the
+      new next_node_id, kg_nodes is a list of all nodes created for the file,
+      and kg_edges is a list of all edges created for this file.
+    """
     headers_to_split_on = [
       ("#", "Header 1"),
       ("##", "Header 2"),
@@ -109,6 +160,23 @@ class FileGraphBuilder:
     parent_node: KnowledgeGraphNode,
     next_node_id: int,
   ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
+    """Convert the parsed langchain documents to a knowledge graph.
+
+    The parsed document will form a chain of nodes, where all nodes are connected
+    to the parent_node using the HAS_TEXT relationship. The nodes are connected using
+    the NEXT_CHUNK relationship in chronological order.
+
+    Args:
+      documents: The langchain documents used to create the TextNode.
+      parent_node: The parent knowledge graph node that represent the file.
+        The node attribute should have type FileNode.
+      next_node_id: The next available node id.
+
+    Returns:
+      A tuple of (next_node_id, kg_nodes, kg_edges), where next_node_id is the
+      new next_node_id, kg_nodes is a list of all nodes created for the file,
+      and kg_edges is a list of all edges created for this file.
+    """
     document_nodes = []
     document_edges = []
 
