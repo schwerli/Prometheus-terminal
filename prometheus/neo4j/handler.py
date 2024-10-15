@@ -39,7 +39,7 @@ class Handler:
   def _write_file_nodes(
     self, tx: ManagedTransaction, file_nodes: Sequence[Neo4jFileNode]
   ):
-    query = """\
+    query = """
       UNWIND $file_nodes AS file_node
       CREATE (a:FileNode {node_id: file_node.node_id, basename: file_node.basename, relative_path: file_node.relative_path})
     """
@@ -48,7 +48,7 @@ class Handler:
       tx.run(query, file_nodes=file_nodes_batch)
 
   def _write_ast_nodes(self, tx: ManagedTransaction, ast_nodes: Sequence[Neo4jASTNode]):
-    query = """\
+    query = """
       UNWIND $ast_nodes AS ast_node
       CREATE (a:ASTNode {node_id: ast_node.node_id, start_line: ast_node.start_line, end_line: ast_node.end_line, type: ast_node.type, text: ast_node.text})
     """
@@ -59,7 +59,7 @@ class Handler:
   def _write_text_nodes(
     self, tx: ManagedTransaction, text_nodes: Sequence[Neo4jTextNode]
   ):
-    query = """\
+    query = """
       UNWIND $text_nodes AS text_node
       CREATE (a:TextNode {node_id: text_node.node_id, text: text_node.text, metadata: text_node.metadata})
     """
@@ -70,7 +70,7 @@ class Handler:
   def _write_has_file_edges(
     self, tx: ManagedTransaction, has_file_edges: Sequence[Neo4jHasFileEdge]
   ):
-    query = """\ 
+    query = """
       UNWIND $edges AS edge
       MATCH (source:FileNode), (target:FileNode)
       WHERE source.node_id = edge.source.node_id AND target.node_id = edge.target.node_id
@@ -83,7 +83,7 @@ class Handler:
   def _write_has_ast_edges(
     self, tx: ManagedTransaction, has_ast_edges: Sequence[Neo4jHasASTEdge]
   ):
-    query = """\ 
+    query = """
       UNWIND $edges AS edge
       MATCH (source:FileNode), (target:ASTNode)
       WHERE source.node_id = edge.source.node_id AND target.node_id = edge.target.node_id
@@ -96,7 +96,7 @@ class Handler:
   def _write_has_text_edges(
     self, tx: ManagedTransaction, has_text_edges: Sequence[Neo4jHasTextEdge]
   ):
-    query = """\ 
+    query = """
       UNWIND $edges AS edge
       MATCH (source:FileNode), (target:TextNode)
       WHERE source.node_id = edge.source.node_id AND target.node_id = edge.target.node_id
@@ -109,7 +109,7 @@ class Handler:
   def _write_parent_of_edges(
     self, tx: ManagedTransaction, parent_of_edges: Sequence[Neo4jParentOfEdge]
   ):
-    query = """\ 
+    query = """
       UNWIND $edges AS edge
       MATCH (source:ASTNode), (target:ASTNode)
       WHERE source.node_id = edge.source.node_id AND target.node_id = edge.target.node_id
@@ -122,7 +122,7 @@ class Handler:
   def _write_next_chunk_edges(
     self, tx: ManagedTransaction, next_chunk_edges: Sequence[Neo4jNextChunkEdge]
   ):
-    query = """\ 
+    query = """
       UNWIND $edges AS edge
       MATCH (source:TextNode), (target:TextNode)
       WHERE source.node_id = edge.source.node_id AND target.node_id = edge.target.node_id
