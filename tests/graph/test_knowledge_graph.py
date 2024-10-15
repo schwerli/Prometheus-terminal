@@ -1,6 +1,12 @@
-from prometheus.graph.graph_types import ASTNode, FileNode, KnowledgeGraphEdgeType, TextNode
+from prometheus.graph.graph_types import (
+  ASTNode,
+  FileNode,
+  KnowledgeGraphEdgeType,
+  TextNode,
+)
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from tests.test_utils import test_project_paths
+
 
 def test_build_graph():
   knowledge_graph = KnowledgeGraph(test_project_paths.TEST_PROJECT_PATH, 1000)
