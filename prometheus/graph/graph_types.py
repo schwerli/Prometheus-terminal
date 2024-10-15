@@ -41,9 +41,11 @@ class TextNode:
 
   Attributes:
     text: A string.
+    metadata: The metadata about the string.
   """
 
   text: str
+  metadata: str
 
 
 @dataclasses.dataclass
