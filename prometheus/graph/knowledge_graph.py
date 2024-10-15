@@ -1,13 +1,24 @@
 from collections import deque
 import logging
 from pathlib import Path
+from typing import Sequence
 
 from prometheus.graph.file_graph_builder import FileGraphBuilder
 from prometheus.graph.graph_types import (
+  ASTNode,
   FileNode,
   KnowledgeGraphEdge,
   KnowledgeGraphEdgeType,
   KnowledgeGraphNode,
+  Neo4jASTNode,
+  Neo4jFileNode,
+  Neo4jHasASTEdge,
+  Neo4jHasFileEdge,
+  Neo4jHasTextEdge,
+  Neo4jNextChunkEdge,
+  Neo4jParentOfEdge,
+  Neo4jTextNode,
+  TextNode,
 )
 
 
@@ -64,3 +75,83 @@ class KnowledgeGraph:
         continue
 
       self._logger.info(f"Skip parsing {file} because it is not supported.")
+
+  def get_file_nodes(self) -> Sequence[KnowledgeGraphNode]:
+    return [
+      kg_node
+      for kg_node in self._knowledge_graph_nodes
+      if isinstance(kg_node.node, FileNode)
+    ]
+
+  def get_ast_nodes(self) -> Sequence[KnowledgeGraphNode]:
+    return [
+      kg_node
+      for kg_node in self._knowledge_graph_nodes
+      if isinstance(kg_node.node, ASTNode)
+    ]
+
+  def get_text_nodes(self) -> Sequence[KnowledgeGraphNode]:
+    return [
+      kg_node
+      for kg_node in self._knowledge_graph_nodes
+      if isinstance(kg_node.node, TextNode)
+    ]
+
+  def get_has_ast_edges(self) -> Sequence[KnowledgeGraphEdge]:
+    return [
+      kg_edge
+      for kg_edge in self._knowledge_graph_edges
+      if kg_edge.type == KnowledgeGraphEdgeType.has_ast
+    ]
+
+  def get_has_file_edges(self) -> Sequence[KnowledgeGraphEdge]:
+    return [
+      kg_edge
+      for kg_edge in self._knowledge_graph_edges
+      if kg_edge.type == KnowledgeGraphEdgeType.has_file
+    ]
+
+  def get_has_text_edges(self) -> Sequence[KnowledgeGraphEdge]:
+    return [
+      kg_edge
+      for kg_edge in self._knowledge_graph_edges
+      if kg_edge.type == KnowledgeGraphEdgeType.has_text
+    ]
+
+  def get_next_chunk_edges(self) -> Sequence[KnowledgeGraphEdge]:
+    return [
+      kg_edge
+      for kg_edge in self._knowledge_graph_edges
+      if kg_edge.type == KnowledgeGraphEdgeType.next_chunk
+    ]
+
+  def get_parent_of_edges(self) -> Sequence[KnowledgeGraphEdge]:
+    return [
+      kg_edge
+      for kg_edge in self._knowledge_graph_edges
+      if kg_edge.type == KnowledgeGraphEdgeType.parent_of
+    ]
+
+  def get_neo4j_file_nodes(self) -> Sequence[Neo4jFileNode]:
+    return [kg_node.to_neo4j_node() for kg_node in self.get_file_nodes()]
+
+  def get_neo4j_ast_nodes(self) -> Sequence[Neo4jASTNode]:
+    return [kg_node.to_neo4j_node() for kg_node in self.get_ast_nodes()]
+
+  def get_neo4j_text_nodes(self) -> Sequence[Neo4jTextNode]:
+    return [kg_node.to_neo4j_node() for kg_node in self.get_text_nodes()]
+
+  def get_neo4j_has_ast_edges(self) -> Sequence[Neo4jHasASTEdge]:
+    return [kg_edge.to_neo4j_edge() for kg_edge in self.get_has_ast_edges()]
+
+  def get_neo4j_has_file_edges(self) -> Sequence[Neo4jHasFileEdge]:
+    return [kg_edge.to_neo4j_edge() for kg_edge in self.get_has_file_edges()]
+
+  def get_neo4j_has_text_edges(self) -> Sequence[Neo4jHasTextEdge]:
+    return [kg_edge.to_neo4j_edge() for kg_edge in self.get_has_text_edges()]
+
+  def get_neo4j_next_chunk_edges(self) -> Sequence[Neo4jNextChunkEdge]:
+    return [kg_edge.to_neo4j_edge() for kg_edge in self.get_next_chunk_edges()]
+
+  def get_neo4j_parent_of_edges(self) -> Sequence[Neo4jParentOfEdge]:
+    return [kg_edge.to_neo4j_edge() for kg_edge in self.get_parent_of_edges()]

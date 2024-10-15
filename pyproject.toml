@@ -18,6 +18,7 @@ test = [
   "ruff==0.6.9",
   "pytest==8.3.3",
   "pytest-cov==5.0.0",
+  "testcontainers==4.8.2",
 ]
 
 [tool.ruff]
