@@ -78,7 +78,9 @@ class KnowledgeGraphNode:
           text=self.node.text,
         )
       case TextNode():
-        return Neo4jTextNode(node_id=self.node_id, text=self.node.text, metadata=self.node.metadata)
+        return Neo4jTextNode(
+          node_id=self.node_id, text=self.node.text, metadata=self.node.metadata
+        )
       case _:
         raise ValueError("Unknown KnowledgeGraphNode.node type")
 
