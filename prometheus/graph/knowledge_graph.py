@@ -84,14 +84,16 @@ class KnowledgeGraph:
         for child_file in sorted(file.iterdir()):
           child_file_node = FileNode(
             basename=child_file.name,
-            relative_path=str(child_file.relative_to(root_dir)),
+            relative_path=str(child_file.relative_to(root_dir).as_posix()),
           )
           kg_child_file_node = KnowledgeGraphNode(self._next_node_id, child_file_node)
           self._next_node_id += 1
           self._knowledge_graph_nodes.append(kg_child_file_node)
           self._knowledge_graph_edges.append(
             KnowledgeGraphEdge(
-              kg_file_path_node, kg_child_file_node, KnowledgeGraphEdgeType.has_file
+              kg_file_path_node,
+              kg_child_file_node,
+              KnowledgeGraphEdgeType.has_file,
             )
           )
 
