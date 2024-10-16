@@ -24,8 +24,8 @@ class ASTNode:
 
   Attributes:
     type: The tree-sitter node type.
-    start_line: The starting line number.
-    end_line: The ending line number.
+    start_line: The starting line number. 0-indexed and inclusive.
+    end_line: The ending line number.  0-indexed and inclusive.
     text: The source code correcpsonding to the node.
   """
 
@@ -79,7 +79,9 @@ class KnowledgeGraphNode:
         )
       case TextNode():
         return Neo4jTextNode(
-          node_id=self.node_id, text=self.node.text, metadata=self.node.metadata
+          node_id=self.node_id,
+          text=self.node.text,
+          metadata=self.node.metadata,
         )
       case _:
         raise ValueError("Unknown KnowledgeGraphNode.node type")
@@ -122,23 +124,28 @@ class KnowledgeGraphEdge:
     match self.type:
       case KnowledgeGraphEdgeType.has_file:
         return Neo4jHasFileEdge(
-          source=self.source.to_neo4j_node(), target=self.target.to_neo4j_node()
+          source=self.source.to_neo4j_node(),
+          target=self.target.to_neo4j_node(),
         )
       case KnowledgeGraphEdgeType.has_ast:
         return Neo4jHasASTEdge(
-          source=self.source.to_neo4j_node(), target=self.target.to_neo4j_node()
+          source=self.source.to_neo4j_node(),
+          target=self.target.to_neo4j_node(),
         )
       case KnowledgeGraphEdgeType.parent_of:
         return Neo4jParentOfEdge(
-          source=self.source.to_neo4j_node(), target=self.target.to_neo4j_node()
+          source=self.source.to_neo4j_node(),
+          target=self.target.to_neo4j_node(),
         )
       case KnowledgeGraphEdgeType.has_text:
         return Neo4jHasTextEdge(
-          source=self.source.to_neo4j_node(), target=self.target.to_neo4j_node()
+          source=self.source.to_neo4j_node(),
+          target=self.target.to_neo4j_node(),
         )
       case KnowledgeGraphEdgeType.next_chunk:
         return Neo4jNextChunkEdge(
-          source=self.source.to_neo4j_node(), target=self.target.to_neo4j_node()
+          source=self.source.to_neo4j_node(),
+          target=self.target.to_neo4j_node(),
         )
       case _:
         raise ValueError(f"Unknown edge type: {self.type}")

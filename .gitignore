@@ -3,4 +3,5 @@ venv/
 .ruff_cache/
 .vscode/
 .coverage
+config.json
 __pycache__/
