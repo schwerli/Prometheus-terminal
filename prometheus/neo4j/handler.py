@@ -1,6 +1,7 @@
 """The neo4j handler for writing the knowledge graph to neo4j."""
 
 from typing import Sequence
+
 from neo4j import GraphDatabase, ManagedTransaction
 
 from prometheus.graph.graph_types import (

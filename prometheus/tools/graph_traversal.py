@@ -1,7 +1,7 @@
 from pathlib import Path
-from pydantic import BaseModel, Field
 
 from neo4j import GraphDatabase
+from pydantic import BaseModel, Field
 
 from prometheus.parser import tree_sitter_parser
 from prometheus.utils import neo4j_util

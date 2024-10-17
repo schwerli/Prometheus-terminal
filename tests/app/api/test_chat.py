@@ -1,9 +1,10 @@
 from unittest.mock import Mock
+
+import neo4j
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-import neo4j
-
 from langchain_community.chat_models.fake import FakeListChatModel
+
 from prometheus.agents.context_provider_agent import ContextProviderAgent
 from prometheus.app.api import chat
 from prometheus.graph.knowledge_graph import KnowledgeGraph

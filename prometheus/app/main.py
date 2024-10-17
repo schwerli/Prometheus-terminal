@@ -1,4 +1,5 @@
 import logging
+
 from fastapi import FastAPI
 
 from prometheus.app.api import chat, repository

@@ -1,6 +1,5 @@
-from neo4j import GraphDatabase
 import pytest
-
+from neo4j import GraphDatabase
 from testcontainers.neo4j import Neo4jContainer
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph

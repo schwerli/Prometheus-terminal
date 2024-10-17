@@ -1,10 +1,10 @@
 import functools
-from langchain.agents import AgentExecutor
-from langchain.agents import create_tool_calling_agent
+
+import neo4j
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-import neo4j
 
 from prometheus.agents import chat_history, message_types
 from prometheus.graph.knowledge_graph import KnowledgeGraph

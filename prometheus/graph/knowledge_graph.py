@@ -17,8 +17,8 @@ This knowledge graph will be persisted in a graph database (neo4j), where an AI 
 codebase to find the most relevant context for the user query.
 """
 
-from collections import defaultdict, deque
 import logging
+from collections import defaultdict, deque
 from pathlib import Path
 from typing import Mapping, Sequence
 

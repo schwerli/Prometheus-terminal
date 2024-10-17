@@ -27,5 +27,8 @@ test = [
 [tool.ruff]
 indent-width = 2
 
+[tool.ruff.lint]
+select = ["I"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"

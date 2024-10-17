@@ -1,9 +1,10 @@
 from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.configuration import config
+from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j import handler
 
 router = APIRouter()
