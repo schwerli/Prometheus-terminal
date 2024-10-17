@@ -1,5 +1,4 @@
 import functools
-from typing import List, Mapping
 from langchain.agents import AgentExecutor
 from langchain.agents import create_tool_calling_agent
 from langchain.tools import StructuredTool
@@ -69,7 +68,7 @@ class ContextProviderAgent:
       func=find_file_node_with_basename_fn,
       name=graph_traversal.find_file_node_with_basename.__name__,
       description=graph_traversal.FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION,
-      args_schema=graph_traversal.GetFileNodeWithBasenameInput,
+      args_schema=graph_traversal.FindFileNodeWithBasenameInput,
     )
     tools.append(find_file_node_with_basename_tool)
 
