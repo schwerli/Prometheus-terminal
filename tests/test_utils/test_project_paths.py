@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 TEST_PROJECT_PATH = Path(__file__).parent.parent / "test_project"
 C_FILE = TEST_PROJECT_PATH / "test.c"
 BAR_DIR = TEST_PROJECT_PATH / "bar"

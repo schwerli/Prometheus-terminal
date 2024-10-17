@@ -1,6 +1,5 @@
-import enum
-
 import dataclasses
+import enum
 
 
 class Role(enum.StrEnum):
