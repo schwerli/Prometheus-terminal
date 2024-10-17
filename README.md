@@ -8,7 +8,7 @@ First you need to start the Neo4j container for storing the knowledge graph.
 docker run \
   -p 7474:7474 \
   -p 7687:7687 \
-  -e NEO4J_AUTH=neo4j/neo4j \
-  -e NEO4JLABS_PLUGINS='["apoc"]' \
+  -e NEO4J_AUTH=neo4j/password \
+  -e NEO4J_PLUGINS='["apoc"]' \
   neo4j:5.20.0
 ```

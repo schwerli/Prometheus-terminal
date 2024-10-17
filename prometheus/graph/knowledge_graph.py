@@ -21,7 +21,6 @@ from collections import defaultdict, deque
 import logging
 from pathlib import Path
 from typing import Mapping, Sequence
-from unittest import result
 
 from prometheus.graph.file_graph_builder import FileGraphBuilder
 from prometheus.graph.graph_types import (
@@ -80,6 +79,7 @@ class KnowledgeGraph:
     while file_stack:
       file, kg_file_path_node = file_stack.pop()
 
+      self._logger.info(f"Processing {file.name}...")
       # The file is a directory, we create FileNode for all children files.
       if file.is_dir():
         for child_file in sorted(file.iterdir()):

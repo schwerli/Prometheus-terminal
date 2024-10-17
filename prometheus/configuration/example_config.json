@@ -8,5 +8,11 @@
   },
   "knowledge_graph": {
     "max_ast_depth": 5
+  },
+  "anthropic": {
+    "model": "CHANGE_ME",
+    "api_key": "CHANGE_ME",
+    "temperature": 0,
+    "max_tokens": 4096
   }
 }
