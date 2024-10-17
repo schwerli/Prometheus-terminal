@@ -3,20 +3,15 @@ from unittest.mock import Mock
 import neo4j
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from langchain_community.chat_models.fake import FakeListChatModel
 
 from prometheus.agents.context_provider_agent import ContextProviderAgent
 from prometheus.app.api import chat
 from prometheus.graph.knowledge_graph import KnowledgeGraph
+from tests.test_utils.llm import FakeListChatModelWithTools
 
 app = FastAPI()
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 client = TestClient(app)
-
-
-class FakeListChatModelWithTools(FakeListChatModel):
-  def bind_tools(self, tools):
-    return self
 
 
 def test_send_without_kg():

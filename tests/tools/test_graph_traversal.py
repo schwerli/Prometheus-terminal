@@ -17,7 +17,7 @@ def setup_neo4j_container():
   kg = KnowledgeGraph(test_project_paths.TEST_PROJECT_PATH, 1000)
   container = Neo4jContainer(
     image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4JLABS_PLUGINS", '["apoc"]')
+  ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     uri = neo4j_container.get_connection_url()
     handler = Handler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
