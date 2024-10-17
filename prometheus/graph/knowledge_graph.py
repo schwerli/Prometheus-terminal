@@ -17,10 +17,11 @@ This knowledge graph will be persisted in a graph database (neo4j), where an AI 
 codebase to find the most relevant context for the user query.
 """
 
-from collections import deque
+from collections import defaultdict, deque
 import logging
 from pathlib import Path
-from typing import Sequence
+from typing import Mapping, Sequence
+from unittest import result
 
 from prometheus.graph.file_graph_builder import FileGraphBuilder
 from prometheus.graph.graph_types import (
@@ -113,6 +114,48 @@ class KnowledgeGraph:
 
       # This can only happend for files that are not supported by file_graph_builder.
       self._logger.info(f"Skip parsing {file} because it is not supported.")
+
+  def get_file_tree(self, max_tree_lines: int = 300) -> str:
+    file_node_adjacency_dict = self._get_file_node_adjacency_dict()
+
+    stack = deque()
+    stack.append((self._root_node, 0, "", None))
+    result_lines = []
+
+    SPACE = "    "
+    BRANCH = "|   "
+    TEE = "├── "
+    LAST = "└── "
+    while stack and (len(result_lines)) < max_tree_lines:
+      file_node, depth, prefix, is_last = stack.pop()
+
+      pointer = LAST if is_last else TEE
+      line_prefix = "" if depth == 0 else prefix + pointer
+      result_lines.append(line_prefix + file_node.node.basename)
+
+      sorted_children_file_node = sorted(
+        file_node_adjacency_dict[file_node], key=lambda x: x.node.basename
+      )
+      for i in range(len(sorted_children_file_node) - 1, -1, -1):
+        extension = SPACE if is_last else BRANCH
+        new_prefix = "" if depth == 0 else prefix + extension
+        stack.append(
+          (
+            sorted_children_file_node[i],
+            depth + 1,
+            new_prefix,
+            i == len(sorted_children_file_node) - 1,
+          )
+        )
+    return "\n".join(result_lines)
+
+  def _get_file_node_adjacency_dict(
+    self,
+  ) -> Mapping[KnowledgeGraphNode, Sequence[KnowledgeGraphNode]]:
+    file_node_adjacency_dict = defaultdict(list)
+    for has_file_edge in self.get_has_file_edges():
+      file_node_adjacency_dict[has_file_edge.source].append(has_file_edge.target)
+    return file_node_adjacency_dict
 
   def get_file_nodes(self) -> Sequence[KnowledgeGraphNode]:
     return [
