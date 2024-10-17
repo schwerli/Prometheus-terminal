@@ -5,7 +5,7 @@ import enum
 from typing import TypedDict, Union
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class FileNode:
   """A node representing a file/dir.
 
@@ -18,7 +18,7 @@ class FileNode:
   relative_path: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ASTNode:
   """A node representing a tree-sitter node.
 
@@ -35,7 +35,7 @@ class ASTNode:
   text: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class TextNode:
   """A node representing a piece of text.
 
@@ -48,7 +48,7 @@ class TextNode:
   metadata: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class KnowledgeGraphNode:
   """A node in the knowledge graph.
 
@@ -97,7 +97,7 @@ class KnowledgeGraphEdgeType(enum.StrEnum):
   next_chunk = "NEXT_CHUNK"
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class KnowledgeGraphEdge:
   """An edge in the knowledge graph.
 

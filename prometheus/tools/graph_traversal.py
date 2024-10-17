@@ -17,6 +17,15 @@ class FindFileNodeWithBasenameInput(BaseModel):
   basename: str = Field("The basename of FileNode to search for")
 
 
+FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION = """\
+Find all FileNode in the graph with this basename of a file/dir. The basename must
+include the extension, like 'bar.py', 'baz.java' or 'foo'
+(in this case foo is a direcctory or a file without extension).
+
+You can use this tool to check if a file/dir with this basename exists or get all
+attributes related to the file/dir."""
+
+
 def find_file_node_with_basename(basename: str, driver: GraphDatabase.driver) -> str:
   query = f"""
       MATCH (f:FileNode {{ basename: '{basename}' }})
@@ -29,6 +38,15 @@ def find_file_node_with_basename(basename: str, driver: GraphDatabase.driver) ->
 
 class FindFileNodeWithRelativePathInput(BaseModel):
   relative_path: str = Field("The relative_path of FileNode to search for")
+
+
+FIND_FILE_NODE_WITH_RELATIVE_PATH_DESCRIPTION = """\
+Search FileNode in the graph with this relative_path of a file/dir. The relative_path is
+the relative path from the root path of codebase. The relative_path must include the extension,
+like 'foo/bar/baz.java'.
+
+You can use this tool to check if a file/dir with this relative_path exists or get all
+attributes related to the file/dir."""
 
 
 def find_file_node_with_relative_path(
@@ -52,6 +70,14 @@ class FindASTNodeWithTextInput(BaseModel):
   text: str = Field("Search ASTNode that exactly contains this text.")
 
 
+FIND_AST_NODE_WITH_TEXT_DESCRIPTION = """\
+Find all ASTNode in the graph that exactly contains this text. The contains is
+same as python's check `'foo' in text`, ie. it is case sensitive and is
+looking for exact matches. Therefore the search text should be exact as well.
+
+You can use this tool to find all source code in the code that contains this text."""
+
+
 def find_ast_node_with_text(text: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
@@ -67,6 +93,13 @@ class FindASTNodeWithTypeInput(BaseModel):
   type: str = Field("Search ASTNode that has this tree-sitter node type.")
 
 
+FIND_AST_NODE_WITH_TYPE_DESCRIPTION = """\
+Find all ASTNode in the graph that has this tree-sitter node type.
+
+You can use this tool to find all source code with a certain type, like method_declaration
+or class_declaration."""
+
+
 def find_ast_node_with_type(type: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode {{ type: '{type}' }})
@@ -80,6 +113,16 @@ def find_ast_node_with_type(type: str, driver: GraphDatabase.driver) -> str:
 class FindASTNodeWithTextInFileInput(BaseModel):
   text: str = Field("Search ASTNode that exactly contains this text.")
   basename: str = Field("The basename of FileNode to search ASTNode.")
+
+
+FIND_AST_NODE_WITH_TEXT_IN_FILE_DESCRIPTION = """\
+Find all ASTNode in the graph that exactly contains this text in a file with this basename.
+The contains is same as python's check `'foo' in text`, ie. it is case sensitive and is
+looking for exact matches. Therefore the search text should be exact as well. The basename
+must include the extension, like 'bar.py', 'baz.java' or 'foo'
+(in this case foo is a direcctory or a file without extension).
+
+You can use this tool to find all source code with a certain text in a specific file."""
 
 
 def find_ast_node_with_text_in_file(
@@ -100,6 +143,15 @@ class FindASTNodeWithTypeInFileInput(BaseModel):
   basename: str = Field("The basename of FileNode to search ASTNode.")
 
 
+FIND_AST_NODE_WITH_TYPE_IN_FILE_DESCRIPTION = """\
+Find all ASTNode in the graph that has this tree-sitter node type in a file with this basename.
+The basename must include the extension, like 'bar.py', 'baz.java' or 'foo'
+(in this case foo is a direcctory or a file without extension).
+
+You can use this tool to find all source code with a certain type in a specific file,
+like method_declaration or class_declaration."""
+
+
 def find_ast_node_with_type_in_file(
   type: str, basename: str, driver: GraphDatabase.driver
 ) -> str:
@@ -116,6 +168,16 @@ def find_ast_node_with_type_in_file(
 class FindASTNodeWithTypeAndTextInput(BaseModel):
   type: str = Field("Search ASTNode with this tree-sitter node type.")
   text: str = Field("Search ASTNode that exactly contains this text.")
+
+
+FIND_AST_NODE_WITH_TYPE_AND_TEXT_DESCRIPTION = """\
+Find all ASTNode in the graph that has this tree-sitter node type and exactly
+contains this text. The contains is same as python's check `'foo' in text`,
+ie. it is case sensitive and is looking for exact matches. Therefore the search
+text should be exact as well.
+
+You can use this tool to find all source code with a certain type and text.
+For example to find all method_declartion that contains 'x = 1'."""
 
 
 def find_ast_node_with_type_and_text(
@@ -140,6 +202,14 @@ class FindTextNodeWithTextInput(BaseModel):
   text: str = Field("Search TextNode that exactly contains this text.")
 
 
+FIND_TEXT_NODE_WITH_TEXT_DESCRIPTION = """\
+Find all TextNode in the graph that exactly contains this text. The contains is
+same as python's check `'foo' in text`, ie. it is case sensitive and is
+looking for exact matches. Therefore the search text should be exact as well.
+
+You can use this tool to find all text/documentation in codebase that contains this text."""
+
+
 def find_text_node_with_text(text: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
@@ -154,6 +224,16 @@ def find_text_node_with_text(text: str, driver: GraphDatabase.driver) -> str:
 class FindTextNodeWithTextInFileInput(BaseModel):
   text: str = Field("Search TextNode that exactly contains this text.")
   basename: str = Field("The basename of FileNode to search TextNode.")
+
+
+FIND_TEXT_NODE_WITH_TEXT_IN_FILE_DESCRIPTION = """\
+Find all TextNode in the graph that exactly contains this text in a file with this basename.
+The contains is same as python's check `'foo' in text`, ie. it is case sensitive and is
+looking for exact matches. Therefore the search text should be exact as well.
+The basename must include the extension, like 'bar.py', 'baz.java' or 'foo'
+(in this case foo is a direcctory or a file without extension).
+
+You can use this tool to find text/documentation in a specific file that contains this text."""
 
 
 def find_text_node_with_text_in_file(
@@ -173,6 +253,12 @@ class GetNextTextNodeWithNodeIdInput(BaseModel):
   node_id: int = Field("Get the next TextNode of this given node_id.")
 
 
+GET_NEXT_TEXT_NODE_WITH_NODE_ID_DESCRIPTION = """\
+Get the next TextNode of this given node_id.
+
+You can use this tool to read the next section of text that you are interested in."""
+
+
 def get_next_text_node_with_node_id(node_id: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (a:TextNode {{ node_id: {node_id} }}) -[:NEXT_CHUNK]-> (b:TextNode)
@@ -188,6 +274,15 @@ def get_next_text_node_with_node_id(node_id: str, driver: GraphDatabase.driver) 
 
 class PreviewFileContentWithBasenameInput(BaseModel):
   basename: str = Field("The basename of FileNode to preview.")
+
+
+PREVIEW_FILE_CONTENT_WITH_BASENAME_DESCRIPTION = """\
+Preview the content of a file with this basename. The basename must include
+the extension, like 'bar.py', 'baz.java' or 'foo' (in this case foo is a
+direcctory or a file without extension).
+
+You can use this tool to preview the content of a specific file to see what it contains
+in the first 300 lines or the first section."""
 
 
 def preview_file_content_with_basename(
@@ -216,6 +311,13 @@ class GetParentNodeInput(BaseModel):
   node_id: str = Field(description="Get parent node of node with this node_id")
 
 
+GET_PARENT_NODE_DESCRIPTION = """\
+Get the parent node in graph of this given node_id.
+
+This tool can be used to traverse the graph. For example to find the parent directory
+of a file, or the parent ASTNode of a ASTnode (eg. 'method_declaration' to 'class_declaration')."""
+
+
 def get_parent_node(node_id: int, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (p) -[r]-> (c {{ node_id: {node_id} }})
@@ -228,6 +330,13 @@ def get_parent_node(node_id: int, driver: GraphDatabase.driver) -> str:
 
 class GetChildrenNodeInput(BaseModel):
   node_id: str = Field(description="Get children nodes of node with this node_id")
+
+
+GET_CHILDREN_NODE_DESCRIPTION = """\
+Get the children nodes in graph of this given node_id.
+
+This tool can be used to traverse the graph. For example to find the children files/directories
+of a directory, or the children ASTNode of a ASTnode (eg. all source code components under 'class_declaration')."""
 
 
 def get_children_node(node_id: int, driver: GraphDatabase.driver) -> str:

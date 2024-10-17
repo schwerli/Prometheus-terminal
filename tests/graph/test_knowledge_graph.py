@@ -20,3 +20,18 @@ def test_build_graph():
   assert len(knowledge_graph.get_has_ast_edges()) == 3
   assert len(knowledge_graph.get_has_text_edges()) == 4
   assert len(knowledge_graph.get_next_chunk_edges()) == 3
+
+
+def test_get_file_tree():
+  knowledge_graph = KnowledgeGraph(test_project_paths.TEST_PROJECT_PATH, 1000)
+  file_tree = knowledge_graph.get_file_tree()
+  expected_file_tree = """\
+test_project
+├── bar
+|   ├── test.java
+|   └── test.py
+├── foo
+|   ├── test.dummy
+|   └── test.md
+└── test.c"""
+  assert file_tree == expected_file_tree
