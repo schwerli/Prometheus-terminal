@@ -14,10 +14,7 @@ class LocalRepository(BaseModel):
 
 
 @router.post("/local/", responses={404: {"description": "Local repository not found"}})
-def upload_local_repository(
-  local_repository: LocalRepository,
-  request: Request
-):
+def upload_local_repository(local_repository: LocalRepository, request: Request):
   local_path = Path(local_repository.path)
 
   if not local_path.exists():
