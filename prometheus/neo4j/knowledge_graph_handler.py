@@ -244,6 +244,32 @@ class KnowledgeGraphHandler:
         session.execute_read(self._read_next_chunk_edges),
       )
 
+  def knowledge_graph_exists(self) -> bool:
+    """Check if the knowledge graph exists in the Neo4j database.
+
+    Returns:
+      True if there are any nodes in the database, False otherwise.
+    """
+    query = """
+      MATCH (n)
+      WHERE n:ASTNode OR n:TextNode OR n:FileNode
+      RETURN COUNT(n) > 0 AS graph_exists
+    """
+    with self.driver.session() as session:
+      result = session.run(query)
+      record = result.single()
+      return record["graph_exists"] if record else False
+
+  def clear_knowledge_graph(self):
+    """Clear the knowledge graph from neo4j."""
+    query = """
+      MATCH (n)
+      WHERE n:ASTNode OR n:TextNode OR n:FileNode
+      DETACH DELETE n
+    """
+    with self.driver.session() as session:
+      session.run(query)
+
   def close(self):
     """Close the driver."""
     self.driver.close()
