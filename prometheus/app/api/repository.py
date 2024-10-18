@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from prometheus.configuration import config
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.neo4j import handler
+from prometheus.neo4j import knowledge_graph_handler
 
 router = APIRouter()
 
@@ -27,13 +27,13 @@ def upload_local_repository(local_repository: LocalRepository, request: Request)
   kg = KnowledgeGraph(
     Path(local_repository.path), config.config["knowledge_graph"]["max_ast_depth"]
   )
-  neo4j_handler = handler.Handler(
+  kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
     config.config["neo4j"]["uri"],
     config.config["neo4j"]["username"],
     config.config["neo4j"]["password"],
     config.config["neo4j"]["database"],
     config.config["neo4j"]["batch_size"],
   )
-  neo4j_handler.write_knowledge_graph(kg)
-  neo4j_handler.close()
+  kg_handler.write_knowledge_graph(kg)
+  kg_handler.close()
   request.app.state.kg = kg

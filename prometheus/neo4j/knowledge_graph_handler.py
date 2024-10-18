@@ -17,7 +17,7 @@ from prometheus.graph.graph_types import (
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 
 
-class Handler:
+class KnowledgeGraphHandler:
   """The handler to writing the Knowledge graph to neo4j."""
 
   def __init__(

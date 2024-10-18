@@ -4,7 +4,7 @@ from testcontainers.neo4j import Neo4jContainer
 
 from prometheus.agents import chat_history, context_provider_agent, message_types
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.neo4j.handler import Handler
+from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
 from tests.test_utils.llm import FakeListChatModelWithTools
 
@@ -21,7 +21,7 @@ def setup_neo4j_container_with_kg():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     uri = neo4j_container.get_connection_url()
-    handler = Handler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
     handler.write_knowledge_graph(kg)
     handler.close()
     yield kg, neo4j_container
