@@ -3,7 +3,7 @@ from neo4j import GraphDatabase
 from testcontainers.neo4j import Neo4jContainer
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.neo4j.handler import Handler
+from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
 
 NEO4J_IMAGE = "neo4j:5.20.0"
@@ -19,7 +19,7 @@ def setup_neo4j_container():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     uri = neo4j_container.get_connection_url()
-    handler = Handler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
     handler.write_knowledge_graph(kg)
     handler.close()
     yield neo4j_container
