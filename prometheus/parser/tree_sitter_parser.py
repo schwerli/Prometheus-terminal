@@ -35,9 +35,7 @@ def parse(file: Path) -> Tree:
   file_type = FileType.from_path(file)
   lang = FILE_TYPE_TO_LANG.get(file_type, None)
   if lang is None:
-    raise FileNotSupportedError(
-      f"{file_type.value} is not supported by tree_sitter_parser"
-    )
+    raise FileNotSupportedError(f"{file_type.value} is not supported by tree_sitter_parser")
 
   lang_parser = get_parser(lang)
   with file.open("rb") as f:

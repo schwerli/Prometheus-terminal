@@ -24,9 +24,8 @@ def upload_local_repository(local_repository: LocalRepository, request: Request)
       detail=f"Local repository not found at path: {local_repository.path}",
     )
 
-  kg = KnowledgeGraph(
-    Path(local_repository.path), config.config["knowledge_graph"]["max_ast_depth"]
-  )
+  kg = KnowledgeGraph(config.config["knowledge_graph"]["max_ast_depth"])
+  kg.build_graph(Path(local_repository.path))
   kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
     config.config["neo4j"]["uri"],
     config.config["neo4j"]["username"],

@@ -25,9 +25,7 @@ def test_send():
   neo4j_driver_mock = Mock(spec=neo4j.Driver)
   mock_response = "Mock response"
   fake_llm = FakeListChatModelWithTools(responses=[mock_response])
-  fake_agent = ContextProviderAgent(
-    llm=fake_llm, kg=kg_mock, neo4j_driver=neo4j_driver_mock
-  )
+  fake_agent = ContextProviderAgent(llm=fake_llm, kg=kg_mock, neo4j_driver=neo4j_driver_mock)
 
   app.state.kg = kg_mock
   app.state.neo4j_driver = neo4j_driver_mock

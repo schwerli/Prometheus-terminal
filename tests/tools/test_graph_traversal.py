@@ -12,9 +12,10 @@ NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def setup_neo4j_container():
-  kg = KnowledgeGraph(test_project_paths.TEST_PROJECT_PATH, 1000)
+  kg = KnowledgeGraph(1000)
+  kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
   container = Neo4jContainer(
     image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
@@ -37,9 +38,7 @@ def test_find_file_node_with_basename(setup_neo4j_container):
 
   basename = test_project_paths.PYTHON_FILE.name
   relative_path = str(
-    test_project_paths.PYTHON_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.PYTHON_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert result.count("FileNode") == 1
   assert f"'basename': '{basename}'" in result
@@ -51,9 +50,7 @@ def test_find_file_node_with_relative_path(setup_neo4j_container):
   uri = neo4j_container.get_connection_url()
 
   relative_path = str(
-    test_project_paths.MD_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.MD_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
     result = graph_traversal.find_file_node_with_relative_path(relative_path, driver)
@@ -77,9 +74,7 @@ def test_find_ast_node_with_text(setup_neo4j_container):
 
   basename = test_project_paths.JAVA_FILE.name
   relative_path = str(
-    test_project_paths.JAVA_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.JAVA_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -102,9 +97,7 @@ def test_find_ast_node_with_type(setup_neo4j_container):
 
   basename = test_project_paths.JAVA_FILE.name
   relative_path = str(
-    test_project_paths.JAVA_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.JAVA_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -124,9 +117,7 @@ def test_find_ast_node_with_text_in_file(setup_neo4j_container):
     result = graph_traversal.find_ast_node_with_text_in_file(text, basename, driver)
 
   relative_path = str(
-    test_project_paths.C_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.C_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -146,9 +137,7 @@ def test_find_ast_node_with_type_in_file(setup_neo4j_container):
     result = graph_traversal.find_ast_node_with_type_in_file(type, basename, driver)
 
   relative_path = str(
-    test_project_paths.C_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.C_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -169,9 +158,7 @@ def test_find_ast_node_with_type_and_text(setup_neo4j_container):
 
   basename = test_project_paths.C_FILE.name
   relative_path = str(
-    test_project_paths.C_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.C_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -194,9 +181,7 @@ def test_find_text_node_with_text(setup_neo4j_container):
 
   basename = test_project_paths.MD_FILE.name
   relative_path = str(
-    test_project_paths.MD_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.MD_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -217,9 +202,7 @@ def test_find_text_node_with_text_in_file(setup_neo4j_container):
   assert "TextNode" in result
 
   relative_path = str(
-    test_project_paths.MD_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.MD_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -254,9 +237,7 @@ def test_preview_source_code_file_content_with_basename(setup_neo4j_container):
   source_code = test_project_paths.C_FILE.open().read()
   basename = test_project_paths.C_FILE.name
   relative_path = str(
-    test_project_paths.C_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.C_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
@@ -276,9 +257,7 @@ def test_preview_text_file_content_with_basename(setup_neo4j_container):
 
   basename = test_project_paths.MD_FILE.name
   relative_path = str(
-    test_project_paths.MD_FILE.relative_to(
-      test_project_paths.TEST_PROJECT_PATH
-    ).as_posix()
+    test_project_paths.MD_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result

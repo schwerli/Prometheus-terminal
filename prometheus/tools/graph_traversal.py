@@ -49,9 +49,7 @@ You can use this tool to check if a file/dir with this relative_path exists or g
 attributes related to the file/dir."""
 
 
-def find_file_node_with_relative_path(
-  relative_path: str, driver: GraphDatabase.driver
-) -> str:
+def find_file_node_with_relative_path(relative_path: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode {{ relative_path: '{relative_path}' }})
     RETURN f AS FileNode
@@ -125,9 +123,7 @@ must include the extension, like 'bar.py', 'baz.java' or 'foo'
 You can use this tool to find all source code with a certain text in a specific file."""
 
 
-def find_ast_node_with_text_in_file(
-  text: str, basename: str, driver: GraphDatabase.driver
-) -> str:
+def find_ast_node_with_text_in_file(text: str, basename: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
     WHERE f.basename = '{basename}' AND a.text CONTAINS '{text}'
@@ -152,9 +148,7 @@ You can use this tool to find all source code with a certain type in a specific 
 like method_declaration or class_declaration."""
 
 
-def find_ast_node_with_type_in_file(
-  type: str, basename: str, driver: GraphDatabase.driver
-) -> str:
+def find_ast_node_with_type_in_file(type: str, basename: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
     WHERE f.basename = '{basename}' AND a.type = '{type}'
@@ -180,9 +174,7 @@ You can use this tool to find all source code with a certain type and text.
 For example to find all method_declartion that contains 'x = 1'."""
 
 
-def find_ast_node_with_type_and_text(
-  type: str, text: str, driver: GraphDatabase.driver
-) -> str:
+def find_ast_node_with_type_and_text(type: str, text: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
     WHERE a.type = '{type}' AND a.text CONTAINS '{text}'
@@ -236,9 +228,7 @@ The basename must include the extension, like 'bar.py', 'baz.java' or 'foo'
 You can use this tool to find text/documentation in a specific file that contains this text."""
 
 
-def find_text_node_with_text_in_file(
-  text: str, basename: str, driver: GraphDatabase.driver
-) -> str:
+def find_text_node_with_text_in_file(text: str, basename: str, driver: GraphDatabase.driver) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
     WHERE f.basename = '{basename}' AND t.text CONTAINS '{text}'
@@ -285,9 +275,7 @@ You can use this tool to preview the content of a specific file to see what it c
 in the first 300 lines or the first section."""
 
 
-def preview_file_content_with_basename(
-  basename: str, driver: GraphDatabase.driver
-) -> str:
+def preview_file_content_with_basename(basename: str, driver: GraphDatabase.driver) -> str:
   source_code_query = f"""\
     MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
     WITH f, apoc.text.split(a.text, '\\R') AS lines

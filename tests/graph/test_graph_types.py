@@ -4,6 +4,9 @@ from prometheus.graph.graph_types import (
   KnowledgeGraphEdge,
   KnowledgeGraphEdgeType,
   KnowledgeGraphNode,
+  Neo4jASTNode,
+  Neo4jFileNode,
+  Neo4jTextNode,
   TextNode,
 )
 
@@ -114,9 +117,7 @@ def test_to_neo4j_has_ast_edge():
 
   source_file_node = FileNode(source_basename, source_relative_path)
   source_knowledge_graph_node = KnowledgeGraphNode(source_node_id, source_file_node)
-  target_ast_node = ASTNode(
-    target_type, target_start_line, target_end_line, target_text
-  )
+  target_ast_node = ASTNode(target_type, target_start_line, target_end_line, target_text)
   target_knowledge_graph_node = KnowledgeGraphNode(target_node_id, target_ast_node)
   knowledge_graph_edge = KnowledgeGraphEdge(
     source_knowledge_graph_node,
@@ -146,13 +147,9 @@ def test_to_neo4j_parent_of_edge():
   target_text = "return True"
   target_node_id = 10
 
-  source_ast_node = ASTNode(
-    source_type, source_start_line, source_end_line, source_text
-  )
+  source_ast_node = ASTNode(source_type, source_start_line, source_end_line, source_text)
   source_knowledge_graph_node = KnowledgeGraphNode(source_node_id, source_ast_node)
-  target_ast_node = ASTNode(
-    target_type, target_start_line, target_end_line, target_text
-  )
+  target_ast_node = ASTNode(target_type, target_start_line, target_end_line, target_text)
   target_knowledge_graph_node = KnowledgeGraphNode(target_node_id, target_ast_node)
   knowledge_graph_edge = KnowledgeGraphEdge(
     source_knowledge_graph_node,
@@ -224,3 +221,43 @@ def test_to_neo4j_next_chunk_edge():
 
   assert neo4j_next_chunk_edge["source"] == source_knowledge_graph_node.to_neo4j_node()
   assert neo4j_next_chunk_edge["target"] == target_knowledge_graph_node.to_neo4j_node()
+
+
+def test_from_neo4j_file_node():
+  node_id = 10
+  basename = "foo.py"
+  relative_path = "bar/baz/foo.py"
+  neo4j_file_node = Neo4jFileNode(node_id=node_id, basename=basename, relative_path=relative_path)
+  knowledge_graph_node = KnowledgeGraphNode.from_neo4j_file_node(neo4j_file_node)
+
+  expected_file_node = FileNode(basename, relative_path)
+  expected_knowledge_graph_node = KnowledgeGraphNode(node_id, expected_file_node)
+  assert knowledge_graph_node == expected_knowledge_graph_node
+
+
+def test_from_neo4j_ast_node():
+  node_id = 15
+  type = "string_literal"
+  start_line = 5
+  end_line = 6
+  text = '"hello world"'
+  neo4j_ast_node = Neo4jASTNode(
+    node_id=node_id, type=type, start_line=start_line, end_line=end_line, text=text
+  )
+  knowledge_graph_node = KnowledgeGraphNode.from_neo4j_ast_node(neo4j_ast_node)
+
+  expected_ast_node = ASTNode(type, start_line, end_line, text)
+  expected_knowledge_graph_node = KnowledgeGraphNode(node_id, expected_ast_node)
+  assert knowledge_graph_node == expected_knowledge_graph_node
+
+
+def test_from_neo4j_text_node():
+  node_id = 20
+  text = "hello world"
+  metadata = '{"foo": "bar"}'
+  neo4j_text_node = Neo4jTextNode(node_id=node_id, text=text, metadata=metadata)
+  knowledge_graph_node = KnowledgeGraphNode.from_neo4j_text_node(neo4j_text_node)
+
+  expected_text_node = TextNode(text, metadata)
+  expected_knowledge_graph_node = KnowledgeGraphNode(node_id, expected_text_node)
+  assert knowledge_graph_node == expected_knowledge_graph_node

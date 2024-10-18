@@ -40,9 +40,7 @@ Report any error that you found back to the user.
 
 
 class ContextProviderAgent:
-  def __init__(
-    self, llm: BaseChatModel, kg: KnowledgeGraph, neo4j_driver: neo4j.Driver
-  ):
+  def __init__(self, llm: BaseChatModel, kg: KnowledgeGraph, neo4j_driver: neo4j.Driver):
     self.neo4j_driver = neo4j_driver
 
     sys_prompt = SYS_PROMPT.format(file_tree=kg.get_file_tree())

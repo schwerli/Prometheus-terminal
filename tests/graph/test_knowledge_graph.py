@@ -1,9 +1,18 @@
+import pytest
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from tests.test_utils import test_project_paths
 
+from testcontainers.neo4j import Neo4jContainer
+from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
+
+NEO4J_IMAGE = "neo4j:5.20.0"
+NEO4J_USERNAME = "neo4j"
+NEO4J_PASSWORD = "password"
+
 
 def test_build_graph():
-  knowledge_graph = KnowledgeGraph(test_project_paths.TEST_PROJECT_PATH, 1000)
+  knowledge_graph = KnowledgeGraph(1000)
+  knowledge_graph.build_graph(test_project_paths.TEST_PROJECT_PATH)
 
   assert knowledge_graph._next_node_id == 96
   # 8 FileNode
@@ -23,7 +32,8 @@ def test_build_graph():
 
 
 def test_get_file_tree():
-  knowledge_graph = KnowledgeGraph(test_project_paths.TEST_PROJECT_PATH, 1000)
+  knowledge_graph = KnowledgeGraph(1000)
+  knowledge_graph.build_graph(test_project_paths.TEST_PROJECT_PATH)
   file_tree = knowledge_graph.get_file_tree()
   expected_file_tree = """\
 test_project
@@ -35,3 +45,19 @@ test_project
 |   └── test.md
 └── test.c"""
   assert file_tree == expected_file_tree
+
+def test_from_neo4j():
+  kg = KnowledgeGraph(1000)
+  kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
+  container = Neo4jContainer(
+    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
+  ).with_env("NEO4J_PLUGINS", '["apoc"]')
+  with container as neo4j_container:
+    uri = neo4j_container.get_connection_url()
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler.write_knowledge_graph(kg)
+    
+    read_kg = handler.read_knowledge_graph()
+
+    assert read_kg == kg
+    
