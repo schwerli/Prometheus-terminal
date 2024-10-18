@@ -103,3 +103,25 @@ def test_num_next_chunk_edges(setup_container_and_handler):
     with driver.session() as session:
       read_next_chunk_edges = session.execute_read(handler._read_next_chunk_edges)
       assert len(read_next_chunk_edges) == 3
+
+def test_knowledge_graph_exists(setup_container_and_handler):
+  _, handler = setup_container_and_handler
+  
+  assert handler.knowledge_graph_exists()
+
+def test_clear_knowledge_graph():
+  kg = KnowledgeGraph(1000)
+  kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
+  container = Neo4jContainer(
+    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
+  ).with_env("NEO4J_PLUGINS", '["apoc"]')
+  with container as neo4j_container:
+    uri = neo4j_container.get_connection_url()
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler.write_knowledge_graph(kg)
+    
+    assert handler.knowledge_graph_exists()
+
+    handler.clear_knowledge_graph()
+
+    assert not handler.knowledge_graph_exists()

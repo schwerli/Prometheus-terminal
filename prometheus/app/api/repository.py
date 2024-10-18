@@ -36,3 +36,19 @@ def upload_local_repository(local_repository: LocalRepository, request: Request)
   kg_handler.write_knowledge_graph(kg)
   kg_handler.close()
   request.app.state.kg = kg
+
+@router.get("/delete/")
+def delete(request: Request):
+  kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
+    config.config["neo4j"]["uri"],
+    config.config["neo4j"]["username"],
+    config.config["neo4j"]["password"],
+    config.config["neo4j"]["database"],
+    config.config["neo4j"]["batch_size"],
+  )
+  if not kg_handler.knowledge_graph_exists():
+    return
+  
+  kg_handler.clear_knowledge_graph()
+  kg_handler.close()
+  request.app.state.kg = None
