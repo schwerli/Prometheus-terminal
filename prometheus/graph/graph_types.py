@@ -86,6 +86,35 @@ class KnowledgeGraphNode:
       case _:
         raise ValueError("Unknown KnowledgeGraphNode.node type")
 
+  @classmethod
+  def from_neo4j_file_node(cls, node: "Neo4jFileNode") -> "KnowledgeGraphNode":
+    return cls(
+      node_id=node["node_id"],
+      node=FileNode(
+        basename=node["basename"],
+        relative_path=node["relative_path"],
+      ),
+    )
+
+  @classmethod
+  def from_neo4j_ast_node(cls, node: "Neo4jASTNode") -> "KnowledgeGraphNode":
+    return cls(
+      node_id=node["node_id"],
+      node=ASTNode(
+        type=node["type"],
+        start_line=node["start_line"],
+        end_line=node["end_line"],
+        text=node["text"],
+      ),
+    )
+
+  @classmethod
+  def from_neo4j_text_node(cls, node: "Neo4jTextNode") -> "KnowledgeGraphNode":
+    return cls(
+      node_id=node["node_id"],
+      node=TextNode(text=node["text"], metadata=node["metadata"]),
+    )
+
 
 class KnowledgeGraphEdgeType(enum.StrEnum):
   """Enum of all knowledge graph edge types"""

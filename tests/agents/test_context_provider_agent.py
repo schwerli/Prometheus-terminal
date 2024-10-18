@@ -1,3 +1,5 @@
+from cgi import test
+
 import pytest
 from neo4j import GraphDatabase
 from testcontainers.neo4j import Neo4jContainer
@@ -13,9 +15,10 @@ NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def setup_neo4j_container_with_kg():
-  kg = KnowledgeGraph(test_project_paths.TEST_PROJECT_PATH, 1000)
+  kg = KnowledgeGraph(1000)
+  kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
   container = Neo4jContainer(
     image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
@@ -37,7 +40,5 @@ def test_basic_context_provider_agent(setup_neo4j_container_with_kg):
     cp_agent = context_provider_agent.ContextProviderAgent(fake_llm, kg, driver)
 
     messages = chat_history.ChatHistory(10)
-    messages.add_message(
-      message_types.Message(role=message_types.Role.user, message="hello")
-    )
+    messages.add_message(message_types.Message(role=message_types.Role.user, message="hello"))
     assert cp_agent.get_response(messages) == fake_response

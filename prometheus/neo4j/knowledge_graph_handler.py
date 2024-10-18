@@ -1,10 +1,11 @@
 """The neo4j handler for writing the knowledge graph to neo4j."""
 
-from typing import Sequence
+from typing import Any, Mapping, Sequence
 
 from neo4j import GraphDatabase, ManagedTransaction
 
 from prometheus.graph.graph_types import (
+  KnowledgeGraphNode,
   Neo4jASTNode,
   Neo4jFileNode,
   Neo4jHasASTEdge,
@@ -20,9 +21,7 @@ from prometheus.graph.knowledge_graph import KnowledgeGraph
 class KnowledgeGraphHandler:
   """The handler to writing the Knowledge graph to neo4j."""
 
-  def __init__(
-    self, uri: str, user: str, password: str, database: str, batch_size: int
-  ):
+  def __init__(self, uri: str, user: str, password: str, database: str, batch_size: int):
     """
     Args:
       uri: The neo4j uri.
@@ -51,9 +50,7 @@ class KnowledgeGraphHandler:
     for query in queries:
       tx.run(query)
 
-  def _write_file_nodes(
-    self, tx: ManagedTransaction, file_nodes: Sequence[Neo4jFileNode]
-  ):
+  def _write_file_nodes(self, tx: ManagedTransaction, file_nodes: Sequence[Neo4jFileNode]):
     """Write Neo4jFileNode to neo4j."""
     query = """
       UNWIND $file_nodes AS file_node
@@ -73,9 +70,7 @@ class KnowledgeGraphHandler:
       ast_nodes_batch = ast_nodes[i : i + self.batch_size]
       tx.run(query, ast_nodes=ast_nodes_batch)
 
-  def _write_text_nodes(
-    self, tx: ManagedTransaction, text_nodes: Sequence[Neo4jTextNode]
-  ):
+  def _write_text_nodes(self, tx: ManagedTransaction, text_nodes: Sequence[Neo4jTextNode]):
     """Write Neo4jTextNode to neo4j."""
     query = """
       UNWIND $text_nodes AS text_node
@@ -99,9 +94,7 @@ class KnowledgeGraphHandler:
       has_file_edges_batch = has_file_edges[i : i + self.batch_size]
       tx.run(query, edges=has_file_edges_batch)
 
-  def _write_has_ast_edges(
-    self, tx: ManagedTransaction, has_ast_edges: Sequence[Neo4jHasASTEdge]
-  ):
+  def _write_has_ast_edges(self, tx: ManagedTransaction, has_ast_edges: Sequence[Neo4jHasASTEdge]):
     """Write Neo4jHasASTEdge to neo4j."""
     query = """
       UNWIND $edges AS edge
@@ -171,10 +164,85 @@ class KnowledgeGraphHandler:
       session.execute_write(self._write_has_ast_edges, kg.get_neo4j_has_ast_edges())
       session.execute_write(self._write_has_file_edges, kg.get_neo4j_has_file_edges())
       session.execute_write(self._write_has_text_edges, kg.get_neo4j_has_text_edges())
-      session.execute_write(
-        self._write_next_chunk_edges, kg.get_neo4j_next_chunk_edges()
-      )
+      session.execute_write(self._write_next_chunk_edges, kg.get_neo4j_next_chunk_edges())
       session.execute_write(self._write_parent_of_edges, kg.get_neo4j_parent_of_edges())
+
+  def _read_file_nodes(self, tx: ManagedTransaction) -> Sequence[KnowledgeGraphNode]:
+    """Read FileNode from neo4j."""
+    query = "MATCH (n:FileNode) RETURN n.node_id AS node_id, n.basename AS basename, n.relative_path AS relative_path"
+    result = tx.run(query)
+    return [KnowledgeGraphNode.from_neo4j_file_node(record.data()) for record in result]
+
+  def _read_ast_nodes(self, tx: ManagedTransaction) -> Sequence[KnowledgeGraphNode]:
+    """Read ASTNode from neo4j."""
+    query = "MATCH (n:ASTNode) RETURN n.node_id AS node_id, n.start_line AS start_line, n.end_line AS end_line, n.type AS type, n.text AS text"
+    result = tx.run(query)
+    return [KnowledgeGraphNode.from_neo4j_ast_node(record.data()) for record in result]
+
+  def _read_text_nodes(self, tx: ManagedTransaction) -> Sequence[KnowledgeGraphNode]:
+    """Read TextNode from neo4j."""
+    query = "MATCH (n:TextNode) RETURN n.node_id AS node_id, n.text AS text, n.metadata AS metadata"
+    result = tx.run(query)
+    return [KnowledgeGraphNode.from_neo4j_text_node(record.data()) for record in result]
+
+  def _read_parent_of_edges(self, tx: ManagedTransaction) -> Sequence[Mapping[str, int]]:
+    """Read PARENT_OF edges from neo4j."""
+    query = """
+        MATCH (source:ASTNode) -[:PARENT_OF]-> (target:ASTNode)
+        RETURN source.node_id AS source_id, target.node_id AS target_id
+    """
+    result = tx.run(query)
+    return [record.data() for record in result]
+
+  def _read_has_file_edges(self, tx: ManagedTransaction) -> Sequence[Mapping[str, int]]:
+    """Read HAS_FILE edges from neo4j."""
+    query = """
+        MATCH (source:FileNode) -[:HAS_FILE]-> (target:FileNode)
+        RETURN source.node_id AS source_id, target.node_id AS target_id
+    """
+    result = tx.run(query)
+    return [record.data() for record in result]
+
+  def _read_has_ast_edges(self, tx: ManagedTransaction) -> Sequence[Mapping[str, int]]:
+    """Read HAS_AST edges from neo4j."""
+    query = """
+        MATCH (source:FileNode) -[:HAS_AST]-> (target:ASTNode)
+        RETURN source.node_id AS source_id, target.node_id AS target_id
+    """
+    result = tx.run(query)
+    return [record.data() for record in result]
+
+  def _read_has_text_edges(self, tx: ManagedTransaction) -> Sequence[Mapping[str, int]]:
+    """Read HAS_TEXT edges from neo4j."""
+    query = """
+        MATCH (source:FileNode) -[:HAS_TEXT]-> (target:TextNode)
+        RETURN source.node_id AS source_id, target.node_id AS target_id
+    """
+    result = tx.run(query)
+    return [record.data() for record in result]
+
+  def _read_next_chunk_edges(self, tx: ManagedTransaction) -> Sequence[Mapping[str, int]]:
+    """Read NEXT_CHUNK edges from neo4j."""
+    query = """
+        MATCH (source:TextNode) -[:NEXT_CHUNK]-> (target:TextNode)
+        RETURN source.node_id AS source_id, target.node_id AS target_id
+    """
+    result = tx.run(query)
+    return [record.data() for record in result]
+
+  def read_knowledge_graph(self) -> KnowledgeGraph:
+    """Read KnowledgeGraph from neo4j."""
+    with self.driver.session() as session:
+      return KnowledgeGraph.from_neo4j(
+        session.execute_read(self._read_file_nodes),
+        session.execute_read(self._read_ast_nodes),
+        session.execute_read(self._read_text_nodes),
+        session.execute_read(self._read_parent_of_edges),
+        session.execute_read(self._read_has_file_edges),
+        session.execute_read(self._read_has_ast_edges),
+        session.execute_read(self._read_has_text_edges),
+        session.execute_read(self._read_next_chunk_edges),
+      )
 
   def close(self):
     """Close the driver."""

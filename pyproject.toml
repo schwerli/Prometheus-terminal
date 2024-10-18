@@ -26,6 +26,7 @@ test = [
 
 [tool.ruff]
 indent-width = 2
+line-length = 100
 
 [tool.ruff.lint]
 select = ["I"]

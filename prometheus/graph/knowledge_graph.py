@@ -17,10 +17,11 @@ This knowledge graph will be persisted in a graph database (neo4j), where an AI 
 codebase to find the most relevant context for the user query.
 """
 
+import itertools
 import logging
 from collections import defaultdict, deque
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Mapping, Optional, Sequence
 
 from prometheus.graph.file_graph_builder import FileGraphBuilder
 from prometheus.graph.graph_types import (
@@ -42,24 +43,32 @@ from prometheus.graph.graph_types import (
 
 
 class KnowledgeGraph:
-  def __init__(self, root_dir: Path, max_ast_depth: int):
-    """
+  def __init__(
+    self,
+    max_ast_depth: int,
+    next_node_id: int = 0,
+    root_node: Optional[KnowledgeGraphNode] = None,
+    knowledge_graph_nodes: Optional[Sequence[KnowledgeGraphNode]] = None,
+    knowledge_graph_edges: Optional[Sequence[KnowledgeGraphEdge]] = None,
+  ):
+    """Initializes the knowledge graph.
+
     Args:
-      root_dir: The root directory of the codebase.
-      max_ast_depth: The maximum depth AST that we traverse. This can be used to limit
-        the number of nodes in the knowledge graph.
+      max_ast_depth: The maximum depth of tree-sitter nodes to parse.
+      next_node_id: The next available node id.
+      root_node: The root node for the knowledge graph.
+      knowledge_graph_nodes: The initial list of knowledge graph nodes.
+      knowledge_graph_edges: The initial list of knowledge graph edges.
     """
     self.max_ast_depth = max_ast_depth
-    self._next_node_id = 0
-    self._root_node = None
-    self._knowledge_graph_nodes = []
-    self._knowledge_graph_edges = []
+    self._next_node_id = next_node_id
+    self._root_node = root_node
+    self._knowledge_graph_nodes = knowledge_graph_nodes if knowledge_graph_nodes is not None else []
+    self._knowledge_graph_edges = knowledge_graph_edges if knowledge_graph_edges is not None else []
     self._file_graph_builder = FileGraphBuilder(max_ast_depth)
     self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
-    self._build_graph(root_dir)
-
-  def _build_graph(self, root_dir: Path):
+  def build_graph(self, root_dir: Path):
     """Builds knowledege graph for a codebase at a location.
 
     Args:
@@ -115,6 +124,87 @@ class KnowledgeGraph:
       # This can only happend for files that are not supported by file_graph_builder.
       self._logger.info(f"Skip parsing {file} because it is not supported.")
 
+  @classmethod
+  def from_neo4j(
+    cls,
+    file_nodes: Sequence[KnowledgeGraphNode],
+    ast_nodes: Sequence[KnowledgeGraphNode],
+    text_nodes: Sequence[KnowledgeGraphNode],
+    parent_of_edges_ids: Sequence[Mapping[str, int]],
+    has_file_edges_ids: Sequence[Mapping[str, int]],
+    has_ast_edges_ids: Sequence[Mapping[str, int]],
+    has_text_edges_ids: Sequence[Mapping[str, int]],
+    next_chunk_edges_ids: Sequence[Mapping[str, int]],
+  ):
+    # All nodes
+    knowledge_graph_nodes = [x for x in itertools.chain(file_nodes, ast_nodes, text_nodes)]
+
+    # All edges
+    node_id_to_node = {x.node_id: x for x in knowledge_graph_nodes}
+    parent_of_edges = [
+      KnowledgeGraphEdge(
+        node_id_to_node[parent_of_edge_ids["source_id"]],
+        node_id_to_node[parent_of_edge_ids["target_id"]],
+        KnowledgeGraphEdgeType.parent_of,
+      )
+      for parent_of_edge_ids in parent_of_edges_ids
+    ]
+    has_file_edges = [
+      KnowledgeGraphEdge(
+        node_id_to_node[has_file_edge_ids["source_id"]],
+        node_id_to_node[has_file_edge_ids["target_id"]],
+        KnowledgeGraphEdgeType.has_file,
+      )
+      for has_file_edge_ids in has_file_edges_ids
+    ]
+    has_ast_edges = [
+      KnowledgeGraphEdge(
+        node_id_to_node[has_ast_edge_ids["source_id"]],
+        node_id_to_node[has_ast_edge_ids["target_id"]],
+        KnowledgeGraphEdgeType.has_ast,
+      )
+      for has_ast_edge_ids in has_ast_edges_ids
+    ]
+    has_text_edges = [
+      KnowledgeGraphEdge(
+        node_id_to_node[has_text_edge_ids["source_id"]],
+        node_id_to_node[has_text_edge_ids["target_id"]],
+        KnowledgeGraphEdgeType.has_text,
+      )
+      for has_text_edge_ids in has_text_edges_ids
+    ]
+    next_chunk_edges = [
+      KnowledgeGraphEdge(
+        node_id_to_node[next_chunk_edge_ids["source_id"]],
+        node_id_to_node[next_chunk_edge_ids["target_id"]],
+        KnowledgeGraphEdgeType.next_chunk,
+      )
+      for next_chunk_edge_ids in next_chunk_edges_ids
+    ]
+    knowledge_graph_edges = [
+      x
+      for x in itertools.chain(
+        parent_of_edges, has_file_edges, has_ast_edges, has_text_edges, next_chunk_edges
+      )
+    ]
+
+    # Root node
+    root_node = None
+    for node in knowledge_graph_nodes:
+      if node.node_id == 0:
+        root_node = node
+        break
+    if root_node is None:
+      raise ValueError("Node with node_id 0 not found.")
+
+    return cls(
+      max_ast_depth=-1,
+      next_node_id=len(knowledge_graph_nodes),
+      root_node=root_node,
+      knowledge_graph_nodes=knowledge_graph_nodes,
+      knowledge_graph_edges=knowledge_graph_edges,
+    )
+
   def get_file_tree(self, max_tree_lines: int = 300) -> str:
     file_node_adjacency_dict = self._get_file_node_adjacency_dict()
 
@@ -159,23 +249,15 @@ class KnowledgeGraph:
 
   def get_file_nodes(self) -> Sequence[KnowledgeGraphNode]:
     return [
-      kg_node
-      for kg_node in self._knowledge_graph_nodes
-      if isinstance(kg_node.node, FileNode)
+      kg_node for kg_node in self._knowledge_graph_nodes if isinstance(kg_node.node, FileNode)
     ]
 
   def get_ast_nodes(self) -> Sequence[KnowledgeGraphNode]:
-    return [
-      kg_node
-      for kg_node in self._knowledge_graph_nodes
-      if isinstance(kg_node.node, ASTNode)
-    ]
+    return [kg_node for kg_node in self._knowledge_graph_nodes if isinstance(kg_node.node, ASTNode)]
 
   def get_text_nodes(self) -> Sequence[KnowledgeGraphNode]:
     return [
-      kg_node
-      for kg_node in self._knowledge_graph_nodes
-      if isinstance(kg_node.node, TextNode)
+      kg_node for kg_node in self._knowledge_graph_nodes if isinstance(kg_node.node, TextNode)
     ]
 
   def get_has_ast_edges(self) -> Sequence[KnowledgeGraphEdge]:
@@ -236,3 +318,26 @@ class KnowledgeGraph:
 
   def get_neo4j_parent_of_edges(self) -> Sequence[Neo4jParentOfEdge]:
     return [kg_edge.to_neo4j_edge() for kg_edge in self.get_parent_of_edges()]
+
+  def __eq__(self, other: "KnowledgeGraph") -> bool:
+    if not isinstance(other, KnowledgeGraph):
+      return False
+
+    self._knowledge_graph_nodes.sort(key=lambda x: x.node_id)
+    other._knowledge_graph_nodes.sort(key=lambda x: x.node_id)
+
+    for self_kg_node, other_kg_node in itertools.zip_longest(
+      self._knowledge_graph_nodes, other._knowledge_graph_nodes, fillvalue=None
+    ):
+      if self_kg_node != other_kg_node:
+        return False
+
+    self._knowledge_graph_edges.sort(key=lambda x: (x.source.node_id, x.target.node_id, x.type))
+    other._knowledge_graph_edges.sort(key=lambda x: (x.source.node_id, x.target.node_id, x.type))
+    for self_kg_edge, other_kg_edge in itertools.zip_longest(
+      self._knowledge_graph_edges, other._knowledge_graph_edges, fillvalue=None
+    ):
+      if self_kg_edge != other_kg_edge:
+        return False
+
+    return True

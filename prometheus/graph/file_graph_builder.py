@@ -116,9 +116,7 @@ class FileGraphBuilder:
 
         tree_sitter_nodes.append(kg_child_ast_node)
         tree_sitter_edges.append(
-          KnowledgeGraphEdge(
-            kg_node, kg_child_ast_node, KnowledgeGraphEdgeType.parent_of
-          )
+          KnowledgeGraphEdge(kg_node, kg_child_ast_node, KnowledgeGraphEdgeType.parent_of)
         )
 
         node_stack.append((tree_sitter_child_node, kg_child_ast_node, depth + 1))
@@ -147,9 +145,7 @@ class FileGraphBuilder:
       ("##", "Header 2"),
       ("###", "Header 3"),
     ]
-    markdown_splitter = MarkdownHeaderTextSplitter(
-      headers_to_split_on=headers_to_split_on
-    )
+    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
     text = file.open(encoding="utf-8").read()
     documents = markdown_splitter.split_text(text)
     return self._documents_to_file_graph(documents, parent_node, next_node_id)
@@ -195,9 +191,7 @@ class FileGraphBuilder:
 
       if previous_node:
         document_edges.append(
-          KnowledgeGraphEdge(
-            previous_node, kg_text_node, KnowledgeGraphEdgeType.next_chunk
-          )
+          KnowledgeGraphEdge(previous_node, kg_text_node, KnowledgeGraphEdgeType.next_chunk)
         )
 
       previous_node = kg_text_node

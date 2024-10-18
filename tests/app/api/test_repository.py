@@ -18,7 +18,7 @@ NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def setup_neo4j_container():
   container = Neo4jContainer(
     image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD

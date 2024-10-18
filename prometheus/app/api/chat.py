@@ -39,7 +39,5 @@ def answer_issue(query: Query, request: Request):
     )
 
   messages = chat_history.ChatHistory(10)
-  messages.add_message(
-    message_types.Message(role=message_types.Role.user, message=query.query)
-  )
+  messages.add_message(message_types.Message(role=message_types.Role.user, message=query.query))
   return request.app.state.cp_agent.get_response(messages)
