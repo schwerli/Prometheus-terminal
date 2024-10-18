@@ -37,6 +37,7 @@ def upload_local_repository(local_repository: LocalRepository, request: Request)
   kg_handler.close()
   request.app.state.kg = kg
 
+
 @router.get("/delete/")
 def delete(request: Request):
   kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
@@ -48,7 +49,7 @@ def delete(request: Request):
   )
   if not kg_handler.knowledge_graph_exists():
     return
-  
+
   kg_handler.clear_knowledge_graph()
   kg_handler.close()
   request.app.state.kg = None
