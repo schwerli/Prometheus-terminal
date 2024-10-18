@@ -1,9 +1,9 @@
 import pytest
-from prometheus.graph.knowledge_graph import KnowledgeGraph
-from tests.test_utils import test_project_paths
-
 from testcontainers.neo4j import Neo4jContainer
+
+from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
+from tests.test_utils import test_project_paths
 
 NEO4J_IMAGE = "neo4j:5.20.0"
 NEO4J_USERNAME = "neo4j"
@@ -46,6 +46,7 @@ test_project
 └── test.c"""
   assert file_tree == expected_file_tree
 
+
 def test_from_neo4j():
   kg = KnowledgeGraph(1000)
   kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
@@ -56,8 +57,7 @@ def test_from_neo4j():
     uri = neo4j_container.get_connection_url()
     handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
     handler.write_knowledge_graph(kg)
-    
+
     read_kg = handler.read_knowledge_graph()
 
     assert read_kg == kg
-    

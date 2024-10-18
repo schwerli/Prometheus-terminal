@@ -318,22 +318,26 @@ class KnowledgeGraph:
 
   def get_neo4j_parent_of_edges(self) -> Sequence[Neo4jParentOfEdge]:
     return [kg_edge.to_neo4j_edge() for kg_edge in self.get_parent_of_edges()]
-  
+
   def __eq__(self, other: "KnowledgeGraph") -> bool:
     if not isinstance(other, KnowledgeGraph):
       return False
-    
+
     self._knowledge_graph_nodes.sort(key=lambda x: x.node_id)
     other._knowledge_graph_nodes.sort(key=lambda x: x.node_id)
 
-    for self_kg_node, other_kg_node in itertools.zip_longest(self._knowledge_graph_nodes, other._knowledge_graph_nodes, fillvalue=None):
+    for self_kg_node, other_kg_node in itertools.zip_longest(
+      self._knowledge_graph_nodes, other._knowledge_graph_nodes, fillvalue=None
+    ):
       if self_kg_node != other_kg_node:
         return False
-      
+
     self._knowledge_graph_edges.sort(key=lambda x: (x.source.node_id, x.target.node_id, x.type))
     other._knowledge_graph_edges.sort(key=lambda x: (x.source.node_id, x.target.node_id, x.type))
-    for self_kg_edge, other_kg_edge in itertools.zip_longest(self._knowledge_graph_edges, other._knowledge_graph_edges, fillvalue=None):
+    for self_kg_edge, other_kg_edge in itertools.zip_longest(
+      self._knowledge_graph_edges, other._knowledge_graph_edges, fillvalue=None
+    ):
       if self_kg_edge != other_kg_edge:
         return False
-      
+
     return True
