@@ -20,7 +20,7 @@ def setup_container_and_handler():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     uri = neo4j_container.get_connection_url()
-    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, 100)
     handler.write_knowledge_graph(kg)
     yield neo4j_container, handler
 
@@ -119,7 +119,7 @@ def test_clear_knowledge_graph():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     uri = neo4j_container.get_connection_url()
-    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, 100)
     handler.write_knowledge_graph(kg)
 
     assert handler.knowledge_graph_exists()

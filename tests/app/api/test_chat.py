@@ -1,36 +1,36 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 
-import neo4j
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from prometheus.agents.context_provider_agent import ContextProviderAgent
 from prometheus.app.api import chat
-from prometheus.graph.knowledge_graph import KnowledgeGraph
-from tests.test_utils.llm import FakeListChatModelWithTools
 
 app = FastAPI()
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 client = TestClient(app)
 
 
-def test_send_without_kg():
+@pytest.fixture
+def mock_shared_state():
+  mock_state = MagicMock()
+  app.state.shared_state = mock_state
+  yield mock_state
+
+
+def test_send_without_kg(mock_shared_state):
+  mock_shared_state.has_knowledge_graph.return_value = False
   response = client.post("/chat/send", json={"query": "hello"})
   assert response.status_code == 404
 
 
-def test_send():
-  kg_mock = Mock(spec=KnowledgeGraph)
-  kg_mock.get_file_tree.return_value = "mock_file_tree"
-  neo4j_driver_mock = Mock(spec=neo4j.Driver)
-  mock_response = "Mock response"
-  fake_llm = FakeListChatModelWithTools(responses=[mock_response])
-  fake_agent = ContextProviderAgent(llm=fake_llm, kg=kg_mock, neo4j_driver=neo4j_driver_mock)
-
-  app.state.kg = kg_mock
-  app.state.neo4j_driver = neo4j_driver_mock
-  app.state.cp_agent = fake_agent
-
+def test_send(mock_shared_state):
+  mock_shared_state.has_knowledge_graph.return_value = True
+  mock_cp_agent = MagicMock()
+  mock_response = "Mocked response"
+  mock_cp_agent.get_response.return_value = mock_response
+  mock_shared_state.cp_agent = mock_cp_agent
   response = client.post("/chat/send", json={"query": "hello"})
+
   assert response.status_code == 200
   assert response.json() == mock_response

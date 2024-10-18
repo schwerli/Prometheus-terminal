@@ -1,5 +1,3 @@
-from cgi import test
-
 import pytest
 from neo4j import GraphDatabase
 from testcontainers.neo4j import Neo4jContainer
@@ -24,7 +22,7 @@ def setup_neo4j_container_with_kg():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     uri = neo4j_container.get_connection_url()
-    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, 100)
     handler.write_knowledge_graph(kg)
     handler.close()
     yield kg, neo4j_container

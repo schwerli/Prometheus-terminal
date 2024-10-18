@@ -1,4 +1,3 @@
-import pytest
 from testcontainers.neo4j import Neo4jContainer
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -55,7 +54,7 @@ def test_from_neo4j():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     uri = neo4j_container.get_connection_url()
-    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, "neo4j", 100)
+    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, 100)
     handler.write_knowledge_graph(kg)
 
     read_kg = handler.read_knowledge_graph()
