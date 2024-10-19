@@ -2,7 +2,7 @@ import pytest
 from neo4j import GraphDatabase
 from testcontainers.neo4j import Neo4jContainer
 
-from prometheus.agents import chat_history, context_provider_agent, message_types
+from prometheus.agents import context_provider_agent
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
@@ -37,6 +37,4 @@ def test_basic_context_provider_agent(setup_neo4j_container_with_kg):
   ) as driver:
     cp_agent = context_provider_agent.ContextProviderAgent(fake_llm, kg, driver)
 
-    messages = chat_history.ChatHistory(10)
-    messages.add_message(message_types.Message(role=message_types.Role.user, message="hello"))
-    assert cp_agent.get_response(messages) == fake_response
+    assert cp_agent.get_response("hello") == fake_response

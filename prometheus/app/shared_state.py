@@ -6,7 +6,8 @@ from neo4j import GraphDatabase
 from prometheus.agents import context_provider_agent
 from prometheus.configuration import config
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.neo4j import knowledge_graph_handler
+from prometheus.message.message_history import MessageHistory
+from prometheus.neo4j import knowledge_graph_handler, message_history_handler
 
 
 class SharedState:
@@ -29,6 +30,12 @@ class SharedState:
       api_key=config.config["anthropic"]["api_key"],
     )
     self.cp_agent = None
+    mh_handler = message_history_handler.MessageHistoryHandler(
+      config.config["neo4j"]["uri"],
+      config.config["neo4j"]["username"],
+      config.config["neo4j"]["password"],
+    )
+    self.message_history = MessageHistory(mh_handler)
 
     self._load_existing_knowledge_graph()
 

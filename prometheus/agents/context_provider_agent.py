@@ -1,4 +1,5 @@
 import functools
+from typing import Optional
 
 import neo4j
 from langchain.agents import AgentExecutor, create_tool_calling_agent
@@ -6,8 +7,8 @@ from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from prometheus.agents import chat_history, message_types
 from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.message import message_history
 from prometheus.tools import graph_traversal
 
 SYS_PROMPT = """\
@@ -204,14 +205,13 @@ class ContextProviderAgent:
 
     return tools
 
-  def get_response(self, chat_history: chat_history.ChatHistory) -> str:
-    query_message = chat_history.get_last_message()
-    assert query_message is not None
-    assert query_message.role == message_types.Role.user
-
-    langchain_chat_history = chat_history.to_langchain_chat_history()
+  def get_response(self, query: str, message_history: Optional[message_history.MessageHistory] = None) -> str:
+    if message_history is None:
+      langchain_chat_history = []
+    else:
+      langchain_chat_history = message_history.to_langchain_chat_history()
     response = self.agent_executor.invoke(
-      {"input": query_message.message, "chat_history": langchain_chat_history}
+      {"input": query, "chat_history": langchain_chat_history}
     )
 
     return response["output"]
