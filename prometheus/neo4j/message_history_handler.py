@@ -1,6 +1,3 @@
-
-
-
 from typing import Sequence
 
 from neo4j import GraphDatabase
@@ -40,7 +37,11 @@ class MessageHistoryHandler:
 
   def delete_conversation(self, conversation_id: str):
     with self.driver.session() as session:
-      query = "MATCH (c:ConversationNode {conversation_id: $conversation_id}) -[:HAS_MESSAGE]-> (m:MessageNode) DETACH DELETE c, m"
+      query = """
+        MATCH (c:ConversationNode {conversation_id: $conversation_id})
+        OPTIONAL MATCH (c) -[:HAS_MESSAGE]-> (m:MessageNode)
+        DETACH DELETE c, m
+      """
       session.run(query, conversation_id=conversation_id)
 
   def delete_all_conversations(self):
@@ -68,7 +69,7 @@ class MessageHistoryHandler:
         query = """
         MATCH (c:ConversationNode {conversation_id: $conversation_id}), 
               (m:MessageNode {message_id: $message_id})
-        MERGE (c)-[r:HAS_MESSAGE]->(m)
+        MERGE (c) -[r:HAS_MESSAGE]-> (m)
         """
         tx.run(query, conversation_id=conversation_id, message_id=message.message_id)
 
@@ -86,3 +87,18 @@ class MessageHistoryHandler:
       for record in result:
         messages.append(message_types.Message(**record))
     return messages
+
+  def get_all_conversation_id(self) -> Sequence[str]:
+    conversation_ids = []
+    with self.driver.session() as session:
+      query = """
+      MATCH (c:ConversationNode)
+      RETURN c.conversation_id AS conversation_id
+      """
+      result = session.run(query)
+      for record in result:
+        conversation_ids.append(record["conversation_id"])
+    return conversation_ids
+
+  def close(self):
+    self.driver.close()

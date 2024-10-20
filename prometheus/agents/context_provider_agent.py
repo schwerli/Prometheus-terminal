@@ -205,13 +205,13 @@ class ContextProviderAgent:
 
     return tools
 
-  def get_response(self, query: str, message_history: Optional[message_history.MessageHistory] = None) -> str:
+  def get_response(
+    self, query: str, message_history: Optional[message_history.MessageHistory] = None
+  ) -> str:
     if message_history is None:
       langchain_chat_history = []
     else:
       langchain_chat_history = message_history.to_langchain_chat_history()
-    response = self.agent_executor.invoke(
-      {"input": query, "chat_history": langchain_chat_history}
-    )
+    response = self.agent_executor.invoke({"input": query, "chat_history": langchain_chat_history})
 
     return response["output"]
