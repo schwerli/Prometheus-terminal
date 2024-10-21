@@ -1,4 +1,5 @@
 import functools
+import logging
 from typing import Optional
 
 import neo4j
@@ -56,6 +57,8 @@ class ContextProviderAgent:
     tools = self._init_tools()
     agent = create_tool_calling_agent(llm, tools, agent_prompt)
     self.agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+    self._logger = logging.getLogger("prometheus.agents.context_provider_agent")
 
   def _init_tools(self):
     tools = []
@@ -214,4 +217,4 @@ class ContextProviderAgent:
       langchain_chat_history = message_history.to_langchain_chat_history()
     response = self.agent_executor.invoke({"input": query, "chat_history": langchain_chat_history})
 
-    return response["output"]
+    return response["output"][0]["text"]

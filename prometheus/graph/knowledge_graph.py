@@ -23,6 +23,8 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
+import igittigitt
+
 from prometheus.graph.file_graph_builder import FileGraphBuilder
 from prometheus.graph.graph_types import (
   ASTNode,
@@ -74,6 +76,11 @@ class KnowledgeGraph:
     Args:
       root_dir: The codebase root directory.
     """
+    root_dir = root_dir.absolute()
+    gitignore_parser = igittigitt.IgnoreParser()
+    gitignore_parser.add_rule(".git", base_path=root_dir)
+    gitignore_parser.parse_rule_files(base_dir=root_dir)
+
     # The root node for the whole graph
     root_dir_node = FileNode(basename=root_dir.name, relative_path=".")
     kg_root_dir_node = KnowledgeGraphNode(self._next_node_id, root_dir_node)
@@ -88,10 +95,14 @@ class KnowledgeGraph:
     while file_stack:
       file, kg_file_path_node = file_stack.pop()
 
-      self._logger.info(f"Processing {file.name}...")
       # The file is a directory, we create FileNode for all children files.
       if file.is_dir():
+        self._logger.info(f"Processing directory {file.name}")
         for child_file in sorted(file.iterdir()):
+          if gitignore_parser.match(child_file):
+            self._logger.info(f"Skipping {file.name} because it is ignored")
+            continue
+
           child_file_node = FileNode(
             basename=child_file.name,
             relative_path=str(child_file.relative_to(root_dir).as_posix()),
@@ -113,6 +124,7 @@ class KnowledgeGraph:
       # The file is a file that file_graph_builder supports, it means that we can
       # build a knowledge graph over it.
       if self._file_graph_builder.supports_file(file):
+        self._logger.info(f"Processing file {file.name}")
         next_node_id, kg_nodes, kg_edges = self._file_graph_builder.build_file_graph(
           kg_file_path_node, file, self._next_node_id
         )
@@ -122,7 +134,7 @@ class KnowledgeGraph:
         continue
 
       # This can only happend for files that are not supported by file_graph_builder.
-      self._logger.info(f"Skip parsing {file} because it is not supported.")
+      self._logger.info(f"Skip parsing {file} because it is not supported")
 
   @classmethod
   def from_neo4j(

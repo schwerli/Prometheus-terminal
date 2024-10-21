@@ -62,7 +62,14 @@ class MessageHistoryHandler:
                       m.text = $text, 
                       m.created_at = $created_at
         """
-        tx.run(query, **neo4j_message_node)
+        tx.run(
+          query,
+          message_id=neo4j_message_node["message_id"],
+          index=neo4j_message_node["index"],
+          role=neo4j_message_node["role"],
+          text=neo4j_message_node["text"],
+          created_at=neo4j_message_node["created_at"],
+        )
 
         query = """
         MATCH (c:ConversationNode {conversation_id: $conversation_id}), 
