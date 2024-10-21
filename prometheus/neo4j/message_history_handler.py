@@ -6,14 +6,12 @@ from prometheus.message import message_types
 
 
 class MessageHistoryHandler:
-  def __init__(self, uri: str, user: str, password: str):
+  def __init__(self, driver: GraphDatabase.driver):
     """
     Args:
-      uri: The neo4j uri.
-      user: The neo4j username.
-      password: The neo4j password.
+      driver: The neo4j driver.
     """
-    self.driver = GraphDatabase.driver(uri, auth=(user, password))
+    self.driver = driver
     self._init_database()
 
   def _init_database(self):
@@ -99,6 +97,3 @@ class MessageHistoryHandler:
       for record in result:
         conversation_ids.append(record["conversation_id"])
     return conversation_ids
-
-  def close(self):
-    self.driver.close()

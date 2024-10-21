@@ -1,12 +1,7 @@
-from testcontainers.neo4j import Neo4jContainer
-
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
-
-NEO4J_IMAGE = "neo4j:5.20.0"
-NEO4J_USERNAME = "neo4j"
-NEO4J_PASSWORD = "password"
+from tests.test_utils.fixtures import neo4j_container_with_kg_fixture  # noqa: F401
 
 
 def test_build_graph():
@@ -46,17 +41,10 @@ test_project
   assert file_tree == expected_file_tree
 
 
-def test_from_neo4j():
-  kg = KnowledgeGraph(1000)
-  kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
-  container = Neo4jContainer(
-    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]')
-  with container as neo4j_container:
-    uri = neo4j_container.get_connection_url()
-    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, 100)
-    handler.write_knowledge_graph(kg)
+def test_from_neo4j(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, kg = neo4j_container_with_kg_fixture
+  driver = neo4j_container.get_driver()
+  handler = KnowledgeGraphHandler(driver, 100)
+  read_kg = handler.read_knowledge_graph()
 
-    read_kg = handler.read_knowledge_graph()
-
-    assert read_kg == kg
+  assert read_kg == kg

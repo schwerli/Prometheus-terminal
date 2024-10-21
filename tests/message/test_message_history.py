@@ -1,29 +1,13 @@
-import pytest
 from langchain_core.messages import AIMessage, HumanMessage
-from testcontainers.neo4j import Neo4jContainer
 
 from prometheus.message import message_types
 from prometheus.message.message_history import MessageHistory
 from prometheus.neo4j.message_history_handler import MessageHistoryHandler
-
-NEO4J_IMAGE = "neo4j:5.20.0"
-NEO4J_USERNAME = "neo4j"
-NEO4J_PASSWORD = "password"
+from tests.test_utils.fixtures import empty_neo4j_container_fixture  # noqa: F401
 
 
-@pytest.fixture(scope="function")
-def setup_handler():
-  container = Neo4jContainer(
-    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]')
-  with container as neo4j_container:
-    uri = neo4j_container.get_connection_url()
-    handler = MessageHistoryHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD)
-    yield handler
-
-
-def test_add_message(setup_handler):
-  handler = setup_handler
+def test_add_message(empty_neo4j_container_fixture):  # noqa: F811
+  handler = MessageHistoryHandler(empty_neo4j_container_fixture.get_driver())
   message_history = MessageHistory(handler)
 
   assert not handler.get_all_conversation_id()
@@ -37,8 +21,8 @@ def test_add_message(setup_handler):
   assert len(handler.get_all_conversation_id()) == 1
 
 
-def test_load_conversation(setup_handler):
-  handler = setup_handler
+def test_load_conversation(empty_neo4j_container_fixture):  # noqa: F811
+  handler = MessageHistoryHandler(empty_neo4j_container_fixture.get_driver())
   message_history_old = MessageHistory(handler)
 
   text1 = "random text 1"
@@ -58,8 +42,8 @@ def test_load_conversation(setup_handler):
   assert message_history_new.in_memory_message_history[2].text == text3
 
 
-def test_to_langchain_chat_history(setup_handler):
-  handler = setup_handler
+def test_to_langchain_chat_history(empty_neo4j_container_fixture):  # noqa: F811
+  handler = MessageHistoryHandler(empty_neo4j_container_fixture.get_driver())
   message_history = MessageHistory(handler)
 
   text1 = "random text 1"

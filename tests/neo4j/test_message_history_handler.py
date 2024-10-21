@@ -1,38 +1,21 @@
 from datetime import datetime
 
-import pytest
-from neo4j import GraphDatabase
-from testcontainers.neo4j import Neo4jContainer
-
 from prometheus.message import message_types
 from prometheus.neo4j.message_history_handler import MessageHistoryHandler
-
-NEO4J_IMAGE = "neo4j:5.20.0"
-NEO4J_USERNAME = "neo4j"
-NEO4J_PASSWORD = "password"
+from tests.test_utils.fixtures import empty_neo4j_container_fixture  # noqa: F401
+from tests.test_utils.util import clean_neo4j_container
 
 
-@pytest.fixture(scope="function")
-def setup_container_and_handler():
-  container = Neo4jContainer(
-    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]')
-  with container as neo4j_container:
-    uri = neo4j_container.get_connection_url()
-    handler = MessageHistoryHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD)
-    yield neo4j_container, handler
-
-
-def test_add_conversation(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_add_conversation(empty_neo4j_container_fixture):  # noqa: F811
+  neo4j_container = empty_neo4j_container_fixture
+  handler = MessageHistoryHandler(neo4j_container.get_driver())
 
   conversation_id = "foo"
   title = "bar"
   conversation = message_types.Conversation(conversation_id, title)
   handler.add_conversation(conversation)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_conversation_node = session.run(
         "MATCH (n:ConversationNode) RETURN n.conversation_id AS conversation_id, n.title AS title"
@@ -41,10 +24,12 @@ def test_add_conversation(setup_container_and_handler):
       assert read_conversation_node[0]["conversation_id"] == conversation_id
       assert read_conversation_node[0]["title"] == title
 
+  clean_neo4j_container(neo4j_container)
 
-def test_delete_conversation(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+
+def test_delete_conversation(empty_neo4j_container_fixture):  # noqa: F811
+  neo4j_container = empty_neo4j_container_fixture
+  handler = MessageHistoryHandler(neo4j_container.get_driver())
 
   conversation_id = "1"
   title = "Hello world"
@@ -59,7 +44,7 @@ def test_delete_conversation(setup_container_and_handler):
   message = message_types.Message(message_id, index, role, text, created_at)
   handler.add_message(conversation_id, message)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_conversation_node = session.run(
         "MATCH (n:ConversationNode) RETURN n.conversation_id AS conversation_id, n.title AS title"
@@ -80,11 +65,12 @@ def test_delete_conversation(setup_container_and_handler):
         "MATCH (n:MessageNode) RETURN n.message_id AS message_id, n.index AS index, n.role AS role, n.text AS text, n.created_at AS created_at"
       ).data()
       assert len(read_message_node) == 0
+  clean_neo4j_container(neo4j_container)
 
 
-def test_delete_all_conversations(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_delete_all_conversations(empty_neo4j_container_fixture):  # noqa: F811
+  neo4j_container = empty_neo4j_container_fixture
+  handler = MessageHistoryHandler(neo4j_container.get_driver())
 
   conversation_id_10 = "10"
   title_10 = "Hello world"
@@ -112,7 +98,7 @@ def test_delete_all_conversations(setup_container_and_handler):
   message_2 = message_types.Message(message_id_2, index_2, role_2, text_2, created_at_2)
   handler.add_message(conversation_id_20, message_2)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_conversation_node = session.run(
         "MATCH (n:ConversationNode) RETURN n.conversation_id AS conversation_id, n.title AS title"
@@ -133,11 +119,12 @@ def test_delete_all_conversations(setup_container_and_handler):
         "MATCH (n:MessageNode) RETURN n.message_id AS message_id, n.index AS index, n.role AS role, n.text AS text, n.created_at AS created_at"
       ).data()
       assert len(read_message_node) == 0
+  clean_neo4j_container(neo4j_container)
 
 
-def test_add_message(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_add_message(empty_neo4j_container_fixture):  # noqa: F811
+  neo4j_container = empty_neo4j_container_fixture
+  handler = MessageHistoryHandler(neo4j_container.get_driver())
 
   conversation_id = "1"
   title = "Hello world"
@@ -152,7 +139,7 @@ def test_add_message(setup_container_and_handler):
   message = message_types.Message(message_id, index, role, text, created_at)
   handler.add_message(conversation_id, message)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_message_node = session.run(
         "MATCH (n:MessageNode) RETURN n.message_id AS message_id, n.index AS index, n.role AS role, n.text AS text, n.created_at AS created_at"
@@ -170,10 +157,12 @@ def test_add_message(setup_container_and_handler):
       assert len(read_has_message_edge) == 1
       assert read_has_message_edge[0]["conversation_id"] == conversation_id
       assert read_has_message_edge[0]["message_id"] == message_id
+  clean_neo4j_container(neo4j_container)
 
 
-def test_load_conversation(setup_container_and_handler):
-  _, handler = setup_container_and_handler
+def test_load_conversation(empty_neo4j_container_fixture):  # noqa: F811
+  neo4j_container = empty_neo4j_container_fixture
+  handler = MessageHistoryHandler(neo4j_container.get_driver())
 
   conversation_id = "1"
   title = "Hello world"
@@ -191,10 +180,12 @@ def test_load_conversation(setup_container_and_handler):
   messages = handler.load_conversation(conversation_id)
   assert len(messages) == 1
   assert messages[0] == message
+  clean_neo4j_container(neo4j_container)
 
 
-def test_get_all_conversation_id(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
+def test_get_all_conversation_id(empty_neo4j_container_fixture):  # noqa: F811
+  neo4j_container = empty_neo4j_container_fixture
+  handler = MessageHistoryHandler(neo4j_container.get_driver())
 
   conversation_id_10 = "10"
   title_10 = "Hello world"
@@ -211,3 +202,4 @@ def test_get_all_conversation_id(setup_container_and_handler):
   assert len(read_conversation_ids) == 2
   assert conversation_id_10 in read_conversation_ids
   assert conversation_id_20 in read_conversation_ids
+  clean_neo4j_container(neo4j_container)

@@ -21,15 +21,13 @@ from prometheus.graph.knowledge_graph import KnowledgeGraph
 class KnowledgeGraphHandler:
   """The handler to writing the Knowledge graph to neo4j."""
 
-  def __init__(self, uri: str, user: str, password: str, batch_size: int):
+  def __init__(self, driver: GraphDatabase.driver, batch_size: int):
     """
     Args:
-      uri: The neo4j uri.
-      user: The neo4j username.
-      password: The neo4j password.
+      driver: The neo4j driver.
       batch_size: The maximum number of nodes/edges written to neo4j each time.
     """
-    self.driver = GraphDatabase.driver(uri, auth=(user, password))
+    self.driver = driver
     self.batch_size = batch_size
 
   def _init_database(self, tx: ManagedTransaction):
@@ -267,7 +265,3 @@ class KnowledgeGraphHandler:
     """
     with self.driver.session() as session:
       session.run(query)
-
-  def close(self):
-    """Close the driver."""
-    self.driver.close()
