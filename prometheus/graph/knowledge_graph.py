@@ -22,6 +22,7 @@ import logging
 from collections import defaultdict, deque
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
+
 import igittigitt
 
 from prometheus.graph.file_graph_builder import FileGraphBuilder
