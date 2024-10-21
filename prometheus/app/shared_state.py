@@ -15,15 +15,13 @@ from prometheus.neo4j import knowledge_graph_handler, message_history_handler
 class SharedState:
   def __init__(self):
     self.kg = None
-    self.kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
-      config.config["neo4j"]["uri"],
-      config.config["neo4j"]["username"],
-      config.config["neo4j"]["password"],
-      config.config["neo4j"]["batch_size"],
-    )
     self.neo4j_driver = GraphDatabase.driver(
       config.config["neo4j"]["uri"],
       auth=(config.config["neo4j"]["username"], config.config["neo4j"]["password"]),
+    )
+    self.kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
+      self.neo4j_driver,
+      config.config["neo4j"]["batch_size"],
     )
     self.llm = ChatAnthropic(
       model=config.config["anthropic"]["model"],
@@ -32,11 +30,7 @@ class SharedState:
       api_key=config.config["anthropic"]["api_key"],
     )
     self.cp_agent = None
-    mh_handler = message_history_handler.MessageHistoryHandler(
-      config.config["neo4j"]["uri"],
-      config.config["neo4j"]["username"],
-      config.config["neo4j"]["password"],
-    )
+    mh_handler = message_history_handler.MessageHistoryHandler(self.neo4j_driver)
     self.message_history = MessageHistory(mh_handler)
 
     self._load_existing_knowledge_graph()

@@ -1,129 +1,109 @@
-import pytest
-from neo4j import GraphDatabase
-from testcontainers.neo4j import Neo4jContainer
-
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
-
-NEO4J_IMAGE = "neo4j:5.20.0"
-NEO4J_USERNAME = "neo4j"
-NEO4J_PASSWORD = "password"
-
-
-@pytest.fixture(scope="module")
-def setup_container_and_handler():
-  kg = KnowledgeGraph(1000)
-  kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
-  container = Neo4jContainer(
-    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]')
-  with container as neo4j_container:
-    uri = neo4j_container.get_connection_url()
-    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, 100)
-    handler.write_knowledge_graph(kg)
-    yield neo4j_container, handler
+from tests.test_utils.fixtures import (  # noqa: F401
+  empty_neo4j_container_fixture,
+  neo4j_container_with_kg_fixture,
+)
 
 
-def test_num_ast_nodes(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_ast_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_ast_nodes = session.execute_read(handler._read_ast_nodes)
       assert len(read_ast_nodes) == 84
 
 
-def test_num_file_nodes(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_file_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_file_nodes = session.execute_read(handler._read_file_nodes)
       assert len(read_file_nodes) == 8
 
 
-def test_num_text_nodes(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_text_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_text_nodes = session.execute_read(handler._read_text_nodes)
       assert len(read_text_nodes) == 4
 
 
-def test_num_parent_of_edges(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_parent_of_edges(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_parent_of_edges = session.execute_read(handler._read_parent_of_edges)
       assert len(read_parent_of_edges) == 81
 
 
-def test_num_has_file_edges(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_has_file_edges(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_has_file_edges = session.execute_read(handler._read_has_file_edges)
       assert len(read_has_file_edges) == 7
 
 
-def test_num_has_ast_edges(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_has_ast_edges(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_has_ast_edges = session.execute_read(handler._read_has_ast_edges)
       assert len(read_has_ast_edges) == 3
 
 
-def test_num_has_text_edges(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_has_text_edges(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_has_text_edges = session.execute_read(handler._read_has_text_edges)
       assert len(read_has_text_edges) == 4
 
 
-def test_num_next_chunk_edges(setup_container_and_handler):
-  neo4j_container, handler = setup_container_and_handler
-  uri = neo4j_container.get_connection_url()
+def test_num_next_chunk_edges(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-  with GraphDatabase.driver(uri, auth=(NEO4J_USERNAME, NEO4J_PASSWORD)) as driver:
+  with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_next_chunk_edges = session.execute_read(handler._read_next_chunk_edges)
       assert len(read_next_chunk_edges) == 3
 
 
-def test_knowledge_graph_exists(setup_container_and_handler):
-  _, handler = setup_container_and_handler
+def test_knowledge_graph_exists(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
   assert handler.knowledge_graph_exists()
 
 
-def test_clear_knowledge_graph():
+def test_clear_knowledge_graph(empty_neo4j_container_fixture):  # noqa: F811
   kg = KnowledgeGraph(1000)
   kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
-  container = Neo4jContainer(
-    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]')
-  with container as neo4j_container:
-    uri = neo4j_container.get_connection_url()
-    handler = KnowledgeGraphHandler(uri, NEO4J_USERNAME, NEO4J_PASSWORD, 100)
-    handler.write_knowledge_graph(kg)
 
-    assert handler.knowledge_graph_exists()
+  driver = empty_neo4j_container_fixture.get_driver()
+  handler = KnowledgeGraphHandler(driver, 100)
+  handler.write_knowledge_graph(kg)
 
-    handler.clear_knowledge_graph()
+  assert handler.knowledge_graph_exists()
 
-    assert not handler.knowledge_graph_exists()
+  handler.clear_knowledge_graph()
+
+  assert not handler.knowledge_graph_exists()
