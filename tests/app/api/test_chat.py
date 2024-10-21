@@ -20,17 +20,20 @@ def mock_shared_state():
 
 def test_send_without_kg(mock_shared_state):
   mock_shared_state.has_knowledge_graph.return_value = False
-  response = client.post("/chat/send", json={"query": "hello"})
+  response = client.post("/chat/send", json={"text": "hello"})
   assert response.status_code == 404
 
 
 def test_send(mock_shared_state):
+  mock_conversation_id = "id"
+  mock_response = "mock response"
+
   mock_shared_state.has_knowledge_graph.return_value = True
-  mock_cp_agent = MagicMock()
-  mock_response = "Mocked response"
-  mock_cp_agent.get_response.return_value = mock_response
-  mock_shared_state.cp_agent = mock_cp_agent
-  response = client.post("/chat/send", json={"query": "hello"})
+  mock_shared_state.chat_with_context_provider_agent.return_value = (
+    mock_conversation_id,
+    mock_response,
+  )
+  response = client.post("/chat/send", json={"text": "hello"})
 
   assert response.status_code == 200
-  assert response.json() == mock_response
+  assert response.json() == {"conversation_id": mock_conversation_id, "response": mock_response}

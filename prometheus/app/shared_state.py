@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from langchain_anthropic import ChatAnthropic
 from neo4j import GraphDatabase
@@ -6,7 +7,9 @@ from neo4j import GraphDatabase
 from prometheus.agents import context_provider_agent
 from prometheus.configuration import config
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.neo4j import knowledge_graph_handler
+from prometheus.message import message_types
+from prometheus.message.message_history import MessageHistory
+from prometheus.neo4j import knowledge_graph_handler, message_history_handler
 
 
 class SharedState:
@@ -29,6 +32,12 @@ class SharedState:
       api_key=config.config["anthropic"]["api_key"],
     )
     self.cp_agent = None
+    mh_handler = message_history_handler.MessageHistoryHandler(
+      config.config["neo4j"]["uri"],
+      config.config["neo4j"]["username"],
+      config.config["neo4j"]["password"],
+    )
+    self.message_history = MessageHistory(mh_handler)
 
     self._load_existing_knowledge_graph()
 
@@ -38,6 +47,15 @@ class SharedState:
       self.cp_agent = context_provider_agent.ContextProviderAgent(
         self.llm, self.kg, self.neo4j_driver
       )
+
+  def chat_with_context_provider_agent(self, query: str, conversation_id: Optional[str] = None):
+    if conversation_id:
+      self.message_history.load_conversation(conversation_id)
+
+    conversation_id = self.message_history.add_message(message_types.Role.user, query)
+    response = self.cp_agent.get_response(query, self.message_history)
+    self.message_history.add_message(message_types.Role.assistant, response)
+    return conversation_id, response
 
   def upload_repository(self, path: Path):
     kg = KnowledgeGraph(config.config["knowledge_graph"]["max_ast_depth"])
@@ -51,6 +69,7 @@ class SharedState:
   def clear_knowledge_graph(self):
     self.kg_handler.clear_knowledge_graph()
     self.kg = None
+    self.cp_agent = None
 
   def has_knowledge_graph(self):
     return self.kg is not None
