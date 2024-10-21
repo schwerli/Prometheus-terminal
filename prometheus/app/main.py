@@ -1,5 +1,5 @@
 import logging
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
@@ -12,15 +12,17 @@ logging.basicConfig(
   handlers=[logging.StreamHandler()],
 )
 
-app = FastAPI()
 
-
-@contextmanager
-def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+  # Startup event: Initialize shared_state
   app.state.shared_state = shared_state.SharedState()
   yield
+  # Shutdown event: Close shared_state
   app.state.shared_state.close()
 
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(repository.router, prefix="/repository", tags=["repository"])

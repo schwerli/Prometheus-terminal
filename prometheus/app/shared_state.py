@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -33,11 +34,13 @@ class SharedState:
     mh_handler = message_history_handler.MessageHistoryHandler(self.neo4j_driver)
     self.message_history = MessageHistory(mh_handler)
 
+    self._logger = logging.getLogger("prometheus.app.shared_state")
+
     self._load_existing_knowledge_graph()
 
   def _load_existing_knowledge_graph(self):
     if self.kg_handler.knowledge_graph_exists():
-      self.kg = self.kg_handler.load_knowledge_graph()
+      self.kg = self.kg_handler.read_knowledge_graph()
       self.cp_agent = context_provider_agent.ContextProviderAgent(
         self.llm, self.kg, self.neo4j_driver
       )
@@ -69,5 +72,4 @@ class SharedState:
     return self.kg is not None
 
   def close(self):
-    self.kg_handler.close()
     self.neo4j_driver.close()
