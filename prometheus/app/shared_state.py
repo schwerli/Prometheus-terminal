@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 from langchain_community.chat_models import ChatLiteLLM
 from neo4j import GraphDatabase
@@ -48,6 +48,15 @@ class SharedState:
     response = self.cp_agent.get_response(query, self.message_history)
     self.message_history.add_message(message_types.Role.assistant, response)
     return conversation_id, response
+
+  def get_all_conversations(self) -> Sequence[message_types.Conversation]:
+    return self.message_history.get_all_conversations()
+
+  def get_all_conversation_messages(self, conversation_id: str) -> Sequence[message_types.Message]:
+    return [
+      message.to_primitive_dict()
+      for message in self.message_history.get_all_conversation_messages(conversation_id)
+    ]
 
   def upload_repository(self, path: Path):
     kg = KnowledgeGraph(config.config["knowledge_graph"]["max_ast_depth"])

@@ -1,7 +1,7 @@
 import dataclasses
 import enum
 from datetime import datetime
-from typing import TypedDict
+from typing import Mapping, TypedDict, Union
 
 
 class Role(enum.StrEnum):
@@ -23,10 +23,19 @@ class Message:
     return Neo4jMessageNode(
       message_id=self.message_id,
       index=self.index,
-      role=self.role.value,
+      role=self.role,
       text=self.text,
       created_at=self.created_at,
     )
+
+  def to_primitive_dict(self) -> Mapping[str, Union[str, int]]:
+    return {
+      "message_id": self.message_id,
+      "index": self.index,
+      "role": self.role,
+      "text": self.text,
+      "created_at": self.created_at.isoformat(),
+    }
 
 
 @dataclasses.dataclass(frozen=True)

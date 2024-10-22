@@ -10,7 +10,7 @@ def test_add_message(empty_neo4j_container_fixture):  # noqa: F811
   handler = MessageHistoryHandler(empty_neo4j_container_fixture.get_driver())
   message_history = MessageHistory(handler)
 
-  assert not handler.get_all_conversation_id()
+  assert not handler.get_all_conversations()
 
   text = "Hello"
   message_history.add_message(message_types.Role.user, text)
@@ -18,7 +18,7 @@ def test_add_message(empty_neo4j_container_fixture):  # noqa: F811
   assert len(message_history.in_memory_message_history) == 1
   assert message_history.in_memory_message_history[0].text == text
   assert message_history.in_memory_message_history[0].role == message_types.Role.user
-  assert len(handler.get_all_conversation_id()) == 1
+  assert len(handler.get_all_conversations()) == 1
 
 
 def test_load_conversation(empty_neo4j_container_fixture):  # noqa: F811
