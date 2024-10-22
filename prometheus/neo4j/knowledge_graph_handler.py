@@ -1,5 +1,6 @@
 """The neo4j handler for writing the knowledge graph to neo4j."""
 
+import logging
 from typing import Mapping, Sequence
 
 from neo4j import GraphDatabase, ManagedTransaction

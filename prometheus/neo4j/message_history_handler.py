@@ -1,3 +1,4 @@
+import logging
 from typing import Sequence
 
 from neo4j import GraphDatabase
@@ -58,7 +59,9 @@ class MessageHistoryHandler:
       session.run(query)
 
   def add_message(self, conversation_id: str, message: message_types.Message):
-    self._logger.info(f"Adding a new MessageNode under ConversationNode {conversation_id} to neo4j: {message}")
+    self._logger.info(
+      f"Adding a new MessageNode under ConversationNode {conversation_id} to neo4j: {message}"
+    )
     neo4j_message_node = message.to_neo4j_message_node()
     with self.driver.session() as session:
       with session.begin_transaction() as tx:
@@ -88,7 +91,9 @@ class MessageHistoryHandler:
         tx.commit()
 
   def get_conversation_messages(self, conversation_id: str) -> Sequence[message_types.Message]:
-    self._logger.info(f"Getting all MessageNodes under ConversationNode {conversation_id} from neo4j")
+    self._logger.info(
+      f"Getting all MessageNodes under ConversationNode {conversation_id} from neo4j"
+    )
     messages = []
     with self.driver.session() as session:
       query = """
