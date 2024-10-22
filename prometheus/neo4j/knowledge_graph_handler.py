@@ -30,6 +30,8 @@ class KnowledgeGraphHandler:
     self.driver = driver
     self.batch_size = batch_size
 
+    self._logger = logging.getLogger("prometheus.neo4j.knowledge_graph_handler")
+
   def _init_database(self, tx: ManagedTransaction):
     """Initialization of the neo4j database."""
 
@@ -150,6 +152,7 @@ class KnowledgeGraphHandler:
     Args:
       kg: The knowledge graph to write to neo4j.
     """
+    self._logger.info("Writing knowledge graph to neo4j")
     with self.driver.session() as session:
       session.execute_write(self._init_database)
 
@@ -228,6 +231,7 @@ class KnowledgeGraphHandler:
 
   def read_knowledge_graph(self) -> KnowledgeGraph:
     """Read KnowledgeGraph from neo4j."""
+    self._logger.info("Reading knowledge graph from neo4j")
     with self.driver.session() as session:
       return KnowledgeGraph.from_neo4j(
         session.execute_read(self._read_file_nodes),
@@ -263,5 +267,6 @@ class KnowledgeGraphHandler:
       WHERE n:ASTNode OR n:TextNode OR n:FileNode
       DETACH DELETE n
     """
+    self._logger.info("Deleting knowledge graph from neo4j")
     with self.driver.session() as session:
       session.run(query)

@@ -14,6 +14,8 @@ class MessageHistoryHandler:
     self.driver = driver
     self._init_database()
 
+    self._logger = logging.getLogger("prometheus.neo4j.message_history_handler")
+
   def _init_database(self):
     """Initialization of the neo4j database."""
 
@@ -28,12 +30,15 @@ class MessageHistoryHandler:
         session.run(query)
 
   def add_conversation(self, conversation: message_types.Conversation):
+    self._logger.info(f"Adding a new ConversationNode to neo4j: {conversation}")
+
     neo4j_conversation_node = conversation.to_neo4j_conversation_node()
     with self.driver.session() as session:
       query = "CREATE (c:ConversationNode {conversation_id: $conversation_id, title: $title})"
       session.run(query, **neo4j_conversation_node)
 
   def delete_conversation(self, conversation_id: str):
+    self._logger.info(f"Deleting a ConversationNode from neo4j: {conversation_id}")
     with self.driver.session() as session:
       query = """
         MATCH (c:ConversationNode {conversation_id: $conversation_id})
@@ -43,6 +48,7 @@ class MessageHistoryHandler:
       session.run(query, conversation_id=conversation_id)
 
   def delete_all_conversations(self):
+    self._logger.info("Deleting all ConversationNodes and MessageNodes from neo4j")
     with self.driver.session() as session:
       query = """
         MATCH (n)
@@ -52,6 +58,7 @@ class MessageHistoryHandler:
       session.run(query)
 
   def add_message(self, conversation_id: str, message: message_types.Message):
+    self._logger.info(f"Adding a new MessageNode under ConversationNode {conversation_id} to neo4j: {message}")
     neo4j_message_node = message.to_neo4j_message_node()
     with self.driver.session() as session:
       with session.begin_transaction() as tx:
@@ -81,6 +88,7 @@ class MessageHistoryHandler:
         tx.commit()
 
   def get_conversation_messages(self, conversation_id: str) -> Sequence[message_types.Message]:
+    self._logger.info(f"Getting all MessageNodes under ConversationNode {conversation_id} from neo4j")
     messages = []
     with self.driver.session() as session:
       query = """
@@ -94,6 +102,7 @@ class MessageHistoryHandler:
     return messages
 
   def get_all_conversations(self) -> Sequence[message_types.Conversation]:
+    self._logger.info("Getting all ConversationNodes from neo4j")
     conversations = []
     with self.driver.session() as session:
       query = """

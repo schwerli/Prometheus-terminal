@@ -217,4 +217,5 @@ class ContextProviderAgent:
       langchain_chat_history = message_history.to_langchain_chat_history()
     response = self.agent_executor.invoke({"input": query, "chat_history": langchain_chat_history})
 
+    self._logger.info(f"Context provider agent reponse: {response}")
     return response["output"]
