@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from langchain_anthropic import ChatAnthropic
+from langchain_community.chat_models import ChatLiteLLM
 from neo4j import GraphDatabase
 
 from prometheus.agents import context_provider_agent
@@ -24,12 +24,7 @@ class SharedState:
       self.neo4j_driver,
       config.config["neo4j"]["batch_size"],
     )
-    self.llm = ChatAnthropic(
-      model=config.config["anthropic"]["model"],
-      temperature=config.config["anthropic"]["temperature"],
-      max_tokens=config.config["anthropic"]["max_tokens"],
-      api_key=config.config["anthropic"]["api_key"],
-    )
+    self.llm = ChatLiteLLM(**config.config["litellm"])
     self.cp_agent = None
     mh_handler = message_history_handler.MessageHistoryHandler(self.neo4j_driver)
     self.message_history = MessageHistory(mh_handler)
