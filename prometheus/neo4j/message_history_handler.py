@@ -80,7 +80,7 @@ class MessageHistoryHandler:
 
         tx.commit()
 
-  def load_conversation(self, conversation_id: str) -> Sequence[message_types.Message]:
+  def get_conversation_messages(self, conversation_id: str) -> Sequence[message_types.Message]:
     messages = []
     with self.driver.session() as session:
       query = """
@@ -93,14 +93,14 @@ class MessageHistoryHandler:
         messages.append(message_types.Message(**record))
     return messages
 
-  def get_all_conversation_id(self) -> Sequence[str]:
-    conversation_ids = []
+  def get_all_conversations(self) -> Sequence[message_types.Conversation]:
+    conversations = []
     with self.driver.session() as session:
       query = """
       MATCH (c:ConversationNode)
-      RETURN c.conversation_id AS conversation_id
+      RETURN c.conversation_id AS conversation_id, c.title AS title
       """
       result = session.run(query)
       for record in result:
-        conversation_ids.append(record["conversation_id"])
-    return conversation_ids
+        conversations.append(message_types.Conversation(**record))
+    return conversations

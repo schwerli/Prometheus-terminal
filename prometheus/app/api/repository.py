@@ -38,3 +38,8 @@ def delete(request: Request):
 
   request.app.state.shared_state.clear_knowledge_graph()
   return {"message": "Successfully deleted knowledge graph"}
+
+
+@router.get("/exists/", response_model=bool)
+def knowledge_graph_exists(request: Request) -> bool:
+  return request.app.state.shared_state.kg_handler.knowledge_graph_exists()

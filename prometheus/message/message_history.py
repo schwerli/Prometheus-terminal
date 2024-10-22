@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Sequence
 
 from langchain_core.messages import AIMessage, HumanMessage
 
@@ -40,13 +41,19 @@ class MessageHistory:
     if self.conversation_id == conversation_id:
       return
 
-    messages = self.message_history_handler.load_conversation(conversation_id)
+    messages = self.message_history_handler.get_conversation_messages(conversation_id)
     if not messages:
       raise ValueError(f"Conversation with id {conversation_id} does not exists.")
     messages.sort(key=lambda x: x.index)
     self.message_index = messages[-1].index + 1
     self.in_memory_message_history = messages[-self.max_size :]
     self.conversation_id = conversation_id
+
+  def get_all_conversation_messages(self, conversation_id: str) -> Sequence[message_types.Message]:
+    return self.message_history_handler.get_conversation_messages(conversation_id)
+
+  def get_all_conversations(self) -> Sequence[message_types.Conversation]:
+    return self.message_history_handler.get_all_conversations()
 
   def to_langchain_chat_history(self):
     langchain_chat_history = []

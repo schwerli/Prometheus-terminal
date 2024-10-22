@@ -160,7 +160,7 @@ def test_add_message(empty_neo4j_container_fixture):  # noqa: F811
   clean_neo4j_container(neo4j_container)
 
 
-def test_load_conversation(empty_neo4j_container_fixture):  # noqa: F811
+def test_get_conversation_messages(empty_neo4j_container_fixture):  # noqa: F811
   neo4j_container = empty_neo4j_container_fixture
   handler = MessageHistoryHandler(neo4j_container.get_driver())
 
@@ -177,13 +177,13 @@ def test_load_conversation(empty_neo4j_container_fixture):  # noqa: F811
   message = message_types.Message(message_id, index, role, text, created_at)
   handler.add_message(conversation_id, message)
 
-  messages = handler.load_conversation(conversation_id)
+  messages = handler.get_conversation_messages(conversation_id)
   assert len(messages) == 1
   assert messages[0] == message
   clean_neo4j_container(neo4j_container)
 
 
-def test_get_all_conversation_id(empty_neo4j_container_fixture):  # noqa: F811
+def test_get_all_conversations(empty_neo4j_container_fixture):  # noqa: F811
   neo4j_container = empty_neo4j_container_fixture
   handler = MessageHistoryHandler(neo4j_container.get_driver())
 
@@ -197,9 +197,9 @@ def test_get_all_conversation_id(empty_neo4j_container_fixture):  # noqa: F811
   conversation_20 = message_types.Conversation(conversation_id_20, title_20)
   handler.add_conversation(conversation_20)
 
-  read_conversation_ids = handler.get_all_conversation_id()
+  read_conversations = handler.get_all_conversations()
 
-  assert len(read_conversation_ids) == 2
-  assert conversation_id_10 in read_conversation_ids
-  assert conversation_id_20 in read_conversation_ids
+  assert len(read_conversations) == 2
+  assert conversation_10 in read_conversations
+  assert conversation_20 in read_conversations
   clean_neo4j_container(neo4j_container)

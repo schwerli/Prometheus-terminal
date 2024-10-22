@@ -3,6 +3,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from prometheus.message import message_types
+
 router = APIRouter()
 
 
@@ -23,3 +25,13 @@ def answer_query(send_message: SendMessage, request: Request):
     send_message.text, send_message.conversation_id
   )
   return {"conversation_id": conversation_id, "response": response}
+
+
+@router.get("/all_conversations/", response_model=list[message_types.Conversation])
+def get_all_conversations(request: Request):
+  return request.app.state.shared_state.get_all_conversations()
+
+
+@router.get("/conversation_messages/{conversation_id}", response_model=list[message_types.Message])
+def get_conversation_messages(conversation_id: str, request: Request):
+  return request.app.state.shared_state.get_all_conversation_messages(conversation_id)
