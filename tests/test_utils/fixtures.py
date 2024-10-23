@@ -1,3 +1,4 @@
+from git import Repo
 import pytest
 from testcontainers.neo4j import Neo4jContainer
 
@@ -31,3 +32,12 @@ def empty_neo4j_container_fixture():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     yield neo4j_container
+
+@pytest.fixture(scope="session")
+def git_repo_fixture():
+  test_project_paths.GIT_DIR.rename(test_project_paths.TEST_PROJECT_PATH / ".git")
+  repo = Repo(test_project_paths.TEST_PROJECT_PATH)
+  yield repo
+
+  repo.git.checkout("master")
+  (test_project_paths.TEST_PROJECT_PATH / ".git").rename(test_project_paths.GIT_DIR)
