@@ -4,9 +4,10 @@ import git
 
 from prometheus.git.git_repository import GitRepository
 from tests.test_utils import test_project_paths
+from tests.test_utils.fixtures import git_repo_fixture  # noqa: F401
 
 
-def test_clone_repository(git_repo_fixture):
+def test_clone_repository(git_repo_fixture):  # noqa: F811
   with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
     repo = git_repo_fixture
     mock_clone_from.return_value = repo
@@ -22,7 +23,7 @@ def test_clone_repository(git_repo_fixture):
     )
 
 
-def test_checkout_commit(git_repo_fixture):
+def test_checkout_commit(git_repo_fixture):  # noqa: F811
   with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
     repo = git_repo_fixture
     mock_clone_from.return_value = repo
@@ -39,7 +40,7 @@ def test_checkout_commit(git_repo_fixture):
     assert repo.head.commit.hexsha == commit_sha
 
 
-def test_switch_branch(git_repo_fixture):
+def test_switch_branch(git_repo_fixture):  # noqa: F811
   original_execute = git.Git.execute
   with (
     mock.patch("git.Repo.clone_from") as mock_clone_from,
