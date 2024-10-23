@@ -185,8 +185,8 @@ def test_get_next_text_node_with_node_id(neo4j_container_with_kg_fixture):  # no
   with neo4j_container.get_driver() as driver:
     result = graph_traversal.get_next_text_node_with_node_id(node_id, driver)
 
-  assert "'text': 'Text under header C.'" in result
-  assert "'metadata': \"{'Header 1': 'A', 'Header 2': 'C'}\"" in result
+  assert "'text': 'Text under header B.'" in result
+  assert "'metadata': \"{'Header 1': 'A', 'Header 2': 'B'}\"" in result
 
 
 def test_preview_source_code_file_content_with_basename(neo4j_container_with_kg_fixture):  # noqa: F811
@@ -247,16 +247,14 @@ def test_get_parent_node(neo4j_container_with_kg_fixture):  # noqa: F811
 def test_get_children_node(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
-  node_id = 20
+  node_id = 0
   with neo4j_container.get_driver() as driver:
     result = graph_traversal.get_children_node(node_id, driver)
 
   assert "ChildNode" in result
-  assert "ASTNode" in result
+  assert "FileNode" in result
 
-  assert result.count("Result") == 3
+  assert result.count("Result") == 4
 
-  assert "'start_line': 3" in result
-  assert "'end_line': 3" in result
-  assert "'type': 'string_literal'" in result
-  assert "'text': '\"Hello world!\"'" in result
+  assert "'basename': '.gitignore'" in result
+  assert "'relative_path': '.gitignore'" in result

@@ -7,6 +7,7 @@ from neo4j import GraphDatabase
 
 from prometheus.agents import context_provider_agent
 from prometheus.configuration import config
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.message import message_types
 from prometheus.message.message_history import MessageHistory
@@ -28,6 +29,7 @@ class SharedState:
     self.cp_agent = None
     mh_handler = message_history_handler.MessageHistoryHandler(self.neo4j_driver)
     self.message_history = MessageHistory(mh_handler)
+    self.git_repo = GitRepository(config.config["github"]["access_token"])
 
     self._logger = logging.getLogger("prometheus.app.shared_state")
 
@@ -58,9 +60,21 @@ class SharedState:
       for message in self.message_history.get_all_conversation_messages(conversation_id)
     ]
 
-  def upload_repository(self, path: Path):
+  def upload_local_repository(self, path: Path):
     kg = KnowledgeGraph(config.config["knowledge_graph"]["max_ast_depth"])
     kg.build_graph(path)
+    self.kg = kg
+    self.kg_handler.write_knowledge_graph(kg)
+    self.cp_agent = context_provider_agent.ContextProviderAgent(
+      self.llm, self.kg, self.neo4j_driver
+    )
+
+  def upload_github_repository(self, https_url: str):
+    target_directory = Path(config.config["prometheus"]["working_directory"]) / "repositories"
+    target_directory.mkdir(parents=True, exist_ok=True)
+    saved_path = self.git_repo.clone_repository(https_url, target_directory)
+    kg = KnowledgeGraph(config.config["knowledge_graph"]["max_ast_depth"])
+    kg.build_graph(saved_path)
     self.kg = kg
     self.kg_handler.write_knowledge_graph(kg)
     self.cp_agent = context_provider_agent.ContextProviderAgent(
@@ -71,6 +85,9 @@ class SharedState:
     self.kg_handler.clear_knowledge_graph()
     self.kg = None
     self.cp_agent = None
+
+    if self.git_repo.has_repository():
+      self.git_repo.remove_repository()
 
   def has_knowledge_graph(self):
     return self.kg is not None

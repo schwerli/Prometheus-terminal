@@ -24,7 +24,7 @@ def test_num_file_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
   with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_file_nodes = session.execute_read(handler._read_file_nodes)
-      assert len(read_file_nodes) == 8
+      assert len(read_file_nodes) == 9
 
 
 def test_num_text_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
@@ -54,7 +54,7 @@ def test_num_has_file_edges(neo4j_container_with_kg_fixture):  # noqa: F811
   with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_has_file_edges = session.execute_read(handler._read_has_file_edges)
-      assert len(read_has_file_edges) == 7
+      assert len(read_has_file_edges) == 8
 
 
 def test_num_has_ast_edges(neo4j_container_with_kg_fixture):  # noqa: F811
