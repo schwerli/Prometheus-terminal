@@ -1,4 +1,7 @@
+import shutil
+
 import pytest
+from git import Repo
 from testcontainers.neo4j import Neo4jContainer
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -31,3 +34,19 @@ def empty_neo4j_container_fixture():
   ).with_env("NEO4J_PLUGINS", '["apoc"]')
   with container as neo4j_container:
     yield neo4j_container
+
+
+@pytest.fixture(scope="function")
+def git_repo_fixture():
+  git_backup_dir = test_project_paths.TEST_PROJECT_PATH / ".git_backup"
+  if git_backup_dir.exists():
+    shutil.rmtree(git_backup_dir)
+  shutil.copytree(test_project_paths.GIT_DIR, git_backup_dir)
+  test_project_paths.GIT_DIR.rename(test_project_paths.TEST_PROJECT_PATH / ".git")
+
+  repo = Repo(test_project_paths.TEST_PROJECT_PATH)
+  yield repo
+  repo.git.checkout("master")
+
+  shutil.rmtree(test_project_paths.TEST_PROJECT_PATH / ".git")
+  git_backup_dir.rename(test_project_paths.GIT_DIR)
