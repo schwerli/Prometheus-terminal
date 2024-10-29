@@ -8,10 +8,14 @@
   "knowledge_graph": {
     "max_ast_depth": 5
   },
-  "anthropic": {
+  "litellm": {
     "model": "CHANGE_ME",
-    "api_key": "CHANGE_ME",
-    "temperature": 0,
-    "max_tokens": 4096
+    "anthropic_api_key": "CHANGE_ME"
+  },
+  "github": {
+    "token": "CHANGE_ME"
+  },
+  "postgres": {
+    "db_uri": "CHANGE_ME"
   }
 }

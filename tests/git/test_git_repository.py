@@ -9,7 +9,9 @@ from tests.test_utils import test_project_paths
 from tests.test_utils.fixtures import git_repo_fixture  # noqa: F401
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git")
+@pytest.mark.skipif(
+  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
+)
 def test_clone_repository(git_repo_fixture):  # noqa: F811
   with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
     repo = git_repo_fixture
@@ -26,7 +28,9 @@ def test_clone_repository(git_repo_fixture):  # noqa: F811
     )
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git")
+@pytest.mark.skipif(
+  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
+)
 def test_checkout_commit(git_repo_fixture):  # noqa: F811
   with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
     repo = git_repo_fixture
@@ -44,7 +48,9 @@ def test_checkout_commit(git_repo_fixture):  # noqa: F811
     assert repo.head.commit.hexsha == commit_sha
 
 
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git")
+@pytest.mark.skipif(
+  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
+)
 def test_switch_branch(git_repo_fixture):  # noqa: F811
   original_execute = git.Git.execute
   with (
