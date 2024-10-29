@@ -29,7 +29,7 @@ def test_send(mock_shared_state):
   mock_response = "mock response"
 
   mock_shared_state.has_knowledge_graph.return_value = True
-  mock_shared_state.chat_with_context_provider_agent.return_value = (
+  mock_shared_state.chat_with_context_provider.return_value = (
     mock_conversation_id,
     mock_response,
   )
