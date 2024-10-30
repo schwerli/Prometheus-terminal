@@ -1,14 +1,13 @@
 import functools
 import logging
-from typing import Annotated, Sequence, TypedDict
 
 import neo4j
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
-from langgraph.graph.message import add_messages
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 from prometheus.tools import graph_traversal
 
 SYS_PROMPT = """\
@@ -35,14 +34,7 @@ that are source code or text have corresponding ASTNode and TextNode connected t
 
 Here is the unix tree command output for the root directory of the codebase:
 {file_tree}
-
-Report any error that you found back to the user.
 """
-
-
-class ContextProviderState(TypedDict):
-  query: str
-  messages: Annotated[Sequence[BaseMessage], add_messages]
 
 
 class ContextProviderNode:
@@ -53,7 +45,7 @@ class ContextProviderNode:
     self._init_tools()
     self.model_with_tools = model.bind_tools(self.tools)
 
-    self._logger = logging.getLogger("prometheus.agents.context_provider_agent")
+    self._logger = logging.getLogger("prometheus.agents.context_provider_node")
 
   def _init_tools(self):
     self.tools = []

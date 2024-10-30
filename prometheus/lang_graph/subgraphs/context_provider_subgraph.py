@@ -3,14 +3,13 @@ from typing import Optional
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from langgraph.graph import StateGraph
+from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.nodes.context_provider_node import (
-  ContextProviderNode,
-  ContextProviderState,
-)
+from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
+from prometheus.lang_graph.nodes.context_summary_node import ContextSummaryNode
+from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 
 
 class ContextProviderSubgraph:
@@ -21,19 +20,20 @@ class ContextProviderSubgraph:
     neo4j_driver: neo4j.Driver,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    agent_node = ContextProviderNode(model, kg, neo4j_driver)
-    tools = agent_node.tools
-    tool_node = ToolNode(tools=tools)
+    context_provider_node = ContextProviderNode(model, kg, neo4j_driver)
+    tool_node = ToolNode(tools=context_provider_node.tools)
+    context_summary_node = ContextSummaryNode(model)
 
     workflow = StateGraph(ContextProviderState)
-    workflow.add_node("agent", agent_node)
+    workflow.add_node("context_provider_node", context_provider_node)
     workflow.add_node("tools", tool_node)
+    workflow.add_node("context_summary_node", context_summary_node)
     workflow.add_conditional_edges(
-      "agent",
-      tools_condition,
+      "context_provider_node", tools_condition, {"tools": "tools", END: "context_summary_node"}
     )
-    workflow.add_edge("tools", "agent")
-    workflow.set_entry_point("agent")
+    workflow.add_edge("tools", "context_provider_node")
+    workflow.add_edge("context_summary_node", END)
+    workflow.set_entry_point("context_provider_node")
     self.subgraph = workflow.compile(checkpointer=checkpointer)
 
   def invoke(self, query: str, thread_id: Optional[str] = None):
@@ -41,4 +41,4 @@ class ContextProviderSubgraph:
     if thread_id:
       config = {"configurable": {"thread_id": thread_id}}
     output_state = self.subgraph.invoke({"query": query}, config)
-    return output_state["messages"][-1].content
+    return output_state["summary"]
