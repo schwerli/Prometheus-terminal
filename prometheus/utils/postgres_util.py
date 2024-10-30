@@ -25,6 +25,7 @@ def get_messages(checkpointer: BaseCheckpointSaver, thread_id: str) -> Sequence[
   read_config = {"configurable": {"thread_id": thread_id}}
   checkpoint = checkpointer.get(read_config)
   messages = []
+  messages.append({"role": "user", "text": checkpoint["channel_values"]["query"]})
   for message in checkpoint["channel_values"]["messages"]:
     if isinstance(message, HumanMessage):
       messages.append({"role": "user", "text": message.content})
