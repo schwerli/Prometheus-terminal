@@ -5,10 +5,11 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+
 class Issue(BaseModel):
   title: str
   body: str
-  comments: Optional[Mapping[str, str]]=None
+  comments: Optional[Mapping[str, str]] = None
 
 
 @router.post("/answer/")
@@ -18,11 +19,10 @@ def answer_issue(issue: Issue, request: Request):
       status_code=404,
       detail="A repository is not uploaded, use /repository/ endpoint to upload one",
     )
-  
+
   response = request.app.state.shared_state.answer_issue(
     issue.title,
     issue.body,
     issue.comments if issue.comments else [],
   )
   return response
-  

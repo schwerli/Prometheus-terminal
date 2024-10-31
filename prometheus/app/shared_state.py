@@ -59,8 +59,14 @@ class SharedState:
     thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
     response = self.cp_subgraph.invoke(query, thread_id)
     return thread_id, response
-  
-  def answer_issue(self, issue_title: str, issue_body: str, issue_comments: Sequence[Mapping[str, str]], thread_id: Optional[str] = None):
+
+  def answer_issue(
+    self,
+    issue_title: str,
+    issue_body: str,
+    issue_comments: Sequence[Mapping[str, str]],
+    thread_id: Optional[str] = None,
+  ):
     thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
     response = self.ia_subgraph.invoke(issue_title, issue_body, issue_comments, thread_id)
     return response.content
