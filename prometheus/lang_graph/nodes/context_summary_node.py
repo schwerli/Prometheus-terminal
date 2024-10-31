@@ -123,4 +123,4 @@ The retrieved context from the ContextRetrievalAgent:
       self.format_human_message(state["query"], state["messages"]),
     ]
     response = self.model.invoke(message_history)
-    return {"summary": [response]}
+    return {"summary": response}
