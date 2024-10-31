@@ -1,3 +1,4 @@
+import functools
 from typing import Optional
 
 import neo4j
@@ -21,7 +22,7 @@ class ContextProviderSubgraph:
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     context_provider_node = ContextProviderNode(model, kg, neo4j_driver)
-    tool_node = ToolNode(tools=context_provider_node.tools)
+    tool_node = ToolNode(tools=context_provider_node.tools, messages_key="context_messages")
     context_summary_node = ContextSummaryNode(model)
 
     workflow = StateGraph(ContextProviderState)
@@ -29,7 +30,9 @@ class ContextProviderSubgraph:
     workflow.add_node("tools", tool_node)
     workflow.add_node("context_summary_node", context_summary_node)
     workflow.add_conditional_edges(
-      "context_provider_node", tools_condition, {"tools": "tools", END: "context_summary_node"}
+      "context_provider_node",
+      functools.partial(tools_condition, messages_key="context_messages"),
+      {"tools": "tools", END: "context_summary_node"},
     )
     workflow.add_edge("tools", "context_provider_node")
     workflow.add_edge("context_summary_node", END)

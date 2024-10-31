@@ -12,7 +12,7 @@ from psycopg.rows import dict_row
 from prometheus.configuration import config
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.subgraphs import context_provider_subgraph
+from prometheus.lang_graph.subgraphs import context_provider_subgraph, issue_answer_subgraph
 from prometheus.neo4j import knowledge_graph_handler
 from prometheus.utils import postgres_util
 
@@ -38,6 +38,7 @@ class SharedState:
     self.checkpointer = PostgresSaver(self.postgres_conn)
     self.checkpointer.setup()
     self.cp_subgraph = None
+    self.ia_subgraph = None
     self.git_repo = GitRepository(config.config["github"]["access_token"])
 
     self._logger = logging.getLogger("prometheus.app.shared_state")
@@ -50,11 +51,19 @@ class SharedState:
       self.cp_subgraph = context_provider_subgraph.ContextProviderSubgraph(
         self.model, self.kg, self.neo4j_driver, self.checkpointer
       )
+      self.ia_subgraph = issue_answer_subgraph.IssueAnswerSubgraph(
+        self.model, self.kg, self.neo4j_driver, self.checkpointer
+      )
 
   def chat_with_context_provider(self, query: str, thread_id: Optional[str] = None):
     thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
     response = self.cp_subgraph.invoke(query, thread_id)
     return thread_id, response
+  
+  def answer_issue(self, issue_title: str, issue_body: str, issue_comments: Sequence[Mapping[str, str]], thread_id: Optional[str] = None):
+    thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
+    response = self.ia_subgraph.invoke(issue_title, issue_body, issue_comments, thread_id)
+    return response.content
 
   def get_all_conversation_ids(self) -> Sequence[str]:
     return postgres_util.get_all_thread_ids(self.checkpointer)
@@ -70,6 +79,9 @@ class SharedState:
     self.cp_subgraph = context_provider_subgraph.ContextProviderSubgraph(
       self.model, self.kg, self.neo4j_driver, self.checkpointer
     )
+    self.ia_subgraph = issue_answer_subgraph.IssueAnswerSubgraph(
+      self.model, self.kg, self.neo4j_driver, self.checkpointer
+    )
 
   def upload_github_repository(self, https_url: str):
     target_directory = Path(config.config["prometheus"]["working_directory"]) / "repositories"
@@ -82,11 +94,15 @@ class SharedState:
     self.cp_subgraph = context_provider_subgraph.ContextProviderSubgraph(
       self.model, self.kg, self.neo4j_driver, self.checkpointer
     )
+    self.ia_subgraph = issue_answer_subgraph.IssueAnswerSubgraph(
+      self.model, self.kg, self.neo4j_driver, self.checkpointer
+    )
 
   def clear_knowledge_graph(self):
     self.kg_handler.clear_knowledge_graph()
     self.kg = None
     self.cp_subgraph = None
+    self.ia_subgraph = None
 
     if self.git_repo.has_repository():
       self.git_repo.remove_repository()

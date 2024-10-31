@@ -6,5 +6,5 @@ from langgraph.graph.message import add_messages
 
 class ContextProviderState(TypedDict):
   query: str
-  messages: Annotated[Sequence[BaseMessage], add_messages]
+  context_messages: Annotated[Sequence[BaseMessage], add_messages]
   summary: str

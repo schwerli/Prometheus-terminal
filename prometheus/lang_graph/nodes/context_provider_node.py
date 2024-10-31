@@ -194,6 +194,6 @@ class ContextProviderNode:
     self.tools.append(get_children_node_tool)
 
   def __call__(self, state: ContextProviderState):
-    message_history = [self.system_prompt, HumanMessage(state["query"])] + state["messages"]
+    message_history = [self.system_prompt, HumanMessage(state["query"])] + state["context_messages"]
     response = self.model_with_tools.invoke(message_history)
-    return {"messages": [response]}
+    return {"context_messages": [response]}
