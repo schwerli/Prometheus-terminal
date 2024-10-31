@@ -99,9 +99,9 @@ The retrieved context from the ContextRetrievalAgent:
 
     self._logger = logging.getLogger("prometheus.agents.context_provider_node")
 
-  def format_messages(self, messages: Sequence[BaseMessage]):
+  def format_messages(self, context_messages: Sequence[BaseMessage]):
     formatted_messages = []
-    for message in messages:
+    for message in context_messages:
       if isinstance(message, HumanMessage):
         formatted_messages.append(f"Human message: {message.content}")
       elif isinstance(message, AIMessage):
@@ -110,17 +110,17 @@ The retrieved context from the ContextRetrievalAgent:
         formatted_messages.append(f"Tool message: {message.content}")
     return formatted_messages
 
-  def format_human_message(self, query: str, messages: Sequence[BaseMessage]):
-    formatted_messages = self.format_messages(messages)
+  def format_human_message(self, query: str, context_messages: Sequence[BaseMessage]):
+    formatted_context_messages = self.format_messages(context_messages)
     human_message = HumanMessage(
-      self.HUMAN_PROMPT.format(query=query, context="\n".join(formatted_messages))
+      self.HUMAN_PROMPT.format(query=query, context="\n".join(formatted_context_messages))
     )
     return human_message
 
   def __call__(self, state: ContextProviderState):
     message_history = [
       self.system_prompt,
-      self.format_human_message(state["query"], state["messages"]),
+      self.format_human_message(state["query"], state["context_messages"]),
     ]
     response = self.model.invoke(message_history)
     return {"summary": response}

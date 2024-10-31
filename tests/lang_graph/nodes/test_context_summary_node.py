@@ -15,7 +15,7 @@ def test_context_summary_node():
     ToolMessage(content="Found implementation in utils.py", tool_call_id="test_tool_call_1"),
   ]
   test_state = ContextProviderState(
-    {"query": "How does the error handling work?", "messages": test_messages}
+    {"query": "How does the error handling work?", "context_messages": test_messages}
   )
 
   result = node(test_state)
