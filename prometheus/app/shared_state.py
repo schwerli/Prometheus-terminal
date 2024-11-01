@@ -9,7 +9,7 @@ from neo4j import GraphDatabase
 from psycopg import Connection
 from psycopg.rows import dict_row
 
-from prometheus.configuration import config
+from prometheus.configuration.config import settings
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs import context_provider_subgraph, issue_answer_subgraph
@@ -21,16 +21,16 @@ class SharedState:
   def __init__(self):
     self.kg = None
     self.neo4j_driver = GraphDatabase.driver(
-      config.config["neo4j"]["uri"],
-      auth=(config.config["neo4j"]["username"], config.config["neo4j"]["password"]),
+      settings.NEO4J_URI,
+      auth=(settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD),
     )
     self.kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
       self.neo4j_driver,
-      config.config["neo4j"]["batch_size"],
+      settings.NEO4J_BATCH_SIZE,
     )
-    self.model = ChatLiteLLM(**config.config["litellm"])
+    self.model = ChatLiteLLM(model=settings.LITELLM_MODEL, anthropic_api_key=settings.LITELLM_ANTHROPIC_API_KEY)
     self.postgres_conn = Connection.connect(
-      config.config["postgres"]["db_uri"],
+      settings.POSTGRES_URI,
       autocommit=True,
       prepare_threshold=0,
       row_factory=dict_row,
@@ -39,7 +39,7 @@ class SharedState:
     self.checkpointer.setup()
     self.cp_subgraph = None
     self.ia_subgraph = None
-    self.git_repo = GitRepository(config.config["github"]["access_token"])
+    self.git_repo = GitRepository(settings.GITHUB_ACCESS_TOKEN)
 
     self._logger = logging.getLogger("prometheus.app.shared_state")
 
@@ -78,7 +78,7 @@ class SharedState:
     return postgres_util.get_messages(self.checkpointer, conversation_id)
 
   def upload_local_repository(self, path: Path):
-    kg = KnowledgeGraph(config.config["knowledge_graph"]["max_ast_depth"])
+    kg = KnowledgeGraph(settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH)
     kg.build_graph(path)
     self.kg = kg
     self.kg_handler.write_knowledge_graph(kg)
@@ -90,10 +90,10 @@ class SharedState:
     )
 
   def upload_github_repository(self, https_url: str):
-    target_directory = Path(config.config["prometheus"]["working_directory"]) / "repositories"
+    target_directory = Path(settings.WORKING_DIRECTORY) / "repositories"
     target_directory.mkdir(parents=True, exist_ok=True)
     saved_path = self.git_repo.clone_repository(https_url, target_directory)
-    kg = KnowledgeGraph(config.config["knowledge_graph"]["max_ast_depth"])
+    kg = KnowledgeGraph(settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH)
     kg.build_graph(saved_path)
     self.kg = kg
     self.kg_handler.write_knowledge_graph(kg)
