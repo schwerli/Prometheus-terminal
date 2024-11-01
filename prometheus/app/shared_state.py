@@ -28,7 +28,9 @@ class SharedState:
       self.neo4j_driver,
       settings.NEO4J_BATCH_SIZE,
     )
-    self.model = ChatLiteLLM(model=settings.LITELLM_MODEL, anthropic_api_key=settings.LITELLM_ANTHROPIC_API_KEY)
+    self.model = ChatLiteLLM(
+      model=settings.LITELLM_MODEL, anthropic_api_key=settings.LITELLM_ANTHROPIC_API_KEY
+    )
     self.postgres_conn = Connection.connect(
       settings.POSTGRES_URI,
       autocommit=True,
