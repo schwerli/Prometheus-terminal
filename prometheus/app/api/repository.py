@@ -35,6 +35,16 @@ def upload_github_repository(https_url: str, request: Request):
     raise HTTPException(status_code=400, detail=f"Unable to clone {https_url}")
 
 
+@router.get("/github_commit/")
+def upload_github_repository_at_commit(https_url: str, commit_id: str, request: Request):
+  try:
+    request.app.state.shared_state.upload_github_repository(https_url, commit_id)
+  except git.exc.GitCommandError:
+    raise HTTPException(
+      status_code=400, detail=f"Unable to clone {https_url} with commit {commit_id}"
+    )
+
+
 @router.get("/delete/")
 def delete(request: Request):
   if not request.app.state.shared_state.kg_handler.knowledge_graph_exists():

@@ -9,3 +9,5 @@ data_postgres/
 config.json
 __pycache__/
 settings.toml
+.github
+tests/

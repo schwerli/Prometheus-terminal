@@ -5,6 +5,40 @@ import enum
 from typing import TypedDict, Union
 
 
+class CodeBaseSourceEnum(enum.StrEnum):
+  """Enum of all knowledge graph edge types"""
+
+  github = "GitHub"
+  local = "local"
+
+
+@dataclasses.dataclass(frozen=True)
+class MetadataNode:
+  codebase_source: CodeBaseSourceEnum
+
+  local_path: str
+
+  https_url: str
+  commit_id: str
+
+  def to_neo4j_node(self) -> "Neo4jMetadataNode":
+    return Neo4jMetadataNode(
+      codebase_source=self.codebase_source,
+      local_path=self.local_path,
+      https_url=self.https_url,
+      commit_id=self.commit_id,
+    )
+
+  @classmethod
+  def from_neo4j_metadata_node(cls, node: "Neo4jMetadataNode") -> "MetadataNode":
+    return cls(
+      codebase_source=node["codebase_source"],
+      local_path=node["local_path"],
+      https_url=node["https_url"],
+      commit_id=node["commit_id"],
+    )
+
+
 @dataclasses.dataclass(frozen=True)
 class FileNode:
   """A node representing a file/dir.
@@ -183,6 +217,13 @@ class KnowledgeGraphEdge:
 ###############################################################################
 #                              Neo4j types                                    #
 ###############################################################################
+
+
+class Neo4jMetadataNode(TypedDict):
+  codebase_source: str
+  local_path: str
+  https_url: str
+  commit_id: str
 
 
 class Neo4jFileNode(TypedDict):
