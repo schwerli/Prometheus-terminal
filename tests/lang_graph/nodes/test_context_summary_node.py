@@ -21,8 +21,7 @@ def test_context_summary_node():
   result = node(test_state)
 
   assert "summary" in result
-  assert isinstance(result["summary"], AIMessage)
-  assert result["summary"].content == fake_response
+  assert result["summary"] == fake_response
 
 
 def test_format_messages():

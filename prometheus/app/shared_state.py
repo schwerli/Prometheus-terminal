@@ -80,6 +80,7 @@ class SharedState:
     return postgres_util.get_messages(self.checkpointer, conversation_id)
 
   def upload_local_repository(self, path: Path):
+    self.clear_knowledge_graph()
     kg = KnowledgeGraph(settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH)
     kg.build_graph(path)
     self.kg = kg
@@ -91,10 +92,17 @@ class SharedState:
       self.model, self.kg, self.neo4j_driver, self.checkpointer
     )
 
-  def upload_github_repository(self, https_url: str):
+  def upload_github_repository(self, https_url: str, commit_id: Optional[str] = None):
+    if self.kg is not None and self.kg.is_built_from_github():
+      if commit_id and self.kg.get_codebase_https_url() == https_url and self.kg.get_codebase_commit_id() == commit_id:
+        return
+    self.clear_knowledge_graph()
+
     target_directory = Path(settings.WORKING_DIRECTORY) / "repositories"
     target_directory.mkdir(parents=True, exist_ok=True)
     saved_path = self.git_repo.clone_repository(https_url, target_directory)
+    if commit_id:
+      self.git_repo.checkout_commit(commit_id)
     kg = KnowledgeGraph(settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH)
     kg.build_graph(saved_path)
     self.kg = kg

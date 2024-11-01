@@ -1,3 +1,4 @@
+from prometheus.graph.graph_types import MetadataNode
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
@@ -5,6 +6,16 @@ from tests.test_utils.fixtures import (  # noqa: F401
   empty_neo4j_container_fixture,
   neo4j_container_with_kg_fixture,
 )
+
+
+def test_num_metadata_node(neo4j_container_with_kg_fixture):  # noqa: F811
+  neo4j_container, _ = neo4j_container_with_kg_fixture
+  handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
+
+  with neo4j_container.get_driver() as driver:
+    with driver.session() as session:
+      read_metadata_node = session.execute_read(handler._read_metadata_node)
+      assert isinstance(read_metadata_node, MetadataNode)
 
 
 def test_num_ast_nodes(neo4j_container_with_kg_fixture):  # noqa: F811

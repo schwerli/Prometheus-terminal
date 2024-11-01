@@ -1,3 +1,4 @@
+from prometheus.graph.graph_types import CodeBaseSourceEnum
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
@@ -9,6 +10,9 @@ def test_build_graph():
   knowledge_graph.build_graph(test_project_paths.TEST_PROJECT_PATH)
 
   assert knowledge_graph._next_node_id == 97
+  assert knowledge_graph._metadata_node is not None
+  assert knowledge_graph._metadata_node.codebase_source == CodeBaseSourceEnum.local
+  assert knowledge_graph._metadata_node.local_path == str(test_project_paths.TEST_PROJECT_PATH)
   # 9 FileNode
   # 84 ASTnode
   # 4 TextNode

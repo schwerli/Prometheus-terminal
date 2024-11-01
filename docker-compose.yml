@@ -36,7 +36,7 @@ services:
       timeout: 30s
       retries: 3
 
-  app:
+  prometheus:
     build: .
     container_name: prometheus
     ports:
