@@ -50,4 +50,4 @@ class IssueAnswerSubgraph:
       {"issue_title": issue_title, "issue_body": issue_body, "issue_comments": issue_comments},
       config,
     )
-    return output_state["issue_response"]
+    return output_state["issue_response"].content
