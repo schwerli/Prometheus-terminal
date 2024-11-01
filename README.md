@@ -2,23 +2,16 @@
 
 # How to run the project
 
-First you need to start the Neo4j container for storing the knowledge graph.
+In this project we use `docker-compose.yml` to run everything. It expects you to set the following enviroment variables:
 
-```bash
-docker run \
-  -p 7474:7474 \
-  -p 7687:7687 \
-  -e NEO4J_AUTH=neo4j/password \
-  -e NEO4J_PLUGINS='["apoc"]' \
-  -v ./data_neo4j:/data \
-  neo4j:5.20.0
+```
+PROMETHEUS_LITELLM_MODEL="..."
+PROMETHEUS_LITELLM_ANTHROPIC_API_KEY="..."
+PROMETHEUS_GITHUB_ACCESS_TOKEN="..."
 ```
 
-```bash
-docker run \
-  -p 5432:5432 \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=password \
-  -v ./data_postgres:/var/lib/postgresql/data \
-  postgres
-```
+`PROMETHEUS_LITELLM_MODEL` and `PROMETHEUS_LITELLM_ANTHROPIC_API_KEY` are parameters to [ChatLiteLLM](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.litellm.ChatLiteLLM.html), and `PROMETHEUS_GITHUB_ACCESS_TOKEN` is the GitHub access token.
+
+You can also create `.env` with these varaibles.
+
+Now, simply run `docker compose up`.
