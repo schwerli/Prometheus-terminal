@@ -94,7 +94,11 @@ class SharedState:
 
   def upload_github_repository(self, https_url: str, commit_id: Optional[str] = None):
     if self.kg is not None and self.kg.is_built_from_github():
-      if commit_id and self.kg.get_codebase_https_url() == https_url and self.kg.get_codebase_commit_id() == commit_id:
+      if (
+        commit_id
+        and self.kg.get_codebase_https_url() == https_url
+        and self.kg.get_codebase_commit_id() == commit_id
+      ):
         return
     self.clear_knowledge_graph()
 

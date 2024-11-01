@@ -11,6 +11,7 @@ class CodeBaseSourceEnum(enum.StrEnum):
   github = "GitHub"
   local = "local"
 
+
 @dataclasses.dataclass(frozen=True)
 class MetadataNode:
   codebase_source: CodeBaseSourceEnum
@@ -27,7 +28,7 @@ class MetadataNode:
       https_url=self.https_url,
       commit_id=self.commit_id,
     )
-  
+
   @classmethod
   def from_neo4j_metadata_node(cls, node: "Neo4jMetadataNode") -> "MetadataNode":
     return cls(
@@ -36,6 +37,7 @@ class MetadataNode:
       https_url=node["https_url"],
       commit_id=node["commit_id"],
     )
+
 
 @dataclasses.dataclass(frozen=True)
 class FileNode:
@@ -215,6 +217,7 @@ class KnowledgeGraphEdge:
 ###############################################################################
 #                              Neo4j types                                    #
 ###############################################################################
+
 
 class Neo4jMetadataNode(TypedDict):
   codebase_source: str

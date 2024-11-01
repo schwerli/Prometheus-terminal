@@ -76,7 +76,9 @@ class KnowledgeGraph:
     self._file_graph_builder = FileGraphBuilder(max_ast_depth)
     self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
-  def build_graph(self, root_dir: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None):
+  def build_graph(
+    self, root_dir: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
+  ):
     """Builds knowledege graph for a codebase at a location.
 
     Args:
@@ -88,9 +90,19 @@ class KnowledgeGraph:
     gitignore_parser.parse_rule_files(base_dir=root_dir)
 
     if https_url is not None:
-      metadata_node = MetadataNode(codebase_source=CodeBaseSourceEnum.github, local_path=None, https_url=https_url, commit_id=commit_id)
+      metadata_node = MetadataNode(
+        codebase_source=CodeBaseSourceEnum.github,
+        local_path=None,
+        https_url=https_url,
+        commit_id=commit_id,
+      )
     else:
-      metadata_node = MetadataNode(codebase_source=CodeBaseSourceEnum.local, local_path=str(root_dir), https_url=None, commit_id=None)
+      metadata_node = MetadataNode(
+        codebase_source=CodeBaseSourceEnum.local,
+        local_path=str(root_dir),
+        https_url=None,
+        commit_id=None,
+      )
     self._metadata_node = metadata_node
 
     # The root node for the whole graph
@@ -264,16 +276,16 @@ class KnowledgeGraph:
           )
         )
     return "\n".join(result_lines)
-  
+
   def is_built_from_local_codebase(self) -> bool:
     return self._metadata_node.codebase_source == CodeBaseSourceEnum.LOCAL
-  
+
   def is_built_from_github(self) -> bool:
     return self._metadata_node.codebase_source == CodeBaseSourceEnum.GITHUB
-  
+
   def get_codebase_https_url(self) -> str:
     return self._metadata_node.https_url
-  
+
   def get_codebase_commit_id(self) -> str:
     return self._metadata_node.commit_id
 
@@ -284,7 +296,7 @@ class KnowledgeGraph:
     for has_file_edge in self.get_has_file_edges():
       file_node_adjacency_dict[has_file_edge.source].append(has_file_edge.target)
     return file_node_adjacency_dict
-  
+
   def get_metadata_node(self) -> MetadataNode:
     return self._metadata_node
 
@@ -335,7 +347,7 @@ class KnowledgeGraph:
       for kg_edge in self._knowledge_graph_edges
       if kg_edge.type == KnowledgeGraphEdgeType.parent_of
     ]
-  
+
   def get_neo4j_metadata_node(self) -> Neo4jMetadataNode:
     return self._metadata_node.to_neo4j_node()
 
@@ -366,7 +378,7 @@ class KnowledgeGraph:
   def __eq__(self, other: "KnowledgeGraph") -> bool:
     if not isinstance(other, KnowledgeGraph):
       return False
-    
+
     if self._metadata_node != other._metadata_node:
       return False
 

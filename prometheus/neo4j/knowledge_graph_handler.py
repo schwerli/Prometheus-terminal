@@ -56,7 +56,13 @@ class KnowledgeGraphHandler:
     query = """
       CREATE (a:MetadataNode {codebase_source: $codebase_source, local_path: $local_path, https_url: $https_url, commit_id: $commit_id})
     """
-    tx.run(query, codebase_source=metadata_node["codebase_source"], local_path=metadata_node["local_path"], https_url=metadata_node["https_url"], commit_id=metadata_node["commit_id"])
+    tx.run(
+      query,
+      codebase_source=metadata_node["codebase_source"],
+      local_path=metadata_node["local_path"],
+      https_url=metadata_node["https_url"],
+      commit_id=metadata_node["commit_id"],
+    )
 
   def _write_file_nodes(self, tx: ManagedTransaction, file_nodes: Sequence[Neo4jFileNode]):
     """Write Neo4jFileNode to neo4j."""
