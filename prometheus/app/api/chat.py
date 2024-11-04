@@ -19,7 +19,9 @@ def answer_query(send_message: SendMessage, request: Request):
       detail="A repository is not uploaded, use /repository/ endpoint to upload one",
     )
 
-  conversation_id, response = request.app.state.service_coordinator.chat_with_codebase(send_message.text, send_message.conversation_id)
+  conversation_id, response = request.app.state.service_coordinator.chat_with_codebase(
+    send_message.text, send_message.conversation_id
+  )
   return {"conversation_id": conversation_id, "response": response}
 
 
