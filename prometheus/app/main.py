@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from prometheus.app import shared_state
+from prometheus.app import dependencies
 from prometheus.app.api import chat, issue, repository
 
 logging.basicConfig(
@@ -15,11 +15,9 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  # Startup event: Initialize shared_state
-  app.state.shared_state = shared_state.SharedState()
+  app.state.service_coordinator = dependencies.initialize_services()
   yield
-  # Shutdown event: Close shared_state
-  app.state.shared_state.close()
+  app.state.service_coordinator.close()
 
 
 app = FastAPI(lifespan=lifespan)
