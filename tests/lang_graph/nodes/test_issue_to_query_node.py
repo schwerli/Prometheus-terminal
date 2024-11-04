@@ -11,7 +11,10 @@ def test_issue_to_query_node():
   state = {
     "issue_title": issue_title,
     "issue_body": issue_body,
-    "issue_comments": [{"username": user1, "comment": comment1}, {"username": user2, "comment": comment2}],
+    "issue_comments": [
+      {"username": user1, "comment": comment1},
+      {"username": user2, "comment": comment2},
+    ],
   }
 
   expected_query = f"""\

@@ -18,7 +18,10 @@ def test_format_human_message():
   state = {
     "issue_title": issue_title,
     "issue_body": issue_body,
-    "issue_comments": [{"username": user1, "comment": comment1}, {"username": user2, "comment": comment2}],
+    "issue_comments": [
+      {"username": user1, "comment": comment1},
+      {"username": user2, "comment": comment2},
+    ],
     "summary": summary,
   }
 
@@ -58,7 +61,10 @@ def test_issue_responder_node():
   state = {
     "issue_title": issue_title,
     "issue_body": issue_body,
-    "issue_comments": [{"username": user1, "comment": comment1}, {"username": user2, "comment": comment2}],
+    "issue_comments": [
+      {"username": user1, "comment": comment1},
+      {"username": user2, "comment": comment2},
+    ],
     "summary": summary,
   }
 
