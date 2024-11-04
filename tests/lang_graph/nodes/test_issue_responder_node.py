@@ -12,13 +12,13 @@ def test_format_human_message():
   issue_body = "Users are unable to log in after the recent update."
   summary = "Check authentication.py around line 45 where the login logic was recently updated."
   user1 = "user1"
-  body1 = "I've experienced this issue as well."
+  comment1 = "I've experienced this issue as well."
   user2 = "user2"
-  body2 = "A potential fix is to adjust the memory settings."
+  comment2 = "A potential fix is to adjust the memory settings."
   state = {
     "issue_title": issue_title,
     "issue_body": issue_body,
-    "issue_comments": [{"username": user1, "body": body1}, {"username": user2, "body": body2}],
+    "issue_comments": [{"username": user1, "comment": comment1}, {"username": user2, "comment": comment2}],
     "summary": summary,
   }
 
@@ -33,9 +33,9 @@ Retrieved relevant context summary:
 {summary}
 
 Issue comments:
-{user1}: {body1}
+{user1}: {comment1}
 
-{user2}: {body2}
+{user2}: {comment2}
 """
 
   human_message = issue_responder_node.format_human_message(state).content
@@ -52,13 +52,13 @@ def test_issue_responder_node():
   issue_body = "Users are unable to log in after the recent update."
   summary = "Check authentication.py around line 45 where the login logic was recently updated."
   user1 = "user1"
-  body1 = "I've experienced this issue as well."
+  comment1 = "I've experienced this issue as well."
   user2 = "user2"
-  body2 = "A potential fix is to adjust the memory settings."
+  comment2 = "A potential fix is to adjust the memory settings."
   state = {
     "issue_title": issue_title,
     "issue_body": issue_body,
-    "issue_comments": [{"username": user1, "body": body1}, {"username": user2, "body": body2}],
+    "issue_comments": [{"username": user1, "comment": comment1}, {"username": user2, "comment": comment2}],
     "summary": summary,
   }
 

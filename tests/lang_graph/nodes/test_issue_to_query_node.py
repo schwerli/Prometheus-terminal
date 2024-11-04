@@ -5,13 +5,13 @@ def test_issue_to_query_node():
   issue_title = "Bug in data processing pipeline"
   issue_body = "The pipeline fails when processing large datasets."
   user1 = "user1"
-  body1 = "I've experienced this issue as well."
+  comment1 = "I've experienced this issue as well."
   user2 = "user2"
-  body2 = "A potential fix is to adjust the memory settings."
+  comment2 = "A potential fix is to adjust the memory settings."
   state = {
     "issue_title": issue_title,
     "issue_body": issue_body,
-    "issue_comments": [{"username": user1, "body": body1}, {"username": user2, "body": body2}],
+    "issue_comments": [{"username": user1, "comment": comment1}, {"username": user2, "comment": comment2}],
   }
 
   expected_query = f"""\
@@ -23,9 +23,9 @@ Issue description:
 {issue_body}
 
 Issue comments:
-{user1}: {body1}
+{user1}: {comment1}
 
-{user2}: {body2}
+{user2}: {comment2}
 
 Now, please help the user with the issue.
 """

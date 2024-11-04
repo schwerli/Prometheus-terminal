@@ -14,7 +14,7 @@ def test_context_provider_subgraph(neo4j_container_with_kg_fixture):  # noqa: F8
   issue_response = ia_subgraph.invoke(
     "Issue title",
     "Issue body",
-    [{"username": "user1", "body": "body1"}, {"username": "user2", "body": "body2"}],
+    [{"username": "user1", "comment": "comment1"}, {"username": "user2", "comment": "comment2"}],
   )
 
   assert issue_response == fake_response

@@ -71,7 +71,7 @@ class SharedState:
   ):
     thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
     response = self.ia_subgraph.invoke(issue_title, issue_body, issue_comments, thread_id)
-    return response.content
+    return response
 
   def get_all_conversation_ids(self) -> Sequence[str]:
     return postgres_util.get_all_thread_ids(self.checkpointer)

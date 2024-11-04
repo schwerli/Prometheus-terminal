@@ -7,7 +7,7 @@ class IssueToQueryNode:
   def format_issue_comments(self, issue_comments: Sequence[Mapping[str, str]]):
     formatted_issue_comments = []
     for issue_comment in issue_comments:
-      formatted_issue_comments.append(f"{issue_comment['username']}: {issue_comment['body']}")
+      formatted_issue_comments.append(f"{issue_comment['username']}: {issue_comment['comment']}")
     return "\n\n".join(formatted_issue_comments)
 
   def __call__(self, state: IssueAnswerState):

@@ -278,10 +278,10 @@ class KnowledgeGraph:
     return "\n".join(result_lines)
 
   def is_built_from_local_codebase(self) -> bool:
-    return self._metadata_node.codebase_source == CodeBaseSourceEnum.LOCAL
+    return self._metadata_node.codebase_source == CodeBaseSourceEnum.local
 
   def is_built_from_github(self) -> bool:
-    return self._metadata_node.codebase_source == CodeBaseSourceEnum.GITHUB
+    return self._metadata_node.codebase_source == CodeBaseSourceEnum.github
 
   def get_codebase_https_url(self) -> str:
     return self._metadata_node.https_url
