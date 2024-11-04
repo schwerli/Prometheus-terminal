@@ -1,4 +1,4 @@
-from typing import Mapping, Optional
+from typing import Mapping, Optional, Sequence
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -9,7 +9,7 @@ router = APIRouter()
 class Issue(BaseModel):
   title: str
   body: str
-  comments: Optional[Mapping[str, str]] = None
+  comments: Optional[Sequence[Mapping[str, str]]] = None
 
 
 @router.post("/answer/")

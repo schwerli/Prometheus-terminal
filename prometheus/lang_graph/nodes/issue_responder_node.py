@@ -55,7 +55,7 @@ Analyze the provided issue content, codebase context, and summary to provide a w
   def format_issue_comments(self, issue_comments: Sequence[Mapping[str, str]]):
     formatted_issue_comments = []
     for issue_comment in issue_comments:
-      formatted_issue_comments.append(f"{issue_comment['username']}: {issue_comment['body']}")
+      formatted_issue_comments.append(f"{issue_comment['username']}: {issue_comment['comment']}")
     return "\n\n".join(formatted_issue_comments)
 
   def format_human_message(self, state: IssueAnswerState):
