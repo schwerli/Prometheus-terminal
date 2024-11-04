@@ -13,7 +13,6 @@ from prometheus.graph.knowledge_graph import KnowledgeGraph
 def mock_kg_service():
   service = create_autospec(KnowledgeGraphService, instance=True)
   service.kg = None
-  service.kg_handler = Mock(name="kg_handler")
   return service
 
 
@@ -44,76 +43,76 @@ def service(mock_kg_service, mock_git_repository):
     )
 
 
-def test_upload_local_repository(service, mock_kg_service, mock_knowledge_graph):
-  # Setup
-  test_path = Path("/test/path")
-  mock_kg_service.kg_handler.write_knowledge_graph.return_value = None
-
-  with patch(
-    "prometheus.app.services.repository_service.KnowledgeGraph", return_value=mock_knowledge_graph
-  ) as mock_kg_class:
-    # Exercise
-    service.upload_local_repository(test_path)
-
-    # Verify
-    mock_kg_service.clear.assert_called_once()
-    mock_kg_class.assert_called_once_with(service.max_ast_depth)
-    mock_knowledge_graph.build_graph.assert_called_once_with(test_path)
-    assert mock_kg_service.kg == mock_knowledge_graph
-    mock_kg_service.kg_handler.write_knowledge_graph.assert_called_once_with(mock_knowledge_graph)
-
-
-def test_upload_github_repo_new_repository(
-  service, mock_kg_service, mock_git_repository, mock_knowledge_graph
-):
+def test_clone_new_github_repo(service, mock_kg_service, mock_git_repository):
   # Setup
   test_url = "https://github.com/test/repo"
   test_commit = "abc123"
   saved_path = Path("/test/saved")
-  target_directory = service.working_dir / "repositories"
+  target_directory = service.target_directory
 
   mock_git_repository.has_repository.return_value = False
   mock_git_repository.clone_repository.return_value = saved_path
 
-  with (
-    patch(
-      "prometheus.app.services.repository_service.KnowledgeGraph", return_value=mock_knowledge_graph
-    ) as mock_kg_class,
-    patch("pathlib.Path.mkdir") as mock_mkdir,
-  ):  # Add mock for mkdir
-    # Exercise
-    service.upload_github_repo(test_url, test_commit)
+  # Exercise
+  result_path = service.clone_github_repo(test_url, test_commit)
 
-    # Verify
-    mock_kg_service.clear.assert_called_once()
-    mock_git_repository.has_repository.assert_called_once()
-    mock_git_repository.remove_repository.assert_not_called()
-    mock_git_repository.clone_repository.assert_called_once_with(test_url, target_directory)
-    mock_git_repository.checkout_commit.assert_called_once_with(test_commit)
-    mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
-
-    mock_kg_class.assert_called_once_with(service.max_ast_depth)
-    mock_knowledge_graph.build_graph.assert_called_once_with(saved_path)
-    assert mock_kg_service.kg == mock_knowledge_graph
-    mock_kg_service.kg_handler.write_knowledge_graph.assert_called_once_with(mock_knowledge_graph)
+  # Verify
+  mock_git_repository.has_repository.assert_called_once()
+  mock_git_repository.remove_repository.assert_not_called()
+  mock_git_repository.clone_repository.assert_called_once_with(test_url, target_directory)
+  mock_git_repository.checkout_commit.assert_called_once_with(test_commit)
+  assert result_path == saved_path
 
 
-def test_upload_github_repo_skips_when_should_skip(
-  service, mock_kg_service, mock_git_repository, mock_knowledge_graph
-):
+def test_clone_github_repo_with_existing_repo(service, mock_kg_service, mock_git_repository):
   # Setup
   test_url = "https://github.com/test/repo"
   test_commit = "abc123"
-  mock_kg = create_autospec(KnowledgeGraph, instance=True)
-  mock_kg.is_built_from_github.return_value = True
-  mock_kg.get_codebase_https_url.return_value = test_url
-  mock_kg.get_codebase_commit_id.return_value = test_commit
-  mock_kg_service.kg = mock_kg
+  saved_path = Path("/test/saved")
+  target_directory = service.target_directory
+
+  mock_git_repository.has_repository.return_value = True
+  mock_git_repository.clone_repository.return_value = saved_path
 
   # Exercise
-  service.upload_github_repo(test_url, test_commit)
+  result_path = service.clone_github_repo(test_url, test_commit)
 
-  # Verify no actions were taken
-  mock_kg_service.clear.assert_not_called()
+  # Verify
+  mock_git_repository.has_repository.assert_called_once()
+  mock_git_repository.remove_repository.assert_called_once()
+  mock_git_repository.clone_repository.assert_called_once_with(test_url, target_directory)
+  mock_git_repository.checkout_commit.assert_called_once_with(test_commit)
+  assert result_path == saved_path
+
+
+def test_skip_clone_when_already_loaded(service, mock_kg_service, mock_git_repository):
+  # Setup
+  test_url = "https://github.com/test/repo"
+  test_commit = "abc123"
+
+  mock_knowledge_graph = Mock()
+  mock_knowledge_graph.is_built_from_github.return_value = True
+  mock_knowledge_graph.get_codebase_https_url.return_value = test_url
+  mock_knowledge_graph.get_codebase_commit_id.return_value = test_commit
+
+  mock_kg_service.kg = mock_knowledge_graph
+
+  # Exercise
+  result_path = service.clone_github_repo(test_url, test_commit)
+
+  # Verify
+  assert result_path is None
   mock_git_repository.has_repository.assert_not_called()
   mock_git_repository.clone_repository.assert_not_called()
+  mock_git_repository.checkout_commit.assert_not_called()
+
+
+def test_clean_working_directory(service):
+  # Setup
+  with patch("shutil.rmtree") as mock_rmtree, patch("pathlib.Path.mkdir") as mock_mkdir:
+    # Exercise
+    service.clean_working_directory()
+
+    # Verify
+    mock_rmtree.assert_called_once_with(service.target_directory)
+    mock_mkdir.assert_called_once_with(parents=True)

@@ -15,7 +15,6 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  # Startup event: Initialize shared_state
   app.state.shared_state = shared_state.SharedState()
   yield
   # Shutdown event: Close shared_state
