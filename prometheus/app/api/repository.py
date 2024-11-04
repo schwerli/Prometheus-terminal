@@ -22,7 +22,7 @@ def upload_local_repository(local_repository: str, request: Request):
       detail=f"Local repository not found at path: {local_repository}",
     )
 
-  request.app.state.shared_state.upload_local_repository(local_path)
+  request.app.state.service_coordinator.upload_local_repository(local_path)
 
   return {"message": "Repository uploaded successfully"}
 
@@ -30,7 +30,7 @@ def upload_local_repository(local_repository: str, request: Request):
 @router.get("/github/")
 def upload_github_repository(https_url: str, request: Request):
   try:
-    request.app.state.shared_state.upload_github_repository(https_url)
+    request.app.state.service_coordinator.upload_github_repository(https_url)
   except git.exc.GitCommandError:
     raise HTTPException(status_code=400, detail=f"Unable to clone {https_url}")
 
@@ -38,7 +38,7 @@ def upload_github_repository(https_url: str, request: Request):
 @router.get("/github_commit/")
 def upload_github_repository_at_commit(https_url: str, commit_id: str, request: Request):
   try:
-    request.app.state.shared_state.upload_github_repository(https_url, commit_id)
+    request.app.state.service_coordinator.upload_github_repository(https_url, commit_id)
   except git.exc.GitCommandError:
     raise HTTPException(
       status_code=400, detail=f"Unable to clone {https_url} with commit {commit_id}"
@@ -47,13 +47,13 @@ def upload_github_repository_at_commit(https_url: str, commit_id: str, request: 
 
 @router.get("/delete/")
 def delete(request: Request):
-  if not request.app.state.shared_state.kg_handler.knowledge_graph_exists():
+  if not request.app.state.service_coordinator.exists_knowledge_graph():
     return {"message": "No knowledge graph to delete"}
 
-  request.app.state.shared_state.clear_knowledge_graph()
+  request.app.state.service_coordinator.clear()
   return {"message": "Successfully deleted knowledge graph"}
 
 
 @router.get("/exists/", response_model=bool)
 def knowledge_graph_exists(request: Request) -> bool:
-  return request.app.state.shared_state.kg_handler.knowledge_graph_exists()
+  return request.app.state.service_coordinator.exists_knowledge_graph()

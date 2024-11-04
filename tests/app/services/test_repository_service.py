@@ -38,7 +38,6 @@ def service(mock_kg_service, mock_git_repository):
     return RepositoryService(
       kg_service=mock_kg_service,
       github_token="dummy_token",
-      max_ast_depth=5,
       working_dir=working_dir,
     )
 

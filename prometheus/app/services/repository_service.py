@@ -11,13 +11,11 @@ class RepositoryService:
     self,
     kg_service: KnowledgeGraphService,
     github_token: str,
-    max_ast_depth: int,
-    working_dir: Path,
+    working_dir: str,
   ):
     self.kg_service = kg_service
     self.git_repo = GitRepository(github_token)
-    self.max_ast_depth = max_ast_depth
-    self.target_directory = working_dir / "repositories"
+    self.target_directory = Path(working_dir) / "repositories"
     self.target_directory.mkdir(parents=True, exist_ok=True)
 
   def clone_github_repo(self, https_url: str, commit_id: Optional[str] = None):
