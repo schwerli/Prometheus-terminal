@@ -32,8 +32,11 @@ def mock_knowledge_graph():
 def service(mock_kg_service, mock_git_repository):
   working_dir = Path("/test/working/dir")
   # Patch both GitRepository and Path
-  with patch(
-    "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
+  with (
+    patch(
+      "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
+    ),
+    patch("pathlib.Path.mkdir"),
   ):
     return RepositoryService(
       kg_service=mock_kg_service,
