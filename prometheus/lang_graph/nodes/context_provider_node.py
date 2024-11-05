@@ -104,13 +104,13 @@ class ContextProviderNode:
     self.neo4j_driver = neo4j_driver
 
     self.system_prompt = SystemMessage(SYS_PROMPT.format(file_tree=kg.get_file_tree()))
-    self._init_tools()
+    self.tools = self._init_tools()
     self.model_with_tools = model.bind_tools(self.tools)
 
     self._logger = logging.getLogger("prometheus.agents.context_provider_node")
 
   def _init_tools(self):
-    self.tools = []
+    tools = []
 
     find_file_node_with_basename_fn = functools.partial(
       graph_traversal.find_file_node_with_basename, driver=self.neo4j_driver
@@ -121,7 +121,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.FindFileNodeWithBasenameInput,
     )
-    self.tools.append(find_file_node_with_basename_tool)
+    tools.append(find_file_node_with_basename_tool)
 
     find_file_node_with_relative_path_fn = functools.partial(
       graph_traversal.find_file_node_with_relative_path, driver=self.neo4j_driver
@@ -132,7 +132,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_FILE_NODE_WITH_RELATIVE_PATH_DESCRIPTION,
       args_schema=graph_traversal.FindFileNodeWithRelativePathInput,
     )
-    self.tools.append(find_file_node_with_relative_path_tool)
+    tools.append(find_file_node_with_relative_path_tool)
 
     find_ast_node_with_text_fn = functools.partial(
       graph_traversal.find_ast_node_with_text, driver=self.neo4j_driver
@@ -143,7 +143,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_AST_NODE_WITH_TEXT_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTextInput,
     )
-    self.tools.append(find_ast_node_with_text_tool)
+    tools.append(find_ast_node_with_text_tool)
 
     find_ast_node_with_type_fn = functools.partial(
       graph_traversal.find_ast_node_with_type, driver=self.neo4j_driver
@@ -154,7 +154,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_AST_NODE_WITH_TYPE_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTypeInput,
     )
-    self.tools.append(find_ast_node_with_type_tool)
+    tools.append(find_ast_node_with_type_tool)
 
     find_ast_node_with_text_in_file_fn = functools.partial(
       graph_traversal.find_ast_node_with_text_in_file, driver=self.neo4j_driver
@@ -165,7 +165,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTextInFileInput,
     )
-    self.tools.append(find_ast_node_with_text_in_file_tool)
+    tools.append(find_ast_node_with_text_in_file_tool)
 
     find_ast_node_with_type_in_file_fn = functools.partial(
       graph_traversal.find_ast_node_with_type_in_file, driver=self.neo4j_driver
@@ -176,7 +176,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTypeInFileInput,
     )
-    self.tools.append(find_ast_node_with_type_in_file_tool)
+    tools.append(find_ast_node_with_type_in_file_tool)
 
     find_ast_node_with_type_and_text_fn = functools.partial(
       graph_traversal.find_ast_node_with_type_and_text, driver=self.neo4j_driver
@@ -187,7 +187,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_AST_NODE_WITH_TYPE_AND_TEXT_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTypeAndTextInput,
     )
-    self.tools.append(find_ast_node_with_type_and_text_tool)
+    tools.append(find_ast_node_with_type_and_text_tool)
 
     find_text_node_with_text_fn = functools.partial(
       graph_traversal.find_text_node_with_text, driver=self.neo4j_driver
@@ -198,7 +198,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_DESCRIPTION,
       args_schema=graph_traversal.FindTextNodeWithTextInput,
     )
-    self.tools.append(find_text_node_with_text_tool)
+    tools.append(find_text_node_with_text_tool)
 
     find_text_node_with_text_in_file_fn = functools.partial(
       graph_traversal.find_text_node_with_text_in_file, driver=self.neo4j_driver
@@ -209,7 +209,7 @@ class ContextProviderNode:
       description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_IN_FILE_DESCRIPTION,
       args_schema=graph_traversal.FindTextNodeWithTextInFileInput,
     )
-    self.tools.append(find_text_node_with_text_in_file_tool)
+    tools.append(find_text_node_with_text_in_file_tool)
 
     get_next_text_node_with_node_id_fn = functools.partial(
       graph_traversal.get_next_text_node_with_node_id, driver=self.neo4j_driver
@@ -220,7 +220,7 @@ class ContextProviderNode:
       description=graph_traversal.GET_NEXT_TEXT_NODE_WITH_NODE_ID_DESCRIPTION,
       args_schema=graph_traversal.GetNextTextNodeWithNodeIdInput,
     )
-    self.tools.append(get_next_text_node_with_node_id_tool)
+    tools.append(get_next_text_node_with_node_id_tool)
 
     preview_file_content_with_basename_fn = functools.partial(
       graph_traversal.preview_file_content_with_basename, driver=self.neo4j_driver
@@ -231,7 +231,7 @@ class ContextProviderNode:
       description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.PreviewFileContentWithBasenameInput,
     )
-    self.tools.append(preview_file_content_with_basename_tool)
+    tools.append(preview_file_content_with_basename_tool)
 
     get_parent_node_fn = functools.partial(
       graph_traversal.get_parent_node, driver=self.neo4j_driver
@@ -242,7 +242,7 @@ class ContextProviderNode:
       description=graph_traversal.GET_PARENT_NODE_DESCRIPTION,
       args_schema=graph_traversal.GetParentNodeInput,
     )
-    self.tools.append(get_parent_node_tool)
+    tools.append(get_parent_node_tool)
 
     get_children_node_fn = functools.partial(
       graph_traversal.get_children_node, driver=self.neo4j_driver
@@ -253,7 +253,9 @@ class ContextProviderNode:
       description=graph_traversal.GET_CHILDREN_NODE_DESCRIPTION,
       args_schema=graph_traversal.GetChildrenNodeInput,
     )
-    self.tools.append(get_children_node_tool)
+    tools.append(get_children_node_tool)
+
+    return tools
 
   def __call__(self, state: ContextProviderState):
     message_history = [self.system_prompt, HumanMessage(state["query"])] + state["context_messages"]

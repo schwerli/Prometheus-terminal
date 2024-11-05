@@ -34,6 +34,9 @@ class GitRepository:
   def pull(self):
     self._repo.git.pull()
 
+  def get_diff(self) -> str:
+    return self._repo.git.diff()
+
   def has_repository(self) -> bool:
     return self._repo is not None
 
