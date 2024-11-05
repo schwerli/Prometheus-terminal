@@ -24,7 +24,7 @@ class PythonContainer:
     self.project_path = temp_project_path.absolute()
     self.project_config = self._get_project_config()
     self.client = docker.from_env()
-    self.tag_name = f"prometheus_python_container:{uuid.uuid4().hex[:8]}"
+    self.tag_name = f"prometheus_python_container_{uuid.uuid4().hex[:8]}"
     self.container = None
 
   def _get_project_config(self) -> PythonProjectConfig:
@@ -65,7 +65,7 @@ RUN apt-get update && apt-get install -y \\
     build-essential
 
     # Copy project files
-COPY {project_path} /app/
+COPY . /app/
 
 # Create and activate virtual environment
 RUN python -m venv /app/.venv
@@ -81,7 +81,6 @@ RUN {install_requirements_cmd}
       install_requirements_cmd = "pip install ."
     dockerfile_content = DOCKERFILE_TEMPLATE.format(
       base_image_name="python:3.11-slim",
-      project_path=str(self.project_path),
       install_requirements_cmd=install_requirements_cmd,
     )
     dockerfile_path = self.project_path / "Dockerfile"
@@ -91,14 +90,15 @@ RUN {install_requirements_cmd}
   def _build_docker_image(self):
     dockerfile_path = self._create_dockerfile()
     self.client.images.build(
-      path=self.project_path.as_posix(), dockerfile=dockerfile_path.as_posix(), tag=self.tag_name
+      path=str(self.project_path), dockerfile=dockerfile_path.name, tag=self.tag_name
     )
 
   def _start_container(self):
     self.container = self.client.containers.run(
       self.tag_name,
       detach=True,
-      volumes={self.project_path.as_posix(): {"bind": "/app", "mode": "rw"}},
+      tty=True,
+      volumes={str(self.project_path): {"bind": "/app", "mode": "rw"}},
     )
 
   def run_tests(self) -> str:
