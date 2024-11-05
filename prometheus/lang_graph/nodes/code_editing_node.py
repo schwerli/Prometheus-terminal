@@ -95,19 +95,22 @@ The retrieved context summary from another agent:
     return tools
 
   def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
-    preivous_test_log = ""
-    if "after_test_output" in state and state["after_test_output"]:
-      preivous_test_log = f"\nYour previous edit resulting in the following test output:\n{state['after_test_output']}\n"
     human_message = HumanMessage(
-      self.HUMAN_PROMPT.format(query=state["query"], summary=state["summary"]) + preivous_test_log
+      self.HUMAN_PROMPT.format(query=state["query"], summary=state["summary"])
     )
     return human_message
 
   def __call__(self, state: IssueAnswerAndFixState):
     tools = self._init_tools(state["project_path"])
     model_with_tool = self.model.bind_tools(tools)
-    message_history = [self.system_prompt, self.format_human_message(state)] + state[
-      "code_edit_messages"
-    ]
+
+    # TODO: state["code_edit_messages"] does not work when it loops back to itself.
+    # We should add git diff to it instead.
+    # Also add logging.
+    message_history = [self.system_prompt, self.format_human_message(state)] + state["code_edit_messages"]
+    if "after_test_output" in state and state["after_test_output"]:
+      preivous_test_log = HumanMessage(f"Your previous edit resulting in the following test output:\n{state['after_test_output']}")
+      message_history.append(preivous_test_log)
+
     response = model_with_tool.invoke(message_history)
     return {"code_edit_messages": [response]}

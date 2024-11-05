@@ -133,7 +133,7 @@ def test_upload_github_repository(service_coordinator, mock_services):
     mock_services["github_token"], test_url, test_commit
   )
   mock_services["knowledge_graph_service"].build_and_save_knowledge_graph.assert_called_once_with(
-    saved_path
+    saved_path, test_url, test_commit
   )
 
 

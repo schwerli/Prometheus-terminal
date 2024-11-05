@@ -76,7 +76,7 @@ def test_build_and_save_new_knowledge_graph(mock_neo4j_service, mock_kg_handler,
 
   # Verify
   mock_kg_class.assert_called_once_with(service.max_ast_depth)
-  mock_kg.build_graph.assert_called_once_with(mock_path)
+  mock_kg.build_graph.assert_called_once_with(mock_path, None, None)
   mock_kg_handler.write_knowledge_graph.assert_called_once_with(mock_kg)
   assert service.kg == mock_kg
 
@@ -103,15 +103,18 @@ def test_build_and_save_clear_existing_knowledge_graph(
   # Verify
   mock_kg_handler.clear_knowledge_graph.assert_called_once()
   mock_kg_class.assert_called_once_with(service.max_ast_depth)
-  mock_kg.build_graph.assert_called_once_with(mock_path)
+  mock_kg.build_graph.assert_called_once_with(mock_path, None, None)
   mock_kg_handler.write_knowledge_graph.assert_called_once_with(mock_kg)
   assert service.kg == mock_kg
 
 
-def test_clear_calls_handler_and_resets_kg(mock_neo4j_service, mock_kg_handler):
+def test_clear_calls_handler_and_resets_kg(
+  mock_neo4j_service, mock_kg_handler, mock_knowledge_graph
+):
   # Setup
   mock_kg_handler.knowledge_graph_exists.return_value = True
   mock_kg_handler.read_knowledge_graph.return_value = mock_knowledge_graph
+  mock_knowledge_graph.get_local_path.return_value = Path("/mock/path")
 
   # Exercise
   service = KnowledgeGraphService(mock_neo4j_service, neo4j_batch_size=100, max_ast_depth=5)
@@ -120,3 +123,4 @@ def test_clear_calls_handler_and_resets_kg(mock_neo4j_service, mock_kg_handler):
   # Verify
   mock_kg_handler.clear_knowledge_graph.assert_called_once()
   assert service.kg is None
+  assert service.local_path is None

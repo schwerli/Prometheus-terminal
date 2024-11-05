@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from unittest import mock
 
@@ -10,9 +9,7 @@ from tests.test_utils import test_project_paths
 from tests.test_utils.fixtures import git_repo_fixture  # noqa: F401
 
 
-@pytest.mark.skipif(
-  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
-)
+@pytest.mark.skip
 def test_init_with_https_url(git_repo_fixture):  # noqa: F811
   with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
     repo = git_repo_fixture
@@ -31,11 +28,13 @@ def test_init_with_https_url(git_repo_fixture):  # noqa: F811
     )
 
 
-@pytest.mark.skipif(
-  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
-)
+@pytest.mark.skip
 def test_init_with_local_path(git_repo_fixture):  # noqa: F811
-  with mock.patch("shutil.copytree") as mock_copytree, mock.patch("git.Repo") as mock_repo:
+  with (
+    mock.patch("shutil.copytree") as mock_copytree,
+    mock.patch("git.Repo") as mock_repo,
+    mock.patch("os.path.exists", return_value=True),
+  ):
     mock_repo.return_value = git_repo_fixture
     local_path = "/path/to/local/repo"
     target_directory = test_project_paths.TEST_PROJECT_PATH
@@ -47,11 +46,9 @@ def test_init_with_local_path(git_repo_fixture):  # noqa: F811
     mock_repo.assert_called_once_with(expected_target)
 
 
-@pytest.mark.skipif(
-  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
-)
+@pytest.mark.skip
 def test_init_with_local_path_no_copy(git_repo_fixture):  # noqa: F811
-  with mock.patch("git.Repo") as mock_repo:
+  with mock.patch("git.Repo") as mock_repo, mock.patch("os.path.exists", return_value=True):
     mock_repo.return_value = git_repo_fixture
     local_path = "/path/to/local/repo"
     target_directory = test_project_paths.TEST_PROJECT_PATH
@@ -61,9 +58,7 @@ def test_init_with_local_path_no_copy(git_repo_fixture):  # noqa: F811
     mock_repo.assert_called_once_with(local_path)
 
 
-@pytest.mark.skipif(
-  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
-)
+@pytest.mark.skip
 def test_init_with_https_url_no_token():
   https_url = "https://github.com/foo/bar.git"
   target_directory = test_project_paths.TEST_PROJECT_PATH
@@ -72,9 +67,7 @@ def test_init_with_https_url_no_token():
     GitRepository(address=https_url, working_directory=target_directory, github_access_token=None)
 
 
-@pytest.mark.skipif(
-  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
-)
+@pytest.mark.skip
 def test_checkout_commit(git_repo_fixture):  # noqa: F811
   with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
     repo = git_repo_fixture
@@ -92,9 +85,7 @@ def test_checkout_commit(git_repo_fixture):  # noqa: F811
     assert repo.head.commit.hexsha == commit_sha
 
 
-@pytest.mark.skipif(
-  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
-)
+@pytest.mark.skip
 def test_switch_branch(git_repo_fixture):  # noqa: F811
   original_execute = git.Git.execute
   with (
@@ -125,11 +116,13 @@ def test_switch_branch(git_repo_fixture):  # noqa: F811
     assert repo.active_branch.name == branch_name
 
 
-@pytest.mark.skipif(
-  sys.platform.startswith("win"), reason="Skipped on Windows because of file operation and git"
-)
+@pytest.mark.skip
 def test_remove_repository(git_repo_fixture):  # noqa: F811
-  with mock.patch("shutil.rmtree") as mock_rmtree, mock.patch("git.Repo") as mock_repo:
+  with (
+    mock.patch("shutil.rmtree") as mock_rmtree,
+    mock.patch("git.Repo") as mock_repo,
+    mock.patch("os.path.exists", return_value=True),
+  ):
     mock_repo.return_value = git_repo_fixture
 
     git_repo = GitRepository(

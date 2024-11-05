@@ -121,4 +121,5 @@ RUN {install_requirements_cmd}
       self.container.stop()
       self.container.remove()
 
-    shutil.rmtree(self.project_path.parent)
+    # Not work on windows
+    #shutil.rmtree(self.project_path.parent)

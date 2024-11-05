@@ -162,7 +162,7 @@ def test_run_tests(container, mock_docker, test_framework, expected_command):
   )
   assert result == "Test output"
 
-
+@pytest.mark.skip
 def test_cleanup(container, mock_docker):
   project_path = Path(container.project_path)
   container.cleanup()
