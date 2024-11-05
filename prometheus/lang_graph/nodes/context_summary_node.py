@@ -227,7 +227,7 @@ File: `src/services/auth.py:120-160`
   HUMAN_PROMPT = """\
 The user query is: {query}
 
-The retrieved context from the ContextRetrievalAgent:
+The retrieved context from another agent:
 {context}
 """
 
