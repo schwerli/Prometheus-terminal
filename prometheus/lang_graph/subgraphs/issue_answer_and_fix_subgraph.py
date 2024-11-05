@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 import neo4j
@@ -6,7 +5,6 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 
-from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.code_editing_node import CodeEditingNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
@@ -22,20 +20,18 @@ class IssueAnswerAndFixSubgraph:
   def __init__(
     self,
     model: BaseChatModel,
-    project_path: Path,
-    git_repo: GitRepository,
     kg: KnowledgeGraph,
     neo4j_driver: neo4j.Driver,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    before_patch_test_node = RunTestNode(project_path, "before_test_output")
+    before_patch_test_node = RunTestNode("before_test_output")
     issue_to_query_node = IssueToQueryNode()
     context_provider_subgraph = ContextProviderSubgraph(
       model, kg, neo4j_driver, checkpointer
     ).subgraph
-    code_editing_node = CodeEditingNode(model, project_path)
-    after_patch_test_node = RunTestNode(project_path, "after_test_output")
-    git_diff_node = GitDiffNode(git_repo)
+    code_editing_node = CodeEditingNode(model)
+    after_patch_test_node = RunTestNode("after_test_output")
+    git_diff_node = GitDiffNode()
     issue_responder_node = IssueResponderNode(model)
 
     workflow = StateGraph(IssueAnswerAndFixState)
@@ -63,6 +59,7 @@ class IssueAnswerAndFixSubgraph:
 
   def invoke(
     self,
+    project_path: str,
     issue_title: str,
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
@@ -72,7 +69,12 @@ class IssueAnswerAndFixSubgraph:
     if thread_id:
       config = {"configurable": {"thread_id": thread_id}}
     output_state = self.subgraph.invoke(
-      {"issue_title": issue_title, "issue_body": issue_body, "issue_comments": issue_comments},
+      {
+        "project_path": project_path,
+        "issue_title": issue_title,
+        "issue_body": issue_body,
+        "issue_comments": issue_comments,
+      },
       config,
     )
     return output_state["issue_response"].content

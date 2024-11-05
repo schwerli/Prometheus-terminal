@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 from prometheus.app.services.chat_service import ChatService
-from prometheus.app.services.issue_service import IssueService
+from prometheus.app.services.issue_answer_service import IssueAnswerService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -18,12 +18,14 @@ class ServiceCoordinator:
     neo4j_service: Neo4jService,
     postgres_service: PostgresService,
     repository_service: RepositoryService,
+    github_token: str,
   ):
     self.knowledge_graph_service = knowledge_graph_service
     self.llm_service = llm_service
     self.neo4j_service = neo4j_service
     self.postgres_service = postgres_service
     self.repository_service = repository_service
+    self.github_token = github_token
 
     self._initialize_subgraph_services()
 
@@ -31,7 +33,7 @@ class ServiceCoordinator:
     self.chat_service = ChatService(
       self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
     )
-    self.issue_service = IssueService(
+    self.issue_answer_service = IssueAnswerService(
       self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
     )
 
@@ -45,7 +47,7 @@ class ServiceCoordinator:
     comments: Sequence[Mapping[str, str]],
     thread_id: Optional[str] = None,
   ) -> str:
-    return self.issue_service.answer_issue(title, body, comments, thread_id)
+    return self.issue_answer_service.answer_issue(title, body, comments, thread_id)
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()
@@ -57,7 +59,7 @@ class ServiceCoordinator:
 
   def upload_github_repository(self, https_url: str, commit_id: Optional[str] = None):
     self.knowledge_graph_service.clear()
-    saved_path = self.repository_service.clone_github_repo(https_url, commit_id)
+    saved_path = self.repository_service.clone_github_repo(self.github_token, https_url, commit_id)
     self.knowledge_graph_service.build_and_save_knowledge_graph(saved_path)
     self._initialize_subgraph_services()
 

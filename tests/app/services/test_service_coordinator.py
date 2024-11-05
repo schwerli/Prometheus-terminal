@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from prometheus.app.services.chat_service import ChatService
-from prometheus.app.services.issue_service import IssueService
+from prometheus.app.services.issue_answer_service import IssueAnswerService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -32,6 +32,7 @@ def mock_services():
     "neo4j_service": neo4j_service,
     "postgres_service": postgres_service,
     "repository_service": repository_service,
+    "github_token": "test_token",
   }
 
 
@@ -41,18 +42,19 @@ def mock_chat_service():
 
 
 @pytest.fixture
-def mock_issue_service():
-  return Mock(spec=IssueService)
+def mock_issue_answer_service():
+  return Mock(spec=IssueAnswerService)
 
 
 @pytest.fixture
-def service_coordinator(mock_services, mock_chat_service, mock_issue_service):
+def service_coordinator(mock_services, mock_chat_service, mock_issue_answer_service):
   with (
     patch(
       "prometheus.app.services.service_coordinator.ChatService", return_value=mock_chat_service
     ),
     patch(
-      "prometheus.app.services.service_coordinator.IssueService", return_value=mock_issue_service
+      "prometheus.app.services.service_coordinator.IssueAnswerService",
+      return_value=mock_issue_answer_service,
     ),
   ):
     coordinator = ServiceCoordinator(
@@ -61,6 +63,7 @@ def service_coordinator(mock_services, mock_chat_service, mock_issue_service):
       mock_services["neo4j_service"],
       mock_services["postgres_service"],
       mock_services["repository_service"],
+      mock_services["github_token"],
     )
     return coordinator
 
@@ -73,9 +76,8 @@ def test_initialization(service_coordinator, mock_services):
   assert service_coordinator.postgres_service == mock_services["postgres_service"]
   assert service_coordinator.repository_service == mock_services["repository_service"]
 
-  # Verify that subservices were initialized
   assert service_coordinator.chat_service is not None
-  assert service_coordinator.issue_service is not None
+  assert service_coordinator.issue_answer_service is not None
 
 
 def test_chat_with_codebase(service_coordinator):
@@ -92,12 +94,12 @@ def test_chat_with_codebase(service_coordinator):
 def test_answer_issue(service_coordinator):
   """Test that issue answering is properly delegated"""
   expected_response = "issue answer"
-  service_coordinator.issue_service.answer_issue.return_value = expected_response
+  service_coordinator.issue_answer_service.answer_issue.return_value = expected_response
 
   test_comments = [{"username": "user1", "comment": "comment1"}]
   response = service_coordinator.answer_issue("test title", "test body", test_comments, "thread123")
 
-  service_coordinator.issue_service.answer_issue.assert_called_once_with(
+  service_coordinator.issue_answer_service.answer_issue.assert_called_once_with(
     "test title", "test body", test_comments, "thread123"
   )
   assert response == expected_response
@@ -128,7 +130,7 @@ def test_upload_github_repository(service_coordinator, mock_services):
   # Verify the sequence of operations
   mock_services["knowledge_graph_service"].clear.assert_called_once()
   mock_services["repository_service"].clone_github_repo.assert_called_once_with(
-    test_url, test_commit
+    mock_services["github_token"], test_url, test_commit
   )
   mock_services["knowledge_graph_service"].build_and_save_knowledge_graph.assert_called_once_with(
     saved_path

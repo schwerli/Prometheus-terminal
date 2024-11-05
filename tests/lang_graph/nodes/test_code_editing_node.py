@@ -8,7 +8,7 @@ from tests.test_utils.util import FakeListChatWithToolsModel
 def test_code_editing_node_without_test_output():
   fake_response = "Fake response"
   fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
-  node = CodeEditingNode(fake_llm, "/foo/bar")
+  node = CodeEditingNode(fake_llm)
 
   test_messages = [
     AIMessage(content="This code handles file processing"),
@@ -17,6 +17,7 @@ def test_code_editing_node_without_test_output():
   test_state = IssueAnswerAndFixState(
     {
       "query": "How does the error handling work?",
+      "project_path": "/foo/bar",
       "summary": "Test summary response",
       "code_edit_messages": test_messages,
     }
@@ -31,7 +32,7 @@ def test_code_editing_node_without_test_output():
 def test_code_editing_node_with_test_output():
   fake_response = "Fake response"
   fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
-  node = CodeEditingNode(fake_llm, "/foo/bar")
+  node = CodeEditingNode(fake_llm)
 
   test_messages = [
     AIMessage(content="This code handles file processing"),
@@ -40,6 +41,7 @@ def test_code_editing_node_with_test_output():
   test_state = IssueAnswerAndFixState(
     {
       "query": "How does the error handling work?",
+      "project_path": "/foo/bar",
       "summary": "Test summary response",
       "code_edit_messages": test_messages,
       "test_output": "Test output",

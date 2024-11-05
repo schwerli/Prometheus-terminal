@@ -3,8 +3,6 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 
 class GitDiffNode:
-  def __init__(self, git_repo: GitRepository):
-    self.git_repo = git_repo
-
   def __call__(self, state: IssueAnswerAndFixState):
-    return {"patch": self.git_repo.get_diff()}
+    git_repo = GitRepository(state["project_path"], None, copy_to_working_dir=False)
+    return {"patch": git_repo.get_diff()}

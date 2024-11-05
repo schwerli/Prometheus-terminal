@@ -37,17 +37,15 @@ The retrieved context summary from another agent:
 {summary}
 """
 
-  def __init__(self, model: BaseChatModel, root_path: str):
+  def __init__(self, model: BaseChatModel):
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self.root_path = root_path
-    self.tools = self._init_tools()
-    self.model_with_tools = model.bind_tools(self.tools)
+    self.model = model
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.code_editing_node")
 
-  def _init_tools(self):
+  def _init_tools(self, root_path: str):
     tools = []
 
-    read_file_fn = functools.partial(file_operation.read_file, root_path=self.root_path)
+    read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
     read_file_tool = StructuredTool.from_function(
       func=read_file_fn,
       name=file_operation.read_file.__name__,
@@ -57,7 +55,7 @@ The retrieved context summary from another agent:
     tools.append(read_file_tool)
 
     read_file_with_line_numbers_fn = functools.partial(
-      file_operation.read_file_with_line_numbers, root_path=self.root_path
+      file_operation.read_file_with_line_numbers, root_path=root_path
     )
     read_file_with_line_numbers_tool = StructuredTool.from_function(
       func=read_file_with_line_numbers_fn,
@@ -67,7 +65,7 @@ The retrieved context summary from another agent:
     )
     tools.append(read_file_with_line_numbers_tool)
 
-    create_file_fn = functools.partial(file_operation.create_file, root_path=self.root_path)
+    create_file_fn = functools.partial(file_operation.create_file, root_path=root_path)
     create_file_tool = StructuredTool.from_function(
       func=create_file_fn,
       name=file_operation.create_file.__name__,
@@ -76,7 +74,7 @@ The retrieved context summary from another agent:
     )
     tools.append(create_file_tool)
 
-    delete_fn = functools.partial(file_operation.delete, root_path=self.root_path)
+    delete_fn = functools.partial(file_operation.delete, root_path=root_path)
     delete_tool = StructuredTool.from_function(
       func=delete_fn,
       name=file_operation.delete.__name__,
@@ -85,7 +83,7 @@ The retrieved context summary from another agent:
     )
     tools.append(delete_tool)
 
-    edit_file_fn = functools.partial(file_operation.edit_file, root_path=self.root_path)
+    edit_file_fn = functools.partial(file_operation.edit_file, root_path=root_path)
     edit_file_tool = StructuredTool.from_function(
       func=edit_file_fn,
       name=file_operation.edit_file.__name__,
@@ -106,8 +104,10 @@ The retrieved context summary from another agent:
     return human_message
 
   def __call__(self, state: IssueAnswerAndFixState):
+    tools = self._init_tools(state["project_path"])
+    model_with_tool = self.model.bind_tools(tools)
     message_history = [self.system_prompt, self.format_human_message(state)] + state[
       "code_edit_messages"
     ]
-    response = self.model_with_tools.invoke(message_history)
+    response = model_with_tool.invoke(message_history)
     return {"code_edit_messages": [response]}

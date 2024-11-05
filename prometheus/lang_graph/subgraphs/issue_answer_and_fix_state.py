@@ -7,6 +7,7 @@ from prometheus.lang_graph.subgraphs.issue_answer_state import IssueAnswerState
 
 
 class IssueAnswerAndFixState(IssueAnswerState):
+  project_path: str
   patch: str
   before_compile_output: str
   before_test_output: str
