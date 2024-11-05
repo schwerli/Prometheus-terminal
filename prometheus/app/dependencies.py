@@ -14,12 +14,15 @@ def initialize_services() -> ServiceCoordinator:
   knowledge_graph_service = KnowledgeGraphService(
     neo4j_service, settings.NEO4J_BATCH_SIZE, settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH
   )
-  resposistory_service = RepositoryService(
-    knowledge_graph_service, settings.WORKING_DIRECTORY
-  )
+  resposistory_service = RepositoryService(knowledge_graph_service, settings.WORKING_DIRECTORY)
 
   service_coordinator = ServiceCoordinator(
-    knowledge_graph_service, llm_service, neo4j_service, postgres_service, resposistory_service, settings.GITHUB_ACCESS_TOKEN
+    knowledge_graph_service,
+    llm_service,
+    neo4j_service,
+    postgres_service,
+    resposistory_service,
+    settings.GITHUB_ACCESS_TOKEN,
   )
 
   return service_coordinator

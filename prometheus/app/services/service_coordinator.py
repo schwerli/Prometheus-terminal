@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 from prometheus.app.services.chat_service import ChatService
+from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
 from prometheus.app.services.issue_answer_service import IssueAnswerService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
@@ -29,11 +30,16 @@ class ServiceCoordinator:
 
     self._initialize_subgraph_services()
 
+    self.local_codebase_path = None
+
   def _initialize_subgraph_services(self):
     self.chat_service = ChatService(
       self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
     )
     self.issue_answer_service = IssueAnswerService(
+      self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
+    )
+    self.issue_answer_and_fix_service = IssueAnswerAndFixService(
       self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
     )
 
@@ -49,6 +55,17 @@ class ServiceCoordinator:
   ) -> str:
     return self.issue_answer_service.answer_issue(title, body, comments, thread_id)
 
+  def answer_and_fix_issue(
+    self,
+    title: str,
+    body: str,
+    comments: Sequence[Mapping[str, str]],
+    thread_id: Optional[str] = None,
+  ) -> str:
+    return self.issue_answer_and_fix_service.answer_and_fix_issue(
+      str(self.local_codebase_path), title, body, comments, thread_id
+    )
+
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()
 
@@ -56,12 +73,14 @@ class ServiceCoordinator:
     self.knowledge_graph_service.clear()
     self.knowledge_graph_service.build_and_save_knowledge_graph(path)
     self._initialize_subgraph_services()
+    self.local_codebase_path = path
 
   def upload_github_repository(self, https_url: str, commit_id: Optional[str] = None):
     self.knowledge_graph_service.clear()
     saved_path = self.repository_service.clone_github_repo(self.github_token, https_url, commit_id)
     self.knowledge_graph_service.build_and_save_knowledge_graph(saved_path)
     self._initialize_subgraph_services()
+    self.local_codebase_path = saved_path
 
   def get_all_conversation_ids(self) -> Sequence[str]:
     return self.postgres_service.get_all_thread_ids()
@@ -73,6 +92,7 @@ class ServiceCoordinator:
     self.knowledge_graph_service.clear()
     self.repository_service.clean_working_directory()
     self._initialize_subgraph_services()
+    self.local_codebase_path = None
 
   def close(self):
     self.neo4j_service.close()

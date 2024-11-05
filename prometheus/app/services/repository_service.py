@@ -17,7 +17,9 @@ class RepositoryService:
     self.target_directory.mkdir(parents=True, exist_ok=True)
     self.local_path = None
 
-  def clone_github_repo(self, github_token: str, https_url: str, commit_id: Optional[str] = None) -> Path:
+  def clone_github_repo(
+    self, github_token: str, https_url: str, commit_id: Optional[str] = None
+  ) -> Path:
     if self._should_skip_upload(https_url, commit_id):
       return self.local_path
 
