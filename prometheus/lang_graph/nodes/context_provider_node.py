@@ -107,7 +107,7 @@ class ContextProviderNode:
     self.tools = self._init_tools()
     self.model_with_tools = model.bind_tools(self.tools)
 
-    self._logger = logging.getLogger("prometheus.agents.context_provider_node")
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_provider_node")
 
   def _init_tools(self):
     tools = []
@@ -260,4 +260,5 @@ class ContextProviderNode:
   def __call__(self, state: ContextProviderState):
     message_history = [self.system_prompt, HumanMessage(state["query"])] + state["context_messages"]
     response = self.model_with_tools.invoke(message_history)
+    self._logger.debug(f"ContextProviderNode response:\n{response}")
     return {"context_messages": [response]}

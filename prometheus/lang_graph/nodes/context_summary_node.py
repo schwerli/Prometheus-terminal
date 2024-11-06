@@ -235,7 +235,7 @@ The retrieved context from another agent:
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.model = model
 
-    self._logger = logging.getLogger("prometheus.agents.context_provider_node")
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_summary_node")
 
   def format_messages(self, context_messages: Sequence[BaseMessage]):
     formatted_messages = []
@@ -261,4 +261,5 @@ The retrieved context from another agent:
       self.format_human_message(state["query"], state["context_messages"]),
     ]
     response = self.model.invoke(message_history)
+    self._logger.debug(f"ContextSummaryNode response:\n{response}")
     return {"summary": response.content}

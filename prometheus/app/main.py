@@ -5,12 +5,16 @@ from fastapi import FastAPI
 
 from prometheus.app import dependencies
 from prometheus.app.api import chat, issue, repository
+from prometheus.configuration.config import settings
 
-logging.basicConfig(
-  level=logging.INFO,
-  format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-  handlers=[logging.StreamHandler()],
-)
+# Create a logger for application's namespace
+logger = logging.getLogger("prometheus")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(getattr(logging, settings.LOGGING_LEVEL))
+logger.propagate = False
 
 
 @asynccontextmanager

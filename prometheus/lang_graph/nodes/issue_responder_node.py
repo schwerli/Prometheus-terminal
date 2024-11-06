@@ -1,3 +1,4 @@
+import logging
 from typing import Mapping, Sequence, Union
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -55,6 +56,9 @@ Analyze the provided issue content, codebase context, and summary to provide a w
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.model = model
 
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_responder_node")
+
+
   def format_issue_comments(self, issue_comments: Sequence[Mapping[str, str]]):
     formatted_issue_comments = []
     for issue_comment in issue_comments:
@@ -92,4 +96,5 @@ Issue comments:
       self.format_human_message(state),
     ]
     response = self.model.invoke(messages)
+    self._logger.debug(f"IssueResponderNode reponse:\n{response}")
     return {"issue_response": response}
