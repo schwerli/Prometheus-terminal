@@ -23,7 +23,9 @@ class KnowledgeGraphService:
       return self.kg_handler.read_knowledge_graph()
     return None
 
-  def build_and_save_knowledge_graph(self, path: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None):
+  def build_and_save_knowledge_graph(
+    self, path: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
+  ):
     if self.exists():
       self.clear()
 

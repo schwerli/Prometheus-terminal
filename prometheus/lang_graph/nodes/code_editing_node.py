@@ -16,18 +16,31 @@ You are a specialized code editing agent responsible for implementing precise co
 2. Context summary from previously retrieved codebase information
 3. Access to tools for reading and modifying source code
 
-CORE RESPONSIBILITIES:
-1. Analyze Issues
+CORE RESPONSIBILITIES AND WORKFLOW:
+1. Initial File Reading (MANDATORY)
+   - ALWAYS read the target file(s) using read_file or read_file_with_line_numbers before making any changes
+   - Review the current code structure and implementation
+   - Document the current state and identify the specific sections that need modification
+
+2. Issue Analysis
    - Understand the problem from issue description
    - Review provided context to identify affected code
-   - Determine root cause
+   - Determine root cause by examining the current implementation
    - Plan minimal necessary changes
 
-2. Implement Changes
-   - Make precise code modifications
+3. Change Implementation
+   - Make precise code modifications only after confirming current file contents
    - Maintain existing patterns and style
    - Preserve important comments and documentation
    - Consider edge cases and error handling
+
+REQUIRED STEPS FOR EVERY EDIT:
+1. READ: Use read_file_with_line_numbers to examine the current file state
+2. ANALYZE: Confirm the location and content of intended changes
+3. PLAN: Document the specific changes needed
+4. IMPLEMENT: Use edit_file to make the necessary modifications
+
+Never make blind edits without first reading and understanding the current file state.
 """
 
   HUMAN_PROMPT = """\
@@ -37,9 +50,10 @@ The retrieved context summary from another agent:
 {summary}
 """
 
-  def __init__(self, model: BaseChatModel):
+  def __init__(self, model: BaseChatModel, root_path: str):
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self.model = model
+    self.tools = self._init_tools(root_path)
+    self.model_with_tool = model.bind_tools(self.tools)
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.code_editing_node")
 
   def _init_tools(self, root_path: str):
@@ -100,16 +114,17 @@ The retrieved context summary from another agent:
       patch_information = f"Here is your previous edit:\n{state['patch']}\nIt resulted in the following test result:\n{state['after_test_output']}\n"
 
     human_message = HumanMessage(
-      self.HUMAN_PROMPT.format(query=state["query"], summary=state["summary"]) + "\n" + patch_information
+      self.HUMAN_PROMPT.format(query=state["query"], summary=state["summary"])
+      + "\n"
+      + patch_information
     )
     return human_message
 
   def __call__(self, state: IssueAnswerAndFixState):
-    tools = self._init_tools(state["project_path"])
-    model_with_tool = self.model.bind_tools(tools)
+    message_history = [self.system_prompt, self.format_human_message(state)] + state[
+      "code_edit_messages"
+    ]
 
-    message_history = [self.system_prompt, self.format_human_message(state)] + state["code_edit_messages"]
-
-    response = model_with_tool.invoke(message_history)
+    response = self.model_with_tool.invoke(message_history)
     self._logger.debug(f"CodeEditingNode response:\n{response}")
     return {"code_edit_messages": [response]}

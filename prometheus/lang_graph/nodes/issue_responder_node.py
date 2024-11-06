@@ -58,7 +58,6 @@ Analyze the provided issue content, codebase context, and summary to provide a w
 
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_responder_node")
 
-
   def format_issue_comments(self, issue_comments: Sequence[Mapping[str, str]]):
     formatted_issue_comments = []
     for issue_comment in issue_comments:
