@@ -1,11 +1,8 @@
 import dataclasses
-import logging
-import shutil
-import tempfile
 import uuid
 from pathlib import Path
 
-import docker
+from prometheus.docker.base_container import BaseContainer
 
 
 @dataclasses.dataclass
@@ -17,19 +14,11 @@ class PythonProjectConfig:
   has_unittest: bool
 
 
-class PythonContainer:
+class PythonContainer(BaseContainer):
   def __init__(self, project_path: Path):
-    self._logger = logging.getLogger("prometheus.docker.python_container")
-    self._logger.info(f"Creating python container for project at path {project_path}")
-    temp_dir = Path(tempfile.mkdtemp())
-    temp_project_path = temp_dir / "project"
-    shutil.copytree(project_path, temp_project_path)
-    self.project_path = temp_project_path.absolute()
-    self._logger.debug(f"Copied {project_path} to {self.project_path}")
-    self.project_config = self._get_project_config()
-    self.client = docker.from_env()
+    super().__init__(project_path)
     self.tag_name = f"prometheus_python_container_{uuid.uuid4().hex[:10]}"
-    self.container = None
+    self.project_config = self._get_project_config()
 
   def _get_project_config(self) -> PythonProjectConfig:
     has_setup_py = (self.project_path / "setup.py").exists()
@@ -55,9 +44,9 @@ class PythonContainer:
       has_unittest=has_unittest,
     )
 
-  def _create_dockerfile(self):
+  def create_dockerfile(self) -> Path:
     DOCKERFILE_TEMPLATE = """\
-FROM {base_image_name}
+FROM python:3.11-slim
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
@@ -66,7 +55,7 @@ ENV PYTHONPATH=/app
 # Copy project files
 COPY . /app/
 
-RUN pip install pytest pytest-cov
+RUN pip install pytest pytest-cov build
 
 RUN {install_requirements_cmd}
 """
@@ -74,44 +63,20 @@ RUN {install_requirements_cmd}
       install_requirements_cmd = "pip install -r requirements.txt"
     else:
       install_requirements_cmd = "pip install ."
+
     dockerfile_content = DOCKERFILE_TEMPLATE.format(
-      base_image_name="python:3.11-slim",
       install_requirements_cmd=install_requirements_cmd,
     )
     dockerfile_path = self.project_path / "Dockerfile"
     dockerfile_path.write_text(dockerfile_content)
     return dockerfile_path
 
-  def _build_docker_image(self):
-    dockerfile_path = self._create_dockerfile()
-    self.client.images.build(
-      path=str(self.project_path), dockerfile=dockerfile_path.name, tag=self.tag_name
-    )
+  def run_build(self):
+    self.logger.info("Running Python build")
+    return self.execute_command("python -m build")
 
-  def _start_container(self):
-    self.container = self.client.containers.run(self.tag_name, detach=True, tty=True)
-
-  def run_tests(self) -> str:
-    if not self.container:
-      self._build_docker_image()
-      self._start_container()
-
+  def run_test(self):
+    self.logger.info("Running Python tests")
     if self.project_config.has_pytest:
-      return self._execute_command("python -m pytest -v")
-    return self._execute_command("python -m unittest discover -v")
-
-  def _execute_command(self, command: str) -> str:
-    self._logger.debug(f"Running command in container: {command}")
-    exec_result = self.container.exec_run(
-      command, workdir="/app", environment={"PYTHONPATH": "/app"}
-    )
-    return exec_result.output.decode("utf-8")
-
-  def cleanup(self):
-    if self.container:
-      self.container.stop()
-      self.container.remove()
-      self.client.images.remove(self.tag_name)
-      self.container = None
-
-    shutil.rmtree(self.project_path)
+      return self.execute_command("python -m pytest -v")
+    return self.execute_command("python -m unittest discover -v")
