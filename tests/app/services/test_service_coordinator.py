@@ -4,14 +4,13 @@ from unittest.mock import Mock, patch
 import pytest
 
 from prometheus.app.services.chat_service import ChatService
+from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
 from prometheus.app.services.issue_answer_service import IssueAnswerService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.app.services.postgres_service import PostgresService
 from prometheus.app.services.repository_service import RepositoryService
-
-# Import your ServiceCoordinator and related services
 from prometheus.app.services.service_coordinator import ServiceCoordinator
 
 
@@ -22,6 +21,7 @@ def mock_services():
 
   knowledge_graph_service = Mock(spec=KnowledgeGraphService)
   knowledge_graph_service.kg = None
+  knowledge_graph_service.local_path = None
   neo4j_service = Mock(spec=Neo4jService)
   postgres_service = Mock(spec=PostgresService)
   repository_service = Mock(spec=RepositoryService)
@@ -47,14 +47,26 @@ def mock_issue_answer_service():
 
 
 @pytest.fixture
-def service_coordinator(mock_services, mock_chat_service, mock_issue_answer_service):
+def mock_issue_answer_and_fix_service():
+  return Mock(spec=IssueAnswerAndFixService)
+
+
+@pytest.fixture
+def service_coordinator(
+  mock_services, mock_chat_service, mock_issue_answer_service, mock_issue_answer_and_fix_service
+):
   with (
     patch(
-      "prometheus.app.services.service_coordinator.ChatService", return_value=mock_chat_service
+      "prometheus.app.services.service_coordinator.ChatService",
+      return_value=mock_chat_service,
     ),
     patch(
       "prometheus.app.services.service_coordinator.IssueAnswerService",
       return_value=mock_issue_answer_service,
+    ),
+    patch(
+      "prometheus.app.services.service_coordinator.IssueAnswerAndFixService",
+      return_value=mock_issue_answer_and_fix_service,
     ),
   ):
     coordinator = ServiceCoordinator(
@@ -78,6 +90,7 @@ def test_initialization(service_coordinator, mock_services):
 
   assert service_coordinator.chat_service is not None
   assert service_coordinator.issue_answer_service is not None
+  assert service_coordinator.issue_answer_and_fix_service is None
 
 
 def test_chat_with_codebase(service_coordinator):

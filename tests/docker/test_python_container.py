@@ -143,7 +143,7 @@ def test_build_docker_image(container, mock_docker):
 
 @pytest.mark.parametrize(
   "test_framework,expected_command",
-  [(True, "pytest -v"), (False, "python -m unittest discover -v")],
+  [(True, "python -m pytest -v"), (False, "python -m unittest discover -v")],
 )
 def test_run_tests(container, mock_docker, test_framework, expected_command):
   # Patch the instance attribute instead of the class attribute

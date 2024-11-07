@@ -8,7 +8,7 @@ from tests.test_utils.util import FakeListChatWithToolsModel
 def test_code_editing_node_without_test_output():
   fake_response = "Fake response"
   fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
-  node = CodeEditingNode(fake_llm)
+  node = CodeEditingNode(fake_llm, "/foo/bar")
 
   test_messages = [
     AIMessage(content="This code handles file processing"),
@@ -32,7 +32,7 @@ def test_code_editing_node_without_test_output():
 def test_code_editing_node_with_test_output():
   fake_response = "Fake response"
   fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
-  node = CodeEditingNode(fake_llm)
+  node = CodeEditingNode(fake_llm, "/foo/bar")
 
   test_messages = [
     AIMessage(content="This code handles file processing"),
