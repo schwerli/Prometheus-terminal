@@ -3,7 +3,7 @@ import logging
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
@@ -59,10 +59,11 @@ Remember:
 - If a build cannot succeed without file modifications, explain why
 """
 
-  def __init__(self, model: BaseChatModel, container: GeneralContainer):
+  def __init__(self, model: BaseChatModel, container: GeneralContainer, before_edit: bool):
     self.tools = self._init_tools(container)
     self.model_with_tools = model.bind_tools(self.tools)
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
+    self.before_edit = before_edit
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_node")
 
   def _init_tools(self, container: GeneralContainer):
@@ -78,9 +79,19 @@ Remember:
     tools.append(run_command_tool)
 
     return tools
+  
+  def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
+    message = f"The (incomplete) project structure is:\n{state['project_structure']}"
+    if not self.before_edit:
+      message += f"\n\nThe previous build summary is:\n{state['build_summary']}"
+    return HumanMessage(message)
 
   def __call__(self, state: IssueAnswerAndFixState):
-    message_history = [self.system_prompt] + state["build_messages"]
+    if not self.before_edit and "exist_build" in state and not state["exist_build"]:
+      self._logger.debug("exist_build is false, skipping build.")
+      return {"build_messages": [AIMessage(content="Previous agent determined there is no build system.")]}
+
+    message_history = [self.system_prompt, self.format_human_message(state)] + state["build_messages"]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"GeneralBuildNode response:\n{response}")
     return {"build_messages": [response]}
