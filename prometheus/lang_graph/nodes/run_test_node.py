@@ -13,7 +13,7 @@ class RunTestNode:
   def __call__(self, state: IssueAnswerAndFixState):
     container = PythonContainer(Path(state["project_path"]))
     self._logger.info(f"Starting running the test at state {self.test_state_attr}")
-    output = container.run_tests()
+    output = container.run_test()
     self._logger.debug(f"Test output:\n{output}")
     container.cleanup()
     return {self.test_state_attr: output}
