@@ -45,7 +45,6 @@ class GitRepository:
 
   def switch_branch(self, branch_name: str):
     self.repo.git.checkout(branch_name)
-    self.pull()
 
   def pull(self):
     self.repo.git.pull()

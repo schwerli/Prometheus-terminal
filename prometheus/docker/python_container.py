@@ -114,5 +114,4 @@ RUN {install_requirements_cmd}
       self.client.images.remove(self.tag_name)
       self.container = None
 
-    # Not work on windows
-    # shutil.rmtree(self.project_path.parent)
+    shutil.rmtree(self.project_path)
