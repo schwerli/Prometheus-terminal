@@ -40,6 +40,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - PROMETHEUS_LOGGING_LEVEL="DEBUG"
       - PROMETHEUS_NEO4J_URI="bolt://neo4j:7687"
       - PROMETHEUS_NEO4J_USERNAME=neo4j
       - PROMETHEUS_NEO4J_PASSWORD=password
@@ -47,11 +48,13 @@ services:
       - PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH=5
       - PROMETHEUS_LITELLM_MODEL=${PROMETHEUS_LITELLM_MODEL}
       - PROMETHEUS_LITELLM_ANTHROPIC_API_KEY=${PROMETHEUS_LITELLM_ANTHROPIC_API_KEY}
+      - PROMETHEUS_LITELLM_GEMINI_API_KEY=${PROMETHEUS_LITELLM_GEMINI_API_KEY}
       - PROMETHEUS_WORKING_DIRECTORY="/app/working_dir"
       - PROMETHEUS_GITHUB_ACCESS_TOKEN=${PROMETHEUS_GITHUB_ACCESS_TOKEN}
       - PROMETHEUS_POSTGRES_URI="postgresql://postgres:password@postgres:5432/postgres?sslmode=disable"
     volumes:
       - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       neo4j:
         condition: service_healthy

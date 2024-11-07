@@ -2,7 +2,7 @@ from unittest.mock import Mock, create_autospec, patch
 
 import pytest
 
-from prometheus.app.services.issue_service import IssueService
+from prometheus.app.services.issue_answer_service import IssueAnswerService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -45,19 +45,23 @@ def mock_llm_service():
 
 
 @pytest.fixture
-def mock_ia_subgraph():
+def mock_issue_answer_subgraph():
   return create_autospec(IssueAnswerSubgraph, instance=True)
 
 
 @pytest.fixture
 def issue_service(
-  mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, mock_ia_subgraph
+  mock_kg_service,
+  mock_neo4j_service,
+  mock_postgres_service,
+  mock_llm_service,
+  mock_issue_answer_subgraph,
 ):
   with patch(
-    "prometheus.lang_graph.subgraphs.issue_answer_subgraph.IssueAnswerSubgraph",
-    return_value=mock_ia_subgraph,
+    "prometheus.app.services.issue_answer_service.IssueAnswerSubgraph",
+    return_value=mock_issue_answer_subgraph,
   ):
-    service = IssueService(
+    service = IssueAnswerService(
       kg_service=mock_kg_service,
       neo4j_service=mock_neo4j_service,
       postgres_service=mock_postgres_service,
@@ -67,15 +71,19 @@ def issue_service(
 
 
 def test_initialization_with_kg(
-  mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, mock_ia_subgraph
+  mock_kg_service,
+  mock_neo4j_service,
+  mock_postgres_service,
+  mock_llm_service,
+  mock_issue_answer_subgraph,
 ):
   # Setup
   with patch(
-    "prometheus.lang_graph.subgraphs.issue_answer_subgraph.IssueAnswerSubgraph",
-    return_value=mock_ia_subgraph,
+    "prometheus.app.services.issue_answer_service.IssueAnswerSubgraph",
+    return_value=mock_issue_answer_subgraph,
   ) as mock_ia_class:
     # Exercise
-    service = IssueService(
+    service = IssueAnswerService(
       kg_service=mock_kg_service,
       neo4j_service=mock_neo4j_service,
       postgres_service=mock_postgres_service,
@@ -84,26 +92,31 @@ def test_initialization_with_kg(
 
     # Verify
     mock_ia_class.assert_called_once_with(
-      mock_llm_service.model,
+      service.model,  # Updated to use service.model instead of mock_llm_service.model
       mock_kg_service.kg,
       mock_neo4j_service.neo4j_driver,
       mock_postgres_service.checkpointer,
     )
-    assert service.ia_subgraph == mock_ia_subgraph
+    assert service.issue_answer_subgraph == mock_issue_answer_subgraph
+    assert service.model == mock_llm_service.model  # Add verification for model assignment
 
 
 def test_initialization_without_kg(
-  mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, mock_ia_subgraph
+  mock_kg_service,
+  mock_neo4j_service,
+  mock_postgres_service,
+  mock_llm_service,
+  mock_issue_answer_subgraph,
 ):
   # Setup
   mock_kg_service.kg = None
 
   with patch(
     "prometheus.lang_graph.subgraphs.issue_answer_subgraph.IssueAnswerSubgraph",
-    return_value=mock_ia_subgraph,
+    return_value=mock_issue_answer_subgraph,
   ) as mock_ia_class:
     # Exercise
-    service = IssueService(
+    service = IssueAnswerService(
       kg_service=mock_kg_service,
       neo4j_service=mock_neo4j_service,
       postgres_service=mock_postgres_service,
@@ -112,33 +125,34 @@ def test_initialization_without_kg(
 
     # Verify
     mock_ia_class.assert_not_called()
-    assert service.ia_subgraph is None
+    assert service.issue_answer_subgraph is None
+    assert service.model == mock_llm_service.model  # Add verification for model assignment
 
 
-def test_answer_issue_with_existing_thread(issue_service, mock_ia_subgraph):
+def test_answer_issue_with_existing_thread(issue_service, mock_issue_answer_subgraph):
   # Setup
   title = "Test Issue"
   body = "Test body"
   comments = [{"author": "user1", "content": "comment1"}]
   thread_id = "existing-thread-id"
   expected_response = "test response"
-  mock_ia_subgraph.invoke.return_value = expected_response
+  mock_issue_answer_subgraph.invoke.return_value = expected_response
 
   # Exercise
   response = issue_service.answer_issue(title, body, comments, thread_id)
 
   # Verify
   assert response == expected_response
-  mock_ia_subgraph.invoke.assert_called_once_with(title, body, comments, thread_id)
+  mock_issue_answer_subgraph.invoke.assert_called_once_with(title, body, comments, thread_id)
 
 
-def test_answer_issue_with_new_thread(issue_service, mock_ia_subgraph):
+def test_answer_issue_with_new_thread(issue_service, mock_issue_answer_subgraph):
   # Setup
   title = "Test Issue"
   body = "Test body"
   comments = [{"author": "user1", "content": "comment1"}]
   expected_response = "test response"
-  mock_ia_subgraph.invoke.return_value = expected_response
+  mock_issue_answer_subgraph.invoke.return_value = expected_response
 
   # Exercise
   with patch("uuid.uuid4", return_value="mocked-uuid"):
@@ -146,12 +160,12 @@ def test_answer_issue_with_new_thread(issue_service, mock_ia_subgraph):
 
   # Verify
   assert response == expected_response
-  mock_ia_subgraph.invoke.assert_called_once_with(title, body, comments, "mocked-uuid")
+  mock_issue_answer_subgraph.invoke.assert_called_once_with(title, body, comments, "mocked-uuid")
 
 
 def test_answer_issue_without_initialized_kg(issue_service):
   # Setup
-  issue_service.ia_subgraph = None
+  issue_service.issue_answer_subgraph = None
   title = "Test Issue"
   body = "Test body"
   comments = []

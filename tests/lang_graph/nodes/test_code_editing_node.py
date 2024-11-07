@@ -17,6 +17,7 @@ def test_code_editing_node_without_test_output():
   test_state = IssueAnswerAndFixState(
     {
       "query": "How does the error handling work?",
+      "project_path": "/foo/bar",
       "summary": "Test summary response",
       "code_edit_messages": test_messages,
     }
@@ -40,6 +41,7 @@ def test_code_editing_node_with_test_output():
   test_state = IssueAnswerAndFixState(
     {
       "query": "How does the error handling work?",
+      "project_path": "/foo/bar",
       "summary": "Test summary response",
       "code_edit_messages": test_messages,
       "test_output": "Test output",

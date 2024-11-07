@@ -1,47 +1,61 @@
+import os
 import shutil
 from pathlib import Path
+from typing import Optional
 
-from git import Repo
+from git import InvalidGitRepositoryError, Repo
 
 
 class GitRepository:
-  def __init__(self, github_access_token: str):
-    self._github_access_token = github_access_token
-    self._original_https_url = None
-    self._repo = None
+  def __init__(
+    self,
+    address: str,
+    working_directory: Path,
+    copy_to_working_dir: bool = True,
+    github_access_token: Optional[str] = None,
+  ):
+    if address.startswith("https://"):
+      if github_access_token is None:
+        raise ValueError("github_access_token is required for https repository")
+      self.repo = self._clone_repository(address, github_access_token, working_directory)
+    else:
+      local_path = address
+      if copy_to_working_dir:
+        local_path = working_directory / os.path.basename(address)
+        shutil.copytree(address, local_path)
+      try:
+        self.repo = Repo(local_path)
+      except InvalidGitRepositoryError:
+        self.repo = Repo.init(local_path)
 
-  def clone_repository(self, https_url: str, target_directory: Path) -> Path:
-    if self._original_https_url == https_url and self._repo is not None:
-      self.pull()
-
+  def _clone_repository(
+    self, https_url: str, github_access_token: str, target_directory: Path
+  ) -> Repo:
     self._original_https_url = https_url
-    https_url = https_url.replace("https://", f"https://{self._github_access_token}@")
+    https_url = https_url.replace("https://", f"https://{github_access_token}@")
     repo_name = https_url.split("/")[-1].split(".")[0]
     local_path = target_directory / repo_name
     if local_path.exists():
       shutil.rmtree(local_path)
 
-    self._repo = Repo.clone_from(https_url, local_path)
-    return local_path
+    return Repo.clone_from(https_url, local_path)
 
   def checkout_commit(self, commit_sha: str):
-    self._repo.git.checkout(commit_sha)
+    self.repo.git.checkout(commit_sha)
 
   def switch_branch(self, branch_name: str):
-    self._repo.git.checkout(branch_name)
-    self._repo.git.pull()
+    self.repo.git.checkout(branch_name)
 
   def pull(self):
-    self._repo.git.pull()
+    self.repo.git.pull()
 
   def get_diff(self) -> str:
-    return self._repo.git.diff()
+    return self.repo.git.diff()
 
-  def has_repository(self) -> bool:
-    return self._repo is not None
+  def get_working_directory(self) -> str:
+    return self.repo.working_dir
 
   def remove_repository(self):
-    if self._repo is not None:
-      shutil.rmtree(self._repo.working_dir)
-      self._repo = None
-      self._original_https_url = None
+    if self.repo is not None:
+      shutil.rmtree(self.repo.working_dir)
+      self.repo = None

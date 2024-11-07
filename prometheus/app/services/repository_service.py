@@ -10,30 +10,30 @@ class RepositoryService:
   def __init__(
     self,
     kg_service: KnowledgeGraphService,
-    github_token: str,
     working_dir: str,
   ):
     self.kg_service = kg_service
-    self.git_repo = GitRepository(github_token)
     self.target_directory = Path(working_dir) / "repositories"
     self.target_directory.mkdir(parents=True, exist_ok=True)
+    self.local_path = None
 
-  def clone_github_repo(self, https_url: str, commit_id: Optional[str] = None):
+  def clone_github_repo(
+    self, github_token: str, https_url: str, commit_id: Optional[str] = None
+  ) -> Path:
     if self._should_skip_upload(https_url, commit_id):
-      return
+      return self.local_path
 
-    if self.git_repo.has_repository():
-      self.git_repo.remove_repository()
-
-    saved_path = self.git_repo.clone_repository(https_url, self.target_directory)
+    git_repo = GitRepository(https_url, self.target_directory, github_access_token=github_token)
     if commit_id:
-      self.git_repo.checkout_commit(commit_id)
-    return saved_path
+      git_repo.checkout_commit(commit_id)
+    self.local_path = Path(git_repo.get_working_directory())
+    return self.local_path
 
   def _should_skip_upload(self, https_url: str, commit_id: Optional[str]) -> bool:
     kg = self.kg_service.kg
     return (
-      kg is not None
+      self.local_path is not None
+      and kg is not None
       and kg.is_built_from_github()
       and commit_id
       and kg.get_codebase_https_url() == https_url

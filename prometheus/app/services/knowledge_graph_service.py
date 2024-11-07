@@ -14,19 +14,26 @@ class KnowledgeGraphService:
     self.max_ast_depth = max_ast_depth
     self.kg = self._load_existing_knowledge_graph()
 
+    self.local_path = None
+    if self.kg is not None:
+      self.local_path = self.kg.get_local_path()
+
   def _load_existing_knowledge_graph(self) -> Optional[KnowledgeGraph]:
     if self.kg_handler.knowledge_graph_exists():
       return self.kg_handler.read_knowledge_graph()
     return None
 
-  def build_and_save_knowledge_graph(self, path: Path):
+  def build_and_save_knowledge_graph(
+    self, path: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
+  ):
     if self.exists():
       self.clear()
 
     kg = KnowledgeGraph(self.max_ast_depth)
-    kg.build_graph(path)
+    kg.build_graph(path, https_url, commit_id)
     self.kg = kg
     self.kg_handler.write_knowledge_graph(kg)
+    self.local_path = kg.get_local_path()
 
   def exists(self) -> bool:
     return self.kg_handler.knowledge_graph_exists()
@@ -34,3 +41,4 @@ class KnowledgeGraphService:
   def clear(self):
     self.kg_handler.clear_knowledge_graph()
     self.kg = None
+    self.local_path = None

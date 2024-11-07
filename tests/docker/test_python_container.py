@@ -143,7 +143,7 @@ def test_build_docker_image(container, mock_docker):
 
 @pytest.mark.parametrize(
   "test_framework,expected_command",
-  [(True, "pytest -v"), (False, "python -m unittest discover -v")],
+  [(True, "python -m pytest -v"), (False, "python -m unittest discover -v")],
 )
 def test_run_tests(container, mock_docker, test_framework, expected_command):
   # Patch the instance attribute instead of the class attribute
@@ -165,8 +165,12 @@ def test_run_tests(container, mock_docker, test_framework, expected_command):
 
 def test_cleanup(container, mock_docker):
   project_path = Path(container.project_path)
-  container.cleanup()
 
-  mock_docker["container"].stop.assert_called_once()
-  mock_docker["container"].remove.assert_called_once()
-  assert not project_path.parent.exists()
+  with patch("shutil.rmtree") as mock_rmtree:
+    container.cleanup()
+
+    mock_docker["container"].stop.assert_called_once()
+    mock_docker["container"].remove.assert_called_once()
+    mock_docker["client"].images.remove.assert_called_once_with(container.tag_name)
+
+    mock_rmtree.assert_called_once_with(project_path)

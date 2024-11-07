@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 import shutil
 import tempfile
 import uuid
@@ -18,13 +19,16 @@ class PythonProjectConfig:
 
 class PythonContainer:
   def __init__(self, project_path: Path):
+    self._logger = logging.getLogger("prometheus.docker.python_container")
+    self._logger.info(f"Creating python container for project at path {project_path}")
     temp_dir = Path(tempfile.mkdtemp())
     temp_project_path = temp_dir / "project"
     shutil.copytree(project_path, temp_project_path)
     self.project_path = temp_project_path.absolute()
+    self._logger.debug(f"Copied {project_path} to {self.project_path}")
     self.project_config = self._get_project_config()
     self.client = docker.from_env()
-    self.tag_name = f"prometheus_python_container_{uuid.uuid4().hex[:8]}"
+    self.tag_name = f"prometheus_python_container_{uuid.uuid4().hex[:10]}"
     self.container = None
 
   def _get_project_config(self) -> PythonProjectConfig:
@@ -59,17 +63,8 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Install git and build essentials for potential requirements
-RUN apt-get update && apt-get install -y \\
-    git \\
-    build-essential
-
-    # Copy project files
+# Copy project files
 COPY . /app/
-
-# Create and activate virtual environment
-RUN python -m venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH"
 
 RUN pip install pytest pytest-cov
 
@@ -94,12 +89,7 @@ RUN {install_requirements_cmd}
     )
 
   def _start_container(self):
-    self.container = self.client.containers.run(
-      self.tag_name,
-      detach=True,
-      tty=True,
-      volumes={str(self.project_path): {"bind": "/app", "mode": "rw"}},
-    )
+    self.container = self.client.containers.run(self.tag_name, detach=True, tty=True)
 
   def run_tests(self) -> str:
     if not self.container:
@@ -107,10 +97,11 @@ RUN {install_requirements_cmd}
       self._start_container()
 
     if self.project_config.has_pytest:
-      return self._execute_command("pytest -v")
+      return self._execute_command("python -m pytest -v")
     return self._execute_command("python -m unittest discover -v")
 
   def _execute_command(self, command: str) -> str:
+    self._logger.debug(f"Running command in container: {command}")
     exec_result = self.container.exec_run(
       command, workdir="/app", environment={"PYTHONPATH": "/app"}
     )
@@ -120,5 +111,7 @@ RUN {install_requirements_cmd}
     if self.container:
       self.container.stop()
       self.container.remove()
+      self.client.images.remove(self.tag_name)
+      self.container = None
 
-    shutil.rmtree(self.project_path.parent)
+    shutil.rmtree(self.project_path)

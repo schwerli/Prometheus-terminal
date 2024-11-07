@@ -18,7 +18,9 @@ def mock_kg_service():
 
 @pytest.fixture
 def mock_git_repository():
-  return create_autospec(GitRepository, instance=True)
+  repo = create_autospec(GitRepository, instance=True)
+  repo.get_working_directory.return_value = "/test/working/dir/repositories/repo"
+  return repo
 
 
 @pytest.fixture
@@ -29,18 +31,12 @@ def mock_knowledge_graph():
 
 
 @pytest.fixture
-def service(mock_kg_service, mock_git_repository):
+def service(mock_kg_service):
   working_dir = Path("/test/working/dir")
-  # Patch both GitRepository and Path
-  with (
-    patch(
-      "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
-    ),
-    patch("pathlib.Path.mkdir"),
-  ):
+  # Don't mock GitRepository in the fixture anymore
+  with patch("pathlib.Path.mkdir"):
     return RepositoryService(
       kg_service=mock_kg_service,
-      github_token="dummy_token",
       working_dir=working_dir,
     )
 
@@ -49,48 +45,34 @@ def test_clone_new_github_repo(service, mock_kg_service, mock_git_repository):
   # Setup
   test_url = "https://github.com/test/repo"
   test_commit = "abc123"
-  saved_path = Path("/test/saved")
-  target_directory = service.target_directory
+  test_github_token = "test_token"
+  expected_path = Path("/test/working/dir/repositories/repo")
 
-  mock_git_repository.has_repository.return_value = False
-  mock_git_repository.clone_repository.return_value = saved_path
+  # Mock the GitRepository class creation
+  with patch(
+    "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
+  ) as mock_git_class:
+    # Exercise
+    result_path = service.clone_github_repo(test_github_token, test_url, test_commit)
 
-  # Exercise
-  result_path = service.clone_github_repo(test_url, test_commit)
+    # Verify
+    # Check that GitRepository was instantiated with correct parameters
+    mock_git_class.assert_called_once_with(
+      test_url, service.target_directory, github_access_token=test_github_token
+    )
 
-  # Verify
-  mock_git_repository.has_repository.assert_called_once()
-  mock_git_repository.remove_repository.assert_not_called()
-  mock_git_repository.clone_repository.assert_called_once_with(test_url, target_directory)
-  mock_git_repository.checkout_commit.assert_called_once_with(test_commit)
-  assert result_path == saved_path
+    # Verify checkout_commit was called
+    mock_git_repository.checkout_commit.assert_called_once_with(test_commit)
 
-
-def test_clone_github_repo_with_existing_repo(service, mock_kg_service, mock_git_repository):
-  # Setup
-  test_url = "https://github.com/test/repo"
-  test_commit = "abc123"
-  saved_path = Path("/test/saved")
-  target_directory = service.target_directory
-
-  mock_git_repository.has_repository.return_value = True
-  mock_git_repository.clone_repository.return_value = saved_path
-
-  # Exercise
-  result_path = service.clone_github_repo(test_url, test_commit)
-
-  # Verify
-  mock_git_repository.has_repository.assert_called_once()
-  mock_git_repository.remove_repository.assert_called_once()
-  mock_git_repository.clone_repository.assert_called_once_with(test_url, target_directory)
-  mock_git_repository.checkout_commit.assert_called_once_with(test_commit)
-  assert result_path == saved_path
+    # Verify the returned path matches expected
+    assert result_path == expected_path
 
 
 def test_skip_clone_when_already_loaded(service, mock_kg_service, mock_git_repository):
   # Setup
   test_url = "https://github.com/test/repo"
   test_commit = "abc123"
+  test_github_token = "test_token"
 
   mock_knowledge_graph = Mock()
   mock_knowledge_graph.is_built_from_github.return_value = True
@@ -99,14 +81,22 @@ def test_skip_clone_when_already_loaded(service, mock_kg_service, mock_git_repos
 
   mock_kg_service.kg = mock_knowledge_graph
 
-  # Exercise
-  result_path = service.clone_github_repo(test_url, test_commit)
+  # Set local_path to simulate already loaded repository
+  service.local_path = Path("/fake/path")
 
-  # Verify
-  assert result_path is None
-  mock_git_repository.has_repository.assert_not_called()
-  mock_git_repository.clone_repository.assert_not_called()
-  mock_git_repository.checkout_commit.assert_not_called()
+  # Exercise
+  with patch(
+    "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
+  ) as mock_git_class:
+    result_path = service.clone_github_repo(test_github_token, test_url, test_commit)
+
+    # Verify
+    assert result_path == service.local_path
+    # GitRepository should not be instantiated
+    mock_git_class.assert_not_called()
+    # These methods should not be called on the mock repository
+    mock_git_repository.checkout_commit.assert_not_called()
+    mock_git_repository.get_working_directory.assert_not_called()
 
 
 def test_clean_working_directory(service):

@@ -92,7 +92,7 @@ class KnowledgeGraph:
     if https_url is not None:
       metadata_node = MetadataNode(
         codebase_source=CodeBaseSourceEnum.github,
-        local_path=None,
+        local_path=str(root_dir),
         https_url=https_url,
         commit_id=commit_id,
       )
@@ -282,6 +282,9 @@ class KnowledgeGraph:
 
   def is_built_from_github(self) -> bool:
     return self._metadata_node.codebase_source == CodeBaseSourceEnum.github
+
+  def get_local_path(self) -> str:
+    return self._metadata_node.local_path
 
   def get_codebase_https_url(self) -> str:
     return self._metadata_node.https_url
