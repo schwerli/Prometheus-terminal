@@ -5,7 +5,6 @@ import pytest
 
 from prometheus.app.services.chat_service import ChatService
 from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
-from prometheus.app.services.issue_answer_service import IssueAnswerService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -42,27 +41,16 @@ def mock_chat_service():
 
 
 @pytest.fixture
-def mock_issue_answer_service():
-  return Mock(spec=IssueAnswerService)
-
-
-@pytest.fixture
 def mock_issue_answer_and_fix_service():
   return Mock(spec=IssueAnswerAndFixService)
 
 
 @pytest.fixture
-def service_coordinator(
-  mock_services, mock_chat_service, mock_issue_answer_service, mock_issue_answer_and_fix_service
-):
+def service_coordinator(mock_services, mock_chat_service, mock_issue_answer_and_fix_service):
   with (
     patch(
       "prometheus.app.services.service_coordinator.ChatService",
       return_value=mock_chat_service,
-    ),
-    patch(
-      "prometheus.app.services.service_coordinator.IssueAnswerService",
-      return_value=mock_issue_answer_service,
     ),
     patch(
       "prometheus.app.services.service_coordinator.IssueAnswerAndFixService",
@@ -89,7 +77,6 @@ def test_initialization(service_coordinator, mock_services):
   assert service_coordinator.repository_service == mock_services["repository_service"]
 
   assert service_coordinator.chat_service is not None
-  assert service_coordinator.issue_answer_service is not None
   assert service_coordinator.issue_answer_and_fix_service is None
 
 
@@ -101,20 +88,6 @@ def test_chat_with_codebase(service_coordinator):
   response = service_coordinator.chat_with_codebase("test query", "thread123")
 
   service_coordinator.chat_service.chat.assert_called_once_with("test query", "thread123")
-  assert response == expected_response
-
-
-def test_answer_issue(service_coordinator):
-  """Test that issue answering is properly delegated"""
-  expected_response = "issue answer"
-  service_coordinator.issue_answer_service.answer_issue.return_value = expected_response
-
-  test_comments = [{"username": "user1", "comment": "comment1"}]
-  response = service_coordinator.answer_issue("test title", "test body", test_comments, "thread123")
-
-  service_coordinator.issue_answer_service.answer_issue.assert_called_once_with(
-    "test title", "test body", test_comments, "thread123"
-  )
   assert response == expected_response
 
 
