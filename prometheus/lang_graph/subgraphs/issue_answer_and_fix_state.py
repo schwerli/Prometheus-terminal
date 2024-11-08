@@ -14,6 +14,7 @@ class IssueAnswerAndFixState(ContextProviderState):
   run_test: bool
 
   project_path: str
+  project_structure: str
 
   build_messages: Annotated[Sequence[BaseMessage], add_messages]
   exist_build: bool

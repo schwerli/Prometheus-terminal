@@ -73,7 +73,7 @@ Remember:
     run_command_tool = StructuredTool.from_function(
       func=run_command_fn,
       name=container_command.run_command.__name__,
-      description=container_command.FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION,
+      description=container_command.RUN_COMMAND_DESCRIPTION,
       args_schema=container_command.RunCommandInput,
     )
     tools.append(run_command_tool)

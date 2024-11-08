@@ -7,7 +7,7 @@ class RunCommandInput(BaseModel):
   command: str = Field("The command to be run in the container")
 
 
-READ_FILE_DESCRIPTION = """\
+RUN_COMMAND_DESCRIPTION = """\
 Run a command in the container and return the result of the command. You are always at the root
 of the codebase.
 """
