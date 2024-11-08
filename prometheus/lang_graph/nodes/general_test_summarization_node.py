@@ -8,9 +8,15 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 
 class TestClassification(BaseModel):
-  exist_test: bool = Field(description="Indicates if there is any test framework present in the project")
-  summary: str = Field(description="Summary of the test execution commands")
-  successful: bool = Field(description="Whether all tests passed successfully")
+  exist_test: bool = Field(
+    description="Indicates if there is any test framework present in the project"
+  )
+  command_summary: str = Field(
+    description="Summary of the test framework and list of commands required to run tests"
+  )
+  fail_log: str = Field(
+    description="Contains the test failure logs if any tests failed, empty string if all passed"
+  )
 
 
 class GeneralTestSummarizationNode:
@@ -19,22 +25,32 @@ You are a testing expert analyzing test execution history for software projects.
 a history of commands executed by an agent that attempted to run the tests. Examine this test history to:
 
 1. Determine if a test framework exists (looking for test files, pytest.ini, jest.config.js, etc.)
-2. Assess if all tests passed (dependencies installed, tests executed, no unexpected failures)
-3. Extract the test execution commands and results
+2. Analyze the test execution process and required commands
+3. Identify any test failures and their causes
 
 Provide three outputs:
 1. exist_test: Boolean indicating if a test framework is present
-2. successful: Boolean indicating if all tests passed
-3. summary: Structured test summary containing:
-   - Test Framework: [type or "None"]
-   - Status: [Passed/Failed/N/A] with results
-   - Dependencies: [required packages/tools]
-   - Environment: [required setup]
-   - Steps: [commands with purpose]
-   - Results: [total/passed/failed/skipped]
-   - Notes: [warnings or issues]
+2. command_summary: Concise description of the test setup and chronological list of commands needed for testing, including:
+   - Type of test framework detected
+   - Required test dependencies or setup steps
+   - Sequence of test commands to execute
+   - Test coverage and scope information
+3. fail_log: If any tests failed, provide the relevant error logs and test failure details. Empty string if all tests passed
 
-Focus on command accuracy, test coverage, and failure analysis. The input will contain messages showing the agent's attempts and their results.
+When analyzing commands:
+- Focus on essential test execution steps
+- Include test dependency installation commands
+- List commands in execution order
+- Note any required environment setup for testing
+- Include commands for different test types (unit, integration, etc.)
+
+When capturing fail logs:
+- Include complete test failure messages
+- Show which tests failed and why
+- Include relevant stack traces
+- Return empty string if all tests passed
+
+The input will contain messages showing the agent's attempts and their results.
 """
 
   def __init__(self, model: BaseChatModel):
@@ -56,4 +72,8 @@ Focus on command accuracy, test coverage, and failure analysis. The input will c
     )
     response = self.model_with_structured_output.invoke(message_history)
     self._logger.debug(f"GeneralTestSummarizationNode response:\n{response}")
-    return {"exist_test": response["exist_test"], "test_summary": response["summary"], "test_success": response["sucussful"]}
+    return {
+      "exist_test": response["exist_test"],
+      "test_command_summary": response["command_summary"],
+      "test_fail_log": response["fail_log"],
+    }

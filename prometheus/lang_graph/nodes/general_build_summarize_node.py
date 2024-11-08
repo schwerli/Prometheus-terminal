@@ -8,9 +8,15 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 
 class BuildClassification(BaseModel):
-  exist_build: bool = Field(description="Indicates if there is any build system present in the project")
-  summary: str = Field(description="Summary of the sucussful commands that builds the project")
-  sucussful: bool = Field(description="Whenever the build was successful or not")
+  exist_build: bool = Field(
+    description="Indicates if there is any build system present in the project"
+  )
+  command_summary: str = Field(
+    description="Summary of the build system and list of commands required to build the project"
+  )
+  fail_log: str = Field(
+    description="Contains the error logs if build failed, empty string if successful"
+  )
 
 
 class GeneralBuildSummarizeNode:
@@ -19,21 +25,30 @@ You are a build system expert analyzing build attempts for software projects. Yo
 of commands executed by an agent that attempted to build the project. Examine this build history to:
 
 1. Determine if a build system exists (looking for Makefiles, CMakeLists.txt, package.json, etc.)
-2. Assess if the build was successful (all dependencies installed, commands completed, artifacts generated)
-3. Extract the working build steps and commands
+2. Analyze the build process and required commands
+3. Identify any build failures and their causes
 
 Provide three outputs:
 1. exist_build: Boolean indicating if a build system is present
-2. successful: Boolean indicating if the build succeeded
-3. summary: Structured build summary containing:
-   - Build System: [type or "None"]
-   - Status: [Successful/Failed/N/A] with reason
-   - Dependencies: [required packages/tools]
-   - Environment: [required setup]
-   - Steps: [commands with status]
-   - Notes: [warnings or issues]
+2. command_summary: Concise description of the build system and chronological list of commands needed for building, including:
+   - Type of build system detected
+   - Required dependencies or setup steps
+   - Sequence of build commands to execute
+3. fail_log: If build failed, provide the relevant error logs. Empty string if build succeeded
 
-Focus on command accuracy, build order, and critical dependencies. The input will contain messages showing the agent's attempts and their results.
+When analyzing commands:
+- Focus on essential build steps
+- Include dependency installation commands
+- List commands in execution order
+- Note any required environment setup
+
+When capturing fail logs:
+- Include complete error messages
+- Focus on build-breaking errors
+- Exclude warnings or non-critical messages
+- Return empty string if build was successful
+
+The input will contain messages showing the agent's attempts and their results.
 """
 
   def __init__(self, model: BaseChatModel):
@@ -56,4 +71,8 @@ Focus on command accuracy, build order, and critical dependencies. The input wil
     response = self.model_with_structured_output.invoke(message_history)
     self._logger.debug(f"GeneralBuildSummarizeNode response:\n{response}")
 
-    return {"exist_build": response["exist_build"], "build_summary": response["summary"], "build_success": response["sucussful"]}
+    return {
+      "exist_build": response["exist_build"],
+      "build_command_summary": response["command_summary"],
+      "build_fail_log": response["fail_log"],
+    }

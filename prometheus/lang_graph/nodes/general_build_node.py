@@ -79,7 +79,7 @@ Remember:
     tools.append(run_command_tool)
 
     return tools
-  
+
   def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
     message = f"The (incomplete) project structure is:\n{state['project_structure']}"
     if not self.before_edit:
@@ -89,9 +89,13 @@ Remember:
   def __call__(self, state: IssueAnswerAndFixState):
     if not self.before_edit and "exist_build" in state and not state["exist_build"]:
       self._logger.debug("exist_build is false, skipping build.")
-      return {"build_messages": [AIMessage(content="Previous agent determined there is no build system.")]}
+      return {
+        "build_messages": [AIMessage(content="Previous agent determined there is no build system.")]
+      }
 
-    message_history = [self.system_prompt, self.format_human_message(state)] + state["build_messages"]
+    message_history = [self.system_prompt, self.format_human_message(state)] + state[
+      "build_messages"
+    ]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"GeneralBuildNode response:\n{response}")
     return {"build_messages": [response]}

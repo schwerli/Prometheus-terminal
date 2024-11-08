@@ -2,7 +2,6 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 
 class ResetMessagesNode:
-
   def __init__(self, message_state_key: str):
     self.message_state_key = message_state_key
 

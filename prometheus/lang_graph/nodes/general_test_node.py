@@ -88,7 +88,7 @@ Remember:
     tools.append(run_command_tool)
 
     return tools
-  
+
   def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
     message = f"The (incomplete) project structure is:\n{state['project_structure']}"
     if not self.before_edit:
@@ -98,9 +98,15 @@ Remember:
   def __call__(self, state: IssueAnswerAndFixState):
     if not self.before_edit and "exist_test" in state and not state["exist_test"]:
       self._logger.debug("exist_test is false, skipping test.")
-      return {"build_messages": [AIMessage(content="Previous agent determined there is no test framework.")]}
+      return {
+        "build_messages": [
+          AIMessage(content="Previous agent determined there is no test framework.")
+        ]
+      }
 
-    message_history = [self.system_prompt, self.format_human_message(state)] + state["test_messages"]
+    message_history = [self.system_prompt, self.format_human_message(state)] + state[
+      "test_messages"
+    ]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"GeneralTestNode response:\n{response}")
     return {"test_messages": [response]}
