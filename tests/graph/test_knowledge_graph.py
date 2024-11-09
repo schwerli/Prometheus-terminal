@@ -45,6 +45,34 @@ test_project
   assert file_tree == expected_file_tree
 
 
+def test_get_file_tree_depth_one():
+  knowledge_graph = KnowledgeGraph(1000)
+  knowledge_graph.build_graph(test_project_paths.TEST_PROJECT_PATH)
+  file_tree = knowledge_graph.get_file_tree(max_depth=1)
+  expected_file_tree = """\
+test_project
+├── .gitignore
+├── bar
+├── foo
+└── test.c"""
+  assert file_tree == expected_file_tree
+
+
+def test_get_file_tree_depth_two_max_seven_lines():
+  knowledge_graph = KnowledgeGraph(1000)
+  knowledge_graph.build_graph(test_project_paths.TEST_PROJECT_PATH)
+  file_tree = knowledge_graph.get_file_tree(max_depth=2, max_lines=7)
+  expected_file_tree = """\
+test_project
+├── .gitignore
+├── bar
+|   ├── test.java
+|   └── test.py
+├── foo
+|   ├── test.dummy"""
+  assert file_tree == expected_file_tree
+
+
 def test_from_neo4j(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, kg = neo4j_container_with_kg_fixture
   driver = neo4j_container.get_driver()

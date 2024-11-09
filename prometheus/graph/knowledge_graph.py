@@ -243,7 +243,7 @@ class KnowledgeGraph:
       knowledge_graph_edges=knowledge_graph_edges,
     )
 
-  def get_file_tree(self, max_tree_lines: int = 300) -> str:
+  def get_file_tree(self, max_depth: int = 4, max_lines: int = 1000) -> str:
     file_node_adjacency_dict = self._get_file_node_adjacency_dict()
 
     stack = deque()
@@ -254,8 +254,12 @@ class KnowledgeGraph:
     BRANCH = "|   "
     TEE = "├── "
     LAST = "└── "
-    while stack and (len(result_lines)) < max_tree_lines:
+    while stack and (len(result_lines)) < max_lines:
       file_node, depth, prefix, is_last = stack.pop()
+
+      # Skip if we've exceeded max_depth
+      if depth > max_depth:
+        continue
 
       pointer = LAST if is_last else TEE
       line_prefix = "" if depth == 0 else prefix + pointer
