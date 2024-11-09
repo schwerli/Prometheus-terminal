@@ -1,3 +1,4 @@
+import logging
 from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -54,6 +55,7 @@ The input will contain messages showing the agent's attempts and their results.
   def __init__(self, model: BaseChatModel):
     self.model_with_structured_output = model.with_structured_output(BuildClassification)
     self.sys_prompt = SystemMessage(self.SYS_PROMPT)
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_summarization_node")
 
   def format_build_history(self, build_messages: Sequence[BaseMessage]):
     formatted_messages = []
@@ -65,9 +67,9 @@ The input will contain messages showing the agent's attempts and their results.
     return formatted_messages
 
   def __call__(self, state: IssueAnswerAndFixState):
-    message_history = [self.sys_prompt] + HumanMessage(
-      self.format_build_history(state["build_messages"])
-    )
+    message_history = [
+      self.sys_prompt + HumanMessage(self.format_build_history(state["build_messages"]))
+    ]
     response = self.model_with_structured_output.invoke(message_history)
     self._logger.debug(f"GeneralBuildSummarizeNode response:\n{response}")
 
