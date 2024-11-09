@@ -10,6 +10,7 @@ class IssueAnswerAndFixState(ContextProviderState):
   issue_title: str
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
+  only_answer: bool
   run_build: bool
   run_test: bool
 

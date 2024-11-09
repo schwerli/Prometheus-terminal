@@ -52,9 +52,14 @@ class ServiceCoordinator:
     title: str,
     body: str,
     comments: Sequence[Mapping[str, str]],
+    only_answer: bool,
+    run_build: bool,
+    run_tests: bool,
     thread_id: Optional[str] = None,
   ) -> str:
-    return self.issue_answer_and_fix_service.answer_and_fix_issue(title, body, comments, thread_id)
+    return self.issue_answer_and_fix_service.answer_and_fix_issue(
+      title, body, comments, only_answer, run_build, run_tests, thread_id
+    )
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()
