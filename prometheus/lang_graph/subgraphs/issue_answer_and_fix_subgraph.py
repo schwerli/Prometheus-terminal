@@ -49,6 +49,7 @@ class IssueAnswerAndFixSubgraph:
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self.local_path = local_path.absolute()
+    self.project_structure = kg.get_file_tree()
     self.general_container = GeneralContainer(self.local_path)
 
     issue_to_query_node = IssueToQueryNode()
@@ -263,6 +264,7 @@ class IssueAnswerAndFixSubgraph:
         "issue_body": issue_body,
         "issue_comments": issue_comments,
         "project_path": str(self.local_path),
+        "project_structure": self.project_structure,
         "only_answer": only_answer,
         "run_build": run_build,
         "run_test": run_test,
