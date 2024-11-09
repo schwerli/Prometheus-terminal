@@ -15,47 +15,57 @@ def router():
   [
     (
       "neither build nor test requested",
-      {"run_build": False, "run_test": False, "build_success": False, "test_success": False},
+      {"run_build": False, "run_test": False, "build_fail_log": "", "test_fail_log": ""},
       True,
     ),
     (
       "only build requested and succeeds",
-      {"run_build": True, "run_test": False, "build_success": True, "test_success": False},
+      {"run_build": True, "run_test": False, "build_fail_log": "", "test_fail_log": ""},
       True,
     ),
     (
       "only build requested and fails",
-      {"run_build": True, "run_test": False, "build_success": False, "test_success": False},
+      {
+        "run_build": True,
+        "run_test": False,
+        "build_fail_log": "Build failed",
+        "test_fail_log": False,
+      },
       False,
     ),
     (
       "only test requested and succeeds",
-      {"run_build": False, "run_test": True, "build_success": False, "test_success": True},
+      {"run_build": False, "run_test": True, "build_fail_log": "", "test_fail_log": ""},
       True,
     ),
     (
       "only test requested and fails",
-      {"run_build": False, "run_test": True, "build_success": False, "test_success": False},
+      {"run_build": False, "run_test": True, "build_fail_log": "", "test_fail_log": "Test failed"},
       False,
     ),
     (
       "both build and test requested and succeed",
-      {"run_build": True, "run_test": True, "build_success": True, "test_success": True},
+      {"run_build": True, "run_test": True, "build_fail_log": "", "test_fail_log": ""},
       True,
     ),
     (
       "build fails but test succeeds",
-      {"run_build": True, "run_test": True, "build_success": False, "test_success": True},
+      {"run_build": True, "run_test": True, "build_fail_log": "Build failed", "test_fail_log": ""},
       False,
     ),
     (
       "build succeeds but test fails",
-      {"run_build": True, "run_test": True, "build_success": True, "test_success": False},
+      {"run_build": True, "run_test": True, "build_fail_log": "", "test_fail_log": "Test failed"},
       False,
     ),
     (
       "both build and test fail",
-      {"run_build": True, "run_test": True, "build_success": False, "test_success": False},
+      {
+        "run_build": True,
+        "run_test": True,
+        "build_fail_log": "Build failed",
+        "test_fail_log": "Test failed",
+      },
       False,
     ),
   ],

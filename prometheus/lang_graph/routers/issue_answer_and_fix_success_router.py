@@ -6,10 +6,10 @@ class IssueAnswerAndFixSuccessRouter:
     if not state["run_build"] and not state["run_test"]:
       return True
 
-    if state["run_build"] and not state["build_success"]:
+    if state["run_build"] and state["build_fail_log"]:
       return False
 
-    if state["run_test"] and not state["test_success"]:
+    if state["run_test"] and state["test_fail_log"]:
       return False
 
     return True

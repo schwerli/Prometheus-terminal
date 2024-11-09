@@ -249,10 +249,13 @@ class IssueAnswerAndFixSubgraph:
     run_build: bool,
     run_test: bool,
     thread_id: Optional[str] = None,
+    recursion_limit: int = 100,
   ):
-    config = None
+    config = {}
+    config["recursion_limit"] = recursion_limit
     if thread_id:
-      config = {"configurable": {"thread_id": thread_id}}
+      config["configurable"] = {}
+      config["configurable"]["thread_id"] = thread_id
 
     if not only_answer and (run_build or run_test):
       self.general_container.build_docker_image()

@@ -2,7 +2,8 @@ import logging
 from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
+from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
@@ -50,30 +51,160 @@ When capturing fail logs:
 - Return empty string if build was successful
 
 The input will contain messages showing the agent's attempts and their results.
-"""
+
+Example 1: C++ Project with CMake
+Input:
+Assistant internal thought: Checking for CMake build system files
+Assistant executed command: {"command": "find . -name CMakeLists.txt"}
+Command output: ./CMakeLists.txt
+./src/CMakeLists.txt
+Assistant internal thought: Found CMake configuration. Checking build requirements
+Assistant executed command: {"command": "cat CMakeLists.txt"}
+Command output: cmake_minimum_required(VERSION 3.10)
+project(MyProject)
+find_package(Boost REQUIRED)
+add_subdirectory(src)
+Assistant internal thought: Project requires Boost. Setting up build directory and running CMake
+Assistant executed command: {"command": "mkdir build && cd build && cmake .."}
+Command output: -- The C compiler identification is GNU 9.4.0
+-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /project/build
+Assistant executed command: {"command": "cmake --build build"}
+Command output: [ 20%] Building CXX object src/CMakeFiles/mylib.dir/utils.cpp.o
+[ 40%] Building CXX object src/CMakeFiles/mylib.dir/parser.cpp.o
+[ 60%] Linking CXX static library libmylib.a
+[ 80%] Building CXX object src/CMakeFiles/myapp.dir/main.cpp.o
+[100%] Linking CXX executable myapp
+
+Output:
+{
+    "exist_build": true,
+    "command_summary": "Project uses CMake build system with Boost dependency. Required steps:\n1. Create and enter build directory: mkdir build && cd build\n2. Generate build files: cmake ..\n3. Build project: cmake --build build\nMultiple CMakeLists.txt files indicate hierarchical project structure.",
+    "fail_log": ""
+}
+
+Example 2: Project without Build System
+Input:
+Assistant internal thought: Looking for common build system files
+Assistant executed command: {"command": "find . -maxdepth 1 -type f -name 'Makefile' -o -name 'CMakeLists.txt' -o -name 'package.json' -o -name 'build.gradle'"}
+Command output: 
+Assistant internal thought: No build files found. Checking source directory structure
+Assistant executed command: {"command": "tree ."}
+Command output: .
+└── src
+    └── script.py
+
+Output:
+{
+    "exist_build": false,
+    "command_summary": "No build system detected. Project contains only Python scripts without any build configuration.",
+    "fail_log": ""
+}
+
+Example 3: Node.js Project with Failed Build
+Input:
+Assistant internal thought: Checking Node.js build configuration
+Assistant executed command: {"command": "cat package.json"}
+Command output: {
+  "name": "web-app",
+  "scripts": {
+    "build": "webpack --mode production",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.75.0",
+    "webpack-cli": "^4.10.0"
+  }
+}
+Assistant internal thought: Found webpack build configuration. Installing dependencies and building
+Assistant executed command: {"command": "npm install"}
+Command output: added 245 packages in 15s
+Assistant executed command: {"command": "npm run build"}
+Command output: ERROR in ./src/app.js
+Module not found: Error: Can't resolve './config' in '/project/src'
+ @ ./src/app.js 3:15-33
+
+webpack 5.75.0 compiled with 1 error
+
+Output:
+{
+    "exist_build": true,
+    "command_summary": "Project uses webpack for building Node.js application. Required steps:\n1. Install dependencies: npm install\n2. Build project: npm run build",
+    "fail_log": "ERROR in ./src/app.js\nModule not found: Error: Can't resolve './config' in '/project/src'\n @ ./src/app.js 3:15-33"
+}
+
+Example 4: Java Project with Maven
+Input:
+Assistant internal thought: Looking for Maven build configuration
+Assistant executed command: {"command": "find . -name pom.xml"}
+Command output: ./pom.xml
+Assistant internal thought: Found Maven project. Checking configuration and building
+Assistant executed command: {"command": "cat pom.xml"}
+Command output: <?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>my-app</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+    </dependencies>
+</project>
+Assistant executed command: {"command": "mvn clean install"}
+Command output: [INFO] Scanning for projects...
+[INFO] Building my-app 1.0-SNAPSHOT
+[INFO] --- maven-clean-plugin:3.1.0:clean (default-clean) @ my-app ---
+[INFO] --- maven-resources-plugin:3.2.0:resources (default-resources) @ my-app ---
+[INFO] --- maven-compiler-plugin:3.8.1:compile (default-compile) @ my-app ---
+[INFO] --- maven-jar-plugin:3.2.0:jar (default-jar) @ my-app ---
+[INFO] --- maven-install-plugin:2.5.2:install (default-install) @ my-app ---
+[INFO] BUILD SUCCESS
+
+Output:
+{
+    "exist_build": true,
+    "command_summary": "Project uses Maven build system with Spring Boot dependency. Required steps:\n1. Clean and build project: mvn clean install\nPOM file indicates it's a Spring Boot web application.",
+    "fail_log": ""
+}
+""".replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
-    self.model_with_structured_output = model.with_structured_output(BuildClassification)
-    self.sys_prompt = SystemMessage(self.SYS_PROMPT)
+    prompt = ChatPromptTemplate.from_messages(
+      [("system", self.SYS_PROMPT), ("human", "{build_history}")]
+    )
+    structured_llm = model.with_structured_output(BuildClassification)
+    self.model = prompt | structured_llm
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_summarization_node")
 
   def format_build_history(self, build_messages: Sequence[BaseMessage]):
     formatted_messages = []
     for message in build_messages:
       if isinstance(message, AIMessage):
-        formatted_messages.append(f"Assistant message: {message.content}")
+        if message.content:
+          formatted_messages.append(f"Assistant internal thought: {message.content}")
+        if message.additional_kwargs and message.additional_kwargs["tool_calls"]:
+          for tool_call in message.additional_kwargs["tool_calls"]:
+            formatted_messages.append(f"Assistant executed command: {tool_call.function.arguments}")
       elif isinstance(message, ToolMessage):
-        formatted_messages.append(f"Tool message: {message.content}")
+        formatted_messages.append(f"Command output: {message.content}")
     return formatted_messages
 
   def __call__(self, state: IssueAnswerAndFixState):
-    human_message = HumanMessage("\n".join(self.format_build_history(state["build_messages"])))
-    message_history = [self.sys_prompt, human_message]
-    response = self.model_with_structured_output.invoke(message_history)
+    build_history = "\n".join(self.format_build_history(state["build_messages"]))
+    response = self.model.invoke({"build_history": build_history})
     self._logger.debug(f"GeneralBuildSummarizeNode response:\n{response}")
 
     return {
-      "exist_build": response["exist_build"],
-      "build_command_summary": response["command_summary"],
-      "build_fail_log": response["fail_log"],
+      "exist_build": response.exist_build,
+      "build_command_summary": response.command_summary,
+      "build_fail_log": response.fail_log,
     }

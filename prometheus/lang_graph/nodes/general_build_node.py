@@ -64,7 +64,7 @@ Remember:
   def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
     message = f"The (incomplete) project structure is:\n{state['project_structure']}"
     if not self.before_edit:
-      message += f"\n\nThe previous build summary is:\n{state['build_summary']}"
+      message += f"\n\nThe previous build summary is:\n{state['build_command_summary']}"
     return HumanMessage(message)
 
   def __call__(self, state: IssueAnswerAndFixState):

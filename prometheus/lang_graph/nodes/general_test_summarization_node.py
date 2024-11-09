@@ -2,7 +2,8 @@ import logging
 from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
+from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
@@ -52,30 +53,136 @@ When capturing fail logs:
 - Return empty string if all tests passed
 
 The input will contain messages showing the agent's attempts and their results.
-"""
+
+Example 1: Python Project with pytest
+Input:
+Assistant internal thought: Let me check if there are any Python test files
+Assistant executed command: {"command": "find . -name 'test_*.py'"}
+Command output: ./tests/test_calculator.py
+./tests/integration/test_api.py
+Assistant internal thought: Found test files. Let me check the test framework configuration
+Assistant executed command: {"command": "cat pytest.ini"}
+Command output: [pytest]
+addopts = -v --cov=calculator
+testpaths = tests
+Assistant internal thought: This is a pytest project with coverage requirements. Installing dependencies and running tests
+Assistant executed command: {"command": "pip install -r requirements.txt"}
+Command output: Successfully installed pytest-7.3.1 pytest-cov-4.0.0
+Assistant executed command: {"command": "python -m pytest"}
+Command output: ============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-7.3.1, pluggy-1.0.0
+collected 3 tests
+
+tests/test_calculator.py::test_add PASSED                                   [ 33%]
+tests/test_calculator.py::test_subtract PASSED                             [ 66%]
+tests/test_calculator.py::test_multiply FAILED                             [100%]
+
+FAILED tests/test_calculator.py::test_multiply
+    def test_multiply():
+>       assert calculator.multiply(3, 4) == 13
+E       assert 12 == 13
+
+tests/test_calculator.py:15: AssertionError
+======================= 1 failed, 2 passed in 0.12s ===========================
+
+Output:
+{
+    "exist_test": true,
+    "command_summary": "Project uses pytest framework with coverage reporting. Required steps:\n1. Install dependencies: pip install -r requirements.txt\n2. Run tests: python -m pytest\nTests include unit tests in ./tests and integration tests in ./tests/integration with pytest.ini configuration for coverage reporting.",
+    "fail_log": "FAILED tests/test_calculator.py::test_multiply\n    def test_multiply():\n>       assert calculator.multiply(3, 4) == 13\nE       assert 12 == 13\n\ntests/test_calculator.py:15: AssertionError"
+}
+
+Example 2: Project without Tests
+Input:
+Assistant internal thought: Checking for common test files and configurations
+Assistant executed command: {"command": "find . -type f -name '*test*' -o -name '*spec*'"}
+Command output: 
+Assistant internal thought: No test files found. Let me check build configuration files
+Assistant executed command: {"command": "cat package.json"}
+Command output: {
+  "name": "my-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
+
+Output:
+{
+    "exist_test": false,
+    "command_summary": "No test framework detected. Project contains basic Node.js configuration without any test files or test-related dependencies.",
+    "fail_log": ""
+}
+
+Example 3: JavaScript Project with Jest
+Input:
+Assistant internal thought: Checking package.json for test configuration
+Assistant executed command: {"command": "cat package.json"}
+Command output: {
+  "name": "utils-lib",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^27.0.0"
+  }
+}
+Assistant internal thought: Found Jest configuration. Looking for test files
+Assistant executed command: {"command": "git ls-files '*.test.js'"}
+Command output: src/utils.test.js
+src/components/__tests__/button.test.js
+Assistant internal thought: Installing dependencies and running tests
+Assistant executed command: {"command": "npm install"}
+Command output: added 234 packages in 12s
+Assistant executed command: {"command": "npm test"}
+Command output: PASS src/utils.test.js
+  ✓ formats date correctly (3ms)
+  ✓ validates email format (1ms)
+PASS src/components/__tests__/button.test.js
+  ✓ renders button correctly (5ms)
+  ✓ handles click events (2ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        1.234s
+
+Output:
+{
+    "exist_test": true,
+    "command_summary": "Project uses Jest testing framework. Required steps:\n1. Install dependencies: npm install\n2. Run tests: npm test\nTests are organized in src/**/*.test.js pattern and component-specific tests in __tests__ directories.",
+    "fail_log": ""
+}
+""".replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
-    self.model_with_structured_output = model.with_structured_output(TestClassification)
-    self.sys_prompt = SystemMessage(self.SYS_PROMPT)
+    prompt = ChatPromptTemplate.from_messages(
+      [("system", self.SYS_PROMPT), ("human", "{test_history}")]
+    )
+    structured_llm = model.with_structured_output(TestClassification)
+    self.model = prompt | structured_llm
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_summarization_node")
 
   def format_test_history(self, test_messages: Sequence[BaseMessage]):
     formatted_messages = []
     for message in test_messages:
       if isinstance(message, AIMessage):
-        formatted_messages.append(f"Assistant message: {message.content}")
+        if message.content:
+          formatted_messages.append(f"Assistant internal thought: {message.content}")
+        if message.additional_kwargs and message.additional_kwargs["tool_calls"]:
+          for tool_call in message.additional_kwargs["tool_calls"]:
+            formatted_messages.append(f"Assistant executed command: {tool_call.function.arguments}")
       elif isinstance(message, ToolMessage):
-        formatted_messages.append(f"Tool message: {message.content}")
+        formatted_messages.append(f"Command output: {message.content}")
     return formatted_messages
 
   def __call__(self, state: IssueAnswerAndFixState):
-    human_message = HumanMessage("\n".join(self.format_test_history(state["test_messages"])))
-    message_history = [self.sys_prompt + human_message]
-    self._logger.debug(f"GeneralTestSummarizationNode human message:\n{human_message.content}")
-    response = self.model_with_structured_output.invoke(message_history)
+    test_history = "\n".join(self.format_test_history(state["test_messages"]))
+    response = self.model.invoke({"test_history": test_history})
     self._logger.debug(f"GeneralTestSummarizationNode response:\n{response}")
     return {
-      "exist_test": response["exist_test"],
-      "test_command_summary": response["command_summary"],
-      "test_fail_log": response["fail_log"],
+      "exist_test": response.exist_test,
+      "test_command_summary": response.command_summary,
+      "test_fail_log": response.fail_log,
     }

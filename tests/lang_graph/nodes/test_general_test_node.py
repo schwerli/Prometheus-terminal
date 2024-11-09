@@ -25,7 +25,7 @@ def test_format_human_message_after_edit():
   test_node = GeneralTestNode(fake_model, None, before_edit=False)
   state: IssueAnswerAndFixState = {
     "project_structure": "sample/project/structure",
-    "test_summary": "previous test summary",
+    "test_command_summary": "previous test summary",
   }
 
   result = test_node.format_human_message(state)
@@ -81,7 +81,7 @@ def test_call_after_edit_with_test():
 
   state: IssueAnswerAndFixState = {
     "project_structure": "sample/project/structure",
-    "test_summary": "previous test summary",
+    "test_command_summary": "previous test summary",
     "test_messages": [],
     "exist_test": True,
   }

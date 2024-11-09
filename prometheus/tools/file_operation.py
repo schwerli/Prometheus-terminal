@@ -12,7 +12,7 @@ class ReadFileInput(BaseModel):
 
 
 READ_FILE_DESCRIPTION = """\
-Read the content of a file from the codebase with a safety limit on the number of lines.
+Read the content of a file with line numbers prepended from the codebase with a safety limit on the number of lines.
 Returns up to the first 1000 lines by default to prevent context issues with large files.
 Returns an error message if the file doesn't exist.
 """
@@ -23,10 +23,10 @@ def read_file(relative_path: str, root_path: str, n_lines: int = 1000) -> str:
   if not file_path.exists():
     return f"The file {relative_path} does not exist."
 
-  with file_path.open() as f:  # newline='' preserves original line endings
+  with file_path.open() as f:
     lines = f.readlines()
 
-  return "".join(lines[:n_lines])
+  return pre_append_line_numbers("".join(lines[:n_lines]), 1)
 
 
 class ReadFileWithLineNumbersInput(BaseModel):

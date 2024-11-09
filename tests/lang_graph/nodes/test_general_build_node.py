@@ -10,14 +10,14 @@ def test_format_human_message_before_edit():
   build_node = GeneralBuildNode(fake_model, None, before_edit=True)
   state: IssueAnswerAndFixState = {
     "project_structure": "sample/project/structure",
-    "build_summary": "previous build summary",
+    "build_command_summary": "previous build summary",
   }
 
   result = build_node.format_human_message(state)
 
   assert isinstance(result, HumanMessage)
   assert result.content == "The (incomplete) project structure is:\nsample/project/structure"
-  assert "build_summary" not in result.content
+  assert "build_command_summary" not in result.content
 
 
 def test_format_human_message_after_edit():
@@ -25,7 +25,7 @@ def test_format_human_message_after_edit():
   build_node = GeneralBuildNode(fake_model, None, before_edit=False)
   state: IssueAnswerAndFixState = {
     "project_structure": "sample/project/structure",
-    "build_summary": "previous build summary",
+    "build_command_summary": "previous build summary",
   }
 
   result = build_node.format_human_message(state)
@@ -81,7 +81,7 @@ def test_call_after_edit_with_build():
 
   state: IssueAnswerAndFixState = {
     "project_structure": "sample/project/structure",
-    "build_summary": "previous build summary",
+    "build_command_summary": "previous build summary",
     "build_messages": [],
     "exist_build": True,
   }
