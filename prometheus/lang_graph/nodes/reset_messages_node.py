@@ -9,4 +9,4 @@ class ResetMessagesNode:
     if isinstance(state[self.message_state_key], list):
       state[self.message_state_key].clear()
     elif isinstance(state[self.message_state_key], str):
-      state[self.message_state_key] = ""
+      return {self.message_state_key: ""}
