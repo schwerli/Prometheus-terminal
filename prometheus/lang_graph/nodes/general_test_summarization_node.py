@@ -68,8 +68,9 @@ The input will contain messages showing the agent's attempts and their results.
 
   def __call__(self, state: IssueAnswerAndFixState):
     message_history = [self.sys_prompt] + HumanMessage(
-      self.format_build_history(state["test_messages"])
+      self.format_test_history(state["test_messages"])
     )
+    self._logger.debug(f"GeneralTestSummarizationNode human message:\n{self.format_test_history(state['test_messages'])}")
     response = self.model_with_structured_output.invoke(message_history)
     self._logger.debug(f"GeneralTestSummarizationNode response:\n{response}")
     return {
