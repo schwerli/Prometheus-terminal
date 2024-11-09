@@ -9,7 +9,7 @@ class GeneralContainer(BaseContainer):
     super().__init__(project_path)
     self.tag_name = f"prometheus_general_container_{uuid.uuid4().hex[:10]}"
 
-  def create_dockerfile(self) -> Path:
+  def get_dockerfile_content(self) -> Path:
     DOCKERFILE_CONTENT = """\
 FROM ubuntu:22.04
 

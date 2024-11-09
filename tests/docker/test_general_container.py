@@ -34,18 +34,16 @@ def test_initialization(container, temp_project_dir):
   assert (container.project_path / "test.txt").exists()  # Files should be copied
 
 
-def test_create_dockerfile(container):
-  """Test that the Dockerfile is created with correct content"""
-  dockerfile_path = container.create_dockerfile()
+def test_get_dockerfile_content(container):
+  dockerfile_content = container.get_dockerfile_content()
 
-  assert dockerfile_path.exists()
-  content = dockerfile_path.read_text()
+  assert dockerfile_content
 
   # Check for key elements in the Dockerfile
-  assert "FROM ubuntu:22.04" in content
-  assert "WORKDIR /app" in content
-  assert "RUN apt-get update" in content
-  assert "COPY . /app/" in content
+  assert "FROM ubuntu:22.04" in dockerfile_content
+  assert "WORKDIR /app" in dockerfile_content
+  assert "RUN apt-get update" in dockerfile_content
+  assert "COPY . /app/" in dockerfile_content
 
 
 def test_run_build_raises_not_implemented(container):

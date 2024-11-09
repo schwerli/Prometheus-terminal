@@ -44,7 +44,7 @@ class PythonContainer(BaseContainer):
       has_unittest=has_unittest,
     )
 
-  def create_dockerfile(self) -> Path:
+  def get_dockerfile_content(self) -> Path:
     DOCKERFILE_TEMPLATE = """\
 FROM python:3.11-slim
 
@@ -67,9 +67,7 @@ RUN {install_requirements_cmd}
     dockerfile_content = DOCKERFILE_TEMPLATE.format(
       install_requirements_cmd=install_requirements_cmd,
     )
-    dockerfile_path = self.project_path / "Dockerfile"
-    dockerfile_path.write_text(dockerfile_content)
-    return dockerfile_path
+    return dockerfile_content
 
   def run_build(self):
     self.logger.info("Running Python build")

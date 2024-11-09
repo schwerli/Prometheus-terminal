@@ -124,18 +124,18 @@ def test_get_project_config(temp_project_dir, files, content, expected):
       assert getattr(config, key) == value
 
 
-def test_create_dockerfile(container):
-  dockerfile_path = container.create_dockerfile()
-  assert dockerfile_path == container.project_path / "Dockerfile"
-  assert dockerfile_path.exists()
+def test_get_dockerfile_content(container):
+  dockerfile_content = container.get_dockerfile_content()
+  assert dockerfile_content
+
+  # Check for key elements in the Dockerfile
+  assert "FROM python:3.11-slim" in dockerfile_content
+  assert "WORKDIR /app" in dockerfile_content
+  assert "COPY . /app/" in dockerfile_content
 
 
 def test_build_docker_image(container, mock_docker):
   Path(container.project_path).mkdir(parents=True, exist_ok=True)
-
-  with patch("pathlib.Path.write_text") as mock_write:
-    container.create_dockerfile()
-    assert mock_write.called
 
   # Force the client to be our mocked one
   container.client = mock_docker["client"]

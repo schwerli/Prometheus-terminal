@@ -23,11 +23,11 @@ class BaseContainer(ABC):
     self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
   @abstractmethod
-  def create_dockerfile(self) -> str:
+  def get_dockerfile_content(self) -> str:
     pass
 
   def build_docker_image(self):
-    dockerfile_content = self.create_dockerfile()
+    dockerfile_content = self.get_dockerfile_content()
     dockerfile_path = self.project_path / "Dockerfile"
     dockerfile_path.write_text(dockerfile_content)
     self.logger.info(f"Building docker image {self.tag_name}")
@@ -67,9 +67,6 @@ class BaseContainer(ABC):
 
   def execute_command(self, command: str) -> str:
     self.logger.debug(f"Running command in container: {command}")
-    self.logger.debug("*" * 80)
-    self.logger.debug(f'{self.container.exec_run("ls", workdir="/app").output.decode("utf-8")}')
-    self.logger.debug("*" * 80)
     exec_result = self.container.exec_run(command, workdir="/app")
     exec_result_str = exec_result.output.decode("utf-8")
     self.logger.debug(f"Command output:\n{exec_result_str}")
