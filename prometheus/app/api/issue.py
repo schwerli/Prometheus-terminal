@@ -6,30 +6,17 @@ from pydantic import BaseModel
 router = APIRouter()
 
 
-class Issue(BaseModel):
+class IssueAnswerAndFixRequest(BaseModel):
   title: str
   body: str
   comments: Optional[Sequence[Mapping[str, str]]] = None
-
-
-@router.post("/answer/")
-def answer_issue(issue: Issue, request: Request):
-  if not request.app.state.service_coordinator.exists_knowledge_graph():
-    raise HTTPException(
-      status_code=404,
-      detail="A repository is not uploaded, use /repository/ endpoint to upload one",
-    )
-
-  response = request.app.state.service_coordinator.answer_issue(
-    issue.title,
-    issue.body,
-    issue.comments if issue.comments else [],
-  )
-  return response
+  only_answer: Optional[bool] = True
+  run_build: Optional[bool] = True
+  run_tests: Optional[bool] = True
 
 
 @router.post("/answer_and_fix/")
-def answer_and_fix_issue(issue: Issue, request: Request):
+def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
   if not request.app.state.service_coordinator.exists_knowledge_graph():
     raise HTTPException(
       status_code=404,
@@ -40,5 +27,8 @@ def answer_and_fix_issue(issue: Issue, request: Request):
     issue.title,
     issue.body,
     issue.comments if issue.comments else [],
+    issue.only_answer,
+    issue.run_build,
+    issue.run_tests,
   )
   return response

@@ -41,9 +41,14 @@ class IssueAnswerAndFixService:
     title: str,
     body: str,
     comments: Sequence[Mapping[str, str]],
+    only_answer: bool,
+    run_build: bool,
+    run_tests: bool,
     thread_id: Optional[str] = None,
   ) -> str:
     if not self.issue_answer_and_fix_subgraph:
       raise ValueError("Knowledge graph not initialized")
     thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
-    return self.issue_answer_and_fix_subgraph.invoke(title, body, comments, thread_id)
+    return self.issue_answer_and_fix_subgraph.invoke(
+      title, body, comments, only_answer, run_build, run_tests, thread_id
+    )

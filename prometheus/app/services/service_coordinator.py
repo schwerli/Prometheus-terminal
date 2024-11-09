@@ -3,7 +3,6 @@ from typing import Mapping, Optional, Sequence
 
 from prometheus.app.services.chat_service import ChatService
 from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
-from prometheus.app.services.issue_answer_service import IssueAnswerService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -34,9 +33,6 @@ class ServiceCoordinator:
     self.chat_service = ChatService(
       self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
     )
-    self.issue_answer_service = IssueAnswerService(
-      self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
-    )
     if self.knowledge_graph_service.local_path is not None:
       self.issue_answer_and_fix_service = IssueAnswerAndFixService(
         self.knowledge_graph_service,
@@ -51,23 +47,19 @@ class ServiceCoordinator:
   def chat_with_codebase(self, query: str, thread_id: Optional[str] = None) -> tuple[str, str]:
     return self.chat_service.chat(query, thread_id)
 
-  def answer_issue(
-    self,
-    title: str,
-    body: str,
-    comments: Sequence[Mapping[str, str]],
-    thread_id: Optional[str] = None,
-  ) -> str:
-    return self.issue_answer_service.answer_issue(title, body, comments, thread_id)
-
   def answer_and_fix_issue(
     self,
     title: str,
     body: str,
     comments: Sequence[Mapping[str, str]],
+    only_answer: bool,
+    run_build: bool,
+    run_tests: bool,
     thread_id: Optional[str] = None,
   ) -> str:
-    return self.issue_answer_and_fix_service.answer_and_fix_issue(title, body, comments, thread_id)
+    return self.issue_answer_and_fix_service.answer_and_fix_issue(
+      title, body, comments, only_answer, run_build, run_tests, thread_id
+    )
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()

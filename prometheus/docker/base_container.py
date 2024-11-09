@@ -1,5 +1,6 @@
 import logging
 import shutil
+import tarfile
 import tempfile
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -36,6 +37,22 @@ class BaseContainer(ABC):
     self.logger.info(f"Starting container from image {self.tag_name}")
     self.container = self.client.containers.run(self.tag_name, detach=True, tty=True)
 
+  def update_files(self, new_project_path: Path, container_path: str = "/app"):
+    self.logger.info("Updating files in running container")
+
+    self.execute_command(f"rm -rf {container_path}/*")
+    self.execute_command(f"rm -rf {container_path}/.*")
+
+    with tempfile.NamedTemporaryFile() as temp_tar:
+      with tarfile.open(fileobj=temp_tar, mode="w") as tar:
+        tar.add(str(new_project_path), recursive=True)
+
+      temp_tar.seek(0)
+
+      self.container.put_archive(container_path, temp_tar.read())
+
+    self.logger.info("Files updated successfully")
+
   @abstractmethod
   def run_build(self):
     pass
@@ -56,7 +73,7 @@ class BaseContainer(ABC):
     if self.container:
       self.container.stop()
       self.container.remove()
-      self.client.images.remove(self.tag_name)
       self.container = None
+      self.client.images.remove(self.tag_name)
 
     shutil.rmtree(self.project_path)
