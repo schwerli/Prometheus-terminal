@@ -19,7 +19,7 @@ class BuildClassification(BaseModel):
   )
 
 
-class GeneralBuildSummarizeNode:
+class GeneralBuildSummarizationNode:
   SYS_PROMPT = """\
 You are a build system expert analyzing build attempts for software projects. You'll review a history
 of commands executed by an agent that attempted to build the project. Examine this build history to:
