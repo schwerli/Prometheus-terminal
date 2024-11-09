@@ -54,7 +54,9 @@ class IssueAnswerAndFixSubgraph:
     ).subgraph
 
     before_edit_build_branch_node = NoopNode()
-    before_edit_general_build_node = GeneralBuildNode(model, self.general_container, before_edit=True)
+    before_edit_general_build_node = GeneralBuildNode(
+      model, self.general_container, before_edit=True
+    )
     before_edit_general_build_tools = ToolNode(
       tools=before_edit_general_build_node.tools,
       name="before_edit_general_build_tools",
@@ -81,7 +83,9 @@ class IssueAnswerAndFixSubgraph:
     update_container_node = UpdateContainerNode(self.general_container)
 
     after_edit_build_branch_node = NoopNode()
-    after_edit_general_build_node = GeneralBuildNode(model, self.general_container, before_edit=False)
+    after_edit_general_build_node = GeneralBuildNode(
+      model, self.general_container, before_edit=False
+    )
     after_edit_general_build_tools = ToolNode(
       tools=after_edit_general_build_node.tools,
       name="after_edit_general_build_tools",
@@ -150,10 +154,15 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_conditional_edges(
       "before_edit_general_build_node",
       functools.partial(tools_condition, messages_key="build_messages"),
-      {"tools": "before_edit_general_build_tools", END: "before_edit_general_build_summarization_node"},
+      {
+        "tools": "before_edit_general_build_tools",
+        END: "before_edit_general_build_summarization_node",
+      },
     )
     workflow.add_edge("before_edit_general_build_tools", "before_edit_general_build_node")
-    workflow.add_edge("before_edit_general_build_summarization_node", "before_edit_test_branch_node")
+    workflow.add_edge(
+      "before_edit_general_build_summarization_node", "before_edit_test_branch_node"
+    )
     workflow.add_conditional_edges(
       "before_edit_test_branch_node",
       IssueAnswerAndFixNeedTestRouter(),
@@ -162,7 +171,10 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_conditional_edges(
       "before_edit_general_test_node",
       functools.partial(tools_condition, messages_key="test_messages"),
-      {"tools": "before_edit_general_test_tools", END: "before_edit_general_test_summarization_node"},
+      {
+        "tools": "before_edit_general_test_tools",
+        END: "before_edit_general_test_summarization_node",
+      },
     )
     workflow.add_edge("before_edit_general_test_tools", "before_edit_general_test_node")
     workflow.add_edge("before_edit_general_test_summarization_node", "code_editing_node")
@@ -187,7 +199,10 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_conditional_edges(
       "after_edit_general_build_node",
       functools.partial(tools_condition, messages_key="build_messages"),
-      {"tools": "after_edit_general_build_tools", END: "after_edit_general_build_summarization_node"},
+      {
+        "tools": "after_edit_general_build_tools",
+        END: "after_edit_general_build_summarization_node",
+      },
     )
     workflow.add_edge("after_edit_general_build_tools", "after_edit_general_build_node")
     workflow.add_conditional_edges(
