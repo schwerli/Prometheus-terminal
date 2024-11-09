@@ -38,7 +38,7 @@ class BaseContainer(ABC):
     self.container = self.client.containers.run(self.tag_name, detach=True, tty=True)
 
   def update_files(self, new_project_path: Path, container_path: str = "/app"):
-    self.logger.info("Updating files in running container")
+    self.logger.info(f"Updating files in running container with files from {new_project_path}")
 
     self.execute_command(f"rm -rf {container_path}/*")
     self.execute_command(f"rm -rf {container_path}/.*")
