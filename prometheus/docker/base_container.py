@@ -23,11 +23,13 @@ class BaseContainer(ABC):
     self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
   @abstractmethod
-  def create_dockerfile(self) -> Path:
+  def create_dockerfile(self) -> str:
     pass
 
   def build_docker_image(self):
-    dockerfile_path = self.create_dockerfile()
+    dockerfile_content = self.create_dockerfile()
+    dockerfile_path = self.project_path / "Dockerfile"
+    dockerfile_path.write_text(dockerfile_content)
     self.logger.info(f"Building docker image {self.tag_name}")
     self.client.images.build(
       path=str(self.project_path), dockerfile=dockerfile_path.name, tag=self.tag_name
@@ -40,12 +42,14 @@ class BaseContainer(ABC):
   def update_files(self, new_project_path: Path, container_path: str = "/app"):
     self.logger.info(f"Updating files in running container with files from {new_project_path}")
 
-    self.execute_command(f"rm -rf {container_path}/*")
-    self.execute_command(f"rm -rf {container_path}/.*")
+    self.execute_command("rm -rf ./*")
 
     with tempfile.NamedTemporaryFile() as temp_tar:
       with tarfile.open(fileobj=temp_tar, mode="w") as tar:
-        tar.add(str(new_project_path), recursive=True)
+        abs_project_path = new_project_path.absolute()
+        for path in abs_project_path.rglob("*"):
+          rel_path = path.relative_to(abs_project_path)
+          tar.add(str(path), arcname=str(rel_path))
 
       temp_tar.seek(0)
 
@@ -63,6 +67,9 @@ class BaseContainer(ABC):
 
   def execute_command(self, command: str) -> str:
     self.logger.debug(f"Running command in container: {command}")
+    self.logger.debug("*" * 80)
+    self.logger.debug(f'{self.container.exec_run("ls", workdir="/app").output.decode("utf-8")}')
+    self.logger.debug("*" * 80)
     exec_result = self.container.exec_run(command, workdir="/app")
     exec_result_str = exec_result.output.decode("utf-8")
     self.logger.debug(f"Command output:\n{exec_result_str}")

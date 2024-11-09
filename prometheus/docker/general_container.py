@@ -55,9 +55,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # Copy project files
 COPY . /app/
 """
-    dockerfile_path = self.project_path / "Dockerfile"
-    dockerfile_path.write_text(DOCKERFILE_CONTENT)
-    return dockerfile_path
+    return DOCKERFILE_CONTENT
 
   def run_build(self):
     raise NotImplementedError(
