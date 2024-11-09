@@ -84,6 +84,8 @@ class IssueAnswerAndFixSubgraph:
     reset_edit_messages_node = ResetMessagesNode("code_edit_messages")
     reset_build_messages_node = ResetMessagesNode("build_messages")
     reset_test_messages_node = ResetMessagesNode("test_messages")
+    reset_build_fail_log_node = ResetMessagesNode("build_fail_log")
+    reset_test_fail_log_node = ResetMessagesNode("test_fail_log")
     update_container_node = UpdateContainerNode(self.general_container)
 
     after_edit_build_branch_node = NoopNode()
@@ -130,6 +132,8 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_node("reset_edit_messages_node", reset_edit_messages_node)
     workflow.add_node("reset_build_messages_node", reset_build_messages_node)
     workflow.add_node("reset_test_messages_node", reset_test_messages_node)
+    workflow.add_node("reset_build_fail_log_node", reset_build_fail_log_node)
+    workflow.add_node("reset_test_fail_log_node", reset_test_fail_log_node)
     workflow.add_node("update_container_node", update_container_node)
 
     workflow.add_node("after_edit_build_branch_node", after_edit_build_branch_node)
@@ -197,6 +201,9 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_edge("reset_edit_messages_node", "reset_build_messages_node")
     workflow.add_edge("reset_build_messages_node", "reset_test_messages_node")
     workflow.add_edge("reset_test_messages_node", "update_container_node")
+    workflow.add_edge("reset_test_messages_node", "reset_build_fail_log_node")
+    workflow.add_edge("reset_build_fail_log_node", "reset_test_fail_log_node")
+    workflow.add_edge("reset_test_fail_log_node", "update_container_node")
     workflow.add_edge("update_container_node", "after_edit_build_branch_node")
 
     workflow.add_conditional_edges(

@@ -6,4 +6,7 @@ class ResetMessagesNode:
     self.message_state_key = message_state_key
 
   def __call__(self, state: IssueAnswerAndFixState):
-    state[self.message_state_key].clear()
+    if isinstance(state[self.message_state_key], list):
+      state[self.message_state_key].clear()
+    elif isinstance(state[self.message_state_key], str):
+      state[self.message_state_key] = ""
