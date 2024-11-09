@@ -18,7 +18,6 @@ class GitRepository:
       if github_access_token is None:
         raise ValueError("github_access_token is required for https repository")
       self.repo = self._clone_repository(address, github_access_token, working_directory)
-      self._configure_remote_with_token()
     else:
       local_path = address
       if copy_to_working_dir:
@@ -28,6 +27,9 @@ class GitRepository:
         self.repo = Repo(local_path)
       except InvalidGitRepositoryError:
         self.repo = Repo.init(local_path)
+    
+    if github_access_token:
+      self.repo.remote().set_url(self.repo.remote().url.replace("https://", f"https://{github_access_token}@"))
 
   def _clone_repository(
     self, https_url: str, github_access_token: str, target_directory: Path
@@ -40,15 +42,6 @@ class GitRepository:
       shutil.rmtree(local_path)
 
     return Repo.clone_from(https_url, local_path)
-  
-  def _configure_remote_with_token(self):
-    """Configure the remote URL with the token for push operations."""
-    if self.github_access_token and hasattr(self, '_original_https_url'):
-        token_url = self._original_https_url.replace(
-            "https://",
-            f"https://{self.github_access_token}@"
-        )
-        self.repo.remote().set_url(token_url)
 
   def checkout_commit(self, commit_sha: str):
     self.repo.git.checkout(commit_sha)
