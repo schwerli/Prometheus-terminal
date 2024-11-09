@@ -276,4 +276,4 @@ class IssueAnswerAndFixSubgraph:
     )
     if not only_answer and (run_build or run_test):
       self.general_container.cleanup()
-    return output_state["issue_response"]
+    return output_state["issue_response"], output_state.get("patch", "")

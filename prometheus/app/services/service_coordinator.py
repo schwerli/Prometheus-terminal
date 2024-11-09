@@ -49,17 +49,22 @@ class ServiceCoordinator:
 
   def answer_and_fix_issue(
     self,
-    title: str,
-    body: str,
-    comments: Sequence[Mapping[str, str]],
+    issue_number: int,
+    issue_title: str,
+    issue_body: str,
+    issue_comments: Sequence[Mapping[str, str]],
     only_answer: bool,
     run_build: bool,
     run_tests: bool,
     thread_id: Optional[str] = None,
   ) -> str:
-    return self.issue_answer_and_fix_service.answer_and_fix_issue(
-      title, body, comments, only_answer, run_build, run_tests, thread_id
+    issue_response, patch = self.issue_answer_and_fix_service.answer_and_fix_issue(
+      issue_title, issue_body, issue_comments, only_answer, run_build, run_tests, thread_id
     )
+    remote_branch_name = None
+    if patch:
+      remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}")
+    return issue_response, remote_branch_name
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()

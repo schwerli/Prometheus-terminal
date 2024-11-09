@@ -7,6 +7,7 @@ router = APIRouter()
 
 
 class IssueAnswerAndFixRequest(BaseModel):
+  number: int
   title: str
   body: str
   comments: Optional[Sequence[Mapping[str, str]]] = None
@@ -23,7 +24,8 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
       detail="A repository is not uploaded, use /repository/ endpoint to upload one",
     )
 
-  response = request.app.state.service_coordinator.answer_and_fix_issue(
+  issue_response, remote_branch_name = request.app.state.service_coordinator.answer_and_fix_issue(
+    issue.number,
     issue.title,
     issue.body,
     issue.comments if issue.comments else [],
@@ -31,4 +33,4 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
     issue.run_build,
     issue.run_tests,
   )
-  return response
+  return {"issue_response": issue_response, "remote_branch_name": remote_branch_name}

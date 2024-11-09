@@ -59,3 +59,10 @@ class GitRepository:
     if self.repo is not None:
       shutil.rmtree(self.repo.working_dir)
       self.repo = None
+
+  def create_and_push_branch(self, branch_name: str, commit_message: str):
+    new_branch = self.repo.create_head(branch_name)
+    new_branch.checkout()
+    self.repo.git.add(A=True)
+    self.repo.index.commit(commit_message)
+    self.repo.git.push("--set-upstream", "origin", branch_name)

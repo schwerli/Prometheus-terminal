@@ -1,4 +1,5 @@
 import shutil
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -39,6 +40,12 @@ class RepositoryService:
       and kg.get_codebase_https_url() == https_url
       and kg.get_codebase_commit_id() == commit_id
     )
+
+  def push_change_to_remote(self, commit_message: str):
+    git_repo = GitRepository(str(self.local_path.absolute()), None, False)
+    branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
+    git_repo.create_and_push_branch(branch_name, commit_message)
+    return branch_name
 
   def clean_working_directory(self):
     shutil.rmtree(self.target_directory)

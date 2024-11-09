@@ -1,6 +1,6 @@
 import uuid
 from pathlib import Path
-from typing import Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence, Tuple
 
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
@@ -45,7 +45,7 @@ class IssueAnswerAndFixService:
     run_build: bool,
     run_tests: bool,
     thread_id: Optional[str] = None,
-  ) -> str:
+  ) -> Tuple[str, str]:
     if not self.issue_answer_and_fix_subgraph:
       raise ValueError("Knowledge graph not initialized")
     thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
