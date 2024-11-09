@@ -65,7 +65,7 @@ The input will contain messages showing the agent's attempts and their results.
     return formatted_messages
 
   def __call__(self, state: IssueAnswerAndFixState):
-    message_history = [self.system_prompt] + HumanMessage(
+    message_history = [self.sys_prompt] + HumanMessage(
       self.format_build_history(state["build_messages"])
     )
     response = self.model_with_structured_output.invoke(message_history)
