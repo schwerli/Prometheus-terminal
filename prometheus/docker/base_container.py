@@ -39,14 +39,14 @@ class BaseContainer(ABC):
     self.logger.info(f"Starting container from image {self.tag_name}")
     self.container = self.client.containers.run(self.tag_name, detach=True, tty=True)
 
-  def update_files(self, new_project_path: Path, container_path: str = "/app"):
+  def update_files(self, new_project_path: str, container_path: str = "/app"):
     self.logger.info(f"Updating files in running container with files from {new_project_path}")
 
     self.execute_command("rm -rf ./*")
 
     with tempfile.NamedTemporaryFile() as temp_tar:
       with tarfile.open(fileobj=temp_tar, mode="w") as tar:
-        abs_project_path = new_project_path.absolute()
+        abs_project_path = Path(new_project_path).absolute()
         for path in abs_project_path.rglob("*"):
           rel_path = path.relative_to(abs_project_path)
           tar.add(str(path), arcname=str(rel_path))
