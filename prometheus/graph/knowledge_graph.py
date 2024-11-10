@@ -173,6 +173,7 @@ class KnowledgeGraph:
     has_text_edges_ids: Sequence[Mapping[str, int]],
     next_chunk_edges_ids: Sequence[Mapping[str, int]],
   ):
+    """Creates a knowledge graph from nodes and edges stored in neo4j."""
     # All nodes
     knowledge_graph_nodes = [x for x in itertools.chain(file_nodes, ast_nodes, text_nodes)]
 
@@ -244,6 +245,34 @@ class KnowledgeGraph:
     )
 
   def get_file_tree(self, max_depth: int = 4, max_lines: int = 1000) -> str:
+    """Generate a tree-like string representation of the file structure.
+
+    Creates an ASCII tree visualization of the file hierarchy, similar to the Unix 'tree'
+    command output. The tree is generated using Unicode box-drawing characters and
+    indentation to show the hierarchical relationship between files and directories.
+
+    Example:
+      project/
+      ├── src/
+      │   ├── main.py
+      │   └── utils/
+      │       ├── helpers.py
+      │       └── config.py
+      └── tests/
+          ├── test_main.py
+          └── test_utils.py
+
+    Args:
+      max_depth: Maximum depth of the tree to display. Nodes beyond this depth will
+        be omitted. Defaults to 4.
+      max_lines: Maximum number of lines in the output string. Useful for truncating
+        very large trees. Defaults to 1000.
+
+    Returns:
+      str: A string representation of the file tree, where each line represents a file
+          or directory, with appropriate indentation and connecting lines showing
+          the hierarchy.
+    """
     file_node_adjacency_dict = self._get_file_node_adjacency_dict()
 
     stack = deque()

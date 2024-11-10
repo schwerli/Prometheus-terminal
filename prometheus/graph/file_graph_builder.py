@@ -18,7 +18,24 @@ from prometheus.parser import tree_sitter_parser
 
 
 class FileGraphBuilder:
+  """A class for building knowledge graphs from individual files.
+
+  This class processes files and creates knowledge graph representations using different
+  strategies based on the file type. For source code files, it uses tree-sitter to
+  create an Abstract Syntax Tree (AST) representation. For markdown files, it creates
+  a chain of text nodes based on the document's structure.
+
+  The resulting knowledge graph consists of nodes (KnowledgeGraphNode) connected by
+  edges (KnowledgeGraphEdge) with different relationship types (KnowledgeGraphEdgeType).
+  """
+
   def __init__(self, max_ast_depth: int):
+    """Initialize the FileGraphBuilder.
+
+    Args:
+      max_ast_depth: Maximum depth to traverse in the AST when processing source code files.
+        Higher values create more detailed but larger graphs.
+    """
     self.max_ast_depth = max_ast_depth
 
   def supports_file(self, file: Path) -> bool:

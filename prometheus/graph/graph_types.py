@@ -14,6 +14,15 @@ class CodeBaseSourceEnum(enum.StrEnum):
 
 @dataclasses.dataclass(frozen=True)
 class MetadataNode:
+  """A node for the codebase metadata.
+
+  Attributes:
+    codebase_source: Where the codebase originated from.
+    local_path: The local path where the codebase is stored.
+    https_url: The HTTPS URL of the remote repository.
+    commit_id: The commit ID of the remote repository.
+  """
+
   codebase_source: CodeBaseSourceEnum
 
   local_path: str

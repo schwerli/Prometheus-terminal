@@ -21,6 +21,7 @@ logger.propagate = False
 async def lifespan(app: FastAPI):
   app.state.service_coordinator = dependencies.initialize_services()
   yield
+  app.state.service_coordiantor.clear()
   app.state.service_coordinator.close()
 
 

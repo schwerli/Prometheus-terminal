@@ -1,3 +1,11 @@
+"""Test execution analysis and summarization for software projects.
+
+This module analyzes test execution attempts and provides structured summaries of
+test frameworks, required commands, and failure information. It processes test
+execution histories to determine test framework presence, extract test steps, and
+identify any failures.
+"""
+
 import logging
 from typing import Sequence
 
@@ -10,6 +18,14 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 
 class TestClassification(BaseModel):
+  """Structured output model for test analysis results.
+
+  Attributes:
+    exist_test: Boolean indicating presence of a test framework.
+    command_summary: Detailed description of test framework and required commands.
+    fail_log: Detailed test failure logs and messages, empty string if all tests passed.
+  """
+
   exist_test: bool = Field(
     description="Indicates if there is any test framework present in the project"
   )
@@ -22,6 +38,13 @@ class TestClassification(BaseModel):
 
 
 class GeneralTestSummarizationNode:
+  """Analyzes and summarizes test execution attempts for software projects.
+
+  This class processes test execution histories to provide structured analysis
+  of test frameworks, required test steps, and any failures encountered. It can
+  identify and analyze various testing frameworks including pytest, Jest, and others.
+  """
+
   SYS_PROMPT = """\
 You are a testing expert analyzing test execution history for software projects. You'll review
 a history of commands executed by an agent that attempted to run the tests. Examine this test history to:
@@ -157,6 +180,16 @@ Output:
 """.replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
+    """Initializes the GeneralTestSummarizationNode with an analysis model.
+
+    Sets up the test summarizer with a prompt template and structured output
+    model for analyzing test execution histories.
+
+    Args:
+      model: Language model instance that will be used for analyzing test
+        histories and generating structured summaries. Must be a
+        BaseChatModel implementation.
+    """
     prompt = ChatPromptTemplate.from_messages(
       [("system", self.SYS_PROMPT), ("human", "{test_history}")]
     )
@@ -165,6 +198,19 @@ Output:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_summarization_node")
 
   def format_test_history(self, test_messages: Sequence[BaseMessage]):
+    """Formats test execution messages into a structured history.
+
+    Processes various message types (AI, Tool) into a chronological sequence
+    of test execution steps and their outputs.
+
+    Args:
+      test_messages: Sequence of messages from test execution attempts.
+        Can include AIMessage and ToolMessage types.
+
+    Returns:
+      List of formatted strings representing the test execution history,
+      including internal thoughts, executed commands, and their outputs.
+    """
     formatted_messages = []
     for message in test_messages:
       if isinstance(message, AIMessage):
@@ -178,6 +224,20 @@ Output:
     return formatted_messages
 
   def __call__(self, state: IssueAnswerAndFixState):
+    """Processes test state to generate structured test analysis.
+
+    Analyzes the test execution history to determine test framework presence,
+    required commands, and any failures encountered.
+
+    Args:
+      state: Current state containing test execution messages and history.
+
+    Returns:
+      Dictionary that updates the state containing:
+      - exist_test: Boolean indicating if a test framework exists
+      - test_command_summary: String describing test framework and required commands
+      - test_fail_log: String containing test failure details (empty if all passed)
+    """
     test_history = "\n".join(self.format_test_history(state["test_messages"]))
     response = self.model.invoke({"test_history": test_history})
     self._logger.debug(f"GeneralTestSummarizationNode response:\n{response}")

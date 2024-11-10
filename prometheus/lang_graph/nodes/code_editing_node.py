@@ -1,3 +1,11 @@
+"""Code editing functionality for automated issue resolution and fixing.
+
+This module implements a specialized code editing agent that automatically handles
+build failures, test failures, and other code-related issues. It uses a language
+model with structured tools to analyze problems and implement precise code changes
+while maintaining code integrity.
+"""
+
 import functools
 import logging
 from typing import Mapping, Sequence
@@ -11,6 +19,14 @@ from prometheus.tools import file_operation
 
 
 class CodeEditingNode:
+  """Implements automated code editing for issue resolution and fixes.
+
+  This class provides functionality to automatically analyze and fix code issues,
+  including build failures and test failures. It uses a language model with
+  structured tools to make precise code modifications while maintaining code
+  integrity and existing patterns.
+  """
+
   SYS_PROMPT = """\
 You are a specialized code editing agent responsible for implementing precise code changes to fix build failures, test failures, and issues. You will receive:
 1. Issue information (title, description, and comments)
@@ -97,12 +113,31 @@ Your previous edit (if any):
 """
 
   def __init__(self, model: BaseChatModel, root_path: str):
+    """Initializes the CodeEditingNode with a language model and root path.
+
+    Sets up the code editing agent with the necessary system prompts, file operation
+    tools, and logging configuration.
+
+    Args:
+      model: Language model instance that will be used for code analysis and editing.
+        Must be a BaseChatModel implementation that supports tool binding.
+      root_path: Base directory path for all file operations. All file paths in
+        operations will be resolved relative to this root.
+    """
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.tools = self._init_tools(root_path)
     self.model_with_tool = model.bind_tools(self.tools)
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.code_editing_node")
 
   def _init_tools(self, root_path: str):
+    """Initializes file operation tools with the given root path.
+
+    Args:
+      root_path: Base directory path for all file operations.
+
+    Returns:
+      List of StructuredTool instances configured for file operations.
+    """
     tools = []
 
     read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
@@ -155,12 +190,29 @@ Your previous edit (if any):
     return tools
 
   def format_issue_comments(self, issue_comments: Sequence[Mapping[str, str]]):
+    """Formats issue comments into a readable string.
+
+    Args:
+      issue_comments: Sequence of mappings containing username and comment text.
+
+    Returns:
+      Formatted string of all comments with usernames.
+    """
     formatted_issue_comments = []
     for issue_comment in issue_comments:
       formatted_issue_comments.append(f"{issue_comment['username']}: {issue_comment['comment']}")
     return "\n\n".join(formatted_issue_comments)
 
   def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
+    """Creates a formatted message for the language model from the current state.
+
+    Args:
+      state: Current state containing issue information, build status, and test status.
+
+    Returns:
+      HumanMessage instance containing formatted state information.
+    """
+
     # Format build status based on various conditions
     build_status = "Build Status: Unknown (Build check not enabled)"
     if "run_build" in state and state["run_build"]:
@@ -203,6 +255,18 @@ Your previous edit (if any):
     return human_message
 
   def __call__(self, state: IssueAnswerAndFixState):
+    """Processes the current state to generate code edits.
+
+    This method takes the current state, formats it into messages for the
+    language model, and generates appropriate code modifications based on
+    the issue information and status.
+
+    Args:
+      state: Current state containing issue information and status.
+
+    Returns:
+      Dictionary that will update the state with the model's response messages.
+    """
     message_history = [self.system_prompt, self.format_human_message(state)] + state[
       "code_edit_messages"
     ]
