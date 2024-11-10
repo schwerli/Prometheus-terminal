@@ -42,7 +42,6 @@ class BaseContainer(ABC):
       detach=True,
       tty=True,
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
-      group_add=["docker"],
     )
 
   def update_files(self, new_project_path: str, container_path: str = "/app"):

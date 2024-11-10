@@ -40,7 +40,7 @@ def test_get_dockerfile_content(container):
   assert dockerfile_content
 
   # Check for key elements in the Dockerfile
-  assert "FROM ubuntu:22.04" in dockerfile_content
+  assert "FROM ubuntu:24.04" in dockerfile_content
   assert "WORKDIR /app" in dockerfile_content
   assert "RUN apt-get update" in dockerfile_content
   assert "COPY . /app/" in dockerfile_content
