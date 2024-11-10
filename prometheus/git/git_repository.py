@@ -30,9 +30,6 @@ class GitRepository:
         self.repo = Repo(local_path)
       except InvalidGitRepositoryError:
         self.repo = Repo.init(local_path)
-    
-    if github_access_token:
-      self.repo.remote().set_url(self.repo.remote().url.replace("https://", f"https://{github_access_token}@"))
 
   def _clone_repository(
     self, https_url: str, github_access_token: str, target_directory: Path

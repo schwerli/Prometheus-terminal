@@ -5,7 +5,9 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 class IssueAnswerAndFixSuccessRouter:
   def __init__(self):
-    self._logger = logging.getLogger("prometheus.lang_graph.routers.issue_answer_and_fix_success_router")
+    self._logger = logging.getLogger(
+      "prometheus.lang_graph.routers.issue_answer_and_fix_success_router"
+    )
 
   def __call__(self, state: IssueAnswerAndFixState):
     self._logger.debug(f"Running IssueAnswerAndFixSuccessRouter for state:\n{state}")
