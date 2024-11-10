@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from pathlib import Path
@@ -14,6 +15,8 @@ class GitRepository:
     copy_to_working_dir: bool = True,
     github_access_token: Optional[str] = None,
   ):
+    self._logger = logging.getLogger("prometheus.git.git_repository")
+    self._logger.debug(f"Git repo address {address}")
     if address.startswith("https://"):
       if github_access_token is None:
         raise ValueError("github_access_token is required for https repository")
@@ -64,6 +67,7 @@ class GitRepository:
       self.repo = None
 
   def create_and_push_branch(self, branch_name: str, commit_message: str):
+    self._logger.debug(f"Remote url {self.repo.remote().url}")
     new_branch = self.repo.create_head(branch_name)
     new_branch.checkout()
     self.repo.git.add(A=True)
