@@ -11,7 +11,7 @@ class GeneralContainer(BaseContainer):
 
   def get_dockerfile_content(self) -> Path:
     DOCKERFILE_CONTENT = """\
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Avoid timezone prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive

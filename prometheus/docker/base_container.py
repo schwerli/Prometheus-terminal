@@ -37,7 +37,13 @@ class BaseContainer(ABC):
 
   def start_container(self):
     self.logger.info(f"Starting container from image {self.tag_name}")
-    self.container = self.client.containers.run(self.tag_name, detach=True, tty=True)
+    self.container = self.client.containers.run(
+      self.tag_name,
+      detach=True,
+      tty=True,
+      volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
+      group_add=["docker"],
+    )
 
   def update_files(self, new_project_path: str, container_path: str = "/app"):
     self.logger.info(f"Updating files in running container with files from {new_project_path}")
