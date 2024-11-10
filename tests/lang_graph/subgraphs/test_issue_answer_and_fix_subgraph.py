@@ -41,3 +41,26 @@ def test_issue_answer_fix_subgraph_initialization(mock_kg, mock_neo4j_driver, te
   # Verify the subgraph was created
   assert subgraph.subgraph is not None
   assert subgraph.local_path == temp_project_dir.absolute()
+
+
+def test_issue_answer_fix_subgraph_initialization_with_user_defined(
+  mock_kg, mock_neo4j_driver, temp_project_dir
+):
+  """Test that IssueAnswerAndFixSubgraph with user defined inputs initializes correctly with all components."""
+
+  fake_model = FakeListChatWithToolsModel(responses=[])
+
+  # Initialize the subgraph
+  subgraph = IssueAnswerAndFixSubgraph(
+    model=fake_model,
+    kg=mock_kg,
+    neo4j_driver=mock_neo4j_driver,
+    local_path=temp_project_dir,
+    dockerfile_content="Dockerfile",
+    build_commands=["build"],
+    test_commands=["test"],
+  )
+
+  # Verify the subgraph was created
+  assert subgraph.subgraph is not None
+  assert subgraph.local_path == temp_project_dir.absolute()

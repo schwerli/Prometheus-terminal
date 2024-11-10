@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from prometheus.app import dependencies
-from prometheus.app.api import chat, issue, repository
+from prometheus.app.api import issue, repository
 from prometheus.configuration.config import settings
 
 # Create a logger for application's namespace
@@ -27,6 +27,5 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])

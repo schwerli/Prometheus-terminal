@@ -9,6 +9,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from prometheus.docker.general_container import GeneralContainer
+from prometheus.docker.user_defined_container import UserDefinedContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.code_editing_node import CodeEditingNode
 from prometheus.lang_graph.nodes.general_build_node import GeneralBuildNode
@@ -23,6 +24,8 @@ from prometheus.lang_graph.nodes.issue_to_query_node import IssueToQueryNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
 from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNode
+from prometheus.lang_graph.nodes.user_defined_build_node import UserDefinedBuildNode
+from prometheus.lang_graph.nodes.user_defined_test_node import UserDefinedTestNode
 from prometheus.lang_graph.routers.issue_answer_and_fix_need_build_router import (
   IssueAnswerAndFixNeedBuildRouter,
 )
@@ -47,10 +50,18 @@ class IssueAnswerAndFixSubgraph:
     neo4j_driver: neo4j.Driver,
     local_path: Path,
     checkpointer: Optional[BaseCheckpointSaver] = None,
+    dockerfile_content: Optional[str] = None,
+    build_commands: Optional[Sequence[str]] = None,
+    test_commands: Optional[Sequence[str]] = None,
   ):
     self.local_path = local_path.absolute()
     self.project_structure = kg.get_file_tree()
-    self.general_container = GeneralContainer(self.local_path)
+    if dockerfile_content:
+      self.container = UserDefinedContainer(
+        self.local_path, dockerfile_content, build_commands, test_commands
+      )
+    else:
+      self.container = GeneralContainer(self.local_path)
 
     issue_to_query_node = IssueToQueryNode()
     context_provider_subgraph = ContextProviderSubgraph(
@@ -58,22 +69,26 @@ class IssueAnswerAndFixSubgraph:
     ).subgraph
 
     before_edit_build_branch_node = NoopNode()
-    before_edit_general_build_node = GeneralBuildNode(
-      model, self.general_container, before_edit=True
-    )
-    before_edit_general_build_tools = ToolNode(
-      tools=before_edit_general_build_node.tools,
-      name="before_edit_general_build_tools",
-      messages_key="build_messages",
-    )
+    if dockerfile_content:
+      before_edit_build_node = UserDefinedBuildNode(self.container)
+    else:
+      before_edit_build_node = GeneralBuildNode(model, self.container, before_edit=True)
+      before_edit_build_tools = ToolNode(
+        tools=before_edit_build_node.tools,
+        name="before_edit_build_tools",
+        messages_key="build_messages",
+      )
     before_edit_general_build_summarization_node = GeneralBuildSummarizationNode(model)
     before_edit_test_branch_node = NoopNode()
-    before_edit_general_test_node = GeneralTestNode(model, self.general_container, before_edit=True)
-    before_edit_general_test_tools = ToolNode(
-      tools=before_edit_general_test_node.tools,
-      name="before_edit_general_test_tools",
-      messages_key="test_messages",
-    )
+    if dockerfile_content:
+      before_edit_test_node = UserDefinedTestNode(self.container)
+    else:
+      before_edit_test_node = GeneralTestNode(model, self.container, before_edit=True)
+      before_edit_test_tools = ToolNode(
+        tools=before_edit_test_node.tools,
+        name="before_edit_test_tools",
+        messages_key="test_messages",
+      )
     before_edit_general_test_summarization_node = GeneralTestSummarizationNode(model)
 
     code_editing_node = CodeEditingNode(model, str(self.local_path))
@@ -86,25 +101,29 @@ class IssueAnswerAndFixSubgraph:
     reset_test_messages_node = ResetMessagesNode("test_messages")
     reset_build_fail_log_node = ResetMessagesNode("build_fail_log")
     reset_test_fail_log_node = ResetMessagesNode("test_fail_log")
-    update_container_node = UpdateContainerNode(self.general_container)
+    update_container_node = UpdateContainerNode(self.container)
 
     after_edit_build_branch_node = NoopNode()
-    after_edit_general_build_node = GeneralBuildNode(
-      model, self.general_container, before_edit=False
-    )
-    after_edit_general_build_tools = ToolNode(
-      tools=after_edit_general_build_node.tools,
-      name="after_edit_general_build_tools",
-      messages_key="build_messages",
-    )
+    if dockerfile_content:
+      after_edit_build_node = UserDefinedBuildNode(self.container)
+    else:
+      after_edit_build_node = GeneralBuildNode(model, self.container, before_edit=False)
+      after_edit_build_tools = ToolNode(
+        tools=after_edit_build_node.tools,
+        name="after_edit_build_tools",
+        messages_key="build_messages",
+      )
     after_edit_general_build_summarization_node = GeneralBuildSummarizationNode(model)
     after_edit_test_branch_node = NoopNode()
-    after_edit_general_test_node = GeneralTestNode(model, self.general_container, before_edit=False)
-    after_edit_general_test_tools = ToolNode(
-      tools=after_edit_general_test_node.tools,
-      name="after_edit_general_test_tools",
-      messages_key="test_messages",
-    )
+    if dockerfile_content:
+      after_edit_test_node = UserDefinedTestNode(self.container)
+    else:
+      after_edit_test_node = GeneralTestNode(model, self.container, before_edit=False)
+      after_edit_test_tools = ToolNode(
+        tools=after_edit_test_node.tools,
+        name="after_edit_test_tools",
+        messages_key="test_messages",
+      )
     after_edit_general_test_summarization_node = GeneralTestSummarizationNode(model)
 
     issue_responder_node = IssueResponderNode(model)
@@ -114,14 +133,16 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_node("context_provider_subgraph", context_provider_subgraph)
 
     workflow.add_node("before_edit_build_branch_node", before_edit_build_branch_node)
-    workflow.add_node("before_edit_general_build_node", before_edit_general_build_node)
-    workflow.add_node("before_edit_general_build_tools", before_edit_general_build_tools)
+    workflow.add_node("before_edit_build_node", before_edit_build_node)
+    if not dockerfile_content:
+      workflow.add_node("before_edit_build_tools", before_edit_build_tools)
     workflow.add_node(
       "before_edit_general_build_summarization_node", before_edit_general_build_summarization_node
     )
     workflow.add_node("before_edit_test_branch_node", before_edit_test_branch_node)
-    workflow.add_node("before_edit_general_test_node", before_edit_general_test_node)
-    workflow.add_node("before_edit_general_test_tools", before_edit_general_test_tools)
+    workflow.add_node("before_edit_test_node", before_edit_test_node)
+    if not dockerfile_content:
+      workflow.add_node("before_edit_test_tools", before_edit_test_tools)
     workflow.add_node(
       "before_edit_general_test_summarization_node", before_edit_general_test_summarization_node
     )
@@ -137,14 +158,16 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_node("update_container_node", update_container_node)
 
     workflow.add_node("after_edit_build_branch_node", after_edit_build_branch_node)
-    workflow.add_node("after_edit_general_build_node", after_edit_general_build_node)
-    workflow.add_node("after_edit_general_build_tools", after_edit_general_build_tools)
+    workflow.add_node("after_edit_build_node", after_edit_build_node)
+    if not dockerfile_content:
+      workflow.add_node("after_edit_build_tools", after_edit_build_tools)
     workflow.add_node(
       "after_edit_general_build_summarization_node", after_edit_general_build_summarization_node
     )
     workflow.add_node("after_edit_test_branch_node", after_edit_test_branch_node)
-    workflow.add_node("after_edit_general_test_node", after_edit_general_test_node)
-    workflow.add_node("after_edit_general_test_tools", after_edit_general_test_tools)
+    workflow.add_node("after_edit_test_node", after_edit_test_node)
+    if not dockerfile_content:
+      workflow.add_node("after_edit_test_tools", after_edit_test_tools)
     workflow.add_node(
       "after_edit_general_test_summarization_node", after_edit_general_test_summarization_node
     )
@@ -161,34 +184,40 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_conditional_edges(
       "before_edit_build_branch_node",
       IssueAnswerAndFixNeedBuildRouter(),
-      {True: "before_edit_general_build_node", False: "before_edit_test_branch_node"},
+      {True: "before_edit_build_node", False: "before_edit_test_branch_node"},
     )
-    workflow.add_conditional_edges(
-      "before_edit_general_build_node",
-      functools.partial(tools_condition, messages_key="build_messages"),
-      {
-        "tools": "before_edit_general_build_tools",
-        END: "before_edit_general_build_summarization_node",
-      },
-    )
-    workflow.add_edge("before_edit_general_build_tools", "before_edit_general_build_node")
+    if dockerfile_content:
+      workflow.add_edge("before_edit_build_node", "before_edit_general_build_summarization_node")
+    else:
+      workflow.add_conditional_edges(
+        "before_edit_build_node",
+        functools.partial(tools_condition, messages_key="build_messages"),
+        {
+          "tools": "before_edit_build_tools",
+          END: "before_edit_general_build_summarization_node",
+        },
+      )
+      workflow.add_edge("before_edit_build_tools", "before_edit_build_node")
     workflow.add_edge(
       "before_edit_general_build_summarization_node", "before_edit_test_branch_node"
     )
     workflow.add_conditional_edges(
       "before_edit_test_branch_node",
       IssueAnswerAndFixNeedTestRouter(),
-      {True: "before_edit_general_test_node", False: "code_editing_node"},
+      {True: "before_edit_test_node", False: "code_editing_node"},
     )
-    workflow.add_conditional_edges(
-      "before_edit_general_test_node",
-      functools.partial(tools_condition, messages_key="test_messages"),
-      {
-        "tools": "before_edit_general_test_tools",
-        END: "before_edit_general_test_summarization_node",
-      },
-    )
-    workflow.add_edge("before_edit_general_test_tools", "before_edit_general_test_node")
+    if dockerfile_content:
+      workflow.add_edge("before_edit_test_node", "before_edit_general_test_summarization_node")
+    else:
+      workflow.add_conditional_edges(
+        "before_edit_test_node",
+        functools.partial(tools_condition, messages_key="test_messages"),
+        {
+          "tools": "before_edit_test_tools",
+          END: "before_edit_general_test_summarization_node",
+        },
+      )
+      workflow.add_edge("before_edit_test_tools", "before_edit_test_node")
     workflow.add_edge("before_edit_general_test_summarization_node", "code_editing_node")
 
     workflow.add_conditional_edges(
@@ -209,17 +238,20 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_conditional_edges(
       "after_edit_build_branch_node",
       IssueAnswerAndFixNeedBuildRouter(),
-      {True: "after_edit_general_build_node", False: "after_edit_test_branch_node"},
+      {True: "after_edit_build_node", False: "after_edit_test_branch_node"},
     )
-    workflow.add_conditional_edges(
-      "after_edit_general_build_node",
-      functools.partial(tools_condition, messages_key="build_messages"),
-      {
-        "tools": "after_edit_general_build_tools",
-        END: "after_edit_general_build_summarization_node",
-      },
-    )
-    workflow.add_edge("after_edit_general_build_tools", "after_edit_general_build_node")
+    if dockerfile_content:
+      workflow.add_edge("after_edit_build_node", "after_edit_general_build_summarization_node")
+    else:
+      workflow.add_conditional_edges(
+        "after_edit_build_node",
+        functools.partial(tools_condition, messages_key="build_messages"),
+        {
+          "tools": "after_edit_build_tools",
+          END: "after_edit_general_build_summarization_node",
+        },
+      )
+      workflow.add_edge("after_edit_build_tools", "after_edit_build_node")
     workflow.add_conditional_edges(
       "after_edit_general_build_summarization_node",
       IssueAnswerAndFixSuccessRouter(),
@@ -228,14 +260,17 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_conditional_edges(
       "after_edit_test_branch_node",
       IssueAnswerAndFixNeedTestRouter(),
-      {True: "after_edit_general_test_node", False: "issue_responder_node"},
+      {True: "after_edit_test_node", False: "issue_responder_node"},
     )
-    workflow.add_conditional_edges(
-      "after_edit_general_test_node",
-      functools.partial(tools_condition, messages_key="test_messages"),
-      {"tools": "after_edit_general_test_tools", END: "after_edit_general_test_summarization_node"},
-    )
-    workflow.add_edge("after_edit_general_test_tools", "after_edit_general_test_node")
+    if dockerfile_content:
+      workflow.add_edge("after_edit_test_node", "after_edit_general_test_summarization_node")
+    else:
+      workflow.add_conditional_edges(
+        "after_edit_test_node",
+        functools.partial(tools_condition, messages_key="test_messages"),
+        {"tools": "after_edit_test_tools", END: "after_edit_general_test_summarization_node"},
+      )
+      workflow.add_edge("after_edit_test_tools", "after_edit_test_node")
     workflow.add_conditional_edges(
       "after_edit_general_test_summarization_node",
       IssueAnswerAndFixSuccessRouter(),
@@ -265,8 +300,8 @@ class IssueAnswerAndFixSubgraph:
       config["configurable"]["thread_id"] = thread_id
 
     if not only_answer and (run_build or run_test):
-      self.general_container.build_docker_image()
-      self.general_container.start_container()
+      self.container.build_docker_image()
+      self.container.start_container()
 
     output_state = self.subgraph.invoke(
       {
@@ -282,5 +317,5 @@ class IssueAnswerAndFixSubgraph:
       config,
     )
     if not only_answer and (run_build or run_test):
-      self.general_container.cleanup()
+      self.container.cleanup()
     return output_state["issue_response"], output_state.get("patch", "")
