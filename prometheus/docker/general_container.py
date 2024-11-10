@@ -36,7 +36,7 @@ class GeneralContainer(BaseContainer):
     super().__init__(project_path)
     self.tag_name = f"prometheus_general_container_{uuid.uuid4().hex[:10]}"
 
-  def get_dockerfile_content(self) -> Path:
+  def get_dockerfile_content(self) -> str:
     """Get the Dockerfile content for the general-purpose container.
 
     The Dockerfile sets up an Ubuntu-based environment with a comprehensive
