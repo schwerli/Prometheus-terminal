@@ -40,14 +40,11 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     mysql-client \
     sqlite3 \
-    netcat \
     iputils-ping \
     vim \
     nano \
     zip \
-    unzip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    unzip
 
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
