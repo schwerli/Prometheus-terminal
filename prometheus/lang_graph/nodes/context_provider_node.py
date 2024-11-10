@@ -1,3 +1,10 @@
+"""Knowledge graph-based context provider for codebase queries.
+
+This module implements a specialized context provider that uses a Neo4j knowledge graph
+to find relevant code context based on user queries. It leverages a language model
+with structured tools to systematically search and analyze the codebase KnowledgeGraph.
+"""
+
 import functools
 import logging
 
@@ -10,7 +17,22 @@ from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 from prometheus.tools import graph_traversal
 
-SYS_PROMPT = """\
+
+class ContextProviderNode:
+  """Provides contextual information from a codebase using knowledge graph search.
+
+  This class implements a systematic approach to finding relevant code context
+  by searching through a Neo4j knowledge graph representation of a codebase.
+  It uses a combination of file structure navigation, AST analysis, and text
+  search to gather comprehensive context for queries.
+
+  The knowledge graph contains three main types of nodes:
+  - FileNode: Represents files and directories
+  - ASTNode: Represents syntactic elements from the code
+  - TextNode: Represents documentation and text content
+  """
+
+  SYS_PROMPT = """\
 You are an assistant for finding the relevant context from a codebase to a query.
 The codebase is pre-processed and stored as a graph in a Neo4j graph database.
 You should follow a systematic, multi-step approach to search the knowledge graph and find relevant information.
@@ -98,18 +120,38 @@ The file tree of the codebase:
 {file_tree}
 """
 
-
-class ContextProviderNode:
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph, neo4j_driver: neo4j.Driver):
+    """Initializes the ContextProviderNode with model, knowledge graph, and database connection.
+
+    Sets up the context provider with necessary prompts, graph traversal tools,
+    and logging configuration. Initializes the system prompt with the current
+    file tree structure from the knowledge graph.
+
+    Args:
+      model: Language model instance that will be used for query analysis and
+        context finding. Must be a BaseChatModel implementation that supports
+        tool binding.
+      kg: Knowledge graph instance containing the processed codebase structure.
+        Used to obtain the file tree for system prompts.
+      neo4j_driver: Neo4j driver instance for executing graph queries. This
+        driver should be properly configured with authentication and
+        connection details.
+    """
     self.neo4j_driver = neo4j_driver
 
-    self.system_prompt = SystemMessage(SYS_PROMPT.format(file_tree=kg.get_file_tree()))
+    self.system_prompt = SystemMessage(self.SYS_PROMPT.format(file_tree=kg.get_file_tree()))
     self.tools = self._init_tools()
     self.model_with_tools = model.bind_tools(self.tools)
 
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_provider_node")
 
   def _init_tools(self):
+    """Initializes KnowledgeGraph traversal tools.
+
+
+    Returns:
+      List of StructuredTool instances configured for KnowledgeGraph traversal.
+    """
     tools = []
 
     find_file_node_with_basename_fn = functools.partial(
@@ -258,6 +300,14 @@ class ContextProviderNode:
     return tools
 
   def __call__(self, state: ContextProviderState):
+    """Processes the current state and traverse the knowledge graph to retrieve context.
+
+    Args:
+      state: Current state containing the human query and preivous context_messages.
+
+    Returns:
+      Dictionary that will update the state with the model's response messages.
+    """
     message_history = [self.system_prompt, HumanMessage(state["query"])] + state["context_messages"]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"ContextProviderNode response:\n{response}")

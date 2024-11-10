@@ -1,3 +1,11 @@
+"""GitHub issue response generation for codebase issues.
+
+This module provides functionality to generate professional, context-aware responses
+to GitHub issues. It operates in two modes: information mode for providing explanations
+based on codebase analysis, and solution mode for explaining implemented changes and
+their verification status.
+"""
+
 import logging
 from typing import Mapping, Sequence
 
@@ -8,6 +16,19 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 
 class IssueResponderNode:
+  """Generates professional responses to GitHub issues with contextual information.
+
+  This class provides automated response generation for GitHub issues, handling both
+  informational responses based on codebase analysis and solution-oriented responses
+  that explain implemented changes and their verification status.
+
+  The node operates in two modes:
+  1. Information Mode: Provides explanations using codebase context when no changes
+      are made
+  2. Solution Mode: Explains implemented changes and their verification status when
+      code modifications are present
+  """
+
   SYS_PROMPT = """\
 You are an intelligent GitHub issue response assistant that provides informative and actionable
 responses to issues. Your response will be posted directly to GitHub, so format it appropriately for that context.
@@ -92,18 +113,52 @@ CODEBASE CONTEXT:
 """
 
   def __init__(self, model: BaseChatModel):
+    """Initializes the IssueResponderNode with a language model.
+
+    Sets up the response generator with necessary prompts and logging
+    configuration for creating GitHub issue responses.
+
+    Args:
+      model: Language model instance that will be used for generating
+        responses. Must be a BaseChatModel implementation capable of
+        understanding and generating GitHub-formatted text.
+    """
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.model = model
 
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_responder_node")
 
   def format_issue_comments(self, issue_comments: Sequence[Mapping[str, str]]):
+    """Formats a sequence of issue comments into a readable string.
+
+    Combines multiple issue comments with their associated usernames into a
+    formatted string suitable for inclusion in the response context.
+
+    Args:
+      issue_comments: Sequence of mappings containing 'username' and 'comment'
+        keys for each issue comment.
+
+    Returns:
+      Formatted string containing all comments with usernames, separated by newlines.
+    """
     formatted_issue_comments = []
     for issue_comment in issue_comments:
       formatted_issue_comments.append(f"{issue_comment['username']}: {issue_comment['comment']}")
     return "\n\n".join(formatted_issue_comments)
 
   def format_verification_status(self, state: IssueAnswerAndFixState) -> str:
+    """Creates a formatted string of build and test verification results.
+
+    Analyzes the state to determine build and test status, creating a
+    formatted summary of verification results.
+
+    Args:
+      state: Current state containing build and test status information.
+
+    Returns:
+      Formatted string containing verification results, or empty string if
+      no verification was performed.
+    """
     status_parts = []
 
     if "run_build" in state and state["run_build"]:
@@ -121,6 +176,17 @@ CODEBASE CONTEXT:
     return ""
 
   def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
+    """Creates a formatted message combining all context for response generation.
+
+    Formats the issue information, code changes, and verification status into
+    a structured message for the language model.
+
+    Args:
+      state: Current state containing issue information, changes, and verification results.
+
+    Returns:
+      HumanMessage instance containing formatted context for response generation.
+    """
     edit_status = "MODE: Information Only (No Code Changes)"
 
     # If this is a fix attempt (has patch)

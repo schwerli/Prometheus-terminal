@@ -1,3 +1,11 @@
+"""Build execution analysis and summarization for software projects.
+
+This module analyzes build execution attempts and provides structured summaries of
+build systems, required commands, and failure information. It processes build
+execution histories to determine build system presence, extract build steps, and
+identify any failures.
+"""
+
 import logging
 from typing import Sequence
 
@@ -10,6 +18,14 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnsw
 
 
 class BuildClassification(BaseModel):
+  """Structured output model for build analysis results.
+
+  Attributes:
+    exist_build: Boolean indicating presence of a build system.
+    command_summary: Detailed description of build system and required commands.
+    fail_log: Error logs from failed builds, empty string if successful.
+  """
+
   exist_build: bool = Field(
     description="Indicates if there is any build system present in the project"
   )
@@ -22,6 +38,18 @@ class BuildClassification(BaseModel):
 
 
 class GeneralBuildSummarizationNode:
+  """Analyzes and summarizes build execution attempts for software projects.
+
+  This class processes build execution histories to provide structured analysis
+  of build systems, required build steps, and any failures encountered. It can
+  identify and analyze various build systems including CMake, npm, Maven, and others.
+
+  The analysis covers three main areas:
+  1. Build system detection and classification
+  2. Required build steps and commands
+  3. Build failure analysis and error logging
+  """
+
   SYS_PROMPT = """\
 You are a build system expert analyzing build attempts for software projects. You'll review a history
 of commands executed by an agent that attempted to build the project. Examine this build history to:
@@ -178,6 +206,16 @@ Output:
 """.replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
+    """Initializes the GeneralBuildSummarizationNode with an analysis model.
+
+    Sets up the build summarizer with a prompt template and structured output
+    model for analyzing build execution histories.
+
+    Args:
+      model: Language model instance that will be used for analyzing build
+        histories and generating structured summaries. Must be a
+        BaseChatModel implementation.
+    """
     prompt = ChatPromptTemplate.from_messages(
       [("system", self.SYS_PROMPT), ("human", "{build_history}")]
     )
@@ -186,6 +224,19 @@ Output:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_summarization_node")
 
   def format_build_history(self, build_messages: Sequence[BaseMessage]):
+    """Formats build execution messages into a structured history.
+
+    Processes various message types (AI, Tool) into a chronological sequence
+    of build execution steps and their outputs.
+
+    Args:
+      build_messages: Sequence of messages from build execution attempts.
+        Can include AIMessage and ToolMessage types.
+
+    Returns:
+      List of formatted strings representing the build execution history,
+      including internal thoughts, executed commands, and their outputs.
+    """
     formatted_messages = []
     for message in build_messages:
       if isinstance(message, AIMessage):
@@ -199,6 +250,20 @@ Output:
     return formatted_messages
 
   def __call__(self, state: IssueAnswerAndFixState):
+    """Processes build state to generate structured build analysis.
+
+    Analyzes the build execution history to determine build system presence,
+    required commands, and any failures encountered.
+
+    Args:
+      state: Current state containing build execution messages and history.
+
+    Returns:
+      Dictionary that updates the statecontaining:
+      - exist_build: Boolean indicating if a build system exists
+      - build_command_summary: String describing build system and required commands
+      - build_fail_log: String containing error logs (empty if successful)
+    """
     build_history = "\n".join(self.format_build_history(state["build_messages"]))
     response = self.model.invoke({"build_history": build_history})
     self._logger.debug(f"GeneralBuildSummarizeNode response:\n{response}")
