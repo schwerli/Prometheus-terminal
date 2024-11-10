@@ -1,3 +1,5 @@
+"""Git repository management module."""
+
 import logging
 import os
 import shutil
@@ -8,6 +10,14 @@ from git import InvalidGitRepositoryError, Repo
 
 
 class GitRepository:
+  """A class for managing Git repositories with support for both local and remote operations.
+
+  This class provides a unified interface for working with Git repositories,
+  whether they are local or remote (HTTPS). It supports common Git operations
+  such as cloning, checking out commits, switching branches, and pushing changes.
+  For remote repositories, it handles authentication using GitHub access tokens..
+  """
+
   def __init__(
     self,
     address: str,
@@ -15,6 +25,18 @@ class GitRepository:
     copy_to_working_dir: bool = True,
     github_access_token: Optional[str] = None,
   ):
+    """Initialize a GitRepository instance.
+
+    Args:
+      address: Either a local path to a Git repository or an HTTPS URL
+        for a remote repository.
+      working_directory: Directory where the repository will be stored
+        or copied to.
+      copy_to_working_dir: If True, creates a copy of a local
+        repository in the working directory. Defaults to True.
+      github_access_token: GitHub access token for authentication with remote
+        repositories. Required if address is an HTTPS URL. Defaults to None.
+    """
     self._logger = logging.getLogger("prometheus.git.git_repository")
     self._logger.debug(f"Git repo address {address}")
     if address.startswith("https://"):
@@ -34,6 +56,16 @@ class GitRepository:
   def _clone_repository(
     self, https_url: str, github_access_token: str, target_directory: Path
   ) -> Repo:
+    """Clone a remote repository using HTTPS authentication.
+
+    Args:
+      https_url: HTTPS URL of the remote repository.
+      github_access_token: GitHub access token for authentication.
+      target_directory: Directory where the repository will be cloned.
+
+    Returns:
+        Repo: GitPython Repo object representing the cloned repository.
+    """
     self._original_https_url = https_url
     https_url = https_url.replace("https://", f"https://{github_access_token}@")
     repo_name = https_url.split("/")[-1].split(".")[0]
@@ -64,6 +96,16 @@ class GitRepository:
       self.repo = None
 
   def create_and_push_branch(self, branch_name: str, commit_message: str):
+    """Create a new branch, commit changes, and push to remote.
+
+    This method creates a new branch, switches to it, stages all changes,
+    commits them with the provided message, and pushes the branch to the
+    remote repository.
+
+    Args:
+        branch_name: Name of the new branch to create.
+        commit_message: Message for the commit.
+    """
     self._logger.debug(f"Remote url {self.repo.remote().url}")
     new_branch = self.repo.create_head(branch_name)
     new_branch.checkout()

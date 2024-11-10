@@ -1,3 +1,5 @@
+"""Service for managing PostgreSQL connections and conversation history."""
+
 from datetime import datetime
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -7,6 +9,13 @@ from psycopg.rows import dict_row
 
 
 class PostgresService:
+  """Manages PostgreSQL database operations for conversation storage.
+
+  This service handles database connections and provides methods to interact
+  with stored conversation data. The main functionality is to provide checkpointer
+  for LangGraph.
+  """
+
   def __init__(self, postgres_uri: str):
     self.postgres_conn = Connection.connect(
       postgres_uri,
@@ -21,6 +30,14 @@ class PostgresService:
     self.postgres_conn.close()
 
   def get_all_thread_ids(self) -> list[str]:
+    """Retrieves all unique conversation thread IDs from the database.
+
+    Returns a list of thread IDs sorted by timestamp in descending order
+    (most recent first), with duplicates removed.
+
+    Returns:
+        List of unique thread identifiers as strings.
+    """
     all_checkpoints = list(self.checkpointer.list(None))
     all_checkpoints = sorted(
       all_checkpoints, key=lambda x: datetime.fromisoformat(x.checkpoint["ts"]), reverse=True
@@ -36,6 +53,20 @@ class PostgresService:
     return unique_thread_ids
 
   def get_messages(self, conversation_id: str) -> list[dict[str, str]]:
+    """Retrieves all messages for a specific conversation thread.
+
+    Fetches and formats the complete message history for a given conversation,
+    including both user and assistant messages, but excludes tool messages or
+    call to using tools.
+
+    Args:
+      conversation_id: Unique identifier for the conversation thread.
+
+    Returns:
+      List of message dictionaries, where each dictionary contains:
+        - 'role': Either 'user' or 'assistant'
+        - 'text': The message content
+    """
     read_config = {"configurable": {"thread_id": conversation_id}}
     checkpoint = self.checkpointer.get(read_config)
     messages = []

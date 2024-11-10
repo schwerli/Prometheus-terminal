@@ -8,6 +8,9 @@ router = APIRouter()
 
 @router.get(
   "/local/",
+  description="""
+    Upload a local codebase to Prometheus.
+    """,
   responses={
     404: {"description": "Local repository not found"},
     200: {"description": "Repository uploaded successfully"},
@@ -27,7 +30,12 @@ def upload_local_repository(local_repository: str, request: Request):
   return {"message": "Repository uploaded successfully"}
 
 
-@router.get("/github/")
+@router.get(
+  "/github/",
+  description="""
+    Upload a GitHub repository to Prometheus, default to the latest commit in the main branch.
+    """,
+)
 def upload_github_repository(https_url: str, request: Request):
   try:
     request.app.state.service_coordinator.upload_github_repository(https_url)
@@ -35,7 +43,12 @@ def upload_github_repository(https_url: str, request: Request):
     raise HTTPException(status_code=400, detail=f"Unable to clone {https_url}")
 
 
-@router.get("/github_commit/")
+@router.get(
+  "/github_commit/",
+  description="""
+    Upload a GitHub repository at a specific commit to Prometheus.
+    """,
+)
 def upload_github_repository_at_commit(https_url: str, commit_id: str, request: Request):
   try:
     request.app.state.service_coordinator.upload_github_repository(https_url, commit_id)
@@ -45,7 +58,12 @@ def upload_github_repository_at_commit(https_url: str, commit_id: str, request: 
     )
 
 
-@router.get("/delete/")
+@router.get(
+  "/delete/",
+  description="""
+    Delete the repository uploaded to Prometheus, along with other information.
+    """,
+)
 def delete(request: Request):
   if not request.app.state.service_coordinator.exists_knowledge_graph():
     return {"message": "No knowledge graph to delete"}
@@ -54,6 +72,12 @@ def delete(request: Request):
   return {"message": "Successfully deleted knowledge graph"}
 
 
-@router.get("/exists/", response_model=bool)
+@router.get(
+  "/exists/",
+  description="""
+    If there is a codebase uploaded to Promtheus.
+    """,
+  response_model=bool,
+)
 def knowledge_graph_exists(request: Request) -> bool:
   return request.app.state.service_coordinator.exists_knowledge_graph()

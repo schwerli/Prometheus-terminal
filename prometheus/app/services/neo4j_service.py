@@ -1,3 +1,5 @@
+"""Service for managing Neo4j database driver."""
+
 from neo4j import GraphDatabase
 
 
