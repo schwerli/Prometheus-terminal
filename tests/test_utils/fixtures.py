@@ -1,4 +1,5 @@
 import shutil
+import uuid
 
 import pytest
 from git import Repo
@@ -19,7 +20,7 @@ def neo4j_container_with_kg_fixture():
   kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
   container = Neo4jContainer(
     image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]')
+  ).with_env("NEO4J_PLUGINS", '["apoc"]').with_name(f"neo4j_container_with_kg_{uuid.uuid4().hex[:12]}")
   with container as neo4j_container:
     driver = neo4j_container.get_driver()
     handler = KnowledgeGraphHandler(driver, 100)
@@ -31,7 +32,7 @@ def neo4j_container_with_kg_fixture():
 def empty_neo4j_container_fixture():
   container = Neo4jContainer(
     image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]')
+  ).with_env("NEO4J_PLUGINS", '["apoc"]').with_name(f"empty_neo4j_container_{uuid.uuid4().hex[:12]}")
   with container as neo4j_container:
     yield neo4j_container
 
