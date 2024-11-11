@@ -4,6 +4,7 @@ import tarfile
 import tempfile
 from abc import ABC, abstractmethod
 from pathlib import Path
+import uuid
 
 import docker
 
@@ -35,7 +36,17 @@ class BaseContainer(ABC):
     temp_project_path = temp_dir / project_path.name
     shutil.copytree(project_path, temp_project_path)
     self.project_path = temp_project_path.absolute()
+    self.create_network()
     self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
+
+  def create_network(self):
+    network_name = f"prometheus_container_network_{uuid.uuid4().hex[:8]}"
+    existing_network = self.client.networks.get(network_name)
+    existing_network.remove()
+    self.network = self.client.networks.create(
+        name=self.network_name,
+        driver="bridge",
+    )
 
   @abstractmethod
   def get_dockerfile_content(self) -> str:
@@ -70,6 +81,7 @@ class BaseContainer(ABC):
       self.tag_name,
       detach=True,
       tty=True,
+      network=self.network,
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
       environment={
         "TESTCONTAINERS_RYUK_DISABLED": "true",
