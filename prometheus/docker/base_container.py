@@ -78,7 +78,12 @@ class BaseContainer(ABC):
         "TESTCONTAINERS_RYUK_DISABLED": "true",
         "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE": "/var/run/docker.sock",
         "DOCKER_HOST": "unix:///var/run/docker.sock",
+        "TESTCONTAINERS_HOST_OVERRIDE": "localhost",
+        "DOCKER_GATEWAY_HOST": "host-gateway",
       },
+      extra_hosts={
+        "host.docker.internal": "host-gateway"
+      }
     )
 
   def update_files(self, new_project_path: str, container_path: str = "/app"):
