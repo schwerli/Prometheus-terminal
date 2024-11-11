@@ -41,7 +41,7 @@ services:
       - "8000:8000"
     environment:
       - PROMETHEUS_LOGGING_LEVEL="DEBUG"
-      - PROMETHEUS_NEO4J_URI="bolt://neo4j:7687"
+      - PROMETHEUS_NEO4J_URI="bolt://localhost:7687"
       - PROMETHEUS_NEO4J_USERNAME=neo4j
       - PROMETHEUS_NEO4J_PASSWORD=password
       - PROMETHEUS_NEO4J_BATCH_SIZE=1000
@@ -51,7 +51,7 @@ services:
       - PROMETHEUS_LITELLM_GEMINI_API_KEY=${PROMETHEUS_LITELLM_GEMINI_API_KEY}
       - PROMETHEUS_WORKING_DIRECTORY="/app/working_dir"
       - PROMETHEUS_GITHUB_ACCESS_TOKEN=${PROMETHEUS_GITHUB_ACCESS_TOKEN}
-      - PROMETHEUS_POSTGRES_URI="postgresql://postgres:password@postgres:5432/postgres?sslmode=disable"
+      - PROMETHEUS_POSTGRES_URI="postgresql://postgres:password@localhost:5432/postgres?sslmode=disable"
     volumes:
       - .:/app
       - /var/run/docker.sock:/var/run/docker.sock

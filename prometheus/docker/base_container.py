@@ -2,7 +2,6 @@ import logging
 import shutil
 import tarfile
 import tempfile
-import uuid
 from abc import ABC, abstractmethod
 from pathlib import Path
 
