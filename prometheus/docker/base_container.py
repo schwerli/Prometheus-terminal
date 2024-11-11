@@ -41,10 +41,8 @@ class BaseContainer(ABC):
 
   def create_network(self):
     network_name = f"prometheus_container_network_{uuid.uuid4().hex[:8]}"
-    existing_network = self.client.networks.get(network_name)
-    existing_network.remove()
     self.network = self.client.networks.create(
-        name=self.network_name,
+        name=network_name,
         driver="bridge",
     )
 
@@ -157,5 +155,6 @@ class BaseContainer(ABC):
       self.container.remove()
       self.container = None
       self.client.images.remove(self.tag_name)
+      self.network.remove()
 
     shutil.rmtree(self.project_path)
