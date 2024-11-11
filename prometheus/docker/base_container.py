@@ -71,7 +71,8 @@ class BaseContainer(ABC):
       self.tag_name,
       detach=True,
       tty=True,
-      network_mode="host",
+      network_mode="bridge",
+      publish_all_ports=True,
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
       environment={
         "TESTCONTAINERS_RYUK_DISABLED": "true",
