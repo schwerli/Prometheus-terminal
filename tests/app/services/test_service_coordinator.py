@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from prometheus.app.services.chat_service import ChatService
 from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
@@ -36,22 +35,13 @@ def mock_services():
 
 
 @pytest.fixture
-def mock_chat_service():
-  return Mock(spec=ChatService)
-
-
-@pytest.fixture
 def mock_issue_answer_and_fix_service():
   return Mock(spec=IssueAnswerAndFixService)
 
 
 @pytest.fixture
-def service_coordinator(mock_services, mock_chat_service, mock_issue_answer_and_fix_service):
+def service_coordinator(mock_services, mock_issue_answer_and_fix_service):
   with (
-    patch(
-      "prometheus.app.services.service_coordinator.ChatService",
-      return_value=mock_chat_service,
-    ),
     patch(
       "prometheus.app.services.service_coordinator.IssueAnswerAndFixService",
       return_value=mock_issue_answer_and_fix_service,
@@ -75,20 +65,6 @@ def test_initialization(service_coordinator, mock_services):
   assert service_coordinator.neo4j_service == mock_services["neo4j_service"]
   assert service_coordinator.postgres_service == mock_services["postgres_service"]
   assert service_coordinator.repository_service == mock_services["repository_service"]
-
-  assert service_coordinator.chat_service is not None
-  assert service_coordinator.issue_answer_and_fix_service is None
-
-
-def test_chat_with_codebase(service_coordinator):
-  """Test that chat requests are properly delegated"""
-  expected_response = ("response", "thread_id")
-  service_coordinator.chat_service.chat.return_value = expected_response
-
-  response = service_coordinator.chat_with_codebase("test query", "thread123")
-
-  service_coordinator.chat_service.chat.assert_called_once_with("test query", "thread123")
-  assert response == expected_response
 
 
 def test_upload_local_repository(service_coordinator, mock_services):

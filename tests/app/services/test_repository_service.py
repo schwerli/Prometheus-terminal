@@ -47,6 +47,7 @@ def test_clone_new_github_repo(service, mock_kg_service, mock_git_repository):
   test_commit = "abc123"
   test_github_token = "test_token"
   expected_path = Path("/test/working/dir/repositories/repo")
+  mock_kg_service.local_path = None
 
   # Mock the GitRepository class creation
   with patch(
@@ -80,9 +81,8 @@ def test_skip_clone_when_already_loaded(service, mock_kg_service, mock_git_repos
   mock_knowledge_graph.get_codebase_commit_id.return_value = test_commit
 
   mock_kg_service.kg = mock_knowledge_graph
-
-  # Set local_path to simulate already loaded repository
-  service.local_path = Path("/fake/path")
+  fake_path = Path("/fake/path")
+  mock_kg_service.local_path = fake_path
 
   # Exercise
   with patch(
@@ -91,7 +91,7 @@ def test_skip_clone_when_already_loaded(service, mock_kg_service, mock_git_repos
     result_path = service.clone_github_repo(test_github_token, test_url, test_commit)
 
     # Verify
-    assert result_path == service.local_path
+    assert result_path == fake_path
     # GitRepository should not be instantiated
     mock_git_class.assert_not_called()
     # These methods should not be called on the mock repository

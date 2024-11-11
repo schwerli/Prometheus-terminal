@@ -36,6 +36,22 @@ class IssueAnswerAndFixRequest(BaseModel):
     description="When editing the code, whenver we should run the test to verify the fix",
     examples=[True],
   )
+  dockerfile_content: Optional[str] = Field(
+    default=None,
+    description="If you want specify the containerized environment, specify the Dockerfile content."
+    'It must include "WORKDIR /app" and "COPY . /app/"',
+    examples=["FROM python:3.11\nWORKDIR /app\nCOPY . /app/"],
+  )
+  build_commands: Optional[Sequence[str]] = Field(
+    default=None,
+    description="If you specified dockerfile_content, you must also specify the build commands.",
+    examples=[["pip install -r requirements.txt", "python -m build"]],
+  )
+  test_commands: Optional[Sequence[str]] = Field(
+    default=None,
+    description="If you specified dockerfile_content, you must also specify the test commands.",
+    examples=[["pytest ."]],
+  )
 
 
 @router.post(
@@ -58,6 +74,31 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
       detail="A repository is not uploaded, use /repository/ endpoint to upload one",
     )
 
+  # Validate dockerfile dependencies
+  if issue.dockerfile_content is not None:
+    # Validate build commands
+    if issue.build_commands is None:
+      raise HTTPException(
+        status_code=400,
+        detail="build_commands must be provided when dockerfile_content is specified",
+      )
+
+    # Validate test commands
+    if issue.test_commands is None:
+      raise HTTPException(
+        status_code=400,
+        detail="test_commands must be provided when dockerfile_content is specified",
+      )
+
+    # Validate dockerfile content
+    if (
+      "WORKDIR /app" not in issue.dockerfile_content
+      or "COPY . /app/" not in issue.dockerfile_content
+    ):
+      raise HTTPException(
+        status_code=400, detail='Dockerfile must include "WORKDIR /app" and "COPY . /app/"'
+      )
+
   issue_response, remote_branch_name = request.app.state.service_coordinator.answer_and_fix_issue(
     issue.number,
     issue.title,
@@ -66,5 +107,8 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
     issue.only_answer,
     issue.run_build,
     issue.run_test,
+    issue.dockerfile_content,
+    issue.build_commands,
+    issue.test_commands,
   )
   return {"issue_response": issue_response, "remote_branch_name": remote_branch_name}

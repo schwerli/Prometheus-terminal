@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
@@ -60,7 +59,6 @@ def test_init_without_existing_graph(mock_neo4j_service, mock_kg_handler):
 def test_build_and_save_new_knowledge_graph(mock_neo4j_service, mock_kg_handler, monkeypatch):
   # Setup
   mock_kg_handler.knowledge_graph_exists.return_value = False
-  mock_path = Path("/foo/bar")
 
   # Mock KnowledgeGraph constructor and instance
   mock_kg = Mock()
@@ -69,6 +67,8 @@ def test_build_and_save_new_knowledge_graph(mock_neo4j_service, mock_kg_handler,
     "prometheus.app.services.knowledge_graph_service.KnowledgeGraph", mock_kg_class
   )
   mock_kg_class.build_graph.return_value = None
+  mock_path = "/foo/bar"
+  mock_kg.get_local_path.return_value = mock_path
 
   # Exercise
   service = KnowledgeGraphService(mock_neo4j_service, neo4j_batch_size=100, max_ast_depth=5)
@@ -86,7 +86,6 @@ def test_build_and_save_clear_existing_knowledge_graph(
 ):
   # Setup
   mock_kg_handler.knowledge_graph_exists.return_value = True
-  mock_path = Path("/foo/bar")
 
   # Mock KnowledgeGraph constructor and instance
   mock_kg = Mock()
@@ -95,6 +94,8 @@ def test_build_and_save_clear_existing_knowledge_graph(
     "prometheus.app.services.knowledge_graph_service.KnowledgeGraph", mock_kg_class
   )
   mock_kg_class.build_graph.return_value = None
+  mock_path = "/foo/bar"
+  mock_kg.get_local_path.return_value = mock_path
 
   # Exercise
   service = KnowledgeGraphService(mock_neo4j_service, neo4j_batch_size=100, max_ast_depth=5)
@@ -114,7 +115,7 @@ def test_clear_calls_handler_and_resets_kg(
   # Setup
   mock_kg_handler.knowledge_graph_exists.return_value = True
   mock_kg_handler.read_knowledge_graph.return_value = mock_knowledge_graph
-  mock_knowledge_graph.get_local_path.return_value = Path("/mock/path")
+  mock_knowledge_graph.get_local_path.return_value = "/mock/path"
 
   # Exercise
   service = KnowledgeGraphService(mock_neo4j_service, neo4j_batch_size=100, max_ast_depth=5)

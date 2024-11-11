@@ -32,7 +32,7 @@ class KnowledgeGraphService:
 
     self.local_path = None
     if self.kg is not None:
-      self.local_path = self.kg.get_local_path()
+      self.local_path = Path(self.kg.get_local_path())
 
   def _load_existing_knowledge_graph(self) -> Optional[KnowledgeGraph]:
     """Attempts to load an existing Knowledge Graph from Neo4j.
@@ -65,7 +65,7 @@ class KnowledgeGraphService:
     kg.build_graph(path, https_url, commit_id)
     self.kg = kg
     self.kg_handler.write_knowledge_graph(kg)
-    self.local_path = kg.get_local_path()
+    self.local_path = Path(kg.get_local_path())
 
   def exists(self) -> bool:
     return self.kg_handler.knowledge_graph_exists()

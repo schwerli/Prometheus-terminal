@@ -9,7 +9,6 @@ issue handling, and conversation management.
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
-from prometheus.app.services.chat_service import ChatService
 from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
@@ -53,40 +52,6 @@ class ServiceCoordinator:
     self.repository_service = repository_service
     self.github_token = github_token
 
-    self._initialize_subgraph_services()
-
-  def _initialize_subgraph_services(self):
-    """Initializes chat and issue services based on knowledge graph state.
-
-    Creates chat service instance and conditionally creates issue service
-    if a knowledge graph local path exists.
-    """
-    self.chat_service = ChatService(
-      self.knowledge_graph_service, self.neo4j_service, self.postgres_service, self.llm_service
-    )
-    if self.knowledge_graph_service.local_path is not None:
-      self.issue_answer_and_fix_service = IssueAnswerAndFixService(
-        self.knowledge_graph_service,
-        self.neo4j_service,
-        self.postgres_service,
-        self.llm_service,
-        Path(self.knowledge_graph_service.local_path),
-      )
-    else:
-      self.issue_answer_and_fix_service = None
-
-  def chat_with_codebase(self, query: str, thread_id: Optional[str] = None) -> tuple[str, str]:
-    """Initiates a chat interaction with the analyzed codebase.
-
-    Args:
-      query: User's question or request about the codebase.
-      thread_id: Optional identifier for conversation id to continue previous conversation.
-
-    Returns:
-        Tuple of (response text, conversation id).
-    """
-    return self.chat_service.chat(query, thread_id)
-
   def answer_and_fix_issue(
     self,
     issue_number: int,
@@ -96,6 +61,9 @@ class ServiceCoordinator:
     only_answer: bool,
     run_build: bool,
     run_tests: bool,
+    dockerfile_content: str,
+    build_commands: Sequence[str],
+    test_commands: Sequence[str],
     thread_id: Optional[str] = None,
   ) -> str:
     """Analyzes and optionally fixes a code issue.
@@ -113,7 +81,17 @@ class ServiceCoordinator:
     Returns:
       Tuple of (issue response text, remote branch name if fix was pushed).
     """
-    issue_response, patch = self.issue_answer_and_fix_service.answer_and_fix_issue(
+    issue_answer_and_fix_service = IssueAnswerAndFixService(
+      self.knowledge_graph_service,
+      self.neo4j_service,
+      self.postgres_service,
+      self.llm_service,
+      self.knowledge_graph_service.local_path,
+      dockerfile_content,
+      build_commands,
+      test_commands,
+    )
+    issue_response, patch = issue_answer_and_fix_service.answer_and_fix_issue(
       issue_title, issue_body, issue_comments, only_answer, run_build, run_tests, thread_id
     )
     remote_branch_name = None
@@ -132,7 +110,6 @@ class ServiceCoordinator:
     """
     self.knowledge_graph_service.clear()
     self.knowledge_graph_service.build_and_save_knowledge_graph(path)
-    self._initialize_subgraph_services()
 
   def upload_github_repository(self, https_url: str, commit_id: Optional[str] = None):
     """Uploads a GitHub repository.
@@ -144,7 +121,6 @@ class ServiceCoordinator:
     self.knowledge_graph_service.clear()
     saved_path = self.repository_service.clone_github_repo(self.github_token, https_url, commit_id)
     self.knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
-    self._initialize_subgraph_services()
 
   def get_all_conversation_ids(self) -> Sequence[str]:
     """Retrieves all conversation thread IDs.
@@ -173,7 +149,6 @@ class ServiceCoordinator:
     """
     self.knowledge_graph_service.clear()
     self.repository_service.clean_working_directory()
-    self._initialize_subgraph_services()
 
   def close(self):
     """Closes all database connections and releases resources.

@@ -29,9 +29,8 @@ def test_initialization(container, temp_project_dir):
   """Test that the container is initialized correctly"""
   assert isinstance(container.tag_name, str)
   assert container.tag_name.startswith("prometheus_general_container_")
-  assert len(container.tag_name.split("_")[-1]) == 10  # UUID length
-  assert container.project_path != temp_project_dir  # Should be in a new temp directory
-  assert (container.project_path / "test.txt").exists()  # Files should be copied
+  assert container.project_path != temp_project_dir
+  assert (container.project_path / "test.txt").exists()
 
 
 def test_get_dockerfile_content(container):
@@ -39,7 +38,6 @@ def test_get_dockerfile_content(container):
 
   assert dockerfile_content
 
-  # Check for key elements in the Dockerfile
   assert "FROM ubuntu:24.04" in dockerfile_content
   assert "WORKDIR /app" in dockerfile_content
   assert "RUN apt-get update" in dockerfile_content

@@ -13,7 +13,9 @@ from prometheus.lang_graph.subgraphs.issue_answer_and_fix_subgraph import IssueA
 
 @pytest.fixture
 def mock_kg_service():
-  return create_autospec(KnowledgeGraphService, instance=True)
+  service = create_autospec(KnowledgeGraphService, instance=True)
+  service.kg = Mock(name="mock_knowledge_graph")
+  return service
 
 
 @pytest.fixture
@@ -51,24 +53,32 @@ def test_init_with_knowledge_graph(
   mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, mock_subgraph_class
 ):
   # Setup
-  mock_kg_service.kg = Mock(name="mock_kg")
   mock_class, mock_subgraph = mock_subgraph_class
   local_path = Path("/mock/path")
 
   # Exercise
   service = IssueAnswerAndFixService(
-    mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, local_path
+    mock_kg_service,
+    mock_neo4j_service,
+    mock_postgres_service,
+    mock_llm_service,
+    local_path,
+    dockerfile_content="FROM python:3.9",
+    build_commands=["pip install -r requirements.txt"],
+    test_commands=["pytest"],
   )
 
   # Verify
   assert service.issue_answer_and_fix_subgraph == mock_subgraph
-  assert service.model == mock_llm_service.model
   mock_class.assert_called_once_with(
     mock_llm_service.model,
     mock_kg_service.kg,
     mock_neo4j_service.neo4j_driver,
     local_path,
     mock_postgres_service.checkpointer,
+    "FROM python:3.9",
+    ["pip install -r requirements.txt"],
+    ["pytest"],
   )
 
 
@@ -79,15 +89,10 @@ def test_init_without_knowledge_graph(
   mock_kg_service.kg = None
   local_path = Path("/mock/path")
 
-  # Exercise
-  service = IssueAnswerAndFixService(
-    mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, local_path
-  )
-
-  # Verify
-  assert service.issue_answer_and_fix_subgraph is None
-  assert service.model == mock_llm_service.model
-  mock_subgraph_class[0].assert_not_called()
+  with pytest.raises(ValueError):
+    IssueAnswerAndFixService(
+      mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, local_path
+    )
 
 
 def test_answer_and_fix_issue_success(

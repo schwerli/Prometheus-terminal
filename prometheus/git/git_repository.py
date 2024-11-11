@@ -106,7 +106,6 @@ class GitRepository:
         branch_name: Name of the new branch to create.
         commit_message: Message for the commit.
     """
-    self._logger.debug(f"Remote url {self.repo.remote().url}")
     new_branch = self.repo.create_head(branch_name)
     new_branch.checkout()
     self.repo.git.add(A=True)

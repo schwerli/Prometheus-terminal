@@ -33,7 +33,6 @@ class RepositoryService:
     self.kg_service = kg_service
     self.target_directory = Path(working_dir) / "repositories"
     self.target_directory.mkdir(parents=True, exist_ok=True)
-    self.local_path = None
 
   def clone_github_repo(
     self, github_token: str, https_url: str, commit_id: Optional[str] = None
@@ -53,13 +52,13 @@ class RepositoryService:
         Path to the local repository directory.
     """
     if self._should_skip_upload(https_url, commit_id):
-      return self.local_path
+      return self.kg_service.local_path
 
     git_repo = GitRepository(https_url, self.target_directory, github_access_token=github_token)
     if commit_id:
       git_repo.checkout_commit(commit_id)
-    self.local_path = Path(git_repo.get_working_directory())
-    return self.local_path
+    local_path = Path(git_repo.get_working_directory())
+    return local_path
 
   def _should_skip_upload(self, https_url: str, commit_id: Optional[str]) -> bool:
     """Determines if repository clone operation can be skipped.
@@ -76,7 +75,7 @@ class RepositoryService:
     """
     kg = self.kg_service.kg
     return (
-      self.local_path is not None
+      self.kg_service.local_path is not None
       and kg is not None
       and kg.is_built_from_github()
       and commit_id
@@ -97,7 +96,7 @@ class RepositoryService:
     Returns:
       Name of the created branch.
     """
-    git_repo = GitRepository(str(self.local_path.absolute()), None, False)
+    git_repo = GitRepository(str(self.kg_service.local_path.absolute()), None, False)
     branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
     git_repo.create_and_push_branch(branch_name, commit_message)
     return branch_name
