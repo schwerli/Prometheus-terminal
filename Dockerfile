@@ -24,7 +24,7 @@ COPY . /app
 
 RUN pip install --upgrade pip \
     && pip install hatchling \
-    && pip install .
+    && pip install .[test]
 
 EXPOSE 8000
 
