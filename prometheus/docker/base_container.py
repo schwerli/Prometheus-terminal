@@ -36,15 +36,7 @@ class BaseContainer(ABC):
     temp_project_path = temp_dir / project_path.name
     shutil.copytree(project_path, temp_project_path)
     self.project_path = temp_project_path.absolute()
-    self.create_network()
     self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
-
-  def create_network(self):
-    network_name = f"prometheus_container_network_{uuid.uuid4().hex[:8]}"
-    self.network = self.client.networks.create(
-      name=network_name,
-      driver="bridge",
-    )
 
   @abstractmethod
   def get_dockerfile_content(self) -> str:
@@ -79,7 +71,7 @@ class BaseContainer(ABC):
       self.tag_name,
       detach=True,
       tty=True,
-      network=self.network.name,
+      network_mode="host",
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
       environment={
         "TESTCONTAINERS_RYUK_DISABLED": "true",
@@ -155,6 +147,5 @@ class BaseContainer(ABC):
       self.container.remove()
       self.container = None
       self.client.images.remove(self.tag_name)
-      self.network.remove()
 
     shutil.rmtree(self.project_path)
