@@ -75,6 +75,8 @@ class BaseContainer(ABC):
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
       environment={
         "TESTCONTAINERS_RYUK_DISABLED": "true",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE": "/var/run/docker.sock",
+        "DOCKER_HOST": "unix:///var/run/docker.sock",
       },
     )
 
