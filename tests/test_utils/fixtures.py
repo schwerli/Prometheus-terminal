@@ -1,3 +1,4 @@
+import os
 import shutil
 import uuid
 
@@ -12,6 +13,9 @@ from tests.test_utils import test_project_paths
 NEO4J_IMAGE = "neo4j:5.20.0"
 NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
+
+# Disable default Ryuk container
+os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 
 @pytest.fixture(scope="session")
@@ -43,11 +47,11 @@ def git_repo_fixture():
   if git_backup_dir.exists():
     shutil.rmtree(git_backup_dir)
   shutil.copytree(test_project_paths.GIT_DIR, git_backup_dir)
-  test_project_paths.GIT_DIR.rename(test_project_paths.TEST_PROJECT_PATH / ".git")
+  shutil.move(test_project_paths.GIT_DIR, test_project_paths.TEST_PROJECT_PATH / ".git")
 
   repo = Repo(test_project_paths.TEST_PROJECT_PATH)
   yield repo
   repo.git.checkout("master")
 
   shutil.rmtree(test_project_paths.TEST_PROJECT_PATH / ".git")
-  git_backup_dir.rename(test_project_paths.GIT_DIR)
+  shutil.move(git_backup_dir, test_project_paths.GIT_DIR)
