@@ -39,17 +39,17 @@ class IssueAnswerAndFixRequest(BaseModel):
   dockerfile_content: Optional[str] = Field(
     default=None,
     description="If you want specify the containerized environment, specify the Dockerfile content."
-    'It must include "WORKDIR /app" and "COPY . /app/"',
-    examples=["FROM python:3.11\nWORKDIR /app\nCOPY . /app/"],
+    'It must include "WORKDIR /app" and "COPY . /app"',
+    examples=["FROM python:3.11\nWORKDIR /app\nCOPY . /app"],
   )
   build_commands: Optional[Sequence[str]] = Field(
     default=None,
-    description="If you specified dockerfile_content, you must also specify the build commands.",
+    description="If you specified dockerfile_content and run_build is True, you must also specify the build commands.",
     examples=[["pip install -r requirements.txt", "python -m build"]],
   )
   test_commands: Optional[Sequence[str]] = Field(
     default=None,
-    description="If you specified dockerfile_content, you must also specify the test commands.",
+    description="If you specified dockerfile_content and run_test is True, you must also specify the test commands.",
     examples=[["pytest ."]],
   )
 
@@ -77,26 +77,26 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
   # Validate dockerfile dependencies
   if issue.dockerfile_content is not None:
     # Validate build commands
-    if issue.build_commands is None:
+    if issue.run_build and issue.build_commands is None:
       raise HTTPException(
         status_code=400,
-        detail="build_commands must be provided when dockerfile_content is specified",
+        detail="build_commands must be provided when dockerfile_content is specified and run_build is True",
       )
 
     # Validate test commands
-    if issue.test_commands is None:
+    if issue.run_test and issue.test_commands is None:
       raise HTTPException(
         status_code=400,
-        detail="test_commands must be provided when dockerfile_content is specified",
+        detail="test_commands must be provided when dockerfile_content is specified and run_test is True",
       )
 
     # Validate dockerfile content
     if (
       "WORKDIR /app" not in issue.dockerfile_content
-      or "COPY . /app/" not in issue.dockerfile_content
+      or "COPY . /app" not in issue.dockerfile_content
     ):
       raise HTTPException(
-        status_code=400, detail='Dockerfile must include "WORKDIR /app" and "COPY . /app/"'
+        status_code=400, detail='Dockerfile must include "WORKDIR /app" and "COPY . /app"'
       )
 
   issue_response, remote_branch_name = request.app.state.service_coordinator.answer_and_fix_issue(
