@@ -10,7 +10,6 @@ class IssueAnswerAndFixSuccessRouter:
     )
 
   def __call__(self, state: IssueAnswerAndFixState):
-    self._logger.debug(f"Running IssueAnswerAndFixSuccessRouter for state:\n{state}")
     if not state["run_build"] and not state["run_test"]:
       return True
 

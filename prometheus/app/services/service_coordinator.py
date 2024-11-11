@@ -86,7 +86,7 @@ class ServiceCoordinator:
       self.neo4j_service,
       self.postgres_service,
       self.llm_service,
-      self.repository_service.local_path,
+      self.knowledge_graph_service.local_path,
       dockerfile_content,
       build_commands,
       test_commands,

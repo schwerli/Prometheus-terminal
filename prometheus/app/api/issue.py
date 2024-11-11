@@ -45,12 +45,12 @@ class IssueAnswerAndFixRequest(BaseModel):
   build_commands: Optional[Sequence[str]] = Field(
     default=None,
     description="If you specified dockerfile_content, you must also specify the build commands.",
-    examples=["pip install -r requirements.txt"],
+    examples=[["pip install -r requirements.txt", "python -m build"]],
   )
   test_commands: Optional[Sequence[str]] = Field(
     default=None,
     description="If you specified dockerfile_content, you must also specify the test commands.",
-    examples=["pytest ."],
+    examples=[["pytest ."]],
   )
 
 
