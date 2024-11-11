@@ -1,4 +1,3 @@
-import os
 import shutil
 import uuid
 
@@ -14,17 +13,16 @@ NEO4J_IMAGE = "neo4j:5.20.0"
 NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
 
-# Disable default Ryuk container
-os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
-
 
 @pytest.fixture(scope="session")
 def neo4j_container_with_kg_fixture():
   kg = KnowledgeGraph(1000)
   kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
-  container = Neo4jContainer(
-    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]').with_name(f"neo4j_container_with_kg_{uuid.uuid4().hex[:12]}")
+  container = (
+    Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
+    .with_env("NEO4J_PLUGINS", '["apoc"]')
+    .with_name(f"neo4j_container_with_kg_{uuid.uuid4().hex[:12]}")
+  )
   with container as neo4j_container:
     driver = neo4j_container.get_driver()
     handler = KnowledgeGraphHandler(driver, 100)
@@ -34,9 +32,11 @@ def neo4j_container_with_kg_fixture():
 
 @pytest.fixture(scope="session")
 def empty_neo4j_container_fixture():
-  container = Neo4jContainer(
-    image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD
-  ).with_env("NEO4J_PLUGINS", '["apoc"]').with_name(f"empty_neo4j_container_{uuid.uuid4().hex[:12]}")
+  container = (
+    Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
+    .with_env("NEO4J_PLUGINS", '["apoc"]')
+    .with_name(f"empty_neo4j_container_{uuid.uuid4().hex[:12]}")
+  )
   with container as neo4j_container:
     yield neo4j_container
 

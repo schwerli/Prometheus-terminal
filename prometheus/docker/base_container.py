@@ -71,6 +71,11 @@ class BaseContainer(ABC):
       detach=True,
       tty=True,
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
+      environment={
+        "TESTCONTAINERS_HOST_OVERRIDE": "localhost",
+        "DOCKER_HOST": "unix:///var/run/docker.sock",
+        "TESTCONTAINERS_RYUK_DISABLED": "true",
+      },
     )
 
   def update_files(self, new_project_path: str, container_path: str = "/app"):
