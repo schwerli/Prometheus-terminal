@@ -5,6 +5,7 @@ by AI agents. It combines issue titles, descriptions, and comments into a cohesi
 query format that maintains the context and intent of the original issue.
 """
 
+import logging
 from typing import Mapping, Sequence
 
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
@@ -18,6 +19,9 @@ class IssueToQueryNode:
   maintains the original context while providing a consistent format for
   downstream processing.
   """
+
+  def __init__(self):
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_to_query_node")
 
   def format_issue_comments(self, issue_comments: Sequence[Mapping[str, str]]):
     """Formats issue comments into a readable string.
@@ -51,7 +55,6 @@ class IssueToQueryNode:
       - query: String containing the formatted query ready for processing
           by downstream components.
     """
-
     formatted_issue_comments = self.format_issue_comments(state["issue_comments"])
     query = f"""\
 A user has reported the following issue to the codebase:
@@ -67,4 +70,5 @@ Issue comments:
 Now, please help the user with the issue.
 """
 
+    self._logger.debug(f"Formatting \n{state}\n to \n{query}")
     return {"query": query}

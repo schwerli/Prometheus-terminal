@@ -10,6 +10,8 @@ The module is specifically designed for workflows where:
 - The same state attribute name is reused
 """
 
+import logging
+
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
 
 
@@ -34,6 +36,7 @@ class ResetMessagesNode:
         be reset during node execution.
     """
     self.message_state_key = message_state_key
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.reset_messages_node")
 
   def __call__(self, state: IssueAnswerAndFixState):
     """Resets the specified message state for the next iteration.
@@ -49,6 +52,7 @@ class ResetMessagesNode:
       For string-type messages: Dictionary with empty string state
       For list-type messages: None (list is cleared in place)
     """
+    self._logger.info(f"Resetting {self.message_state_key} in state.")
     if isinstance(state[self.message_state_key], list):
       state[self.message_state_key].clear()
     elif isinstance(state[self.message_state_key], str):

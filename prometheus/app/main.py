@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,10 +10,23 @@ from prometheus.configuration.config import settings
 
 # Create a logger for application's namespace
 logger = logging.getLogger("prometheus")
-handler = logging.StreamHandler()
+
+# Create formatters and handlers
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+
+# Console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+
+# File handler
+file_handler = logging.FileHandler(os.path.join(settings.WORKING_DIRECTORY, "prometheus.log"))
+file_handler.setFormatter(formatter)
+
+# Add both handlers to the logger
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+
+# Set logging level
 logger.setLevel(getattr(logging, settings.LOGGING_LEVEL))
 logger.propagate = False
 

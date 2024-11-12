@@ -289,6 +289,7 @@ Your previous edit (if any):
     Returns:
       Dictionary that will update the state with the model's response messages.
     """
+    self._logger.debug(f"state before invoke:\n{state}")
     message_history = [self.system_prompt, self.format_human_message(state)] + state[
       "code_edit_messages"
     ]
