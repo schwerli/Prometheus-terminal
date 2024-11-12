@@ -23,6 +23,7 @@ class FileNotSupportedError(Exception):
   This exception is raised when the parser encounters a file type that
   is not supported by the tree-sitter parser implementation.
   """
+
   pass
 
 
