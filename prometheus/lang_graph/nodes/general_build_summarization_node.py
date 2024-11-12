@@ -80,58 +80,7 @@ When capturing fail logs:
 
 The input will contain messages showing the agent's attempts and their results.
 
-Example 1: C++ Project with CMake
-Input:
-Assistant internal thought: Checking for CMake build system files
-Assistant executed command: {"command": "find . -name CMakeLists.txt"}
-Command output: ./CMakeLists.txt
-./src/CMakeLists.txt
-Assistant internal thought: Found CMake configuration. Checking build requirements
-Assistant executed command: {"command": "cat CMakeLists.txt"}
-Command output: cmake_minimum_required(VERSION 3.10)
-project(MyProject)
-find_package(Boost REQUIRED)
-add_subdirectory(src)
-Assistant internal thought: Project requires Boost. Setting up build directory and running CMake
-Assistant executed command: {"command": "mkdir build && cd build && cmake .."}
-Command output: -- The C compiler identification is GNU 9.4.0
--- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0
--- Configuring done
--- Generating done
--- Build files have been written to: /project/build
-Assistant executed command: {"command": "cmake --build build"}
-Command output: [ 20%] Building CXX object src/CMakeFiles/mylib.dir/utils.cpp.o
-[ 40%] Building CXX object src/CMakeFiles/mylib.dir/parser.cpp.o
-[ 60%] Linking CXX static library libmylib.a
-[ 80%] Building CXX object src/CMakeFiles/myapp.dir/main.cpp.o
-[100%] Linking CXX executable myapp
-
-Output:
-{
-    "exist_build": true,
-    "command_summary": "Project uses CMake build system with Boost dependency. Required steps:\n1. Create and enter build directory: mkdir build && cd build\n2. Generate build files: cmake ..\n3. Build project: cmake --build build\nMultiple CMakeLists.txt files indicate hierarchical project structure.",
-    "fail_log": ""
-}
-
-Example 2: Project without Build System
-Input:
-Assistant internal thought: Looking for common build system files
-Assistant executed command: {"command": "find . -maxdepth 1 -type f -name 'Makefile' -o -name 'CMakeLists.txt' -o -name 'package.json' -o -name 'build.gradle'"}
-Command output: 
-Assistant internal thought: No build files found. Checking source directory structure
-Assistant executed command: {"command": "tree ."}
-Command output: .
-└── src
-    └── script.py
-
-Output:
-{
-    "exist_build": false,
-    "command_summary": "No build system detected. Project contains only Python scripts without any build configuration.",
-    "fail_log": ""
-}
-
-Example 3: Node.js Project with Failed Build
+Example 1: Node.js Project with Failed Build
 Input:
 Assistant internal thought: Checking Node.js build configuration
 Assistant executed command: {"command": "cat package.json"}
@@ -166,7 +115,7 @@ Output:
     "fail_log": "ERROR in ./src/app.js\nModule not found: Error: Can't resolve './config' in '/project/src'\n @ ./src/app.js 3:15-33"
 }
 
-Example 4: Java Project with Maven
+Example 2: Java Project with Maven (Successful Build)
 Input:
 Assistant internal thought: Looking for Maven build configuration
 Assistant executed command: {"command": "find . -name pom.xml"}
@@ -201,6 +150,24 @@ Output:
 {
     "exist_build": true,
     "command_summary": "Project uses Maven build system with Spring Boot dependency. Required steps:\n1. Clean and build project: mvn clean install\nPOM file indicates it's a Spring Boot web application.",
+    "fail_log": ""
+}
+
+Example 3: Project without Build System
+Input:
+Assistant internal thought: Looking for common build system files
+Assistant executed command: {"command": "find . -maxdepth 1 -type f -name 'Makefile' -o -name 'CMakeLists.txt' -o -name 'package.json' -o -name 'build.gradle'"}
+Command output: 
+Assistant internal thought: No build files found. Checking source directory structure
+Assistant executed command: {"command": "tree ."}
+Command output: .
+└── src
+    └── script.py
+
+Output:
+{
+    "exist_build": false,
+    "command_summary": "No build system detected. Project contains only Python scripts without any build configuration.",
     "fail_log": ""
 }
 """.replace("{", "{{").replace("}", "}}")

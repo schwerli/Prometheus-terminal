@@ -60,7 +60,13 @@ Provide three outputs:
    - Required test dependencies or setup steps
    - Sequence of test commands to execute
    - Test coverage and scope information
-3. fail_log: If any tests failed, provide the relevant error logs and test failure details. Empty string if all tests passed
+3. fail_log: Comprehensive record of test failures including:
+   - Complete test failure messages and stack traces
+   - Test names and descriptions that failed
+   - Error messages and assertions that failed
+   - Relevant code snippets where failures occurred
+   - Test execution summary (e.g., "2 failed, 3 passed")
+   Return an empty string ONLY if all tests passed successfully
 
 When analyzing commands:
 - Focus on essential test execution steps
@@ -70,111 +76,136 @@ When analyzing commands:
 - Include commands for different test types (unit, integration, etc.)
 
 When capturing fail logs:
-- Include complete test failure messages
-- Show which tests failed and why
-- Include relevant stack traces
-- Return empty string if all tests passed
+- Include ALL test failure information from execution output
+- Show complete stack traces and error messages
+- Capture test summaries and statistics
+- Include surrounding context of failures when available
+- Format the output to maintain readability
 
 The input will contain messages showing the agent's attempts and their results.
 
-Example 1: Python Project with pytest
+Example 1: Python Project with Test Failures
 Input:
-Assistant internal thought: Let me check if there are any Python test files
+Assistant internal thought: Looking for Python test files
 Assistant executed command: {"command": "find . -name 'test_*.py'"}
-Command output: ./tests/test_calculator.py
+Command output: ./tests/test_authentication.py
 ./tests/integration/test_api.py
-Assistant internal thought: Found test files. Let me check the test framework configuration
+Assistant internal thought: Found test files. Checking configuration
 Assistant executed command: {"command": "cat pytest.ini"}
 Command output: [pytest]
-addopts = -v --cov=calculator
+addopts = -v --cov=auth
 testpaths = tests
-Assistant internal thought: This is a pytest project with coverage requirements. Installing dependencies and running tests
+Assistant internal thought: Installing dependencies and running tests
 Assistant executed command: {"command": "pip install -r requirements.txt"}
 Command output: Successfully installed pytest-7.3.1 pytest-cov-4.0.0
 Assistant executed command: {"command": "python -m pytest"}
 Command output: ============================= test session starts ==============================
 platform linux -- Python 3.8.10, pytest-7.3.1, pluggy-1.0.0
-collected 3 tests
+collected 5 tests
 
-tests/test_calculator.py::test_add PASSED                                   [ 33%]
-tests/test_calculator.py::test_subtract PASSED                             [ 66%]
-tests/test_calculator.py::test_multiply FAILED                             [100%]
+tests/test_authentication.py::test_valid_login PASSED                      [ 20%]
+tests/test_authentication.py::test_invalid_password PASSED                 [ 40%]
+tests/test_authentication.py::test_account_lockout FAILED                 [ 60%]
+tests/integration/test_api.py::test_api_auth FAILED                       [ 80%]
+tests/integration/test_api.py::test_api_timeout PASSED                    [100%]
 
-FAILED tests/test_calculator.py::test_multiply
-    def test_multiply():
->       assert calculator.multiply(3, 4) == 13
-E       assert 12 == 13
+FAILED tests/test_authentication.py::test_account_lockout
+    def test_account_lockout():
+        for _ in range(5):
+            auth.attempt_login("user", "wrong")
+>       assert auth.is_account_locked("user") == True
+E       AssertionError: assert False == True
+E       +  where False = <function is_account_locked at 0x7f9b8c2e4f70>('user')
 
-tests/test_calculator.py:15: AssertionError
-======================= 1 failed, 2 passed in 0.12s ===========================
+tests/test_authentication.py:45: AssertionError
+
+FAILED tests/integration/test_api.py::test_api_auth
+    def test_api_auth():
+>       response = client.post("/api/login", json={"username": "test", "password": "test123"})
+E       requests.exceptions.ConnectionError: HTTPConnectionError(Connection refused)
+E       During handling of the above exception, another exception occurred:
+E       ConnectionRefusedError: [Errno 111] Connection refused
+
+tests/integration/test_api.py:23: ConnectionRefusedError
+======================= 2 failed, 3 passed in 1.25s ===========================
 
 Output:
 {
     "exist_test": true,
-    "command_summary": "Project uses pytest framework with coverage reporting. Required steps:\n1. Install dependencies: pip install -r requirements.txt\n2. Run tests: python -m pytest\nTests include unit tests in ./tests and integration tests in ./tests/integration with pytest.ini configuration for coverage reporting.",
-    "fail_log": "FAILED tests/test_calculator.py::test_multiply\n    def test_multiply():\n>       assert calculator.multiply(3, 4) == 13\nE       assert 12 == 13\n\ntests/test_calculator.py:15: AssertionError"
+    "command_summary": "Project uses pytest framework with coverage reporting. Required steps:\n1. Install dependencies: pip install -r requirements.txt\n2. Run tests: python -m pytest\nTests include unit tests in ./tests and integration tests in ./tests/integration, configured via pytest.ini for coverage reporting.",
+    "fail_log": "============================= test session starts ==============================\nplatform linux -- Python 3.8.10, pytest-7.3.1, pluggy-1.0.0\ncollected 5 tests\n\nFAILED tests/test_authentication.py::test_account_lockout\n    def test_account_lockout():\n        for _ in range(5):\n            auth.attempt_login(\"user\", \"wrong\")\n>       assert auth.is_account_locked(\"user\") == True\nE       AssertionError: assert False == True\nE       +  where False = <function is_account_locked at 0x7f9b8c2e4f70>('user')\n\ntests/test_authentication.py:45: AssertionError\n\nFAILED tests/integration/test_api.py::test_api_auth\n    def test_api_auth():\n>       response = client.post(\"/api/login\", json={\"username\": \"test\", \"password\": \"test123\"})\nE       requests.exceptions.ConnectionError: HTTPConnectionError(Connection refused)\nE       During handling of the above exception, another exception occurred:\nE       ConnectionRefusedError: [Errno 111] Connection refused\n\ntests/integration/test_api.py:23: ConnectionRefusedError\n======================= 2 failed, 3 passed in 1.25s ==========================="
 }
 
-Example 2: Project without Tests
-Input:
-Assistant internal thought: Checking for common test files and configurations
-Assistant executed command: {"command": "find . -type f -name '*test*' -o -name '*spec*'"}
-Command output: 
-Assistant internal thought: No test files found. Let me check build configuration files
-Assistant executed command: {"command": "cat package.json"}
-Command output: {
-  "name": "my-project",
-  "version": "1.0.0",
-  "dependencies": {
-    "express": "^4.17.1"
-  }
-}
-
-Output:
-{
-    "exist_test": false,
-    "command_summary": "No test framework detected. Project contains basic Node.js configuration without any test files or test-related dependencies.",
-    "fail_log": ""
-}
-
-Example 3: JavaScript Project with Jest
+Example 2: JavaScript Project with Passing Tests
 Input:
 Assistant internal thought: Checking package.json for test configuration
 Assistant executed command: {"command": "cat package.json"}
 Command output: {
-  "name": "utils-lib",
+  "name": "payment-processor",
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage",
     "test:watch": "jest --watch"
   },
   "devDependencies": {
-    "jest": "^27.0.0"
+    "jest": "^27.0.0",
+    "@testing-library/react": "^12.0.0"
   }
 }
 Assistant internal thought: Found Jest configuration. Looking for test files
-Assistant executed command: {"command": "git ls-files '*.test.js'"}
-Command output: src/utils.test.js
-src/components/__tests__/button.test.js
+Assistant executed command: {"command": "find . -name '*.test.js' -o -name '*.spec.js'"}
+Command output: ./src/utils/currency.test.js
+./src/components/PaymentForm.test.js
 Assistant internal thought: Installing dependencies and running tests
 Assistant executed command: {"command": "npm install"}
-Command output: added 234 packages in 12s
+Command output: added 342 packages in 15s
 Assistant executed command: {"command": "npm test"}
-Command output: PASS src/utils.test.js
-  ✓ formats date correctly (3ms)
-  ✓ validates email format (1ms)
-PASS src/components/__tests__/button.test.js
-  ✓ renders button correctly (5ms)
-  ✓ handles click events (2ms)
+Command output: PASS src/utils/currency.test.js
+  Currency Formatter
+    ✓ formats USD correctly (2ms)
+    ✓ formats EUR with proper symbol (1ms)
+    ✓ handles decimal places correctly (1ms)
+PASS src/components/PaymentForm.test.js
+  Payment Form Component
+    ✓ renders all form fields (23ms)
+    ✓ validates card number format (15ms)
+    ✓ shows error for invalid expiry date (12ms)
+    ✓ submits form with valid data (45ms)
 
 Test Suites: 2 passed, 2 total
-Tests:       4 passed, 4 total
+Tests:       7 passed, 7 total
 Snapshots:   0 total
-Time:        1.234s
+Time:        2.145s
+Coverage: 94.32%
 
 Output:
 {
     "exist_test": true,
-    "command_summary": "Project uses Jest testing framework. Required steps:\n1. Install dependencies: npm install\n2. Run tests: npm test\nTests are organized in src/**/*.test.js pattern and component-specific tests in __tests__ directories.",
+    "command_summary": "Project uses Jest framework with React Testing Library. Required steps:\n1. Install dependencies: npm install\n2. Run tests with coverage: npm test\nTests cover both utility functions and React components with a coverage threshold of 94.32%.",
+    "fail_log": ""
+}
+
+Example 3: Project without Tests
+Input:
+Assistant internal thought: Checking for common test files and configurations
+Assistant executed command: {"command": "find . -type f -name '*test*' -o -name '*spec*'"}
+Command output: 
+Assistant internal thought: No test files found. Checking build configurations
+Assistant executed command: {"command": "cat package.json"}
+Command output: {
+  "name": "static-website",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lodash": "^4.17.21"
+  }
+}
+Assistant executed command: {"command": "find . -name 'pytest.ini' -o -name 'jest.config.js'"}
+Command output: 
+
+Output:
+{
+    "exist_test": false,
+    "command_summary": "No test framework detected. Project is a basic Node.js application with Express and utility dependencies, but lacks any test files, test frameworks, or test-related configuration.",
     "fail_log": ""
 }
 """.replace("{", "{{").replace("}", "}}")
