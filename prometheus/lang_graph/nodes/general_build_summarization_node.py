@@ -56,7 +56,7 @@ of commands executed by an agent that attempted to build the project. Examine th
 
 1. Determine if a build system exists (looking for Makefiles, CMakeLists.txt, package.json, etc.)
 2. Analyze the build process and required commands
-3. Identify any build failures and their causes
+3. Identify any build failures, linter errors, and their causes
 
 Provide three outputs:
 1. exist_build: Boolean indicating if a build system is present
@@ -64,19 +64,22 @@ Provide three outputs:
    - Type of build system detected
    - Required dependencies or setup steps
    - Sequence of build commands to execute
-3. fail_log: If build failed, provide the relevant error logs. Empty string if build succeeded
+   - Any linting or code quality checks that are part of the build process
+3. fail_log: If build or linting failed, provide the relevant error logs. Empty string if build succeeded
 
 When analyzing commands:
 - Focus on essential build steps
 - Include dependency installation commands
 - List commands in execution order
 - Note any required environment setup
+- Pay attention to linting commands and code quality checks
 
 When capturing fail logs:
 - Include complete error messages
-- Focus on build-breaking errors
-- Exclude warnings or non-critical messages
-- Return empty string if build was successful
+- Focus on build-breaking errors and linting failures
+- Include linter warnings that cause build failures
+- Exclude non-critical messages and warnings that don't affect the build
+- Return empty string if build and linting were successful
 
 The input will contain messages showing the agent's attempts and their results.
 
@@ -169,6 +172,53 @@ Output:
     "exist_build": false,
     "command_summary": "No build system detected. Project contains only Python scripts without any build configuration.",
     "fail_log": ""
+}
+
+Example 4: TypeScript Project with ESLint Errors
+Input:
+Assistant internal thought: Checking TypeScript project configuration
+Assistant executed command: {"command": "cat package.json"}
+Command output: {
+  "name": "ts-app",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "prebuild": "npm run lint"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0"
+  }
+}
+Assistant internal thought: Found TypeScript project with ESLint. Installing dependencies and running build
+Assistant executed command: {"command": "npm install"}
+Command output: added 320 packages in 12s
+Assistant executed command: {"command": "npm run build"}
+Command output: 
+> ts-app@1.0.0 prebuild
+> npm run lint
+
+src/components/User.ts:15:3 error: Unexpected any. Specify a different type (@typescript-eslint/no-explicit-any)
+  15:   data: any;
+        ^^^^
+src/services/api.ts:8:5 error: Promise-returning function should be async (typescript-promise-function-async)
+  8:     getUser(): Promise<User> {
+        ^^^^^^^
+src/utils/helper.ts:23:7 warning: Unnecessary type assertion (typescript-no-unnecessary-type-assertion)
+  23:       result as string;
+           ^^^^^^^^^^^^^^^^
+
+Found 2 errors and 1 warning
+npm ERR! Exit code 1
+npm ERR! Failed at prebuild script
+
+Output:
+{
+    "exist_build": true,
+    "command_summary": "Project uses TypeScript with ESLint for linting. Required steps:\n1. Install dependencies: npm install\n2. Lint code: npm run lint\n3. Build project: npm run build (includes automatic linting)",
+    "fail_log": "src/components/User.ts:15:3 error: Unexpected any. Specify a different type (@typescript-eslint/no-explicit-any)\n  15:   data: any;\n        ^^^^\nsrc/services/api.ts:8:5 error: Promise-returning function should be async (typescript-promise-function-async)\n  8:     getUser(): Promise<User> {\n        ^^^^^^^\nFound 2 errors"
 }
 """.replace("{", "{{").replace("}", "}}")
 

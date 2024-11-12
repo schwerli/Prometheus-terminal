@@ -51,7 +51,7 @@ a history of commands executed by an agent that attempted to run the tests. Exam
 
 1. Determine if a test framework exists (looking for test files, pytest.ini, jest.config.js, etc.)
 2. Analyze the test execution process and required commands
-3. Identify any test failures and their causes
+3. Identify any test failures, linter errors, and their causes
 
 Provide three outputs:
 1. exist_test: Boolean indicating if a test framework is present
@@ -60,13 +60,17 @@ Provide three outputs:
    - Required test dependencies or setup steps
    - Sequence of test commands to execute
    - Test coverage and scope information
-3. fail_log: Comprehensive record of test failures including:
+   - Any linting commands that run during testing
+   - Code quality checks integrated with test suite
+3. fail_log: Comprehensive record of test and linting failures including:
    - Complete test failure messages and stack traces
    - Test names and descriptions that failed
    - Error messages and assertions that failed
    - Relevant code snippets where failures occurred
    - Test execution summary (e.g., "2 failed, 3 passed")
-   Return an empty string ONLY if all tests passed successfully
+   - Linter errors and warnings that cause test failures
+   - Code quality check violations
+   Return an empty string ONLY if all tests passed successfully and no linting errors occurred
 
 When analyzing commands:
 - Focus on essential test execution steps
@@ -74,12 +78,15 @@ When analyzing commands:
 - List commands in execution order
 - Note any required environment setup for testing
 - Include commands for different test types (unit, integration, etc.)
+- Pay attention to linting commands that run as part of test suite
+- Note any code quality checks integrated with testing
 
 When capturing fail logs:
 - Include ALL test failure information from execution output
 - Show complete stack traces and error messages
 - Capture test summaries and statistics
 - Include surrounding context of failures when available
+- Include linting errors that cause test failures
 - Format the output to maintain readability
 
 The input will contain messages showing the agent's attempts and their results.
@@ -207,6 +214,60 @@ Output:
     "exist_test": false,
     "command_summary": "No test framework detected. Project is a basic Node.js application with Express and utility dependencies, but lacks any test files, test frameworks, or test-related configuration.",
     "fail_log": ""
+}
+
+Example 4: Python Project with Pylint Integration
+Input:
+Assistant internal thought: Looking for Python test and linting configuration
+Assistant executed command: {"command": "find . -name 'pytest.ini' -o -name '.pylintrc'"}
+Command output: ./pytest.ini
+./.pylintrc
+Assistant internal thought: Found both pytest and pylint configs. Checking content
+Assistant executed command: {"command": "cat pytest.ini"}
+Command output: [pytest]
+addopts = -v --pylint --cov=src
+testpaths = tests
+Assistant internal thought: Installing dependencies and running tests with linting
+Assistant executed command: {"command": "pip install -r requirements.txt"}
+Command output: Successfully installed pytest-7.3.1 pytest-cov-4.0.0 pytest-pylint-0.19.0 pylint-2.17.0
+Assistant executed command: {"command": "python -m pytest"}
+Command output: ============================= test session starts ==============================
+platform linux -- Python 3.8.10, pytest-7.3.1, pluggy-1.0.0
+collected 8 items
+
+src/models/user.py:23: [C0111(missing-docstring)] Missing module docstring
+src/models/user.py:45: [C0116(missing-function-docstring)] Missing function or method docstring
+src/models/user.py:67: [W0612(unused-variable)] Unused variable 'result'
+
+tests/test_user.py::test_user_creation PASSED                             [ 12%]
+tests/test_user.py::test_user_validation PASSED                          [ 25%]
+tests/test_user.py::test_user_permissions FAILED                         [ 37%]
+tests/test_user.py::test_user_deletion PASSED                            [ 50%]
+tests/test_admin.py::test_admin_rights PASSED                            [ 62%]
+tests/test_admin.py::test_admin_audit PASSED                             [ 75%]
+tests/test_admin.py::test_admin_revoke PASSED                            [ 87%]
+tests/test_admin.py::test_admin_transfer PASSED                          [100%]
+
+FAILED tests/test_user.py::test_user_permissions
+    def test_user_permissions():
+>       assert user.has_permission('write') == True
+E       AssertionError: assert False == True
+E       +  where False = <bound method User.has_permission of <User id=1>>('write')
+
+tests/test_user.py:89: AssertionError
+
+=========================== pylint summary ====================================
+Your code has been rated at 7.52/10 (previous run: 7.52/10, +0.00)
+
+Required test coverage of 80% reached. Total coverage: 82.45%
+
+======================= 1 failed, 7 passed, 3 pylint warnings in 2.34s ===============
+
+Output:
+{
+    "exist_test": true,
+    "command_summary": "Project uses pytest framework with pylint integration and coverage reporting. Required steps:\n1. Install dependencies: pip install -r requirements.txt\n2. Run tests with linting and coverage: python -m pytest\nTests include unit tests with pylint checks configured via pytest.ini and .pylintrc. Coverage threshold set to 80%.",
+    "fail_log": "============================= test session starts ==============================\nplatform linux -- Python 3.8.10, pytest-7.3.1, pluggy-1.0.0\n\nsrc/models/user.py:23: [C0111(missing-docstring)] Missing module docstring\nsrc/models/user.py:45: [C0116(missing-function-docstring)] Missing function or method docstring\nsrc/models/user.py:67: [W0612(unused-variable)] Unused variable 'result'\n\nFAILED tests/test_user.py::test_user_permissions\n    def test_user_permissions():\n>       assert user.has_permission('write') == True\nE       AssertionError: assert False == True\nE       +  where False = <bound method User.has_permission of <User id=1>>('write')\n\ntests/test_user.py:89: AssertionError\n\n=========================== pylint summary ====================================\nYour code has been rated at 7.52/10 (previous run: 7.52/10, +0.00)\n\n======================= 1 failed, 7 passed, 3 pylint warnings in 2.34s ==============="
 }
 """.replace("{", "{{").replace("}", "}}")
 
