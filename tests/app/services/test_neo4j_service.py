@@ -4,6 +4,7 @@ from prometheus.app.services.neo4j_service import Neo4jService
 from tests.test_utils.fixtures import neo4j_container_with_kg_fixture  # noqa: F401
 
 
+@pytest.mark.slow
 def test_neo4j_service(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
   neo4j_service = Neo4jService(

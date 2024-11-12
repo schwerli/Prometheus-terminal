@@ -139,9 +139,9 @@ class BaseContainer(ABC):
     """
     self.logger.info("Cleaning up container and temporary files")
     if self.container:
-      self.container.stop()
-      self.container.remove()
+      self.container.stop(timeout=10)
+      self.container.remove(force=True)
       self.container = None
-      self.client.images.remove(self.tag_name)
+      self.client.images.remove(self.tag_name, force=True)
 
     shutil.rmtree(self.project_path)

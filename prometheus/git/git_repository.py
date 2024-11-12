@@ -85,7 +85,10 @@ class GitRepository:
     self.repo.git.pull()
 
   def get_diff(self) -> str:
-    return self.repo.git.diff()
+    self.repo.git.add("-A")
+    diff = self.repo.git.diff("--cached")
+    self.repo.git.reset()
+    return diff
 
   def get_working_directory(self) -> str:
     return self.repo.working_dir

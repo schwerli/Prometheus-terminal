@@ -1,3 +1,5 @@
+import pytest
+
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
@@ -73,6 +75,7 @@ test_project
   assert file_tree == expected_file_tree
 
 
+@pytest.mark.slow
 def test_from_neo4j(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, kg = neo4j_container_with_kg_fixture
   driver = neo4j_container.get_driver()

@@ -1,3 +1,4 @@
+import pytest
 from langchain_core.messages import AIMessage, ToolMessage
 
 from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
@@ -6,6 +7,7 @@ from tests.test_utils.fixtures import neo4j_container_with_kg_fixture  # noqa: F
 from tests.test_utils.util import FakeListChatWithToolsModel
 
 
+@pytest.mark.slow
 def test_context_provider_node(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, kg = neo4j_container_with_kg_fixture
   fake_response = "Fake response"

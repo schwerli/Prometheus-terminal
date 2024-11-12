@@ -1,8 +1,11 @@
+import pytest
+
 from prometheus.tools import graph_traversal
 from tests.test_utils import test_project_paths
 from tests.test_utils.fixtures import neo4j_container_with_kg_fixture  # noqa: F401
 
 
+@pytest.mark.slow
 def test_find_file_node_with_basename(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -20,6 +23,7 @@ def test_find_file_node_with_basename(neo4j_container_with_kg_fixture):  # noqa:
   assert f"'relative_path': '{relative_path}'" in result
 
 
+@pytest.mark.slow
 def test_find_file_node_with_relative_path(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -35,6 +39,7 @@ def test_find_file_node_with_relative_path(neo4j_container_with_kg_fixture):  # 
   assert f"'relative_path': '{relative_path}'" in result
 
 
+@pytest.mark.slow
 def test_find_ast_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -57,6 +62,7 @@ def test_find_ast_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F811
   assert "'end_line': 2" in result
 
 
+@pytest.mark.slow
 def test_find_ast_node_with_type(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -79,6 +85,7 @@ def test_find_ast_node_with_type(neo4j_container_with_kg_fixture):  # noqa: F811
   assert "'end_line': 2" in result
 
 
+@pytest.mark.slow
 def test_find_ast_node_with_text_in_file(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -98,6 +105,7 @@ def test_find_ast_node_with_text_in_file(neo4j_container_with_kg_fixture):  # no
   assert "'end_line': 3" in result
 
 
+@pytest.mark.slow
 def test_find_ast_node_with_type_in_file(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -117,6 +125,7 @@ def test_find_ast_node_with_type_in_file(neo4j_container_with_kg_fixture):  # no
   assert "'end_line': 3" in result
 
 
+@pytest.mark.slow
 def test_find_ast_node_with_type_and_text(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -137,6 +146,7 @@ def test_find_ast_node_with_type_and_text(neo4j_container_with_kg_fixture):  # n
   assert "'end_line': 3" in result
 
 
+@pytest.mark.slow
 def test_find_text_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -157,6 +167,7 @@ def test_find_text_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F81
   assert "'metadata': \"{'Header 1': 'A'}\"" in result
 
 
+@pytest.mark.slow
 def test_find_text_node_with_text_in_file(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -177,6 +188,7 @@ def test_find_text_node_with_text_in_file(neo4j_container_with_kg_fixture):  # n
   assert "'metadata': \"{'Header 1': 'A', 'Header 2': 'B'}\"" in result
 
 
+@pytest.mark.slow
 def test_get_next_text_node_with_node_id(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -189,6 +201,7 @@ def test_get_next_text_node_with_node_id(neo4j_container_with_kg_fixture):  # no
   assert "'metadata': \"{'Header 1': 'A', 'Header 2': 'B'}\"" in result
 
 
+@pytest.mark.slow
 def test_preview_source_code_file_content_with_basename(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -209,6 +222,7 @@ def test_preview_source_code_file_content_with_basename(neo4j_container_with_kg_
   assert source_code in result
 
 
+@pytest.mark.slow
 def test_preview_text_file_content_with_basename(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -228,6 +242,7 @@ def test_preview_text_file_content_with_basename(neo4j_container_with_kg_fixture
   assert "Text under header A." in result
 
 
+@pytest.mark.slow
 def test_get_parent_node(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
@@ -244,6 +259,7 @@ def test_get_parent_node(neo4j_container_with_kg_fixture):  # noqa: F811
   assert "'text': '()'" in result
 
 
+@pytest.mark.slow
 def test_get_children_node(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, _ = neo4j_container_with_kg_fixture
 
