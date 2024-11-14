@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
 
 
-class TestClassification(BaseModel):
+class TestStructuredOutput(BaseModel):
   """Structured output model for test analysis results.
 
   Attributes:
@@ -37,7 +37,7 @@ class TestClassification(BaseModel):
   )
 
 
-class GeneralTestSummarizationNode:
+class GeneralTestStructuredNode:
   """Analyzes and summarizes test execution attempts for software projects.
 
   This class processes test execution histories to provide structured analysis
@@ -285,9 +285,9 @@ Output:
     prompt = ChatPromptTemplate.from_messages(
       [("system", self.SYS_PROMPT), ("human", "{test_history}")]
     )
-    structured_llm = model.with_structured_output(TestClassification)
+    structured_llm = model.with_structured_output(TestStructuredOutput)
     self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_summarization_node")
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_structured_node")
 
   def format_test_history(self, test_messages: Sequence[BaseMessage]):
     """Formats test execution messages into a structured history.
@@ -332,7 +332,7 @@ Output:
     """
     test_history = "\n".join(self.format_test_history(state["test_messages"]))
     response = self.model.invoke({"test_history": test_history})
-    self._logger.debug(f"GeneralTestSummarizationNode response:\n{response}")
+    self._logger.debug(f"GeneralTestStructuredNode response:\n{response}")
     return {
       "exist_test": response.exist_test,
       "test_command_summary": response.command_summary,

@@ -1,4 +1,4 @@
-"""Build execution analysis and summarization for software projects.
+"""Build execution analysis and structured summaries for software projects.
 
 This module analyzes build execution attempts and provides structured summaries of
 build systems, required commands, and failure information. It processes build
@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
 
 
-class BuildClassification(BaseModel):
+class BuildStructuredOutput(BaseModel):
   """Structured output model for build analysis results.
 
   Attributes:
@@ -37,7 +37,7 @@ class BuildClassification(BaseModel):
   )
 
 
-class GeneralBuildSummarizationNode:
+class GeneralBuildStructuredNode:
   """Analyzes and summarizes build execution attempts for software projects.
 
   This class processes build execution histories to provide structured analysis
@@ -236,9 +236,9 @@ Output:
     prompt = ChatPromptTemplate.from_messages(
       [("system", self.SYS_PROMPT), ("human", "{build_history}")]
     )
-    structured_llm = model.with_structured_output(BuildClassification)
+    structured_llm = model.with_structured_output(BuildStructuredOutput)
     self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_summarization_node")
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_structured_node")
 
   def format_build_history(self, build_messages: Sequence[BaseMessage]):
     """Formats build execution messages into a structured history.
@@ -283,7 +283,7 @@ Output:
     """
     build_history = "\n".join(self.format_build_history(state["build_messages"]))
     response = self.model.invoke({"build_history": build_history})
-    self._logger.debug(f"GeneralBuildSummarizeNode response:\n{response}")
+    self._logger.debug(f"BuildStructuredOutput response:\n{response}")
 
     return {
       "exist_build": response.exist_build,

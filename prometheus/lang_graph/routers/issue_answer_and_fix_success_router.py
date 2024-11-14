@@ -39,6 +39,9 @@ class IssueAnswerAndFixSuccessRouter:
       bool: True if the operation was successful based on the requested
         operations and their results, False otherwise.
     """
+    if not state["reviewer_approved"]:
+      return False
+
     if not state["run_build"] and not state["run_test"]:
       return True
 
