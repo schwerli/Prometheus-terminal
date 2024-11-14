@@ -34,6 +34,7 @@ You are a specialized code editing agent responsible for implementing precise co
 3. Build status and failure logs (if available and enabled)
 4. Test status and failure logs (if available and enabled)
 5. Access to tools for reading and modifying source code
+6. Previous patch and reviewer comments (if available)
 
 CORE RESPONSIBILITIES AND WORKFLOW:
 1. Initial File Reading and Style Analysis (MANDATORY)
@@ -70,6 +71,15 @@ CORE RESPONSIBILITIES AND WORKFLOW:
       - Plan minimal necessary changes to resolve the issue
       - Consider potential build and test impacts, even if their status is unknown
 
+   d) Reviewer Feedback Handling
+      - If reviewer comments are present for previous patch:
+        * Carefully analyze each comment and suggestion
+        * Address all feedback points systematically
+        * Ensure new changes maintain codebase consistency
+        * Document how each reviewer comment was addressed
+      - If no reviewer comments:
+        * Proceed with normal issue resolution workflow
+
 3. Change Implementation with Style Preservation
    - Make precise code modifications only after confirming current file contents
    - Strictly maintain the existing codebase style
@@ -93,20 +103,24 @@ REQUIRED STEPS FOR EVERY EDIT:
 2. ANALYZE CONTENT:
    - Confirm the location and content of intended changes
    - Understand the context and purpose of the code
+   - Review any reviewer feedback on previous patches
 
 3. PLAN:
    - Document specific changes needed, categorized by type (build/test/issue)
    - Note style patterns that must be preserved
+   - Include plan for addressing reviewer comments if present
 
 4. IMPLEMENT:
    - Use edit_file to make the necessary modifications
    - Ensure perfect style matching with surrounding code
    - Match existing documentation patterns
+   - Address reviewer feedback systematically
 
 5. VALIDATE:
    - Ensure changes address the correct problem
    - Verify style consistency with existing code
    - Check documentation completeness and style
+   - Confirm all reviewer comments have been addressed
 
 Never make blind edits without first reading and understanding the current file state.
 Never modify tests that are intentionally failing to verify issue fixes.
@@ -114,6 +128,7 @@ Never introduce inconsistent styling or formatting.
 Report test bugs instead of changing the tests.
 When build or test status is unknown, make minimal, conservative changes.
 Always maintain the exact style and formatting of the surrounding code.
+Always address all reviewer comments systematically and thoroughly.
 """
 
   HUMAN_PROMPT = """\
@@ -131,7 +146,10 @@ CURRENT STATUS:
 {test_status}
 
 Your previous edit (if any):
-{patch_info}
+{patch}
+
+Reviewer comments to your previous edit (if any):
+{reviewer_comments}
 """
 
   def __init__(self, model: BaseChatModel, root_path: str):
@@ -234,6 +252,8 @@ Your previous edit (if any):
     Returns:
       HumanMessage instance containing formatted state information.
     """
+    # Format comments list into a string
+    comments_str = self.format_issue_comments(state.get("issue_comments", []))
 
     # Format build status based on various conditions
     build_status = "Build Status: Unknown (Build check not enabled)"
@@ -256,12 +276,15 @@ Your previous edit (if any):
         test_status = "Test Status: Passing"
 
     # Format previous patch information if it exists
-    patch_info = ""
+    patch = ""
     if "patch" in state and state["patch"]:
-      patch_info = f"Your previous edit:\n{state['patch']}"
+      patch = state["patch"]
 
-    # Format comments list into a string
-    comments_str = self.format_issue_comments(state.get("issue_comments", []))
+    reviewer_comments = ""
+    if (
+      not state["reviewer_approved"] and "reviewer_comments" in state and state["reviewer_comments"]
+    ):
+      reviewer_comments = state["reviewer_comments"]
 
     human_message = HumanMessage(
       self.HUMAN_PROMPT.format(
@@ -271,7 +294,8 @@ Your previous edit (if any):
         summary=state["summary"],
         build_status=build_status,
         test_status=test_status,
-        patch_info=patch_info,
+        patch=patch,
+        reviewer_comments=reviewer_comments,
       )
     )
     return human_message
