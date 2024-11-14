@@ -1,6 +1,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import FastAPI
 
@@ -44,3 +45,8 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])
+
+
+@app.get("/health", tags=["health"])
+def health_check():
+  return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
