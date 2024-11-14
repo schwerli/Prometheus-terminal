@@ -23,6 +23,9 @@ def test_code_editing_node():
       "issue_comments": [],
       "project_path": "/foo/bar",
       "code_edit_messages": test_messages,
+      "patch": "--- file1.txt\n+++ file1.txt\n@@ -1,2 +1,2 @@\n-a,b,c\n+a,b,d\n",
+      "reviewer_approved": False,
+      "reviewer_comments": "comments",
     }
   )
 

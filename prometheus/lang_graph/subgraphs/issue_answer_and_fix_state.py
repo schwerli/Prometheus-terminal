@@ -30,4 +30,8 @@ class IssueAnswerAndFixState(ContextProviderState):
   code_edit_messages: Annotated[Sequence[BaseMessage], add_messages]
   patch: str
 
+  edit_reviewer_messages: Annotated[Sequence[BaseMessage], add_messages]
+  reviewer_approved: bool
+  reviewer_comments: str
+
   issue_response: str
