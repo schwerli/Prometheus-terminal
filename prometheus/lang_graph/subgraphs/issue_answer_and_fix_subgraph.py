@@ -245,7 +245,6 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_edge("reset_edit_messages_node", "reset_reviewer_messages_node")
     workflow.add_edge("reset_reviewer_messages_node", "reset_build_messages_node")
     workflow.add_edge("reset_build_messages_node", "reset_test_messages_node")
-    workflow.add_edge("reset_test_messages_node", "update_container_node")
     workflow.add_edge("reset_test_messages_node", "reset_build_fail_log_node")
     workflow.add_edge("reset_build_fail_log_node", "reset_test_fail_log_node")
     workflow.add_edge("reset_test_fail_log_node", "update_container_node")
@@ -256,6 +255,7 @@ class IssueAnswerAndFixSubgraph:
       functools.partial(tools_condition, messages_key="edit_reviewer_messages"),
       {"tools": "edit_reviewer_tools", END: "edit_reviewer_structured_node"},
     )
+    workflow.add_edge("edit_reviewer_tools", "edit_reviewer_node")
     workflow.add_conditional_edges(
       "edit_reviewer_structured_node",
       IssueAnswerAndFixSuccessRouter(),
