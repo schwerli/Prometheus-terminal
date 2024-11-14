@@ -119,7 +119,7 @@ Remember:
 - Focus solely on determining if file changes are needed
 - Don't attempt to solve the issue or suggest specific changes
 - Consider only the information provided in the context
-"""
+""".replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
     prompt = ChatPromptTemplate.from_messages(

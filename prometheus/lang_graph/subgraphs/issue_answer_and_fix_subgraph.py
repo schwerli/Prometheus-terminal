@@ -340,7 +340,7 @@ class IssueAnswerAndFixSubgraph:
       config["configurable"] = {}
       config["configurable"]["thread_id"] = thread_id
 
-    if response_mode != ResponseModeEnum.only_answer and (run_build or run_test):
+    if response_mode != ResponseModeEnum.ONLY_ANSWER and (run_build or run_test):
       self.container.build_docker_image()
       self.container.start_container()
 
@@ -368,6 +368,6 @@ class IssueAnswerAndFixSubgraph:
       },
       config,
     )
-    if response_mode != ResponseModeEnum.only_answer and (run_build or run_test):
+    if response_mode != ResponseModeEnum.ONLY_ANSWER and (run_build or run_test):
       self.container.cleanup()
     return output_state["issue_response"], output_state.get("patch", "")
