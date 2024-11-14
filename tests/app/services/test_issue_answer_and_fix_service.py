@@ -116,9 +116,17 @@ def test_answer_and_fix_issue_success(
     mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, local_path
   )
   response = service.answer_and_fix_issue(
-    title, body, comments, only_answer=True, run_build=False, run_tests=False, thread_id=thread_id
+    title,
+    body,
+    comments,
+    response_mode="AUTO",
+    run_build=False,
+    run_tests=False,
+    thread_id=thread_id,
   )
 
   # Verify
   assert response == expected_response
-  mock_subgraph.invoke.assert_called_once_with(title, body, comments, True, False, False, thread_id)
+  mock_subgraph.invoke.assert_called_once_with(
+    title, body, comments, "AUTO", False, False, thread_id
+  )

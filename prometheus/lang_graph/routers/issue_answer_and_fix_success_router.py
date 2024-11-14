@@ -40,15 +40,20 @@ class IssueAnswerAndFixSuccessRouter:
         operations and their results, False otherwise.
     """
     if not state["reviewer_approved"]:
+      self._logger.info("Reviewer did not approve the edit.")
       return False
 
     if not state["run_build"] and not state["run_test"]:
+      self._logger.info("Neither build nor test was requested, edit default to be successful.")
       return True
 
     if state["run_build"] and state["build_fail_log"]:
+      self._logger.info("Build failed.")
       return False
 
     if state["run_test"] and state["test_fail_log"]:
+      self._logger.info("Test failed.")
       return False
 
+    self._logger.info("Both build and test were successful.")
     return True

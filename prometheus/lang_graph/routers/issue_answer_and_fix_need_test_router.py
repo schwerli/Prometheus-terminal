@@ -4,6 +4,8 @@ This module provides a routing mechanism for the issue answer and fix process
 when additional testing is required in the workflow.
 """
 
+import logging
+
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
 
 
@@ -17,6 +19,12 @@ class IssueAnswerAndFixNeedTestRouter:
       None
   """
 
+  def __init__(self):
+    """Initializes the router with a configured logger."""
+    self._logger = logging.getLogger(
+      "prometheus.lang_graph.routers.issue_answer_and_fix_need_test_router"
+    )
+
   def __call__(self, state: IssueAnswerAndFixState):
     """Determine if testing should be run based on the current workflow state.
 
@@ -27,4 +35,5 @@ class IssueAnswerAndFixNeedTestRouter:
     Returns:
         bool: True if tests should be run, False otherwise.
     """
+    self._logger.info(f"Testing required? {state['run_test']}")
     return state["run_test"]

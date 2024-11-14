@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException, Request
 from litellm import Field
 from pydantic import BaseModel
 
+from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import ResponseModeEnum
+
 router = APIRouter()
 
 
@@ -23,8 +25,10 @@ class IssueAnswerAndFixRequest(BaseModel):
       ]
     ],
   )
-  only_answer: Optional[bool] = Field(
-    default=True, description="Only answer the issue without editing the code", examples=[True]
+  response_mode: Optional[ResponseModeEnum] = Field(
+    default=ResponseModeEnum.AUTO,
+    description="The mode of response: auto (automatically determine whether to fix), only_answer (provide answer without changes), or answer_and_fix (provide answer and fix code)",
+    examples=[ResponseModeEnum.AUTO, ResponseModeEnum.ONLY_ANSWER, ResponseModeEnum.ANSWER_AND_FIX],
   )
   run_build: Optional[bool] = Field(
     default=True,
@@ -104,7 +108,7 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
     issue.title,
     issue.body,
     issue.comments if issue.comments else [],
-    issue.only_answer,
+    issue.response_mode,
     issue.run_build,
     issue.run_test,
     issue.dockerfile_content,

@@ -12,6 +12,7 @@ from prometheus.app.services.knowledge_graph_service import KnowledgeGraphServic
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.app.services.postgres_service import PostgresService
+from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import ResponseModeEnum
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_subgraph import IssueAnswerAndFixSubgraph
 
 
@@ -59,7 +60,7 @@ class IssueAnswerAndFixService:
     title: str,
     body: str,
     comments: Sequence[Mapping[str, str]],
-    only_answer: bool,
+    response_mode: ResponseModeEnum,
     run_build: bool,
     run_tests: bool,
     thread_id: Optional[str] = None,
@@ -70,7 +71,8 @@ class IssueAnswerAndFixService:
       title: The title of the issue.
       body: The main description of the issue.
       comments: Sequence of comment dictionaries related to the issue.
-      only_answer: If True, only generates an answer without implementing a fix.
+      response_mode: The mode of response: auto (automatically determine whether to fix),
+        only_answer (provide answer without changes), or answer_and_fix (provide answer and fix code).
       run_build: If True, runs build validation on any generated fix.
       run_tests: If True, runs tests on any generated fix.
       thread_id: Optional identifier for the processing thread. If None,
@@ -83,5 +85,5 @@ class IssueAnswerAndFixService:
     """
     thread_id = str(uuid.uuid4()) if thread_id is None else thread_id
     return self.issue_answer_and_fix_subgraph.invoke(
-      title, body, comments, only_answer, run_build, run_tests, thread_id
+      title, body, comments, response_mode, run_build, run_tests, thread_id
     )
