@@ -71,7 +71,7 @@ Example output:
 }
 
 Always maintain the original meaning and severity of the review while providing a clean, consistent structure.
-"""
+""".replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
     prompt = ChatPromptTemplate.from_messages(
