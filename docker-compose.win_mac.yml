@@ -46,7 +46,7 @@ services:
     build: .
     container_name: prometheus
     ports:
-      - "8000:8000"
+      - "9001:9001"
     environment:
       - PROMETHEUS_LOGGING_LEVEL="DEBUG"
       - PROMETHEUS_NEO4J_URI="bolt://neo4j:7687"
