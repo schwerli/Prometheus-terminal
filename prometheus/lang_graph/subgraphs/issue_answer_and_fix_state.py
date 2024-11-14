@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Annotated, Mapping, Sequence
 
 from langchain_core.messages import BaseMessage
@@ -6,16 +7,26 @@ from langgraph.graph.message import add_messages
 from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 
 
+class ResponseModeEnum(StrEnum):
+  AUTO = "auto"
+  ONLY_ANSWER = "only_answer"
+  ANSWER_AND_FIX = "answer_and_fix"
+
+
 class IssueAnswerAndFixState(ContextProviderState):
+  # Attributes provided by the user
   issue_title: str
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
-  only_answer: bool
+  response_mode: ResponseModeEnum
   run_build: bool
   run_test: bool
 
+  # All attributes generated and used by the subgraph
   project_path: str
   project_structure: str
+
+  require_edit: bool
 
   build_messages: Annotated[Sequence[BaseMessage], add_messages]
   exist_build: bool

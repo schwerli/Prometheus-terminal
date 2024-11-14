@@ -24,6 +24,7 @@ from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.issue_responder_node import IssueResponderNode
 from prometheus.lang_graph.nodes.issue_to_query_node import IssueToQueryNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
+from prometheus.lang_graph.nodes.require_edit_classifier_node import RequireEditClassifierNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
 from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNode
 from prometheus.lang_graph.nodes.user_defined_build_node import UserDefinedBuildNode
@@ -41,7 +42,10 @@ from prometheus.lang_graph.routers.issue_answer_and_fix_success_router import (
   IssueAnswerAndFixSuccessRouter,
 )
 from prometheus.lang_graph.subgraphs.context_provider_subgraph import ContextProviderSubgraph
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
+from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import (
+  IssueAnswerAndFixState,
+  ResponseModeEnum,
+)
 
 
 class IssueAnswerAndFixSubgraph:
@@ -69,6 +73,8 @@ class IssueAnswerAndFixSubgraph:
     context_provider_subgraph = ContextProviderSubgraph(
       model, kg, neo4j_driver, checkpointer
     ).subgraph
+
+    require_edit_classifier_node = RequireEditClassifierNode(model)
 
     before_edit_build_branch_node = NoopNode()
     if dockerfile_content:
@@ -143,6 +149,8 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_node("issue_to_query_node", issue_to_query_node)
     workflow.add_node("context_provider_subgraph", context_provider_subgraph)
 
+    workflow.add_node("require_edit_classifier_node", require_edit_classifier_node)
+
     workflow.add_node("before_edit_build_branch_node", before_edit_build_branch_node)
     workflow.add_node("before_edit_build_node", before_edit_build_node)
     if not dockerfile_content:
@@ -194,6 +202,12 @@ class IssueAnswerAndFixSubgraph:
     workflow.add_edge("issue_to_query_node", "context_provider_subgraph")
     workflow.add_conditional_edges(
       "context_provider_subgraph",
+      IssueAnswerAndFixOnlyAnswerRouter(),
+      {True: "issue_responder_node", False: "require_edit_classifier_node"},
+    )
+
+    workflow.add_conditional_edges(
+      "require_edit_classifier_node",
       IssueAnswerAndFixOnlyAnswerRouter(),
       {True: "issue_responder_node", False: "before_edit_build_branch_node"},
     )
@@ -314,7 +328,7 @@ class IssueAnswerAndFixSubgraph:
     issue_title: str,
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
-    only_answer: bool,
+    response_mode: ResponseModeEnum,
     run_build: bool,
     run_test: bool,
     thread_id: Optional[str] = None,
@@ -326,7 +340,7 @@ class IssueAnswerAndFixSubgraph:
       config["configurable"] = {}
       config["configurable"]["thread_id"] = thread_id
 
-    if not only_answer and (run_build or run_test):
+    if response_mode != ResponseModeEnum.only_answer and (run_build or run_test):
       self.container.build_docker_image()
       self.container.start_container()
 
@@ -335,7 +349,7 @@ class IssueAnswerAndFixSubgraph:
         "issue_title": issue_title,
         "issue_body": issue_body,
         "issue_comments": issue_comments,
-        "only_answer": only_answer,
+        "response_mode": response_mode,
         "run_build": run_build,
         "run_test": run_test,
         "project_path": str(self.local_path),
@@ -354,6 +368,6 @@ class IssueAnswerAndFixSubgraph:
       },
       config,
     )
-    if not only_answer and (run_build or run_test):
+    if response_mode != ResponseModeEnum.only_answer and (run_build or run_test):
       self.container.cleanup()
     return output_state["issue_response"], output_state.get("patch", "")

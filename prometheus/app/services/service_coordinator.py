@@ -15,6 +15,7 @@ from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.app.services.postgres_service import PostgresService
 from prometheus.app.services.repository_service import RepositoryService
+from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import ResponseModeEnum
 
 
 class ServiceCoordinator:
@@ -58,7 +59,7 @@ class ServiceCoordinator:
     issue_title: str,
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
-    only_answer: bool,
+    response_mode: ResponseModeEnum,
     run_build: bool,
     run_tests: bool,
     dockerfile_content: str,
@@ -73,7 +74,8 @@ class ServiceCoordinator:
       issue_title: Title of the issue.
       issue_body: Main description of the issue.
       issue_comments: Sequence of comment dictionaries related to the issue.
-      only_answer: If True, only provides analysis without implementing fix.
+      response_mode: The mode of response: auto (automatically determine whether to fix),
+        only_answer (provide answer without changes), or answer_and_fix (provide answer and fix code).
       run_build: If True, runs build validation on generated fix.
       run_tests: If True, runs tests on generated fix.
       thread_id: Optional identifier for conversation id (Not used right now).
@@ -92,7 +94,7 @@ class ServiceCoordinator:
       test_commands,
     )
     issue_response, patch = issue_answer_and_fix_service.answer_and_fix_issue(
-      issue_title, issue_body, issue_comments, only_answer, run_build, run_tests, thread_id
+      issue_title, issue_body, issue_comments, response_mode, run_build, run_tests, thread_id
     )
     remote_branch_name = None
     if patch:
