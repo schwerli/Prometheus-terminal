@@ -281,9 +281,7 @@ Reviewer comments to your previous edit (if any):
       patch = state["patch"]
 
     reviewer_comments = ""
-    if (
-      not state["reviewer_approved"] and "reviewer_comments" in state and state["reviewer_comments"]
-    ):
+    if "reviewer_approved" in state and not state["reviewer_approved"]:
       reviewer_comments = state["reviewer_comments"]
 
     human_message = HumanMessage(
