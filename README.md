@@ -1,8 +1,15 @@
 ![code coverage](https://github.com/Pantheon-temple/Prometheus/raw/coverage-badge/coverage.svg)
 
-# How to run the project
+Prometheus is a FastAPI backend service that performs intelligent codebase-level operations including answering questions, resolving issues, and reviewing pull requests. At its core, it implements a multi-agent approach governed by a state machine that ensures code quality through automated reviews, build verification, and test execution.
 
-In this project we use `docker-compose.yml` to run everything. It expects you to set the following enviroment variables:
+Prometheus can be connected to other services provided in the `Pantheon-temple` orgnization, for example:
+* Connect it to `Pantheon-temple/Argus-GitHub` to automatically pull the latest changes from your GitHub repository, answer/fix issues, and review pull requests.
+* Connect it to `Pantheon-temple/Hermes` to have chat interface with your codebase (GitHub or local).
+* Connect it your own service, by sending requests to the FastAPI endpoints.
+
+# Quick start
+
+In this project we use `docker-compose.yml`(for Linux), or `docker-compose.win_mac.yml` (for Windows or MacOS). It expects you to set the following enviroment variables:
 
 ```
 PROMETHEUS_LITELLM_MODEL=...
@@ -12,6 +19,6 @@ PROMETHEUS_GITHUB_ACCESS_TOKEN=...
 
 `PROMETHEUS_LITELLM_MODEL` and `PROMETHEUS_LITELLM_ANTHROPIC_API_KEY` are parameters to [ChatLiteLLM](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.litellm.ChatLiteLLM.html), and `PROMETHEUS_GITHUB_ACCESS_TOKEN` is the GitHub access token.
 
-You can also create `.env` with these varaibles.
+You can also create a `.env` file with these varaibles.
 
-Now, simply run `docker compose up`.
+Now, simply run `docker compose up`, and you can access Promtheus at `http://localhost:9001` and the OpenAPI docs at `http://localhost:9001/docs`
