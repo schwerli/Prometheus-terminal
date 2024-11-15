@@ -27,6 +27,8 @@ class IssueAnswerAndFixService:
     llm_serivice: LLMService,
     local_path: Path,
     dockerfile_content: Optional[str] = None,
+    image_name: Optional[str] = None,
+    workdir: Optional[str] = None,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
   ):
@@ -38,6 +40,8 @@ class IssueAnswerAndFixService:
       llm_service: LLM service (For creating the LLM model).
       local_path: Path to local repository.
       dockerfile_content: Optional user defined Dockerfile content for the containerized enviroment.
+      image_name: Optional user defined image to be pulled.
+      workdir: Optional user defined workdir for the containerized enviroment.
       build_commands: Optional build commands for the containerized enviroment.
       test_commands: Optional test commands for the containerized enviroment.
     """
@@ -51,6 +55,8 @@ class IssueAnswerAndFixService:
       local_path,
       postgres_service.checkpointer,
       dockerfile_content,
+      image_name,
+      workdir,
       build_commands,
       test_commands,
     )

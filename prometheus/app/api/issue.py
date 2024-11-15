@@ -42,9 +42,18 @@ class IssueAnswerAndFixRequest(BaseModel):
   )
   dockerfile_content: Optional[str] = Field(
     default=None,
-    description="If you want specify the containerized environment, specify the Dockerfile content."
-    'It must include "WORKDIR /app" and "COPY . /app"',
+    description="Specify the containerized enviroment with dockerfile content",
     examples=["FROM python:3.11\nWORKDIR /app\nCOPY . /app"],
+  )
+  image_name: Optional[str] = Field(
+    default=None,
+    description="Specify the containerized enviroment with image name that should be pulled from dockerhub",
+    examples=["python:3.11-slim"],
+  )
+  workdir: Optional[str] = Field(
+    default=None,
+    description="If you specified the container environment, you must also specify the workdir",
+    examples=["/app"],
   )
   build_commands: Optional[Sequence[str]] = Field(
     default=None,
@@ -78,29 +87,25 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
       detail="A repository is not uploaded, use /repository/ endpoint to upload one",
     )
 
-  # Validate dockerfile dependencies
-  if issue.dockerfile_content is not None:
+  if issue.dockerfile_content or issue.image_name:
+    if issue.workdir is None:
+      raise HTTPException(
+        status_code=400,
+        detail="workdir must be provided for user defined environment",
+      )
+
     # Validate build commands
     if issue.run_build and issue.build_commands is None:
       raise HTTPException(
         status_code=400,
-        detail="build_commands must be provided when dockerfile_content is specified and run_build is True",
+        detail="build_commands must be provided for user defined environment when run_build is True",
       )
 
     # Validate test commands
     if issue.run_test and issue.test_commands is None:
       raise HTTPException(
         status_code=400,
-        detail="test_commands must be provided when dockerfile_content is specified and run_test is True",
-      )
-
-    # Validate dockerfile content
-    if (
-      "WORKDIR /app" not in issue.dockerfile_content
-      or "COPY . /app" not in issue.dockerfile_content
-    ):
-      raise HTTPException(
-        status_code=400, detail='Dockerfile must include "WORKDIR /app" and "COPY . /app"'
+        detail="test_commands must be provided for user defined environment when run_test is True",
       )
 
   issue_response, remote_branch_name = request.app.state.service_coordinator.answer_and_fix_issue(
@@ -112,6 +117,8 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
     issue.run_build,
     issue.run_test,
     issue.dockerfile_content,
+    issue.image_name,
+    issue.workdir,
     issue.build_commands,
     issue.test_commands,
   )

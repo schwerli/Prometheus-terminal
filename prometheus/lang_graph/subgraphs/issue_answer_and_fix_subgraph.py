@@ -57,14 +57,19 @@ class IssueAnswerAndFixSubgraph:
     local_path: Path,
     checkpointer: Optional[BaseCheckpointSaver] = None,
     dockerfile_content: Optional[str] = None,
+    image_name: Optional[str] = None,
+    workdir: Optional[str] = None,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
   ):
     self.local_path = local_path.absolute()
     self.project_structure = kg.get_file_tree()
-    if dockerfile_content:
+
+    is_using_user_defined_container = bool(dockerfile_content) or bool(image_name)
+
+    if is_using_user_defined_container:
       self.container = UserDefinedContainer(
-        self.local_path, dockerfile_content, build_commands, test_commands
+        self.local_path, build_commands, test_commands, workdir, dockerfile_content, image_name
       )
     else:
       self.container = GeneralContainer(self.local_path)
@@ -77,7 +82,7 @@ class IssueAnswerAndFixSubgraph:
     require_edit_classifier_node = RequireEditClassifierNode(model)
 
     before_edit_build_branch_node = NoopNode()
-    if dockerfile_content:
+    if is_using_user_defined_container:
       before_edit_build_node = UserDefinedBuildNode(self.container)
     else:
       before_edit_build_node = GeneralBuildNode(model, self.container, before_edit=True)
@@ -88,7 +93,7 @@ class IssueAnswerAndFixSubgraph:
       )
     before_edit_general_build_structured_node = GeneralBuildStructuredNode(model)
     before_edit_test_branch_node = NoopNode()
-    if dockerfile_content:
+    if is_using_user_defined_container:
       before_edit_test_node = UserDefinedTestNode(self.container)
     else:
       before_edit_test_node = GeneralTestNode(model, self.container, before_edit=True)
@@ -121,7 +126,7 @@ class IssueAnswerAndFixSubgraph:
     edit_reviewer_structured_node = EditReviewerStructuredNode(model)
 
     after_edit_build_branch_node = NoopNode()
-    if dockerfile_content:
+    if is_using_user_defined_container:
       after_edit_build_node = UserDefinedBuildNode(self.container)
     else:
       after_edit_build_node = GeneralBuildNode(model, self.container, before_edit=False)
@@ -132,7 +137,7 @@ class IssueAnswerAndFixSubgraph:
       )
     after_edit_general_build_structured_node = GeneralBuildStructuredNode(model)
     after_edit_test_branch_node = NoopNode()
-    if dockerfile_content:
+    if is_using_user_defined_container:
       after_edit_test_node = UserDefinedTestNode(self.container)
     else:
       after_edit_test_node = GeneralTestNode(model, self.container, before_edit=False)
@@ -217,7 +222,7 @@ class IssueAnswerAndFixSubgraph:
       IssueAnswerAndFixNeedBuildRouter(),
       {True: "before_edit_build_node", False: "before_edit_test_branch_node"},
     )
-    if dockerfile_content:
+    if is_using_user_defined_container:
       workflow.add_edge("before_edit_build_node", "before_edit_general_build_structured_node")
     else:
       workflow.add_conditional_edges(
@@ -235,7 +240,7 @@ class IssueAnswerAndFixSubgraph:
       IssueAnswerAndFixNeedTestRouter(),
       {True: "before_edit_test_node", False: "code_editing_node"},
     )
-    if dockerfile_content:
+    if is_using_user_defined_container:
       workflow.add_edge("before_edit_test_node", "before_edit_general_test_structured_node")
     else:
       workflow.add_conditional_edges(
@@ -281,7 +286,7 @@ class IssueAnswerAndFixSubgraph:
       IssueAnswerAndFixNeedBuildRouter(),
       {True: "after_edit_build_node", False: "after_edit_test_branch_node"},
     )
-    if dockerfile_content:
+    if is_using_user_defined_container:
       workflow.add_edge("after_edit_build_node", "after_edit_general_build_structured_node")
     else:
       workflow.add_conditional_edges(
@@ -303,7 +308,7 @@ class IssueAnswerAndFixSubgraph:
       IssueAnswerAndFixNeedTestRouter(),
       {True: "after_edit_test_node", False: "issue_responder_node"},
     )
-    if dockerfile_content:
+    if is_using_user_defined_container:
       workflow.add_edge("after_edit_test_node", "after_edit_general_test_structured_node")
     else:
       workflow.add_conditional_edges(

@@ -19,6 +19,7 @@ class BaseContainer(ABC):
 
   client: docker.DockerClient = docker.from_env()
   tag_name: str
+  workdir: str = "/app"
   container: docker.models.containers.Container
   project_path: Path
   logger: logging.Logger
@@ -74,14 +75,13 @@ class BaseContainer(ABC):
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
     )
 
-  def update_files(self, new_project_path: str, container_path: str = "/app"):
+  def update_files(self, new_project_path: str):
     """Update files in the running container with files from a local directory.
 
-    Creates a tar archive of the new files and copies them into the container.
+    Creates a tar archive of the new files and copies them into the workdir of the container.
 
     Args:
         new_project_path: Path to the directory containing new files.
-        container_path: Path in container where files should be copied. Defaults to "/app".
     """
     self.logger.info(f"Updating files in running container with files from {new_project_path}")
 
@@ -96,7 +96,7 @@ class BaseContainer(ABC):
 
       temp_tar.seek(0)
 
-      self.container.put_archive(container_path, temp_tar.read())
+      self.container.put_archive(self.workdir, temp_tar.read())
 
     self.logger.info("Files updated successfully")
 
@@ -126,7 +126,7 @@ class BaseContainer(ABC):
         str: Output of the command as a string.
     """
     self.logger.debug(f"Running command in container: {command}")
-    exec_result = self.container.exec_run(command, workdir="/app")
+    exec_result = self.container.exec_run(command, workdir=self.workdir)
     exec_result_str = exec_result.output.decode("utf-8")
     self.logger.debug(f"Command output:\n{exec_result_str}")
     return exec_result_str
