@@ -62,9 +62,11 @@ class ServiceCoordinator:
     response_mode: ResponseModeEnum,
     run_build: bool,
     run_tests: bool,
-    dockerfile_content: str,
-    build_commands: Sequence[str],
-    test_commands: Sequence[str],
+    dockerfile_content: Optional[str] = None,
+    image_name: Optional[str] = None,
+    workdir: Optional[str] = None,
+    build_commands: Optional[Sequence[str]] = None,
+    test_commands: Optional[Sequence[str]] = None,
     thread_id: Optional[str] = None,
   ) -> str:
     """Analyzes and optionally fixes a code issue.
@@ -78,6 +80,11 @@ class ServiceCoordinator:
         only_answer (provide answer without changes), or answer_and_fix (provide answer and fix code).
       run_build: If True, runs build validation on generated fix.
       run_tests: If True, runs tests on generated fix.
+      dockerfile_content: User defined Dockerfile content for the containerized enviroment.
+      image_name: User defined image to be pulled.
+      workdir: User defined workdir for the containerized enviroment.
+      build_commands: User defined build commands for the containerized enviroment.
+      test_commands: User defined test commands for the containerized enviroment.
       thread_id: Optional identifier for conversation id (Not used right now).
 
     Returns:
@@ -90,6 +97,8 @@ class ServiceCoordinator:
       self.llm_service,
       self.knowledge_graph_service.local_path,
       dockerfile_content,
+      image_name,
+      workdir,
       build_commands,
       test_commands,
     )

@@ -64,6 +64,8 @@ def test_init_with_knowledge_graph(
     mock_llm_service,
     local_path,
     dockerfile_content="FROM python:3.9",
+    image_name=None,
+    workdir="/app",
     build_commands=["pip install -r requirements.txt"],
     test_commands=["pytest"],
   )
@@ -77,6 +79,8 @@ def test_init_with_knowledge_graph(
     local_path,
     mock_postgres_service.checkpointer,
     "FROM python:3.9",
+    None,
+    "/app",
     ["pip install -r requirements.txt"],
     ["pytest"],
   )

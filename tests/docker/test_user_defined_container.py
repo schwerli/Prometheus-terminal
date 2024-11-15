@@ -22,23 +22,15 @@ def temp_project_dir():
 
 
 @pytest.fixture
-def dockerfile_content():
-  yield "FROM python:3.9\nWORKDIR /app\nCOPY . /app/"
-
-
-@pytest.fixture
-def build_commands():
-  yield ["pip install -r requirements.txt", "python setup.py build"]
-
-
-@pytest.fixture
-def test_commands():
-  yield ["pytest tests/"]
-
-
-@pytest.fixture
-def container(temp_project_dir, dockerfile_content, build_commands, test_commands):
-  return UserDefinedContainer(temp_project_dir, dockerfile_content, build_commands, test_commands)
+def container(temp_project_dir):
+  return UserDefinedContainer(
+    temp_project_dir,
+    ["pip install -r requirements.txt", "python setup.py build"],
+    ["pytest tests/"],
+    "/app",
+    "FROM python:3.9\nWORKDIR /app\nCOPY . /app/",
+    None,
+  )
 
 
 def test_initialization(container, temp_project_dir):
