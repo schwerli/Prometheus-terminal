@@ -65,6 +65,11 @@ class IssueAnswerAndFixRequest(BaseModel):
     description="If you specified dockerfile_content and run_test is True, you must also specify the test commands.",
     examples=[["pytest ."]],
   )
+  push_to_remote: Optional[bool] = Field(
+    default=False,
+    description="When editing the code, whenver we should push the changes to a remote branch",
+    examples=[True],
+  )
 
 
 @router.post(
@@ -108,18 +113,24 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
         detail="test_commands must be provided for user defined environment when run_test is True",
       )
 
-  issue_response, remote_branch_name = request.app.state.service_coordinator.answer_and_fix_issue(
-    issue.number,
-    issue.title,
-    issue.body,
-    issue.comments if issue.comments else [],
-    issue.response_mode,
-    issue.run_build,
-    issue.run_test,
-    issue.dockerfile_content,
-    issue.image_name,
-    issue.workdir,
-    issue.build_commands,
-    issue.test_commands,
+  issue_response, patch, remote_branch_name = (
+    request.app.state.service_coordinator.answer_and_fix_issue(
+      issue.number,
+      issue.title,
+      issue.body,
+      issue.comments if issue.comments else [],
+      issue.response_mode,
+      issue.run_build,
+      issue.run_test,
+      issue.dockerfile_content,
+      issue.image_name,
+      issue.workdir,
+      issue.build_commands,
+      issue.test_commands,
+    )
   )
-  return {"issue_response": issue_response, "remote_branch_name": remote_branch_name}
+  return {
+    "issue_response": issue_response,
+    "patch": patch,
+    "remote_branch_name": remote_branch_name,
+  }
