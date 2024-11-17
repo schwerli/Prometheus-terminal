@@ -163,8 +163,7 @@ def test_find_text_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F81
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
-  assert f"'text': '{text}'" in result
-  assert "'metadata': \"{'Header 1': 'A'}\"" in result
+  assert f"{text}" in result
 
 
 @pytest.mark.slow
@@ -184,8 +183,7 @@ def test_find_text_node_with_text_in_file(neo4j_container_with_kg_fixture):  # n
   )
   assert f"'basename': '{basename}'" in result
   assert f"'relative_path': '{relative_path}'" in result
-  assert f"'text': '{text}'" in result
-  assert "'metadata': \"{'Header 1': 'A', 'Header 2': 'B'}\"" in result
+  assert f"{text}" in result
 
 
 @pytest.mark.slow
@@ -197,8 +195,7 @@ def test_get_next_text_node_with_node_id(neo4j_container_with_kg_fixture):  # no
   with neo4j_container.get_driver() as driver:
     result = graph_traversal.get_next_text_node_with_node_id(node_id, driver)
 
-  assert "'text': 'Text under header B.'" in result
-  assert "'metadata': \"{'Header 1': 'A', 'Header 2': 'B'}\"" in result
+  assert "TextNode" in result
 
 
 @pytest.mark.slow

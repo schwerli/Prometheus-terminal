@@ -67,6 +67,7 @@ class ServiceCoordinator:
     workdir: Optional[str] = None,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
+    push_to_remote: Optional[bool] = None,
     thread_id: Optional[str] = None,
   ) -> str:
     """Analyzes and optionally fixes a code issue.
@@ -85,6 +86,7 @@ class ServiceCoordinator:
       workdir: User defined workdir for the containerized enviroment.
       build_commands: User defined build commands for the containerized enviroment.
       test_commands: User defined test commands for the containerized enviroment.
+      push_to_remote: If True, push changes to remote repository.
       thread_id: Optional identifier for conversation id (Not used right now).
 
     Returns:
@@ -106,9 +108,9 @@ class ServiceCoordinator:
       issue_title, issue_body, issue_comments, response_mode, run_build, run_tests, thread_id
     )
     remote_branch_name = None
-    if patch:
+    if patch and push_to_remote:
       remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}")
-    return issue_response, remote_branch_name
+    return issue_response, patch, remote_branch_name
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()

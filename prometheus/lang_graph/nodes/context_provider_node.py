@@ -91,6 +91,8 @@ Remember: Your job is ONLY to gather and return relevant context. Do not attempt
 
 The file tree of the codebase:
 {file_tree}
+
+All ASTNode types: {ast_node_types}
 """
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph, neo4j_driver: neo4j.Driver):
@@ -112,7 +114,10 @@ The file tree of the codebase:
     """
     self.neo4j_driver = neo4j_driver
 
-    self.system_prompt = SystemMessage(self.SYS_PROMPT.format(file_tree=kg.get_file_tree()))
+    ast_node_types_str = ", ".join(kg.get_all_ast_node_types())
+    self.system_prompt = SystemMessage(
+      self.SYS_PROMPT.format(file_tree=kg.get_file_tree(), ast_node_types=ast_node_types_str)
+    )
     self.tools = self._init_tools()
     self.model_with_tools = model.bind_tools(self.tools)
 

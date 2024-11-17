@@ -9,7 +9,7 @@ from tests.test_utils import test_project_paths
 
 
 def test_supports_file():
-  file_graph_builder = FileGraphBuilder(0)
+  file_graph_builder = FileGraphBuilder(0, 0, 0)
 
   assert file_graph_builder.supports_file(test_project_paths.C_FILE)
   assert file_graph_builder.supports_file(test_project_paths.JAVA_FILE)
@@ -20,7 +20,7 @@ def test_supports_file():
 
 
 def test_build_python_file_graph():
-  file_graph_builder = FileGraphBuilder(1000)
+  file_graph_builder = FileGraphBuilder(1000, 1000, 100)
 
   parent_kg_node = KnowledgeGraphNode(0, None)
   next_node_id, kg_nodes, kg_edges = file_graph_builder.build_file_graph(
@@ -61,44 +61,43 @@ def test_build_python_file_graph():
   assert found_edge
 
 
-def test_build_markdown_file_graph():
-  file_graph_builder = FileGraphBuilder(1000)
+def test_build_text_file_graph():
+  file_graph_builder = FileGraphBuilder(1000, 100, 10)
 
   parent_kg_node = KnowledgeGraphNode(0, None)
   next_node_id, kg_nodes, kg_edges = file_graph_builder.build_file_graph(
     parent_kg_node, test_project_paths.MD_FILE, 0
   )
 
-  assert next_node_id == 4
-  assert len(kg_nodes) == 4
-  assert len(kg_edges) == 7
+  assert next_node_id == 2
+  assert len(kg_nodes) == 2
+  assert len(kg_edges) == 3
 
   # Test if some of the nodes exists
-  header_b_text_node = TextNode(
-    text="Text under header B.", metadata="{'Header 1': 'A', 'Header 2': 'B'}"
+  text_node_1 = TextNode(
+    text="# A\n\nText under header A.\n\n## B\n\nText under header B.\n\n## C\n\nText under header C.\n\n### D",
+    metadata="",
   )
-  header_c_text_node = TextNode(
-    text="Text under header C.", metadata="{'Header 1': 'A', 'Header 2': 'C'}"
-  )
+  text_node_2 = TextNode(text="### D\n\nText under header D.", metadata="")
 
-  found_header_b_text_node = False
+  found_text_node_1 = False
   for kg_node in kg_nodes:
-    if kg_node.node == header_b_text_node:
-      found_header_b_text_node = True
-  assert found_header_b_text_node
+    if kg_node.node == text_node_1:
+      found_text_node_1 = True
+  assert found_text_node_1
 
-  found_header_c_text_node = False
+  found_text_node_2 = False
   for kg_node in kg_nodes:
-    if kg_node.node == header_c_text_node:
-      found_header_c_text_node = True
-  assert found_header_c_text_node
+    if kg_node.node == text_node_2:
+      found_text_node_2 = True
+  assert found_text_node_2
 
   # Test if some of the edges exists
   found_edge = False
   for kg_edge in kg_edges:
     if (
-      kg_edge.source.node == header_b_text_node
-      and kg_edge.target.node == header_c_text_node
+      kg_edge.source.node == text_node_1
+      and kg_edge.target.node == text_node_2
       and kg_edge.type == KnowledgeGraphEdgeType.next_chunk
     ):
       found_edge = True

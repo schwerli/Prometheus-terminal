@@ -6,6 +6,7 @@ from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNod
 
 def test_update_container_node():
   mocked_container = Mock(spec=GeneralContainer)
+  mocked_container.container = Mock()
   mocked_container.update_files.return_value = None
   update_container_node = UpdateContainerNode(mocked_container)
 

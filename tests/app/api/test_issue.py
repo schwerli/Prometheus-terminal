@@ -29,8 +29,9 @@ def test_answer_and_fix_issue(mock_service_coordinator):
 def test_send(mock_service_coordinator):
   mock_service_coordinator.exists_knowledge_graph.return_value = True
   fake_response = "fake response"
+  fake_patch = "fake patch"
   fake_branch_name = "fake_remote_branch_name"
-  mock_response = (fake_response, fake_branch_name)
+  mock_response = (fake_response, fake_patch, fake_branch_name)
   mock_service_coordinator.answer_and_fix_issue.return_value = mock_response
   response = client.post(
     "/issue/answer_and_fix/", json={"number": 1, "title": "title", "body": "body"}
@@ -39,5 +40,6 @@ def test_send(mock_service_coordinator):
   assert response.status_code == 200
   assert response.json() == {
     "issue_response": fake_response,
+    "patch": fake_patch,
     "remote_branch_name": fake_branch_name,
   }

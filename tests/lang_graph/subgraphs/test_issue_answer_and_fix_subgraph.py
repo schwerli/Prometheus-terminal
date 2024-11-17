@@ -10,7 +10,9 @@ from tests.test_utils.util import FakeListChatWithToolsModel
 
 @pytest.fixture
 def mock_kg():
-  return Mock(spec=KnowledgeGraph)
+  kg = Mock(spec=KnowledgeGraph)
+  kg.get_all_ast_node_types.return_value = ["compilation_unit"]
+  return kg
 
 
 @pytest.fixture

@@ -6,6 +6,8 @@ files are properly reflected in the container's filesystem, maintaining consiste
 between the agent's workspace and the container environment.
 """
 
+import logging
+
 from prometheus.docker.base_container import BaseContainer
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
 
@@ -27,7 +29,14 @@ class UpdateContainerNode:
         be a subclass of BaseContainer implementing the update_files method.
     """
     self.container = container
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.update_container_node")
 
   def __call__(self, state: IssueAnswerAndFixState):
     """Synchronizes the current project state with the container."""
-    self.container.update_files(new_project_path=state["project_path"])
+    if self.container.container is not None:
+      self.container.update_files(new_project_path=state["project_path"])
+    else:
+      self._logger.info(
+        "Not updating files in docker container because it is not running, "
+        "most likely due to run_build and run_test are both false."
+      )

@@ -16,18 +16,29 @@ class KnowledgeGraphService:
   from codebase, storing them in Neo4j, and managing their lifecycle.
   """
 
-  def __init__(self, neo4j_service: Neo4jService, neo4j_batch_size: int, max_ast_depth: int):
+  def __init__(
+    self,
+    neo4j_service: Neo4jService,
+    neo4j_batch_size: int,
+    max_ast_depth: int,
+    chunk_size: int,
+    chunk_overlap: int,
+  ):
     """Initializes the Knowledge Graph service.
 
     Args:
       neo4j_service: Service providing Neo4j database access.
       neo4j_batch_size: Number of nodes to process in each Neo4j batch operation.
       max_ast_depth: Maximum depth to traverse when building AST representations.
+      chunk_size: Chunk size for processing text files.
+      chunk_overlap: Overlap size for processing text files.
     """
     self.kg_handler = knowledge_graph_handler.KnowledgeGraphHandler(
       neo4j_service.neo4j_driver, neo4j_batch_size
     )
     self.max_ast_depth = max_ast_depth
+    self.chunk_size = chunk_size
+    self.chunk_overlap = chunk_overlap
     self.kg = self._load_existing_knowledge_graph()
 
     self.local_path = None
@@ -61,7 +72,7 @@ class KnowledgeGraphService:
     if self.exists():
       self.clear()
 
-    kg = KnowledgeGraph(self.max_ast_depth)
+    kg = KnowledgeGraph(self.max_ast_depth, self.chunk_size, self.chunk_overlap)
     kg.build_graph(path, https_url, commit_id)
     self.kg = kg
     self.kg_handler.write_knowledge_graph(kg)
