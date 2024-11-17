@@ -15,8 +15,8 @@ services:
       - ./data_neo4j:/data
     healthcheck:
       test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "--non-interactive", "RETURN 1;"]
-      interval: 15s
-      timeout: 30s
+      interval: 30s
+      timeout: 60s
       retries: 3
 
 
@@ -33,8 +33,8 @@ services:
       - ./data_postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d postgres -U postgres"]
-      interval: 15s
-      timeout: 30s
+      interval: 30s
+      timeout: 60s
       retries: 3
 
   prometheus:
@@ -54,6 +54,7 @@ services:
       - PROMETHEUS_LITELLM_MODEL=${PROMETHEUS_LITELLM_MODEL}
       - PROMETHEUS_LITELLM_ANTHROPIC_API_KEY=${PROMETHEUS_LITELLM_ANTHROPIC_API_KEY}
       - PROMETHEUS_LITELLM_GEMINI_API_KEY=${PROMETHEUS_LITELLM_GEMINI_API_KEY}
+      - PROMETHEUS_LITELLM_OPENAI_API_KEY=${PROMETHEUS_LITELLM_OPENAI_API_KEY}
       - PROMETHEUS_WORKING_DIRECTORY="/app/working_dir"
       - PROMETHEUS_GITHUB_ACCESS_TOKEN=${PROMETHEUS_GITHUB_ACCESS_TOKEN}
       - PROMETHEUS_POSTGRES_URI="postgresql://postgres:password@localhost:5432/postgres?sslmode=disable"

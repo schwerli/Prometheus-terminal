@@ -51,6 +51,12 @@ CORE PRINCIPLES:
    - Stay within the scope of the reported issue
    - If multiple solutions are possible, choose the simpler one
 
+3. Maintain File State Accuracy
+   - After each edit, ALWAYS re-read the file before planning the next edit
+   - Line numbers will shift after modifications - never rely on previous line numbers
+   - Use read_file_with_line_numbers to get current line positions
+   - Treat each edit as independent and verify current file state
+
 CORE RESPONSIBILITIES AND WORKFLOW:
 1. Initial File Reading and Style Analysis (MANDATORY)
    - ALWAYS read the target file(s) using read_file_with_line_numbers before making any changes
