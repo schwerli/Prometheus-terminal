@@ -36,6 +36,7 @@ class BaseContainer(ABC):
     temp_project_path = temp_dir / project_path.name
     shutil.copytree(project_path, temp_project_path)
     self.project_path = temp_project_path.absolute()
+    self.container = None
     self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
   @abstractmethod

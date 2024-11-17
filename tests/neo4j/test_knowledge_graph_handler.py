@@ -51,7 +51,7 @@ def test_num_text_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
   with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_text_nodes = session.execute_read(handler._read_text_nodes)
-      assert len(read_text_nodes) == 4
+      assert len(read_text_nodes) == 2
 
 
 @pytest.mark.slow
@@ -95,7 +95,7 @@ def test_num_has_text_edges(neo4j_container_with_kg_fixture):  # noqa: F811
   with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_has_text_edges = session.execute_read(handler._read_has_text_edges)
-      assert len(read_has_text_edges) == 4
+      assert len(read_has_text_edges) == 2
 
 
 @pytest.mark.slow
@@ -106,7 +106,7 @@ def test_num_next_chunk_edges(neo4j_container_with_kg_fixture):  # noqa: F811
   with neo4j_container.get_driver() as driver:
     with driver.session() as session:
       read_next_chunk_edges = session.execute_read(handler._read_next_chunk_edges)
-      assert len(read_next_chunk_edges) == 3
+      assert len(read_next_chunk_edges) == 1
 
 
 @pytest.mark.slow
@@ -119,7 +119,7 @@ def test_knowledge_graph_exists(neo4j_container_with_kg_fixture):  # noqa: F811
 
 @pytest.mark.slow
 def test_clear_knowledge_graph(empty_neo4j_container_fixture):  # noqa: F811
-  kg = KnowledgeGraph(1000)
+  kg = KnowledgeGraph(1000, 1000, 100)
   kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
 
   driver = empty_neo4j_container_fixture.get_driver()

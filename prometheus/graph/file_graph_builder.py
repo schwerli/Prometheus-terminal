@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Sequence, Tuple
 
 from langchain_core.documents import Document
-from langchain_text_splitters import MarkdownHeaderTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from prometheus.graph.graph_types import (
   ASTNode,
@@ -29,21 +29,25 @@ class FileGraphBuilder:
   edges (KnowledgeGraphEdge) with different relationship types (KnowledgeGraphEdgeType).
   """
 
-  def __init__(self, max_ast_depth: int):
+  def __init__(self, max_ast_depth: int, chunk_size: int, chunk_overlap: int):
     """Initialize the FileGraphBuilder.
 
     Args:
       max_ast_depth: Maximum depth to traverse in the AST when processing source code files.
         Higher values create more detailed but larger graphs.
+      chunk_size: The chunk size for text files.
+      chunk_overlap: The overlap size for text files.
     """
     self.max_ast_depth = max_ast_depth
+    self.chunk_size = chunk_size
+    self.chunk_overlap = chunk_overlap
 
   def supports_file(self, file: Path) -> bool:
     """Checks if we support building knowledge graph for this file."""
     if tree_sitter_parser.supports_file(file):
       return True
 
-    if file.suffix == ".md":
+    if file.suffix in [".md", ".txt", ".rst"]:
       return True
 
     return False
@@ -68,8 +72,8 @@ class FileGraphBuilder:
     if tree_sitter_parser.supports_file(file):
       return self._tree_sitter_file_graph(parent_node, file, next_node_id)
 
-    if file.suffix == ".md":
-      return self._markdown_file_graph(parent_node, file, next_node_id)
+    if file.suffix in [".md", ".txt", ".rst"]:
+      return self._text_file_graph(parent_node, file, next_node_id)
 
   def _tree_sitter_file_graph(
     self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
@@ -139,32 +143,14 @@ class FileGraphBuilder:
         node_stack.append((tree_sitter_child_node, kg_child_ast_node, depth + 1))
     return next_node_id, tree_sitter_nodes, tree_sitter_edges
 
-  def _markdown_file_graph(
+  def _text_file_graph(
     self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
   ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
-    """Parse markdown file to a knowledge graph.
-
-    We use the langchain markdown parser to chunk the markdown file.
-
-    Args:
-      parent_node: The parent knowledge graph node that represent the file.
-        The node attribute should have type FileNode.
-      file: The file to build knowledge graph.
-      next_node_id: The next available node id.
-
-    Returns:
-      A tuple of (next_node_id, kg_nodes, kg_edges), where next_node_id is the
-      new next_node_id, kg_nodes is a list of all nodes created for the file,
-      and kg_edges is a list of all edges created for this file.
-    """
-    headers_to_split_on = [
-      ("#", "Header 1"),
-      ("##", "Header 2"),
-      ("###", "Header 3"),
-    ]
-    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    text_splitter = RecursiveCharacterTextSplitter(
+      chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap, length_function=len
+    )
     text = file.open(encoding="utf-8").read()
-    documents = markdown_splitter.split_text(text)
+    documents = text_splitter.create_documents([text])
     return self._documents_to_file_graph(documents, parent_node, next_node_id)
 
   def _documents_to_file_graph(

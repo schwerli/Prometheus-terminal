@@ -51,6 +51,8 @@ class KnowledgeGraph:
   def __init__(
     self,
     max_ast_depth: int,
+    chunk_size: int,
+    chunk_overlap: int,
     next_node_id: int = 0,
     root_node: Optional[KnowledgeGraphNode] = None,
     metadata_node: Optional[MetadataNode] = None,
@@ -61,6 +63,8 @@ class KnowledgeGraph:
 
     Args:
       max_ast_depth: The maximum depth of tree-sitter nodes to parse.
+      chunk_size: The chunk size for text files.
+      chunk_overlap: The overlap size for text files.
       next_node_id: The next available node id.
       root_node: The root node for the knowledge graph.
       metadata_node: The metadata node for the knowledge graph.
@@ -73,7 +77,7 @@ class KnowledgeGraph:
     self._metadata_node = metadata_node
     self._knowledge_graph_nodes = knowledge_graph_nodes if knowledge_graph_nodes is not None else []
     self._knowledge_graph_edges = knowledge_graph_edges if knowledge_graph_edges is not None else []
-    self._file_graph_builder = FileGraphBuilder(max_ast_depth)
+    self._file_graph_builder = FileGraphBuilder(max_ast_depth, chunk_size, chunk_overlap)
     self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
   def build_graph(
@@ -237,6 +241,8 @@ class KnowledgeGraph:
 
     return cls(
       max_ast_depth=-1,
+      chunk_size=-1,
+      chunk_overlap=-1,
       next_node_id=len(knowledge_graph_nodes),
       root_node=root_node,
       metadata_node=metadata_node,
@@ -309,6 +315,12 @@ class KnowledgeGraph:
           )
         )
     return "\n".join(result_lines)
+
+  def get_all_ast_node_types(self) -> Sequence[str]:
+    ast_node_types = set()
+    for ast_node in self.get_ast_nodes():
+      ast_node_types.add(ast_node.node.type)
+    return list(ast_node_types)
 
   def is_built_from_local_codebase(self) -> bool:
     return self._metadata_node.codebase_source == CodeBaseSourceEnum.local

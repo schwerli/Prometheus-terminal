@@ -9,9 +9,9 @@ services:
     environment:
       - NEO4J_AUTH=neo4j/password
       - NEO4J_PLUGINS=["apoc"]
-      - NEO4J_server_memory_heap_initial__size=4G
-      - NEO4J_server_memory_heap_max__size=8G
-      - NEO4J_dbms_memory_transaction_total_max=8G
+      - NEO4J_server_memory_heap_initial__size=2G
+      - NEO4J_server_memory_heap_max__size=4G
+      - NEO4J_dbms_memory_transaction_total_max=4G
     networks:
       - prometheus_network
     ports:
@@ -57,6 +57,8 @@ services:
       - PROMETHEUS_NEO4J_PASSWORD=password
       - PROMETHEUS_NEO4J_BATCH_SIZE=1000
       - PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH=5
+      - PROMETHEUS_KNOWLEDGE_GRAPH_CHUNK_SIZE=10000
+      - PROMETHEUS_KNOWLEDGE_GRAPH_CHUNK_OVERLAP=1000
       - PROMETHEUS_LITELLM_MODEL=${PROMETHEUS_LITELLM_MODEL}
       - PROMETHEUS_LITELLM_ANTHROPIC_API_KEY=${PROMETHEUS_LITELLM_ANTHROPIC_API_KEY}
       - PROMETHEUS_LITELLM_GEMINI_API_KEY=${PROMETHEUS_LITELLM_GEMINI_API_KEY}

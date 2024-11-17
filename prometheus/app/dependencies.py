@@ -34,7 +34,11 @@ def initialize_services() -> ServiceCoordinator:
   postgres_service = PostgresService(settings.POSTGRES_URI)
   llm_service = LLMService(settings.LITELLM_MODEL)
   knowledge_graph_service = KnowledgeGraphService(
-    neo4j_service, settings.NEO4J_BATCH_SIZE, settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH
+    neo4j_service,
+    settings.NEO4J_BATCH_SIZE,
+    settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH,
+    settings.KNOWLEDGE_GRAPH_CHUNK_SIZE,
+    settings.KNOWLEDGE_GRAPH_CHUNK_OVERLAP,
   )
   resposistory_service = RepositoryService(knowledge_graph_service, settings.WORKING_DIRECTORY)
 
