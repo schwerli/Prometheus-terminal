@@ -1,6 +1,6 @@
 services:
   neo4j:
-    image: neo4j:5.20.0
+    image: neo4j
     container_name: neo4j_container
     environment:
       - NEO4J_AUTH=neo4j/password
@@ -48,7 +48,7 @@ services:
       - PROMETHEUS_NEO4J_USERNAME=neo4j
       - PROMETHEUS_NEO4J_PASSWORD=password
       - PROMETHEUS_NEO4J_BATCH_SIZE=1000
-      - PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH=5
+      - PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH=4
       - PROMETHEUS_KNOWLEDGE_GRAPH_CHUNK_SIZE=10000
       - PROMETHEUS_KNOWLEDGE_GRAPH_CHUNK_OVERLAP=1000
       - PROMETHEUS_LITELLM_MODEL=${PROMETHEUS_LITELLM_MODEL}
