@@ -15,4 +15,4 @@ class LLMService:
       self.model = ChatOpenAI(model=model_name, max_tokens=None)
     elif "gemini" in model_name:
       self.model = ChatGoogleGenerativeAI(model=model_name, max_tokens=None)
-    self._logger.info(f"LLM model: {self.model.model}")
+    self._logger.info(f"LLM model: {model_name}")
