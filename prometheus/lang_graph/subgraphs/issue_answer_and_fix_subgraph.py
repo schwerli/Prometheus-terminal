@@ -338,7 +338,7 @@ class IssueAnswerAndFixSubgraph:
     run_build: bool,
     run_test: bool,
     thread_id: Optional[str] = None,
-    recursion_limit: int = 100,
+    recursion_limit: int = 300,
   ):
     config = {}
     config["recursion_limit"] = recursion_limit
