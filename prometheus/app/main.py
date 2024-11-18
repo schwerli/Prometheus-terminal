@@ -17,10 +17,14 @@ logger.addHandler(console_handler)
 logger.setLevel(getattr(logging, settings.LOGGING_LEVEL))
 logger.propagate = False
 
-for key, value in settings.as_dict().items():
-  if "API_KEY" in key:
-    continue
-  logger.info(f"Setting {key}={value}")
+
+logger.info(f"LOGGING_LEVEL={settings.LOGGING_LEVEL}")
+logger.info(f"")
+logger.info(f"WORKING_DIRECTORY={settings.WORKING_DIRECTORY}")
+logger.info(f"KNOWLEDGE_GRAPH_MAX_AST_DEPTH={settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH}")
+logger.info(f"KNOWLEDGE_GRAPH_CHUNK_SIZE={settings.KNOWLEDGE_GRAPH_CHUNK_SIZE}")
+logger.info(f"KNOWLEDGE_GRAPH_CHUNK_OVERLAP={settings.KNOWLEDGE_GRAPH_CHUNK_OVERLAP}")
+logger.info(f"MAX_TOKEN_PER_NEO4J_RESULT={settings.MAX_TOKEN_PER_NEO4J_RESULT}")
 
 
 @asynccontextmanager
