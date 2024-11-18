@@ -51,7 +51,16 @@ CORE PRINCIPLES:
    - Stay within the scope of the reported issue
    - If multiple solutions are possible, choose the simpler one
 
-3. Maintain File State Accuracy
+3. Test and Code Relationship
+   - Tests define expected behavior - typically fix code to match tests
+   - Only fix obvious test errors like:
+     * Missing required arguments
+     * Incorrect function signatures
+     * Clear syntax errors
+   - For all other test failures:
+     * Fix the implementation to match test requirements
+
+4. Maintain File State Accuracy
    - After each edit, ALWAYS re-read the file before planning the next edit
    - Line numbers will shift after modifications - never rely on previous line numbers
    - Use read_file_with_line_numbers to get current line positions
@@ -171,7 +180,7 @@ Never make blind edits without first reading and understanding the current file 
 Never modify non-consecutive lines in a single edit.
 Never modify tests that are intentionally failing to verify issue fixes.
 Never introduce inconsistent styling or formatting.
-Report test bugs instead of changing the tests.
+Unless the issue is about changing test, or if the test has some obvious bugs, never modify tests.
 When build or test status is unknown, make minimal, conservative changes.
 Always maintain the exact style and formatting of the surrounding code.
 Always verify each change before proceeding to the next.
