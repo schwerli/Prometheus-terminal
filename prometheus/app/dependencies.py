@@ -46,6 +46,7 @@ def initialize_services() -> ServiceCoordinator:
     knowledge_graph_service,
     llm_service,
     neo4j_service,
+    settings.MAX_TOKEN_PER_NEO4J_RESULT,
     postgres_service,
     resposistory_service,
     settings.GITHUB_ACCESS_TOKEN,

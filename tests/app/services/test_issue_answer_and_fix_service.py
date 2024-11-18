@@ -60,6 +60,7 @@ def test_init_with_knowledge_graph(
   service = IssueAnswerAndFixService(
     mock_kg_service,
     mock_neo4j_service,
+    1000,
     mock_postgres_service,
     mock_llm_service,
     local_path,
@@ -76,6 +77,7 @@ def test_init_with_knowledge_graph(
     mock_llm_service.model,
     mock_kg_service.kg,
     mock_neo4j_service.neo4j_driver,
+    1000,
     local_path,
     mock_postgres_service.checkpointer,
     "FROM python:3.9",
@@ -95,7 +97,7 @@ def test_init_without_knowledge_graph(
 
   with pytest.raises(ValueError):
     IssueAnswerAndFixService(
-      mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, local_path
+      mock_kg_service, mock_neo4j_service, 1000, mock_postgres_service, mock_llm_service, local_path
     )
 
 
@@ -117,7 +119,7 @@ def test_answer_and_fix_issue_success(
 
   # Exercise
   service = IssueAnswerAndFixService(
-    mock_kg_service, mock_neo4j_service, mock_postgres_service, mock_llm_service, local_path
+    mock_kg_service, mock_neo4j_service, 1000, mock_postgres_service, mock_llm_service, local_path
   )
   response = service.answer_and_fix_issue(
     title,

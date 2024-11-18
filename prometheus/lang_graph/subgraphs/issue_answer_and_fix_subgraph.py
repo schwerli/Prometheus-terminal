@@ -54,6 +54,7 @@ class IssueAnswerAndFixSubgraph:
     model: BaseChatModel,
     kg: KnowledgeGraph,
     neo4j_driver: neo4j.Driver,
+    max_token_per_neo4j_result: int,
     local_path: Path,
     checkpointer: Optional[BaseCheckpointSaver] = None,
     dockerfile_content: Optional[str] = None,
@@ -76,7 +77,7 @@ class IssueAnswerAndFixSubgraph:
 
     issue_to_query_node = IssueToQueryNode()
     context_provider_subgraph = ContextProviderSubgraph(
-      model, kg, neo4j_driver, checkpointer
+      model, kg, neo4j_driver, max_token_per_neo4j_result, checkpointer
     ).subgraph
 
     require_edit_classifier_node = RequireEditClassifierNode(model)

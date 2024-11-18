@@ -12,7 +12,7 @@ def test_context_provider_node(neo4j_container_with_kg_fixture):  # noqa: F811
   neo4j_container, kg = neo4j_container_with_kg_fixture
   fake_response = "Fake response"
   fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
-  node = ContextProviderNode(fake_llm, kg, neo4j_container.get_driver())
+  node = ContextProviderNode(fake_llm, kg, neo4j_container.get_driver(), 1000)
 
   test_messages = [
     AIMessage(content="This code handles file processing"),

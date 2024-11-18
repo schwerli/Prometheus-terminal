@@ -19,9 +19,10 @@ class ContextProviderSubgraph:
     model: BaseChatModel,
     kg: KnowledgeGraph,
     neo4j_driver: neo4j.Driver,
+    max_token_per_neo4j_result: int,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    context_provider_node = ContextProviderNode(model, kg, neo4j_driver)
+    context_provider_node = ContextProviderNode(model, kg, neo4j_driver, max_token_per_neo4j_result)
     tool_node = ToolNode(tools=context_provider_node.tools, messages_key="context_messages")
     context_summary_node = ContextSummaryNode(model)
 

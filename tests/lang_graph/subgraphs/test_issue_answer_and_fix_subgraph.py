@@ -37,7 +37,11 @@ def test_issue_answer_fix_subgraph_initialization(mock_kg, mock_neo4j_driver, te
 
   # Initialize the subgraph
   subgraph = IssueAnswerAndFixSubgraph(
-    model=fake_model, kg=mock_kg, neo4j_driver=mock_neo4j_driver, local_path=temp_project_dir
+    model=fake_model,
+    kg=mock_kg,
+    neo4j_driver=mock_neo4j_driver,
+    max_token_per_neo4j_result=1000,
+    local_path=temp_project_dir,
   )
 
   # Verify the subgraph was created
@@ -57,6 +61,7 @@ def test_issue_answer_fix_subgraph_initialization_with_user_defined(
     model=fake_model,
     kg=mock_kg,
     neo4j_driver=mock_neo4j_driver,
+    max_token_per_neo4j_result=1000,
     local_path=temp_project_dir,
     dockerfile_content="Dockerfile",
     build_commands=["build"],

@@ -308,9 +308,15 @@ Output:
       if isinstance(message, AIMessage):
         if message.content:
           formatted_messages.append(f"Assistant internal thought: {message.content}")
-        if message.additional_kwargs and message.additional_kwargs["tool_calls"]:
+        if (
+          message.additional_kwargs
+          and "tool_calls" in message.additional_kwargs
+          and message.additional_kwargs["tool_calls"]
+        ):
           for tool_call in message.additional_kwargs["tool_calls"]:
-            formatted_messages.append(f"Assistant executed command: {tool_call.function.arguments}")
+            formatted_messages.append(
+              f"Assistant executed command: {tool_call['function']['arguments']}"
+            )
       elif isinstance(message, ToolMessage):
         formatted_messages.append(f"Command output: {message.content}")
     return formatted_messages

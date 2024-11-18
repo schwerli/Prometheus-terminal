@@ -125,7 +125,13 @@ The file tree of the codebase:
 All ASTNode types: {ast_node_types}
 """
 
-  def __init__(self, model: BaseChatModel, kg: KnowledgeGraph, neo4j_driver: neo4j.Driver):
+  def __init__(
+    self,
+    model: BaseChatModel,
+    kg: KnowledgeGraph,
+    neo4j_driver: neo4j.Driver,
+    max_token_per_result: int,
+  ):
     """Initializes the ContextProviderNode with model, knowledge graph, and database connection.
 
     Sets up the context provider with necessary prompts, graph traversal tools,
@@ -141,8 +147,10 @@ All ASTNode types: {ast_node_types}
       neo4j_driver: Neo4j driver instance for executing graph queries. This
         driver should be properly configured with authentication and
         connection details.
+      max_token_per_result: Maximum number of tokens per retrieved Neo4j result.
     """
     self.neo4j_driver = neo4j_driver
+    self.max_token_per_result = max_token_per_result
 
     ast_node_types_str = ", ".join(kg.get_all_ast_node_types())
     self.system_prompt = SystemMessage(
@@ -163,7 +171,9 @@ All ASTNode types: {ast_node_types}
     tools = []
 
     find_file_node_with_basename_fn = functools.partial(
-      graph_traversal.find_file_node_with_basename, driver=self.neo4j_driver
+      graph_traversal.find_file_node_with_basename,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_file_node_with_basename_tool = StructuredTool.from_function(
       func=find_file_node_with_basename_fn,
@@ -174,7 +184,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_file_node_with_basename_tool)
 
     find_file_node_with_relative_path_fn = functools.partial(
-      graph_traversal.find_file_node_with_relative_path, driver=self.neo4j_driver
+      graph_traversal.find_file_node_with_relative_path,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_file_node_with_relative_path_tool = StructuredTool.from_function(
       func=find_file_node_with_relative_path_fn,
@@ -185,7 +197,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_file_node_with_relative_path_tool)
 
     find_ast_node_with_text_fn = functools.partial(
-      graph_traversal.find_ast_node_with_text, driver=self.neo4j_driver
+      graph_traversal.find_ast_node_with_text,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_ast_node_with_text_tool = StructuredTool.from_function(
       func=find_ast_node_with_text_fn,
@@ -196,7 +210,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_ast_node_with_text_tool)
 
     find_ast_node_with_type_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type, driver=self.neo4j_driver
+      graph_traversal.find_ast_node_with_type,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_ast_node_with_type_tool = StructuredTool.from_function(
       func=find_ast_node_with_type_fn,
@@ -207,7 +223,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_ast_node_with_type_tool)
 
     find_ast_node_with_text_in_file_fn = functools.partial(
-      graph_traversal.find_ast_node_with_text_in_file, driver=self.neo4j_driver
+      graph_traversal.find_ast_node_with_text_in_file,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_ast_node_with_text_in_file_tool = StructuredTool.from_function(
       func=find_ast_node_with_text_in_file_fn,
@@ -218,7 +236,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_ast_node_with_text_in_file_tool)
 
     find_ast_node_with_type_in_file_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type_in_file, driver=self.neo4j_driver
+      graph_traversal.find_ast_node_with_type_in_file,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_ast_node_with_type_in_file_tool = StructuredTool.from_function(
       func=find_ast_node_with_type_in_file_fn,
@@ -229,7 +249,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_ast_node_with_type_in_file_tool)
 
     find_ast_node_with_type_and_text_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type_and_text, driver=self.neo4j_driver
+      graph_traversal.find_ast_node_with_type_and_text,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_ast_node_with_type_and_text_tool = StructuredTool.from_function(
       func=find_ast_node_with_type_and_text_fn,
@@ -240,7 +262,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_ast_node_with_type_and_text_tool)
 
     find_text_node_with_text_fn = functools.partial(
-      graph_traversal.find_text_node_with_text, driver=self.neo4j_driver
+      graph_traversal.find_text_node_with_text,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_text_node_with_text_tool = StructuredTool.from_function(
       func=find_text_node_with_text_fn,
@@ -251,7 +275,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_text_node_with_text_tool)
 
     find_text_node_with_text_in_file_fn = functools.partial(
-      graph_traversal.find_text_node_with_text_in_file, driver=self.neo4j_driver
+      graph_traversal.find_text_node_with_text_in_file,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     find_text_node_with_text_in_file_tool = StructuredTool.from_function(
       func=find_text_node_with_text_in_file_fn,
@@ -262,7 +288,9 @@ All ASTNode types: {ast_node_types}
     tools.append(find_text_node_with_text_in_file_tool)
 
     get_next_text_node_with_node_id_fn = functools.partial(
-      graph_traversal.get_next_text_node_with_node_id, driver=self.neo4j_driver
+      graph_traversal.get_next_text_node_with_node_id,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     get_next_text_node_with_node_id_tool = StructuredTool.from_function(
       func=get_next_text_node_with_node_id_fn,
@@ -273,7 +301,9 @@ All ASTNode types: {ast_node_types}
     tools.append(get_next_text_node_with_node_id_tool)
 
     preview_file_content_with_basename_fn = functools.partial(
-      graph_traversal.preview_file_content_with_basename, driver=self.neo4j_driver
+      graph_traversal.preview_file_content_with_basename,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     preview_file_content_with_basename_tool = StructuredTool.from_function(
       func=preview_file_content_with_basename_fn,
@@ -284,7 +314,9 @@ All ASTNode types: {ast_node_types}
     tools.append(preview_file_content_with_basename_tool)
 
     get_parent_node_fn = functools.partial(
-      graph_traversal.get_parent_node, driver=self.neo4j_driver
+      graph_traversal.get_parent_node,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     get_parent_node_tool = StructuredTool.from_function(
       func=get_parent_node_fn,
@@ -295,7 +327,9 @@ All ASTNode types: {ast_node_types}
     tools.append(get_parent_node_tool)
 
     get_children_node_fn = functools.partial(
-      graph_traversal.get_children_node, driver=self.neo4j_driver
+      graph_traversal.get_children_node,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
     )
     get_children_node_tool = StructuredTool.from_function(
       func=get_children_node_fn,

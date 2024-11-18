@@ -11,7 +11,7 @@ def test_find_file_node_with_basename(neo4j_container_with_kg_fixture):  # noqa:
 
   with neo4j_container.get_driver() as driver:
     result = graph_traversal.find_file_node_with_basename(
-      test_project_paths.PYTHON_FILE.name, driver
+      test_project_paths.PYTHON_FILE.name, driver, 1000
     )
 
   basename = test_project_paths.PYTHON_FILE.name
@@ -31,7 +31,7 @@ def test_find_file_node_with_relative_path(neo4j_container_with_kg_fixture):  # 
     test_project_paths.MD_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
   )
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_file_node_with_relative_path(relative_path, driver)
+    result = graph_traversal.find_file_node_with_relative_path(relative_path, driver, 1000)
 
   basename = test_project_paths.MD_FILE.name
   assert result.count("FileNode") == 1
@@ -45,7 +45,7 @@ def test_find_ast_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F811
 
   text = "System.out.println"
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_ast_node_with_text(text, driver)
+    result = graph_traversal.find_ast_node_with_text(text, driver, 1000)
 
   assert "FileNode" in result
   assert "ASTNode" in result
@@ -68,7 +68,7 @@ def test_find_ast_node_with_type(neo4j_container_with_kg_fixture):  # noqa: F811
 
   type = "argument_list"
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_ast_node_with_type(type, driver)
+    result = graph_traversal.find_ast_node_with_type(type, driver, 1000)
 
   assert "FileNode" in result
   assert "ASTNode" in result
@@ -92,7 +92,7 @@ def test_find_ast_node_with_text_in_file(neo4j_container_with_kg_fixture):  # no
   text = "printf"
   basename = test_project_paths.C_FILE.name
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_ast_node_with_text_in_file(text, basename, driver)
+    result = graph_traversal.find_ast_node_with_text_in_file(text, basename, driver, 1000)
 
   relative_path = str(
     test_project_paths.C_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
@@ -112,7 +112,7 @@ def test_find_ast_node_with_type_in_file(neo4j_container_with_kg_fixture):  # no
   type = "string_literal"
   basename = test_project_paths.C_FILE.name
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_ast_node_with_type_in_file(type, basename, driver)
+    result = graph_traversal.find_ast_node_with_type_in_file(type, basename, driver, 1000)
 
   relative_path = str(
     test_project_paths.C_FILE.relative_to(test_project_paths.TEST_PROJECT_PATH).as_posix()
@@ -132,7 +132,7 @@ def test_find_ast_node_with_type_and_text(neo4j_container_with_kg_fixture):  # n
   type = "string_literal"
   text = "Hello world!"
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_ast_node_with_type_and_text(type, text, driver)
+    result = graph_traversal.find_ast_node_with_type_and_text(type, text, driver, 1000)
 
   basename = test_project_paths.C_FILE.name
   relative_path = str(
@@ -152,7 +152,7 @@ def test_find_text_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F81
 
   text = "Text under header A."
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_text_node_with_text(text, driver)
+    result = graph_traversal.find_text_node_with_text(text, driver, 1000)
 
   assert "FileNode" in result
   assert "TextNode" in result
@@ -173,7 +173,7 @@ def test_find_text_node_with_text_in_file(neo4j_container_with_kg_fixture):  # n
   text = "Text under header B."
   basename = test_project_paths.MD_FILE.name
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.find_text_node_with_text_in_file(text, basename, driver)
+    result = graph_traversal.find_text_node_with_text_in_file(text, basename, driver, 1000)
 
   assert "FileNode" in result
   assert "TextNode" in result
@@ -193,7 +193,7 @@ def test_get_next_text_node_with_node_id(neo4j_container_with_kg_fixture):  # no
   # node_id of TextNode 'Text under header B.'
   node_id = 36
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.get_next_text_node_with_node_id(node_id, driver)
+    result = graph_traversal.get_next_text_node_with_node_id(node_id, driver, 1000)
 
   assert "TextNode" in result
 
@@ -204,7 +204,7 @@ def test_preview_source_code_file_content_with_basename(neo4j_container_with_kg_
 
   basename = test_project_paths.C_FILE.name
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.preview_file_content_with_basename(basename, driver)
+    result = graph_traversal.preview_file_content_with_basename(basename, driver, 1000)
 
   assert "FileNode" in result
   assert "preview" in result
@@ -225,7 +225,7 @@ def test_preview_text_file_content_with_basename(neo4j_container_with_kg_fixture
 
   basename = test_project_paths.MD_FILE.name
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.preview_file_content_with_basename(basename, driver)
+    result = graph_traversal.preview_file_content_with_basename(basename, driver, 1000)
 
   assert "FileNode" in result
   assert "preview" in result
@@ -245,7 +245,7 @@ def test_get_parent_node(neo4j_container_with_kg_fixture):  # noqa: F811
 
   node_id = 30
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.get_parent_node(node_id, driver)
+    result = graph_traversal.get_parent_node(node_id, driver, 1000)
 
   assert "ParentNode" in result
   assert "ASTNode" in result
@@ -262,7 +262,7 @@ def test_get_children_node(neo4j_container_with_kg_fixture):  # noqa: F811
 
   node_id = 0
   with neo4j_container.get_driver() as driver:
-    result = graph_traversal.get_children_node(node_id, driver)
+    result = graph_traversal.get_children_node(node_id, driver, 1000)
 
   assert "ChildNode" in result
   assert "FileNode" in result

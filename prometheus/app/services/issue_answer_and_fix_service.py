@@ -23,6 +23,7 @@ class IssueAnswerAndFixService:
     self,
     kg_service: KnowledgeGraphService,
     neo4j_service: Neo4jService,
+    max_token_per_neo4j_result: int,
     postgres_service: PostgresService,
     llm_serivice: LLMService,
     local_path: Path,
@@ -36,6 +37,7 @@ class IssueAnswerAndFixService:
     Args:
       kg_service: Knowledge graph service (For creating the knowledge graph).
       neo4j_service: Neo4j database service (For persistance of knowledge graph).
+      max_token_per_neo4j_result: Maximum number of tokens per Neo4j result.
       postgres_service: PostgreSQL database service (For persistance of agent state).
       llm_service: LLM service (For creating the LLM model).
       local_path: Path to local repository.
@@ -52,6 +54,7 @@ class IssueAnswerAndFixService:
       llm_serivice.model,
       kg_service.kg,
       neo4j_service.neo4j_driver,
+      max_token_per_neo4j_result,
       local_path,
       postgres_service.checkpointer,
       dockerfile_content,

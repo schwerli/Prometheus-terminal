@@ -42,7 +42,7 @@ def mock_neo4j_driver():
 def test_format_neo4j_result_single_row():
   result = MockResult([{"name": "John", "age": 30}])
 
-  formatted = format_neo4j_result(result)
+  formatted = format_neo4j_result(result, 1000)
   expected = "Result 1:\nage: 30\nname: John"
 
   assert formatted == expected
@@ -51,7 +51,7 @@ def test_format_neo4j_result_single_row():
 def test_format_neo4j_result_multiple_rows():
   result = MockResult([{"name": "John", "age": 30}, {"name": "Jane", "age": 25}])
 
-  formatted = format_neo4j_result(result)
+  formatted = format_neo4j_result(result, 1000)
   expected = "Result 1:\nage: 30\nname: John\n\n\nResult 2:\nage: 25\nname: Jane"
 
   assert formatted == expected
@@ -59,14 +59,14 @@ def test_format_neo4j_result_multiple_rows():
 
 def test_format_neo4j_result_empty():
   result = MockResult([])
-  formatted = format_neo4j_result(result)
+  formatted = format_neo4j_result(result, 1000)
   assert formatted == ""
 
 
 def test_format_neo4j_result_different_keys():
   result = MockResult([{"name": "John", "age": 30}, {"city": "New York", "country": "USA"}])
 
-  formatted = format_neo4j_result(result)
+  formatted = format_neo4j_result(result, 1000)
   expected = "Result 1:\nage: 30\nname: John\n\n\nResult 2:\ncity: New York\ncountry: USA"
 
   assert formatted == expected
@@ -77,7 +77,7 @@ def test_format_neo4j_result_complex_values():
     [{"numbers": [1, 2, 3], "metadata": {"type": "user", "active": True}, "date": "2024-01-01"}]
   )
 
-  formatted = format_neo4j_result(result)
+  formatted = format_neo4j_result(result, 1000)
   expected = (
     "Result 1:\ndate: 2024-01-01\nmetadata: {'type': 'user', 'active': True}\nnumbers: [1, 2, 3]"
   )
@@ -106,7 +106,7 @@ def test_run_neo4j_query_success(mock_neo4j_driver):
 
   # Run the query
   query = "MATCH (n:Person) RETURN n.name as name, n.age as age"
-  result = run_neo4j_query(query, driver)
+  result = run_neo4j_query(query, driver, 1000)
 
   # Verify results
   assert result == expected
@@ -125,7 +125,7 @@ def test_run_neo4j_query_empty_result(mock_neo4j_driver):
 
   session.execute_read.side_effect = execute_read_side_effect
 
-  result = run_neo4j_query("MATCH (n:NonExistent) RETURN n", driver)
+  result = run_neo4j_query("MATCH (n:NonExistent) RETURN n", driver, 1000)
   assert result == ""
 
 
@@ -141,6 +141,6 @@ def test_run_neo4j_query_multiple_results(mock_neo4j_driver):
 
   session.execute_read.side_effect = execute_read_side_effect
 
-  result = run_neo4j_query("MATCH (n:Person) RETURN n.name as name, n.age as age", driver)
+  result = run_neo4j_query("MATCH (n:Person) RETURN n.name as name, n.age as age", driver, 1000)
   expected = "Result 1:\nage: 30\nname: John\n\n\nResult 2:\nage: 25\nname: Jane"
   assert result == expected

@@ -34,6 +34,7 @@ class ServiceCoordinator:
     knowledge_graph_service: KnowledgeGraphService,
     llm_service: LLMService,
     neo4j_service: Neo4jService,
+    max_token_per_neo4j_result: int,
     postgres_service: PostgresService,
     repository_service: RepositoryService,
     github_token: str,
@@ -45,6 +46,7 @@ class ServiceCoordinator:
         knowledge_graph_service: Service for knowledge graph operations.
         llm_service: Service for language model operations.
         neo4j_service: Service for Neo4j database operations.
+        max_token_per_neo4j_result: Maximum number of tokens per Neo4j result.
         postgres_service: Service for PostgreSQL operations.
         repository_service: Service for repository management.
         github_token: GitHub access token for repository operations.
@@ -53,6 +55,7 @@ class ServiceCoordinator:
     self.knowledge_graph_service = knowledge_graph_service
     self.llm_service = llm_service
     self.neo4j_service = neo4j_service
+    self.max_token_per_neo4j_result = max_token_per_neo4j_result
     self.postgres_service = postgres_service
     self.repository_service = repository_service
     self.github_token = github_token
@@ -109,6 +112,7 @@ class ServiceCoordinator:
     issue_answer_and_fix_service = IssueAnswerAndFixService(
       self.knowledge_graph_service,
       self.neo4j_service,
+      self.max_token_per_neo4j_result,
       self.postgres_service,
       self.llm_service,
       self.knowledge_graph_service.local_path,

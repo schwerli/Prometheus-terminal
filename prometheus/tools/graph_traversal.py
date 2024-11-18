@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from prometheus.parser import tree_sitter_parser
 from prometheus.utils import neo4j_util
 
-MAX_RESULT = 20
+MAX_RESULT = 10
 
 ###############################################################################
 #                          FileNode retrieval                                 #
@@ -26,14 +26,16 @@ You can use this tool to check if a file/dir with this basename exists or get al
 attributes related to the file/dir."""
 
 
-def find_file_node_with_basename(basename: str, driver: GraphDatabase.driver) -> str:
+def find_file_node_with_basename(
+  basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""
       MATCH (f:FileNode {{ basename: '{basename}' }})
       RETURN f AS FileNode
       ORDER BY f.node_id
       LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class FindFileNodeWithRelativePathInput(BaseModel):
@@ -49,14 +51,16 @@ You can use this tool to check if a file/dir with this relative_path exists or g
 attributes related to the file/dir."""
 
 
-def find_file_node_with_relative_path(relative_path: str, driver: GraphDatabase.driver) -> str:
+def find_file_node_with_relative_path(
+  relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode {{ relative_path: '{relative_path}' }})
     RETURN f AS FileNode
     ORDER BY f.node_id
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 ###############################################################################
@@ -76,7 +80,9 @@ looking for exact matches. Therefore the search text should be exact as well.
 You can use this tool to find all source code in the code that contains this text."""
 
 
-def find_ast_node_with_text(text: str, driver: GraphDatabase.driver) -> str:
+def find_ast_node_with_text(
+  text: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
     WHERE a.text CONTAINS '{text}'
@@ -84,7 +90,7 @@ def find_ast_node_with_text(text: str, driver: GraphDatabase.driver) -> str:
     ORDER BY SIZE(a.text)
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class FindASTNodeWithTypeInput(BaseModel):
@@ -98,14 +104,16 @@ You can use this tool to find all source code with a certain type, like method_d
 or class_declaration."""
 
 
-def find_ast_node_with_type(type: str, driver: GraphDatabase.driver) -> str:
+def find_ast_node_with_type(
+  type: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode {{ type: '{type}' }})
     RETURN f as FileNode, a AS ASTNode
     ORDER BY a.node_id
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class FindASTNodeWithTextInFileInput(BaseModel):
@@ -123,7 +131,9 @@ must include the extension, like 'bar.py', 'baz.java' or 'foo'
 You can use this tool to find all source code with a certain text in a specific file."""
 
 
-def find_ast_node_with_text_in_file(text: str, basename: str, driver: GraphDatabase.driver) -> str:
+def find_ast_node_with_text_in_file(
+  text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
     WHERE f.basename = '{basename}' AND a.text CONTAINS '{text}'
@@ -131,7 +141,7 @@ def find_ast_node_with_text_in_file(text: str, basename: str, driver: GraphDatab
     ORDER BY SIZE(a.text)
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class FindASTNodeWithTypeInFileInput(BaseModel):
@@ -148,7 +158,9 @@ You can use this tool to find all source code with a certain type in a specific 
 like method_declaration or class_declaration."""
 
 
-def find_ast_node_with_type_in_file(type: str, basename: str, driver: GraphDatabase.driver) -> str:
+def find_ast_node_with_type_in_file(
+  type: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
     WHERE f.basename = '{basename}' AND a.type = '{type}'
@@ -156,7 +168,7 @@ def find_ast_node_with_type_in_file(type: str, basename: str, driver: GraphDatab
     ORDER BY SIZE(a.text)
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class FindASTNodeWithTypeAndTextInput(BaseModel):
@@ -174,7 +186,9 @@ You can use this tool to find all source code with a certain type and text.
 For example to find all method_declartion that contains 'x = 1'."""
 
 
-def find_ast_node_with_type_and_text(type: str, text: str, driver: GraphDatabase.driver) -> str:
+def find_ast_node_with_type_and_text(
+  type: str, text: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
     WHERE a.type = '{type}' AND a.text CONTAINS '{text}'
@@ -182,7 +196,7 @@ def find_ast_node_with_type_and_text(type: str, text: str, driver: GraphDatabase
     ORDER BY SIZE(a.text)
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 ###############################################################################
@@ -202,7 +216,9 @@ looking for exact matches. Therefore the search text should be exact as well.
 You can use this tool to find all text/documentation in codebase that contains this text."""
 
 
-def find_text_node_with_text(text: str, driver: GraphDatabase.driver) -> str:
+def find_text_node_with_text(
+  text: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
     WHERE t.text CONTAINS '{text}'
@@ -210,7 +226,7 @@ def find_text_node_with_text(text: str, driver: GraphDatabase.driver) -> str:
     ORDER BY t.node_id
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class FindTextNodeWithTextInFileInput(BaseModel):
@@ -228,7 +244,9 @@ The basename must include the extension, like 'bar.py', 'baz.java' or 'foo'
 You can use this tool to find text/documentation in a specific file that contains this text."""
 
 
-def find_text_node_with_text_in_file(text: str, basename: str, driver: GraphDatabase.driver) -> str:
+def find_text_node_with_text_in_file(
+  text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
     WHERE f.basename = '{basename}' AND t.text CONTAINS '{text}'
@@ -236,7 +254,7 @@ def find_text_node_with_text_in_file(text: str, basename: str, driver: GraphData
     ORDER BY t.node_id
     LIMIT {MAX_RESULT}
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class GetNextTextNodeWithNodeIdInput(BaseModel):
@@ -249,12 +267,14 @@ Get the next TextNode of this given node_id.
 You can use this tool to read the next section of text that you are interested in."""
 
 
-def get_next_text_node_with_node_id(node_id: str, driver: GraphDatabase.driver) -> str:
+def get_next_text_node_with_node_id(
+  node_id: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   query = f"""\
     MATCH (a:TextNode {{ node_id: {node_id} }}) -[:NEXT_CHUNK]-> (b:TextNode)
     RETURN b as TextNode
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 ###############################################################################
@@ -275,7 +295,9 @@ You can use this tool to preview the content of a specific file to see what it c
 in the first 300 lines or the first section."""
 
 
-def preview_file_content_with_basename(basename: str, driver: GraphDatabase.driver) -> str:
+def preview_file_content_with_basename(
+  basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+) -> str:
   source_code_query = f"""\
     MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
     WITH f, apoc.text.split(a.text, '\\R') AS lines
@@ -291,8 +313,8 @@ def preview_file_content_with_basename(basename: str, driver: GraphDatabase.driv
   """
 
   if tree_sitter_parser.supports_file(Path(basename)):
-    return neo4j_util.run_neo4j_query(source_code_query, driver)
-  return neo4j_util.run_neo4j_query(text_query, driver)
+    return neo4j_util.run_neo4j_query(source_code_query, driver, max_token_per_result)
+  return neo4j_util.run_neo4j_query(text_query, driver, max_token_per_result)
 
 
 class GetParentNodeInput(BaseModel):
@@ -306,14 +328,14 @@ This tool can be used to traverse the graph. For example to find the parent dire
 of a file, or the parent ASTNode of a ASTnode (eg. 'method_declaration' to 'class_declaration')."""
 
 
-def get_parent_node(node_id: int, driver: GraphDatabase.driver) -> str:
+def get_parent_node(node_id: int, driver: GraphDatabase.driver, max_token_per_result: int) -> str:
   query = f"""\
     MATCH (p) -[r]-> (c {{ node_id: {node_id} }})
     WHERE type(r) IN ['HAS_FILE', 'HAS_TEXT', 'HAS_AST', 'PARENT_OF']
     RETURN p as ParentNode, head(labels(p)) as ParentNodeType
     ORDER BY p.node_id 
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
 class GetChildrenNodeInput(BaseModel):
@@ -327,11 +349,11 @@ This tool can be used to traverse the graph. For example to find the children fi
 of a directory, or the children ASTNode of a ASTnode (eg. all source code components under 'class_declaration')."""
 
 
-def get_children_node(node_id: int, driver: GraphDatabase.driver) -> str:
+def get_children_node(node_id: int, driver: GraphDatabase.driver, max_token_per_result: int) -> str:
   query = f"""\
     MATCH (p {{ node_id: {node_id} }}) -[r]-> (c)
     WHERE type(r) IN ['HAS_FILE', 'HAS_TEXT', 'HAS_AST', 'PARENT_OF']
     RETURN c as ChildNode, head(labels(p)) as ChildNodeType
     ORDER BY c.node_id 
   """
-  return neo4j_util.run_neo4j_query(query, driver)
+  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
