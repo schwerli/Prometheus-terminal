@@ -32,7 +32,12 @@ def initialize_services() -> ServiceCoordinator:
   """
   neo4j_service = Neo4jService(settings.NEO4J_URI, settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD)
   postgres_service = PostgresService(settings.POSTGRES_URI)
-  llm_service = LLMService(settings.MODEL)
+  llm_service = LLMService(
+    settings.MODEL,
+    getattr(settings, "OPENAI_API_KEY", None),
+    getattr(settings, "ANTHROPIC_API_KEY", None),
+    getattr(settings, "GEMINI_API_KEY", None),
+  )
   knowledge_graph_service = KnowledgeGraphService(
     neo4j_service,
     settings.NEO4J_BATCH_SIZE,
