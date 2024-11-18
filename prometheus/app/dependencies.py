@@ -49,6 +49,7 @@ def initialize_services() -> ServiceCoordinator:
     postgres_service,
     resposistory_service,
     settings.GITHUB_ACCESS_TOKEN,
+    settings.WORKING_DIRECTORY,
   )
 
   return service_coordinator

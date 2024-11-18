@@ -38,19 +38,18 @@ class GitRepository:
         repositories. Required if address is an HTTPS URL. Defaults to None.
     """
     self._logger = logging.getLogger("prometheus.git.git_repository")
-    
+
     # Configure git command to use our logger
     g = Git()
     type(g).GIT_PYTHON_TRACE = "full"
-    git_cmd_logger = logging.getLogger('git.cmd')
-    
+    git_cmd_logger = logging.getLogger("git.cmd")
+
     # Ensure git command output goes to our logger
     for handler in git_cmd_logger.handlers:
-        git_cmd_logger.removeHandler(handler)
+      git_cmd_logger.removeHandler(handler)
     git_cmd_logger.parent = self._logger
     git_cmd_logger.propagate = True
 
-    self._logger.debug(f"Git repo address {address}")
     if address.startswith("https://"):
       if github_access_token is None:
         raise ValueError("github_access_token is required for https repository")

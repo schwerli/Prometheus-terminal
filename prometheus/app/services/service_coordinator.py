@@ -6,6 +6,8 @@ repository management. It provides a unified interface for codebase analysis,
 issue handling, and conversation management.
 """
 
+import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
@@ -35,6 +37,7 @@ class ServiceCoordinator:
     postgres_service: PostgresService,
     repository_service: RepositoryService,
     github_token: str,
+    working_directory: str,
   ):
     """Initializes the service coordinator with required services.
 
@@ -45,6 +48,7 @@ class ServiceCoordinator:
         postgres_service: Service for PostgreSQL operations.
         repository_service: Service for repository management.
         github_token: GitHub access token for repository operations.
+        working_directory: Working directory for all Prometheus related files.
     """
     self.knowledge_graph_service = knowledge_graph_service
     self.llm_service = llm_service
@@ -52,6 +56,9 @@ class ServiceCoordinator:
     self.postgres_service = postgres_service
     self.repository_service = repository_service
     self.github_token = github_token
+    self.working_directory = Path(working_directory).absolute()
+    self.answer_and_fix_issue_log_dir = self.working_directory / "answer_and_fix_issue_logs"
+    self.answer_and_fix_issue_log_dir.mkdir(parents=True, exist_ok=True)
 
   def answer_and_fix_issue(
     self,
@@ -92,6 +99,13 @@ class ServiceCoordinator:
     Returns:
       Tuple of (issue response text, remote branch name if fix was pushed).
     """
+    logger = logging.getLogger("prometheus")
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = self.answer_and_fix_issue_log_dir / f"{timestamp}.log"
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
     issue_answer_and_fix_service = IssueAnswerAndFixService(
       self.knowledge_graph_service,
       self.neo4j_service,
@@ -110,6 +124,9 @@ class ServiceCoordinator:
     remote_branch_name = None
     if patch and push_to_remote:
       remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}")
+
+    logger.removeHandler(file_handler)
+    file_handler.close()
     return issue_response, patch, remote_branch_name
 
   def exists_knowledge_graph(self) -> bool:
