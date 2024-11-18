@@ -17,6 +17,11 @@ logger.addHandler(console_handler)
 logger.setLevel(getattr(logging, settings.LOGGING_LEVEL))
 logger.propagate = False
 
+for key, value in settings.as_dict().items():
+  if "API_KEY" in key:
+    continue
+  logger.info(f"Setting {key}={value}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
