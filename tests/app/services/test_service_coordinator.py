@@ -31,6 +31,7 @@ def mock_services():
     "postgres_service": postgres_service,
     "repository_service": repository_service,
     "github_token": "test_token",
+    "working_directory": "test_directory",
   }
 
 
@@ -54,6 +55,7 @@ def service_coordinator(mock_services, mock_issue_answer_and_fix_service):
       mock_services["postgres_service"],
       mock_services["repository_service"],
       mock_services["github_token"],
+      mock_services["working_directory"],
     )
     return coordinator
 
