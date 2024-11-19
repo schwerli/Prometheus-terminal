@@ -109,29 +109,37 @@ class ServiceCoordinator:
     file_handler = logging.FileHandler(log_file)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
-    issue_answer_and_fix_service = IssueAnswerAndFixService(
-      self.knowledge_graph_service,
-      self.neo4j_service,
-      self.max_token_per_neo4j_result,
-      self.postgres_service,
-      self.llm_service,
-      self.knowledge_graph_service.local_path,
-      dockerfile_content,
-      image_name,
-      workdir,
-      build_commands,
-      test_commands,
-    )
-    issue_response, patch = issue_answer_and_fix_service.answer_and_fix_issue(
-      issue_title, issue_body, issue_comments, response_mode, run_build, run_tests, thread_id
-    )
-    remote_branch_name = None
-    if patch and push_to_remote:
-      remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}")
 
-    logger.removeHandler(file_handler)
-    file_handler.close()
-    return issue_response, patch, remote_branch_name
+    try:
+      issue_answer_and_fix_service = IssueAnswerAndFixService(
+        self.knowledge_graph_service,
+        self.neo4j_service,
+        self.max_token_per_neo4j_result,
+        self.postgres_service,
+        self.llm_service,
+        self.knowledge_graph_service.local_path,
+        dockerfile_content,
+        image_name,
+        workdir,
+        build_commands,
+        test_commands,
+      )
+      issue_response, patch = issue_answer_and_fix_service.answer_and_fix_issue(
+        issue_title, issue_body, issue_comments, response_mode, run_build, run_tests, thread_id
+      )
+      remote_branch_name = None
+      if patch and push_to_remote:
+        remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}")
+
+      return issue_response, patch, remote_branch_name
+    
+    except Exception as e:
+      logger.error(f"Error in answer_and_fix_issue: {str(e)}")
+      raise
+
+    finally:
+      logger.removeHandler(file_handler)
+      file_handler.close()
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()
