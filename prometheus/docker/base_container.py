@@ -77,7 +77,7 @@ class BaseContainer(ABC):
     )
 
   def is_running(self) -> bool:
-    return self.container and self.container.status == "running"
+    return bool(self.container)
 
   def update_files(self, new_project_path: str):
     """Update files in the running container with files from a local directory.

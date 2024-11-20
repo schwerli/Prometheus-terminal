@@ -41,7 +41,7 @@ class IssueBugSubgraph:
     workflow.add_node("issue_to_bug_context_node", issue_to_bug_context_node)
     workflow.add_node("bug_reproduction_subgraph_node", bug_reproduction_subgraph_node)
 
-    workflow.set_entry_point("bug_reproduction_subgraph_node")
+    workflow.set_entry_point("issue_to_bug_context_node")
     workflow.add_edge("issue_to_bug_context_node", "bug_reproduction_subgraph_node")
     workflow.add_edge("bug_reproduction_subgraph_node", END)
 

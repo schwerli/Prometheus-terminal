@@ -12,54 +12,67 @@ from prometheus.tools import file_operation
 
 class BugReproducingWriteNode:
   SYS_PROMPT = """\
-You are an agent that writes or modifies test files to reproduce reported bugs. Your primary goal is
-to create or update a test that reliably demonstrates the bug behavior described in the issue.
+You are an agent that writes or modifies TEST FILES ONLY to reproduce reported bugs. Your primary goal is
+to create or update test cases that reliably demonstrate bug behavior described in the issue. You must
+NEVER modify the source code files - your role is to expose bugs through tests, not fix them.
 
 Core Responsibilities:
-1. Test File Management:
-   - Work with the designated test file
-   - If provided, modify the existing reproduction attempt
+1. Test File Management (TESTS ONLY):
+   - Work EXCLUSIVELY with test files (typically in tests/ or test/ directories)
+   - NEVER modify source code files (typically in src/ or lib/ directories)
+   - If provided, modify the existing test reproduction attempt
    - If no attempt exists, create a new file in the appropriate test directory
-2. Bug Reproduction:
-   - Create tests that reliably demonstrate the reported bug
+   
+2. Bug Reproduction Strategy:
+   - Create test cases that reliably demonstrate the reported bug
    - Match the reported exception type and error message
-   - Ensure the test fails in the same way as the original bug
+   - Ensure the test fails in the expected way, matching the bug report
+   - Document how the test triggers the exact reported issue
 
 Test Implementation Requirements:
-1. Code Organization:
-   - Structure tests according to project conventions
-   - Include all necessary imports
+1. Test File Structure:
+   - Name test files according to convention (e.g., test_*.py, *_test.py)
+   - Place tests only in designated test directories
+   - Include all necessary test-specific imports
    - Add required test fixtures and setup
    - Create minimal, focused test cases
    
-2. Documentation:
+2. Test Documentation:
    - Add clear comments explaining reproduction steps
    - Document any assumptions or requirements
-   - Include references to the original issue where relevant
+   - Include references to the original issue
+   - Explain how the test triggers the reported bug
 
-3. Test Quality:
+3. Test Quality Standards:
    - Write self-contained tests that don't rely on external state
    - Minimize dependencies and setup complexity
    - Follow existing test patterns and naming conventions
    - Use appropriate assertions to verify bug conditions
+   - Ensure tests are deterministic and repeatable
+
+IMPORTANT RESTRICTIONS:
+- You may ONLY create or modify files in test directories
+- You must NEVER modify source code files
+- You must NEVER attempt to fix the bug itself
+- Focus solely on reproducing the bug through test cases
 
 Available Tools:
-- read_file: Read contents of a file
+- read_file: Read contents of a file (for reference only)
 - read_file_with_line_numbers: Read file contents with line numbers
-- create_file: Create a new file
-- edit_file: Modify an existing file
+- create_file: Create a new test file
+- edit_file: Modify an existing test file
 
 Workflow:
 1. Analyze the bug report and existing context
-2. Review any previous reproduction attempt
-3. Create or modify the test file
-4. Verify all components are included
-5. Ensure the test demonstrates the bug
+2. Review any previous test reproduction attempt
+3. Create or modify ONLY test files
+4. Verify all test components are included
+5. Ensure the test demonstrates the reported bug
 
 Response Requirements:
-1. File location: Specify the path where you created/modified the test
+1. Test file location: Specify the path where you created/modified the test
 2. Reproduction explanation: Describe how the test triggers the bug
-3. Execution instructions: Provide clear steps to run the test
+3. Test execution instructions: Provide clear steps to run the test
 """
 
   HUMAN_PROMPT = """\
@@ -140,12 +153,16 @@ Previous repreducing attempt:
     return tools
 
   def format_human_message(self, state: BugReproductionState):
-    previous_reproducing_file = state["reproduced_bug_file"] if state["reproduced_bug_file"] else ""
-    previous_reproducing_attempt = (
-      state["last_bug_reproducing_execute_message"].content
-      if state["last_bug_reproducing_execute_message"]
-      else ""
-    )
+    previous_reproducing_file = ""
+    if "reproduced_bug_file" in state and state["reproduced_bug_file"]:
+      previous_reproducing_file = state["reproduced_bug_file"]
+
+    previous_reproducing_attempt = ""
+    if (
+      "last_bug_reproducing_execute_message" in state
+      and state["last_bug_reproducing_execute_message"]
+    ):
+      previous_reproducing_attempt = state["last_bug_reproducing_execute_message"].content
 
     return HumanMessage(
       self.HUMAN_PROMPT.format(

@@ -9,7 +9,8 @@ between the agent's workspace and the container environment.
 import logging
 
 from prometheus.docker.base_container import BaseContainer
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
+from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.lang_graph.graphs.issue_state import IssueState
 
 
 class UpdateContainerNode:
@@ -21,20 +22,22 @@ class UpdateContainerNode:
   in the container where builds, tests, or other operations may occur.
   """
 
-  def __init__(self, container: BaseContainer):
+  def __init__(self, container: BaseContainer, knowledge_graph: KnowledgeGraph):
     """Initializes the UpdateContainerNode with a target container.
 
     Args:
       container: Container instance that will receive file updates. Must
         be a subclass of BaseContainer implementing the update_files method.
+      knowledge_graph: The knolwedge graph build upon the codebase.
     """
     self.container = container
+    self.knowledge_graph = knowledge_graph
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.update_container_node")
 
-  def __call__(self, state: IssueAnswerAndFixState):
+  def __call__(self, _: IssueState):
     """Synchronizes the current project state with the container."""
-    if self.container.container is not None:
-      self.container.update_files(new_project_path=state["project_path"])
+    if self.container.is_running():
+      self.container.update_files(new_project_path=self.knowledge_graph.get_local_path())
     else:
       self._logger.info(
         "Not updating files in docker container because it is not running, "

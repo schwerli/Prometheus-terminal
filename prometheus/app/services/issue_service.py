@@ -2,7 +2,6 @@ import uuid
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
-from prometheus.app.services import postgres_service
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -56,13 +55,13 @@ class IssueService:
     issue_graph = IssueGraph(
       self.llm_service.model,
       self.kg_service.kg,
-      self.neo4j_service.driver,
+      self.neo4j_service.neo4j_driver,
       self.max_token_per_neo4j_result,
       container,
       build_commands,
       test_commands,
       thread_id,
-      postgres_service.checkpointer,
+      self.postgres_service.checkpointer,
     )
 
     issue_graph.invoke(issue_title, issue_body, issue_comments, issue_type)

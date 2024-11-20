@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -18,17 +19,27 @@ class BugReproductionSubgraphNode:
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
     self.bug_reproduction_subgraph = BugReproductionSubgraph(
       model, container, kg, thread_id, checkpointer
     )
 
   def __call__(self, state: IssueState):
+    self._logger.info("Enter bug_reproduction_subgraph")
+    self._logger.debug(f"issue_title: {state['issue_title']}")
+    self._logger.debug(f"issue_body: {state['issue_body']}")
+    self._logger.debug(f"issue_comments: {state['issue_comments']}")
+    self._logger.debug(f"bug_context: {state['bug_context']}")
     output_state = self.bug_reproduction_subgraph.invoke(
       state["issue_title"],
       state["issue_body"],
       state["issue_comments"],
-      state["bug_summary"],
+      state["bug_context"],
     )
+
+    self._logger.info(f"reproduced_bug: {output_state['reproduced_bug']}")
+    self._logger.info(f"reproduced_bug_file: {output_state['reproduced_bug_file']}")
+    self._logger.info(f"reproduced_bug_commands: {output_state['reproduced_bug_commands']}")
     return {
       "reproduced_bug": output_state["reproduced_bug"],
       "reproduced_bug_file": output_state["reproduced_bug_file"],

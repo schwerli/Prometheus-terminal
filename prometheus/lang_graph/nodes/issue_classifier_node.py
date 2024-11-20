@@ -5,9 +5,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import (
-  IssueAnswerAndFixState,
   IssueType,
 )
+from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClassificationState
 from prometheus.utils.issue_util import format_issue_comments
 
 
@@ -121,7 +121,7 @@ Analyze the provided issue and respond with a JSON object containing only the is
     self.model = prompt | structured_llm
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_classifier_node")
 
-  def format_context_info(self, state: IssueAnswerAndFixState) -> str:
+  def format_context_info(self, state: IssueClassificationState) -> str:
     context_info = f"""\
       ISSUE INFORMATION:
       Title: {state['issue_title']}
@@ -134,7 +134,7 @@ Analyze the provided issue and respond with a JSON object containing only the is
     """
     return context_info
 
-  def __call__(self, state: IssueAnswerAndFixState):
+  def __call__(self, state: IssueClassificationState):
     context_info = self.format_context_info(state)
     response = self.model.invoke({"context_info": context_info})
     self._logger.debug(f"IssueClassifierNode response:\n{response}")

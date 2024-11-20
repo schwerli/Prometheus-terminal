@@ -87,7 +87,7 @@ Bug reproducing write agent message:
     return tools
 
   def format_human_message(self, state: BugReproductionState) -> HumanMessage:
-    last_bug_producing_write_message = state["bug_reproducing_write_message"][-1]
+    last_bug_producing_write_message = state["bug_reproducing_write_messages"][-1]
     last_bug_producing_write_message_content = last_bug_producing_write_message.content
     return HumanMessage(
       self.HUMAN_PROMPT.format(
@@ -101,9 +101,9 @@ Bug reproducing write agent message:
     )
 
   def __call__(self, state: BugReproductionState):
-    message_history = [self.system_prompt, self.format_human_message(state)] + state.get(
-      "bug_reproducing_execute_messages", []
-    )
+    message_history = [self.system_prompt, self.format_human_message(state)] + state[
+      "bug_reproducing_execute_messages"
+    ]
 
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"BugReproducingExecuteNode response:\n{response}")

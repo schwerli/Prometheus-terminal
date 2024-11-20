@@ -91,6 +91,10 @@ class IssueGraph:
     issue_comments: Sequence[Mapping[str, str]],
     issue_type: IssueType,
   ):
+    config = None
+    if self.thread_id:
+      config = {"configurable": {"thread_id": self.thread_id}}
+
     input_state = {
       "issue_title": issue_title,
       "issue_body": issue_body,
@@ -98,5 +102,5 @@ class IssueGraph:
       "issue_type": issue_type,
     }
 
-    output_state = self.graph.invoke(input_state)
+    output_state = self.graph.invoke(input_state, config)
     return output_state

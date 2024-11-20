@@ -6,6 +6,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.lang_graph.graphs.issue_state import IssueState
 from prometheus.lang_graph.subgraphs.context_provider_subgraph import ContextProviderSubgraph
 from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import (
   IssueAnswerAndFixState,
@@ -45,7 +46,7 @@ Issue description:
 Issue comments:
 {format_issue_comments(state["issue_comments"])}"""
 
-  def format_classification_query(self, state: IssueClassificationState):
+  def format_classification_query(self, state: Union[IssueState, IssueClassificationState]):
     issue_description = self.format_issue(state)
     query = f"""\
 {issue_description}
@@ -76,7 +77,7 @@ Prioritize finding:
 """
     return query
 
-  def format_bug_query(self, state: IssueAnswerAndFixState):
+  def format_bug_query(self, state: Union[IssueState, IssueClassificationState]):
     issue_description = self.format_issue(state)
     query = f"""\
 {issue_description}
@@ -85,7 +86,7 @@ Now find all relevant information from the codebase that can potentially be used
 """
     return query
 
-  def format_feature_query(self, state: IssueAnswerAndFixState):
+  def format_feature_query(self, state: Union[IssueState, IssueClassificationState]):
     issue_description = self.format_issue(state)
     query = f"""\
 {issue_description}
@@ -118,7 +119,7 @@ Prioritize finding:
 """
     return query
 
-  def format_documentation_query(self, state: IssueAnswerAndFixState):
+  def format_documentation_query(self, state: Union[IssueState, IssueClassificationState]):
     issue_description = self.format_issue(state)
     query = f"""\
 {issue_description}
@@ -151,7 +152,7 @@ Prioritize finding:
 """
     return query
 
-  def format_question_query(self, state: IssueAnswerAndFixState):
+  def format_question_query(self, state: Union[IssueState, IssueClassificationState]):
     issue_description = self.format_issue(state)
     query = f"""\
 {issue_description}
@@ -184,7 +185,8 @@ Prioritize finding:
 """
     return query
 
-  def __call__(self, state: Union[IssueAnswerAndFixState, IssueClassificationState]):
+  def __call__(self, state: Union[IssueState, IssueClassificationState]):
+    self._logger.info(f"Finding context for {self.type_of_context}")
     if self.type_of_context == "classification":
       query = self.format_classification_query(state)
       state_context_key = "classification_context"
@@ -204,4 +206,5 @@ Prioritize finding:
       raise ValueError(f"Unknown context type: {self.type_of_context}")
 
     context = self.context_provider_subgraph.invoke(query, self.thread_id)
+    self._logger.info(f"{state_context_key}: {context}")
     return {state_context_key: context}

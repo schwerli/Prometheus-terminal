@@ -33,7 +33,7 @@ class BugReproductionSubgraph:
       name="bug_reproducing_write_tools",
       messages_key="bug_reproducing_write_messages",
     )
-    update_container_node = UpdateContainerNode(container)
+    update_container_node = UpdateContainerNode(container, kg)
     bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, kg)
     bug_reproducing_execute_tools = ToolNode(
       tools=bug_reproducing_execute_node.tools,
