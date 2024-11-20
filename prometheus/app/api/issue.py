@@ -1,6 +1,6 @@
 from typing import Mapping, Optional, Sequence
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter
 from litellm import Field
 from pydantic import BaseModel
 
@@ -70,68 +70,3 @@ class IssueAnswerAndFixRequest(BaseModel):
     description="When editing the code, whenver we should push the changes to a remote branch",
     examples=[True],
   )
-
-
-@router.post(
-  "/answer_and_fix/",
-  summary="Answer and optionally also fix an issue",
-  description="""
-    Use Prometheus to answer and optionally also fix an issue.
-    
-    When only_answer is false, Promestheus will edit the code to fix the issue, push the change to a remote branch.
-    run_build or run_test when set to True, will use build/test to verify the correctness of the genenerated changes.
-    """,
-  response_description="""
-    A response containing the answer and the remote branch name.
-    """,
-)
-def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
-  if not request.app.state.service_coordinator.exists_knowledge_graph():
-    raise HTTPException(
-      status_code=404,
-      detail="A repository is not uploaded, use /repository/ endpoint to upload one",
-    )
-
-  if issue.dockerfile_content or issue.image_name:
-    if issue.workdir is None:
-      raise HTTPException(
-        status_code=400,
-        detail="workdir must be provided for user defined environment",
-      )
-
-    # Validate build commands
-    if issue.run_build and issue.build_commands is None:
-      raise HTTPException(
-        status_code=400,
-        detail="build_commands must be provided for user defined environment when run_build is True",
-      )
-
-    # Validate test commands
-    if issue.run_test and issue.test_commands is None:
-      raise HTTPException(
-        status_code=400,
-        detail="test_commands must be provided for user defined environment when run_test is True",
-      )
-
-  issue_response, patch, remote_branch_name = (
-    request.app.state.service_coordinator.answer_and_fix_issue(
-      issue.number,
-      issue.title,
-      issue.body,
-      issue.comments if issue.comments else [],
-      issue.response_mode,
-      issue.run_build,
-      issue.run_test,
-      issue.dockerfile_content,
-      issue.image_name,
-      issue.workdir,
-      issue.build_commands,
-      issue.test_commands,
-      issue.push_to_remote,
-    )
-  )
-  return {
-    "issue_response": issue_response,
-    "patch": patch,
-    "remote_branch_name": remote_branch_name,
-  }

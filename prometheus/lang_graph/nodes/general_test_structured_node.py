@@ -14,7 +14,7 @@ from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
+from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
 
 
 class TestStructuredOutput(BaseModel):
@@ -321,7 +321,7 @@ Output:
         formatted_messages.append(f"Command output: {message.content}")
     return formatted_messages
 
-  def __call__(self, state: IssueAnswerAndFixState):
+  def __call__(self, state: BuildAndTestState):
     """Processes test state to generate structured test analysis.
 
     Analyzes the test execution history to determine test framework presence,
@@ -337,6 +337,7 @@ Output:
       - test_fail_log: String containing test failure details (empty if all passed)
     """
     test_history = "\n".join(self.format_test_history(state["test_messages"]))
+    self._logger.debug(f"Test history:\n{test_history}")
     response = self.model.invoke({"test_history": test_history})
     self._logger.debug(f"GeneralTestStructuredNode response:\n{response}")
     return {

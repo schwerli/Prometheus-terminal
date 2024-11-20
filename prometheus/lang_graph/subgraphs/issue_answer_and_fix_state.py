@@ -4,6 +4,7 @@ from typing import Annotated, Mapping, Sequence
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
+from prometheus.lang_graph.graphs.issue_state import IssueType
 from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 
 
@@ -25,6 +26,9 @@ class IssueAnswerAndFixState(ContextProviderState):
   # All attributes generated and used by the subgraph
   project_path: str
   project_structure: str
+
+  issue_classifier_context: str
+  issue_type: IssueType
 
   require_edit: bool
 

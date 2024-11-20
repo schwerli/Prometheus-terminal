@@ -1,9 +1,8 @@
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
-from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -37,29 +36,18 @@ def mock_services():
 
 
 @pytest.fixture
-def mock_issue_answer_and_fix_service():
-  return Mock(spec=IssueAnswerAndFixService)
-
-
-@pytest.fixture
-def service_coordinator(mock_services, mock_issue_answer_and_fix_service):
-  with (
-    patch(
-      "prometheus.app.services.service_coordinator.IssueAnswerAndFixService",
-      return_value=mock_issue_answer_and_fix_service,
-    ),
-  ):
-    coordinator = ServiceCoordinator(
-      mock_services["knowledge_graph_service"],
-      mock_services["llm_service"],
-      mock_services["neo4j_service"],
-      mock_services["max_token_per_neo4j_result"],
-      mock_services["postgres_service"],
-      mock_services["repository_service"],
-      mock_services["github_token"],
-      mock_services["working_directory"],
-    )
-    return coordinator
+def service_coordinator(mock_services):
+  coordinator = ServiceCoordinator(
+    mock_services["knowledge_graph_service"],
+    mock_services["llm_service"],
+    mock_services["neo4j_service"],
+    mock_services["max_token_per_neo4j_result"],
+    mock_services["postgres_service"],
+    mock_services["repository_service"],
+    mock_services["github_token"],
+    mock_services["working_directory"],
+  )
+  return coordinator
 
 
 def test_initialization(service_coordinator, mock_services):

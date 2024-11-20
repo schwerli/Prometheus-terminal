@@ -6,18 +6,14 @@ repository management. It provides a unified interface for codebase analysis,
 issue handling, and conversation management.
 """
 
-import logging
-from datetime import datetime
 from pathlib import Path
-from typing import Mapping, Optional, Sequence
+from typing import Optional, Sequence
 
-from prometheus.app.services.issue_answer_and_fix_service import IssueAnswerAndFixService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.app.services.postgres_service import PostgresService
 from prometheus.app.services.repository_service import RepositoryService
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import ResponseModeEnum
 
 
 class ServiceCoordinator:
@@ -62,84 +58,6 @@ class ServiceCoordinator:
     self.working_directory = Path(working_directory).absolute()
     self.answer_and_fix_issue_log_dir = self.working_directory / "answer_and_fix_issue_logs"
     self.answer_and_fix_issue_log_dir.mkdir(parents=True, exist_ok=True)
-
-  def answer_and_fix_issue(
-    self,
-    issue_number: int,
-    issue_title: str,
-    issue_body: str,
-    issue_comments: Sequence[Mapping[str, str]],
-    response_mode: ResponseModeEnum,
-    run_build: bool,
-    run_tests: bool,
-    dockerfile_content: Optional[str] = None,
-    image_name: Optional[str] = None,
-    workdir: Optional[str] = None,
-    build_commands: Optional[Sequence[str]] = None,
-    test_commands: Optional[Sequence[str]] = None,
-    push_to_remote: Optional[bool] = None,
-    thread_id: Optional[str] = None,
-  ) -> str:
-    """Analyzes and optionally fixes a code issue.
-
-    Args:
-      issue_number: Issue identifier number.
-      issue_title: Title of the issue.
-      issue_body: Main description of the issue.
-      issue_comments: Sequence of comment dictionaries related to the issue.
-      response_mode: The mode of response: auto (automatically determine whether to fix),
-        only_answer (provide answer without changes), or answer_and_fix (provide answer and fix code).
-      run_build: If True, runs build validation on generated fix.
-      run_tests: If True, runs tests on generated fix.
-      dockerfile_content: User defined Dockerfile content for the containerized enviroment.
-      image_name: User defined image to be pulled.
-      workdir: User defined workdir for the containerized enviroment.
-      build_commands: User defined build commands for the containerized enviroment.
-      test_commands: User defined test commands for the containerized enviroment.
-      push_to_remote: If True, push changes to remote repository.
-      thread_id: Optional identifier for conversation id (Not used right now).
-
-    Returns:
-      Tuple of (issue response text, remote branch name if fix was pushed).
-    """
-    logger = logging.getLogger("prometheus")
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = self.answer_and_fix_issue_log_dir / f"{timestamp}.log"
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-    try:
-      issue_answer_and_fix_service = IssueAnswerAndFixService(
-        self.knowledge_graph_service,
-        self.neo4j_service,
-        self.max_token_per_neo4j_result,
-        self.postgres_service,
-        self.llm_service,
-        self.knowledge_graph_service.local_path,
-        dockerfile_content,
-        image_name,
-        workdir,
-        build_commands,
-        test_commands,
-      )
-      issue_response, patch = issue_answer_and_fix_service.answer_and_fix_issue(
-        issue_title, issue_body, issue_comments, response_mode, run_build, run_tests, thread_id
-      )
-      remote_branch_name = None
-      if patch and push_to_remote:
-        remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}")
-
-      return issue_response, patch, remote_branch_name
-    
-    except Exception as e:
-      logger.error(f"Error in answer_and_fix_issue: {str(e)}")
-      raise
-
-    finally:
-      logger.removeHandler(file_handler)
-      file_handler.close()
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()

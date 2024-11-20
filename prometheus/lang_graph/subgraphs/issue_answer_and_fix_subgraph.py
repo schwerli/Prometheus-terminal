@@ -22,7 +22,7 @@ from prometheus.lang_graph.nodes.general_test_node import GeneralTestNode
 from prometheus.lang_graph.nodes.general_test_structured_node import GeneralTestStructuredNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.issue_responder_node import IssueResponderNode
-from prometheus.lang_graph.nodes.issue_to_query_node import IssueToQueryNode
+from prometheus.lang_graph.nodes.issue_to_context_node import IssueToQueryNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 from prometheus.lang_graph.nodes.require_edit_classifier_node import RequireEditClassifierNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode

@@ -14,7 +14,7 @@ from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
+from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
 
 
 class BuildStructuredOutput(BaseModel):
@@ -272,7 +272,7 @@ Output:
         formatted_messages.append(f"Command output: {message.content}")
     return formatted_messages
 
-  def __call__(self, state: IssueAnswerAndFixState):
+  def __call__(self, state: BuildAndTestState):
     """Processes build state to generate structured build analysis.
 
     Analyzes the build execution history to determine build system presence,
@@ -288,6 +288,7 @@ Output:
       - build_fail_log: String containing error logs (empty if successful)
     """
     build_history = "\n".join(self.format_build_history(state["build_messages"]))
+    self._logger.debug(f"Build history:\n{build_history}")
     response = self.model.invoke({"build_history": build_history})
     self._logger.debug(f"BuildStructuredOutput response:\n{response}")
 
