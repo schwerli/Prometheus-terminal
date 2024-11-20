@@ -1,21 +1,23 @@
 from typing import Mapping, Optional, Sequence
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Request
 from litellm import Field
 from pydantic import BaseModel
 
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import ResponseModeEnum
+from prometheus.lang_graph.graphs.issue_state import IssueType
 
 router = APIRouter()
 
 
-class IssueAnswerAndFixRequest(BaseModel):
-  number: int = Field(description="The number of the issue", examples=[42])
-  title: str = Field(description="The title of the issue", examples=["There is a memory leak"])
-  body: str = Field(
+class IssueAnswerRequest(BaseModel):
+  issue_number: int = Field(description="The number of the issue", examples=[42])
+  issue_title: str = Field(
+    description="The title of the issue", examples=["There is a memory leak"]
+  )
+  issue_body: str = Field(
     description="The description of the issue", examples=["foo/bar.c is causing a memory leak"]
   )
-  comments: Optional[Sequence[Mapping[str, str]]] = Field(
+  issue_comments: Optional[Sequence[Mapping[str, str]]] = Field(
     default=None,
     description="Comments on the issue",
     examples=[
@@ -25,10 +27,10 @@ class IssueAnswerAndFixRequest(BaseModel):
       ]
     ],
   )
-  response_mode: Optional[ResponseModeEnum] = Field(
-    default=ResponseModeEnum.AUTO,
-    description="The mode of response: auto (automatically determine whether to fix), only_answer (provide answer without changes), or answer_and_fix (provide answer and fix code)",
-    examples=[ResponseModeEnum.AUTO, ResponseModeEnum.ONLY_ANSWER, ResponseModeEnum.ANSWER_AND_FIX],
+  issue_type: IssueType = Field(
+    default=IssueType.AUTO,
+    description="The type of the issue, set to auto if you do not know",
+    examples=[IssueType.AUTO],
   )
   run_build: Optional[bool] = Field(
     default=True,
@@ -69,4 +71,46 @@ class IssueAnswerAndFixRequest(BaseModel):
     default=False,
     description="When editing the code, whenver we should push the changes to a remote branch",
     examples=[True],
+  )
+
+
+@router.post("/answer/")
+def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
+  if not request.app.state.service_coordinator.exists_knowledge_graph():
+    raise HTTPException(
+      status_code=404,
+      detail="A repository is not uploaded, use /repository/ endpoint to upload one",
+    )
+
+  if issue.dockerfile_content or issue.image_name:
+    if issue.workdir is None:
+      raise HTTPException(
+        status_code=400,
+        detail="workdir must be provided for user defined environment",
+      )
+
+    # Validate build commands
+    if issue.run_build and issue.build_commands is None:
+      raise HTTPException(
+        status_code=400,
+        detail="build_commands must be provided for user defined environment when run_build is True",
+      )
+
+    # Validate test commands
+    if issue.run_test and issue.test_commands is None:
+      raise HTTPException(
+        status_code=400,
+        detail="test_commands must be provided for user defined environment when run_test is True",
+      )
+
+  request.app.state.service_coordinator.answer_issue(
+    issue.issue_title,
+    issue.issue_body,
+    issue.issue_comments if issue.issue_comments else [],
+    issue.issue_type,
+    issue.dockerfile_content,
+    issue.image_name,
+    issue.workdir,
+    issue.build_commands,
+    issue.test_commands,
   )

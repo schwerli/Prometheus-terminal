@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -16,6 +17,7 @@ def mock_services():
   llm_service = Mock(spec=LLMService)
   llm_service.model = Mock()
 
+  issue_service = Mock(sepc=IssueService)
   knowledge_graph_service = Mock(spec=KnowledgeGraphService)
   knowledge_graph_service.kg = None
   knowledge_graph_service.local_path = None
@@ -24,6 +26,7 @@ def mock_services():
   repository_service = Mock(spec=RepositoryService)
 
   return {
+    "issue_service": issue_service,
     "knowledge_graph_service": knowledge_graph_service,
     "llm_service": llm_service,
     "neo4j_service": neo4j_service,
@@ -38,12 +41,13 @@ def mock_services():
 @pytest.fixture
 def service_coordinator(mock_services):
   coordinator = ServiceCoordinator(
+    mock_services["issue_service"],
     mock_services["knowledge_graph_service"],
     mock_services["llm_service"],
     mock_services["neo4j_service"],
-    mock_services["max_token_per_neo4j_result"],
     mock_services["postgres_service"],
     mock_services["repository_service"],
+    mock_services["max_token_per_neo4j_result"],
     mock_services["github_token"],
     mock_services["working_directory"],
   )

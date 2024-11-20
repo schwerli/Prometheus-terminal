@@ -1,5 +1,6 @@
 """Initializes and configures all prometheus services."""
 
+from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
@@ -46,14 +47,22 @@ def initialize_services() -> ServiceCoordinator:
     settings.KNOWLEDGE_GRAPH_CHUNK_OVERLAP,
   )
   resposistory_service = RepositoryService(knowledge_graph_service, settings.WORKING_DIRECTORY)
+  issue_service = IssueService(
+    knowledge_graph_service,
+    neo4j_service,
+    postgres_service,
+    llm_service,
+    settings.MAX_TOKEN_PER_NEO4J_RESULT,
+  )
 
   service_coordinator = ServiceCoordinator(
+    issue_service,
     knowledge_graph_service,
     llm_service,
     neo4j_service,
-    settings.MAX_TOKEN_PER_NEO4J_RESULT,
     postgres_service,
     resposistory_service,
+    settings.MAX_TOKEN_PER_NEO4J_RESULT,
     settings.GITHUB_ACCESS_TOKEN,
     settings.WORKING_DIRECTORY,
   )

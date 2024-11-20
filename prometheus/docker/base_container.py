@@ -76,6 +76,9 @@ class BaseContainer(ABC):
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
     )
 
+  def is_running(self) -> bool:
+    return self.container and self.container.status == "running"
+
   def update_files(self, new_project_path: str):
     """Update files in the running container with files from a local directory.
 

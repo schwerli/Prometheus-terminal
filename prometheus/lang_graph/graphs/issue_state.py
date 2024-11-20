@@ -21,4 +21,9 @@ class IssueState(TypedDict):
 
   question_context: str
 
+  bug_context: str
+  reproduced_bug: bool
+  reproduced_bug_file: str
+  reproduced_bug_commands: Sequence[str]
+
   issue_response: str
