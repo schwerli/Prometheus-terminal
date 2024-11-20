@@ -7,6 +7,7 @@ class IssueBugState(TypedDict):
   issue_comments: Sequence[Mapping[str, str]]
 
   bug_context: str
+
   reproduced_bug: bool
   reproduced_bug_file: str
   reproduced_bug_commands: Sequence[str]

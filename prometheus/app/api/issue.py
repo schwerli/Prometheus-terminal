@@ -8,6 +8,18 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 
 router = APIRouter()
 
+#{
+#  "issue_number": 42,
+#  "issue_title": "Wrong behavior of calculator",
+#  "issue_body": "When I am using your calculate application, 6 divided with 2 is equal to 12, which is not right!",
+#  "issue_type": "bug",
+#  "run_build": false,
+#  "run_test": true,
+#  "dockerfile_content": "FROM python:3.11\nWORKDIR /app\nCOPY . /app\nRUN pip install .",
+#  "test_commands": ["pytest ."],
+#  "workdir": "/app"
+#}
+
 
 class IssueAnswerRequest(BaseModel):
   issue_number: int = Field(description="The number of the issue", examples=[42])
@@ -37,9 +49,9 @@ class IssueAnswerRequest(BaseModel):
     description="When editing the code, whenver we should run the build to verify the fix",
     examples=[True],
   )
-  run_test: Optional[bool] = Field(
+  run_existing_test: Optional[bool] = Field(
     default=True,
-    description="When editing the code, whenver we should run the test to verify the fix",
+    description="When editing the code, whenver we should run the existing test to verify the fix",
     examples=[True],
   )
   dockerfile_content: Optional[str] = Field(
