@@ -10,6 +10,7 @@ import logging
 from typing import Dict
 
 from prometheus.git.git_repository import GitRepository
+from prometheus.graph.knowledge_graph import KnowledgeGraph
 
 
 class GitDiffNode:
@@ -21,7 +22,8 @@ class GitDiffNode:
   workflow to capture code modifications made during issue resolution.
   """
 
-  def __init__(self):
+  def __init__(self, kg: KnowledgeGraph):
+    self.kg = kg
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.git_diff_node")
 
   def __call__(self, state: Dict):
@@ -38,10 +40,7 @@ class GitDiffNode:
       Dictionary that update the state containing:
       - patch: String containing the Git diff output showing all changes made to the project.
     """
-    git_repo = GitRepository(state["project_path"], None, copy_to_working_dir=False)
-    if "reproduced_bug_file" in state and state["reproduced_bug_file"]:
-      patch = git_repo.get_diff([state["reproduced_bug_file"]])
-    else:
-      patch = git_repo.get_diff()
+    git_repo = GitRepository(self.kg.get_local_path(), None, copy_to_working_dir=False)
+    patch = git_repo.get_diff()
     self._logger.debug(f"Generated patch:\n{patch}")
     return {"patch": patch}

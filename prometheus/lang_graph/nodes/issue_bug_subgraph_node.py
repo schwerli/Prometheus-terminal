@@ -40,4 +40,6 @@ class IssueBugSubgraphNode:
       state["issue_title"],
       state["issue_body"],
       state["issue_comments"],
+      state["run_build"],
+      state["run_existing_test"],
     )

@@ -50,7 +50,7 @@ Please proceed with fixing the bug, documenting your analysis and changes.
       )
 
     previous_edit_info = ""
-    if state["patch"]:
+    if "patch" in state and state["patch"]:
       previous_edit_info = f"You have previously made the following changes:\n{state['patch']}"
 
     return self.HUMAN_PROMPT.format(

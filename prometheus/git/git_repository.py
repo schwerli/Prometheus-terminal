@@ -95,11 +95,8 @@ class GitRepository:
   def pull(self):
     self.repo.git.pull()
 
-  def get_diff(self, exclude_files: Optional[Sequence[str]] = None) -> str:
+  def get_diff(self) -> str:
     self.repo.git.add("-A")
-    if exclude_files:
-      for file in exclude_files:
-        self.repo.git.reset(file)
     diff = self.repo.git.diff("--cached")
     if diff and not diff.endswith("\n"):
       diff += "\n"

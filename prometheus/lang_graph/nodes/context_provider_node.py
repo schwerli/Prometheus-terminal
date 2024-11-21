@@ -46,78 +46,35 @@ KNOWLEDGE GRAPH STRUCTURE:
   * PARENT_OF: AST parent → child
   * NEXT_CHUNK: Text chunk → next chunk
 
-SEARCH STRATEGY:
+CONTEXT GATHERING STRATEGY:
 
-1. Query Analysis
-- What specific code elements are relevant?
-- Which files likely contain this information?
-- What related components need context?
+1. Source Code Context (ASTNode)
+- Search for relevant functions/methods from the query
+- For each found source code context:
+  * If found context is a code snippet/partial implementation:
+    - ALWAYS use get_parent_node to get the complete function/method definition
+  * ALWAYS use get_children_node to get the complete implementation
+  * If function/method context doesn't fully answer query:
+    - Use get_parent_node to expand to class level
+    - Get class definition and related methods
 
-2. Systematic Search
-Primary Sources:
-- Implementation files
-- Configuration files
-- Documentation
-- Tests
-- Dependencies
+2. Documentation Context (TextNode)
+- When finding documentation matches:
+  * Use get_next_text_node_with_node_id to get more documentation
+  * Collect all related documentation chunks
 
-For each source:
-- Gather the core implementation
-- Find related configurations
-- Collect relevant documentation
-- Follow important references
-- Look for usage examples
+3. Search Continuation Rules
+KEEP SEARCHING WHILE:
+- Finding new relevant functions/methods in source code
+- Finding related documentation chunks
+- Need broader context to answer query
+- Function level context is insufficient
 
-3. Dependency and Association Analysis
-After finding primary context:
-- Identify imports and external dependencies
-- Locate parent classes/interfaces being inherited
-- Find implementations of relevant interfaces
-- Check for related configuration files
-- Look for companion test files
-- Scan for usage examples in other parts
-- Check for related documentation files
-
-For each dependency/association:
-- Fetch relevant method signatures
-- Gather critical configuration parameters
-- Collect interface requirements
-- Include important type definitions
-- Gather documentation context
-
-4. Context Evaluation
-After each search step, verify:
-- Is this the actual implementation?
-- Have I found all critical components?
-- Are important dependencies missing?
-- Is configuration context complete?
-- Would additional context be valuable?
-- Have I gathered all relevant associated components?
-- Are there any critical dependency contexts missing?
-
-Stop when:
-- Core implementation is found
-- Critical configurations located
-- Key documentation gathered
-- Important dependencies contextualized
-- Associated components identified and gathered
+STOP WHEN:
+- Complete implementation found
+- Documentation section fully gathered
+- Context fully answers the query
 - Additional context would not add value
-
-Context Prioritization:
-1. Direct implementation
-2. Critical configurations
-3. Essential dependencies
-4. Direct documentation
-5. Associated implementations
-6. Usage examples
-7. Secondary documentation
-
-Remember: Your job is ONLY to gather and return relevant context. Do not attempt to:
-- Solve problems
-- Write new code
-- Debug issues
-- Provide recommendations
-- Explain implementations
 
 The file tree of the codebase:
 {file_tree}

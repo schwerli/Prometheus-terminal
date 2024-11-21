@@ -100,7 +100,7 @@ class BugReproductionSubgraph:
     issue_title: str,
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
-    bug_summary: str,
+    bug_context: str,
     recursion_limit: int = 50,
   ):
     config = {"recursion_limit": recursion_limit}
@@ -111,7 +111,7 @@ class BugReproductionSubgraph:
       "issue_title": issue_title,
       "issue_body": issue_body,
       "issue_comments": issue_comments,
-      "bug_summary": bug_summary,
+      "bug_context": bug_context,
     }
 
     output_state = self.subgraph.invoke(input_state, config)

@@ -52,10 +52,11 @@ class IssueBugSubgraph:
       name="bug_fixing_tools",
       messages_key="bug_fixing_messages",
     )
-    git_diff_node = GitDiffNode()
+    git_diff_node = GitDiffNode(kg)
     reset_bug_fixing_messages_node = ResetMessagesNode("bug_fixing_messages")
     update_container_node = UpdateContainerNode(self.container, kg)
 
+    bug_fix_verification_branch_node = NoopNode()
     bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(
       model, container, thread_id, checkpointer
     )
@@ -76,6 +77,7 @@ class IssueBugSubgraph:
     workflow.add_node("reset_bug_fixing_messages_node", reset_bug_fixing_messages_node)
     workflow.add_node("update_container_node", update_container_node)
 
+    workflow.add_node("bug_fix_verification_branch_node", bug_fix_verification_branch_node)
     workflow.add_node("bug_fix_verification_subgraph_node", bug_fix_verification_subgraph_node)
     workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
     workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
@@ -91,8 +93,13 @@ class IssueBugSubgraph:
     workflow.add_edge("bug_fixing_tools", "bug_fixing_node")
     workflow.add_edge("git_diff_node", "reset_bug_fixing_messages_node")
     workflow.add_edge("reset_bug_fixing_messages_node", "update_container_node")
-    workflow.add_edge("update_container_node", "bug_fix_verification_subgraph_node")
+    workflow.add_edge("update_container_node", "bug_fix_verification_branch_node")
 
+    workflow.add_conditional_edges(
+      "bug_fix_verification_branch_node",
+      lambda state: state["reproduced_bug"],
+      {True: "bug_fix_verification_subgraph_node", False: "build_or_test_branch_node"}
+    )
     workflow.add_conditional_edges(
       "bug_fix_verification_subgraph_node",
       lambda state: state["fixed_bug"],
@@ -118,10 +125,11 @@ class IssueBugSubgraph:
     issue_comments: Sequence[Mapping[str, str]],
     run_build: bool,
     run_existing_test: bool,
+    recursion_limit: int = 300,
   ):
-    config = None
+    config = {"recursion_limit": recursion_limit}
     if self.thread_id:
-      config = {"configurable": {"thread_id": self.thread_id}}
+      config["configurable"] = {"thread_id": self.thread_id}
 
     if not self.container.is_running():
       self.container.build_docker_image()

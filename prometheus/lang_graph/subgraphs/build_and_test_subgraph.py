@@ -60,13 +60,13 @@ class BuildAndTestSubgraph:
     workflow = StateGraph(BuildAndTestState)
     workflow.add_node("build_branch_node", build_branch_node)
     workflow.add_node("build_node", build_node)
-    if build_commands:
+    if not build_commands:
       workflow.add_node("build_tools", build_tools)
     workflow.add_node("general_build_structured_node", general_build_structured_node)
 
     workflow.add_node("test_branch_node", test_branch_node)
     workflow.add_node("test_node", test_node)
-    if test_commands:
+    if not test_commands:
       workflow.add_node("test_tools", test_tools)
     workflow.add_node("general_test_structured_node", general_test_structured_node)
 

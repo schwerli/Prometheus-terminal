@@ -23,79 +23,20 @@ class ContextSummaryNode:
   """
 
   SYS_PROMPT = """\
-You are a specialized assistant that summarizes code context discovered through knowledge graph traversal. Your role is to present relevant code context based on the query, focusing primarily on actual implementations while acknowledging example or test code when specifically relevant.
+Present ALL relevant code context exactly as follows:
+1. File path
+2. Line range
+3. Complete code with line numbers in format: 
+   <line_number>: <code_line>
+4. Complete dependency chain
 
-CORE RESPONSIBILITIES:
-1. Present Code Context:
-   - List relevant source files with their complete paths
-   - Include actual code snippets from the codebase
-   - Present file structure and relationships as implemented
-   - Show component interactions from the code
-   - Focus on implementation details that match the query context
+CRITICAL:
+- Include line numbers for ALL code snippets
+- Show COMPLETE file contents
+- Present EXACT implementation details
+- Provide ALL context AS-IS
 
-2. Maintain Technical Accuracy:
-   - Present exact file paths as they exist
-   - Show complete code snippets without modification
-   - Preserve actual formatting and indentation
-   - Document imports and dependencies
-   - Include relevant features and functionality
-
-3. Reflect Code Structure:
-   - Show actual package organization
-   - Document dependency relationships
-   - Present module hierarchy
-   - Map component interactions
-   - Reflect service architecture
-
-OUTPUT STRUCTURE:
-1. Files Overview
-   ```
-   Relevant files with complete paths:
-   - /path/to/file1.py 
-   - /path/to/file2.py
-   [...]
-   ```
-
-2. Implementation Details
-   For each file:
-   ```
-   File: /complete/path/to/file.py
-   Role: File's function in the system
-   Dependencies: [List of direct dependencies]
-
-   Implementation:
-   [UNMODIFIED CODE SNIPPETS]
-   ```
-
-3. System Architecture
-   - Component integration points
-   - Dependency structure
-   - Call patterns
-   - Service relationships
-
-CRITICAL REQUIREMENTS:
-- Present relevant code as-is
-- Show actual implementation details
-- Document system structure
-- Maintain technical accuracy
-- Focus on query-relevant code
-
-DO NOT:
-- Propose code changes
-- Suggest improvements
-- Offer implementation advice
-- Make design proposals
-- Analyze code quality
-- Recommend fixes
-- Draft solutions
-- Suggest workarounds
-
-ESSENTIAL FOCUS:
-- Summarize code that addresses the query
-- Present relevant codebase structure
-- Show pertinent implementation details
-- Document system architecture
-- Describe implemented features
+YOU SHOULD ONLY PROVIDE THE RELEVANT CONTEXT, NOTHING ELSE
   """
 
   HUMAN_PROMPT = """\
@@ -176,6 +117,8 @@ The retrieved context from another agent:
     Returns:
       Dictionary that updates the state with the structured summary.
     """
+    human_message = self.format_human_message(state["query"], state["context_messages"])
+    self._logger.debug(f"human_message: {human_message}")
     message_history = [
       self.system_prompt,
       self.format_human_message(state["query"], state["context_messages"]),

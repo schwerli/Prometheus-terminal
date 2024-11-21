@@ -16,6 +16,8 @@ class IssueState(TypedDict):
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
   issue_type: IssueType
+  run_build: bool
+  run_existing_test: bool
 
   classification_context: str
 

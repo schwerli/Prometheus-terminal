@@ -9,49 +9,43 @@ from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVer
 
 class BugFixVerifyStructureOutput(BaseModel):
   fixed_bug: bool = Field(
-    description="Whenver the bug is fixed, ie. the bug exposing test is passing"
+      description="Whether the bug is fixed, based on more flexible matching of test results"
   )
   reproducing_test_fail_log: str = Field(
-    description="The log from the test failure, empty if fixed_bug is True"
+      description="If the bug wasn't reproduced (fixed_bug is False), explains what went wrong with the reproduction attempt"
   )
 
 
 class BugFixVerifyStructuredNode:
   SYS_PROMPT = """\
 You are a structured output parser for bug fix verification results. Your role is to analyze
-test execution logs and determine whether a bug has been successfully fixed.
+test execution logs and determine whether they successfully reproduce a reported bug.
 
 Your task is to:
 1. Parse the test execution output
-2. Determine if the bug is fixed by checking if the test passes
+2. Determine if the bug behavior is reproduced by analyzing error patterns and messages
 3. Return a structured response containing:
-   - fixed_bug (boolean): True if the test passes, False if it fails
-   - test_fail_log (string): The relevant error/failure message if the test fails, empty string if test passes
+   - fixed_bug (boolean): True if the test fails in a way that matches the reported bug
+   - test_fail_log (string): If the bug wasn't reproduced, explain what went wrong with the reproduction attempt
 
 Guidelines for analysis:
-- A test is considered PASSING if:
-  * It completes execution without errors
-  * No assertion failures are reported
-  * No exceptions are thrown
-  * Exit code is 0 (if visible)
+- A test SUCCESSFULLY REPRODUCES the bug (fixed_bug = True) if:
+  * The error message contains similar keywords or patterns to the reported issue
+  * The fundamental behavior matches the bug report
+  * The failure occurs in the same component or code path
+  * The error indicates the same underlying problem, even if error types differ
 
-- A test is considered FAILING if:
-  * Assertion failures occur
-  * Exceptions are thrown
-  * Error messages are present
-  * Exit code is non-zero (if visible)
+- When the bug is NOT reproduced (fixed_bug = False), the reproducing_test_fail_log should explain:
+  * How the observed behavior differed from the reported bug
+  * What type of error was expected vs what occurred
+  * Whether the test passed when it should have failed
+  * Any other reasons why the reproduction attempt failed
 
-- When extracting test_fail_log:
-  * Include only the relevant error message and stack trace
-  * Trim unnecessary environment setup or teardown logs
-  * Include any assertion messages that explain why the test failed
-  * If multiple errors occur, include the first failure point
-
-Do not:
-- Try to interpret or fix the bugs
-- Make assumptions about test behavior not evident in the logs
-- Include passing test output in the test_fail_log
-- Include system or environment setup messages in the test_fail_log
+Important:
+- Focus on the core bug behavior rather than exact error message matches
+- Consider semantic similarity of errors rather than requiring exact type matches
+- Look for patterns that indicate the same underlying issue
+- Allow for reasonable variation in how errors manifest
 
 Example responses:
 
@@ -64,9 +58,9 @@ For a passing test:
 For a failing test:
 {
     "fixed_bug": false,
-    "reproducing_test_fail_log": "AssertionError: Expected output 'Hello World' but got 'Hello'"
+    "reproducing_test_fail_log": ""Test failed but with wrong error type: got RuntimeError instead of expected ValueError."
 }
-"""
+""".replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
     prompt = ChatPromptTemplate.from_messages(

@@ -19,6 +19,9 @@ Returns an error message if the file doesn't exist.
 
 
 def read_file(relative_path: str, root_path: str, n_lines: int = 1000) -> str:
+  if os.path.isabs(relative_path):
+    return f"relative_path: {relative_path} is a abolsute path, not relative path."
+
   file_path = Path(os.path.join(root_path, relative_path))
   if not file_path.exists():
     return f"The file {relative_path} does not exist."
@@ -30,29 +33,32 @@ def read_file(relative_path: str, root_path: str, n_lines: int = 1000) -> str:
 
 
 class ReadFileWithLineNumbersInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file to read")
+  relative_path: str = Field(description="The relative path of the file to read, eg. foo/bar/test.py, not absolute path")
   start_line: int = Field(description="The start line number to read, 1-indexed and inclusive")
-  end_line: int = Field(description="The ending line number to read, 1-indexed and inclusive")
+  end_line: int = Field(description="The ending line number to read, 1-indexed and exclusive")
 
 
 READ_FILE_WITH_LINE_NUMBERS_DESCRIPTION = """\
 Read a specific range of lines from a file and return the content with line numbers prepended.
-The line numbers are 1-indexed and both start and end lines are inclusive.
+The line numbers are 1-indexed where start_line is inclusive and end_line is exclusive.
 """
 
 
 def read_file_with_line_numbers(
   relative_path: str, root_path: str, start_line: int, end_line: int
 ) -> str:
+  if os.path.isabs(relative_path):
+    return f"relative_path: {relative_path} is a abolsute path, not relative path."
+
   file_path = Path(os.path.join(root_path, relative_path))
   if not file_path.exists():
     return f"The file {relative_path} does not exist."
 
   if end_line < start_line:
-    return f"The end line number {end_line} is less than the start line number {start_line}."
+    return f"The end line number {end_line} must be greater than the start line number {start_line}."
 
   zero_based_start_line = start_line - 1
-  zero_based_end_line = end_line
+  zero_based_end_line = end_line - 1
 
   with file_path.open() as f:
     lines = f.readlines()
@@ -63,7 +69,7 @@ def read_file_with_line_numbers(
 
 
 class CreateFileInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file to create")
+  relative_path: str = Field(description="The relative path of the file to create, eg. foo/bar/test.py, not absolute path")
   content: str = Field(description="The content of the file to create")
 
 
@@ -75,6 +81,9 @@ Returns an error message if the file already exists.
 
 
 def create_file(relative_path: str, root_path: str, content: str) -> str:
+  if os.path.isabs(relative_path):
+    return f"relative_path: {relative_path} is a abolsute path, not relative path."
+
   file_path = Path(os.path.join(root_path, relative_path))
   if file_path.exists():
     return f"The file {relative_path} already exists."
@@ -85,7 +94,7 @@ def create_file(relative_path: str, root_path: str, content: str) -> str:
 
 
 class DeleteInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file/dir to delete")
+  relative_path: str = Field(description="The relative path of the file/dir to delete, eg. foo/bar/test.py, not absolute path")
 
 
 DELETE_DESCRIPTION = """\
@@ -96,6 +105,9 @@ Returns an error message if the path doesn't exist.
 
 
 def delete(relative_path: str, root_path: str) -> str:
+  if os.path.isabs(relative_path):
+    return f"relative_path: {relative_path} is a abolsute path, not relative path."
+
   file_path = Path(os.path.join(root_path, relative_path))
   if not file_path.exists():
     return f"The file {relative_path} does not exist."
@@ -109,9 +121,9 @@ def delete(relative_path: str, root_path: str) -> str:
 
 
 class EditFileInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file to edit")
+  relative_path: str = Field(description="The relative path of the file to edit, eg. foo/bar/test.py, not absolute path")
   start_line: int = Field(description="The start line number to edit, 1-indexed and inclusive")
-  end_line: int = Field(description="The ending line number to edit, 1-indexed and inclusive")
+  end_line: int = Field(description="The ending line number to edit, 1-indexed and exclusive")
   new_content: str = Field(
     description="The new content to write to the file between start_line and end_line"
   )
@@ -119,24 +131,27 @@ class EditFileInput(BaseModel):
 
 EDIT_FILE_DESCRIPTION = """\
 Edit a specific range of lines in an existing file.
-Replaces the content between start_line and end_line (inclusive, 1-indexed) with the new content.
+Replaces the content between start_line (inclusive, 1-indexed) and end_line (exclusive, 1-indexed) with the new content.
 Automatically adds a newline to the new content if it doesn't end with one.
-Returns an error message if the file doesn't exist or if end_line is less than start_line.
+Returns an error message if the file doesn't exist or if end_line is less than or equal to start_line.
 """
 
 
 def edit_file(
   relative_path: str, root_path: str, start_line: int, end_line: int, new_content: str
 ) -> str:
+  if os.path.isabs(relative_path):
+    return f"relative_path: {relative_path} is a abolsute path, not relative path."
+
   file_path = Path(os.path.join(root_path, relative_path))
   if not file_path.exists():
     return f"The file {relative_path} does not exist."
 
   if end_line < start_line:
-    return f"The end line number {end_line} is less than the start line number {start_line}."
+    return f"The end line number {end_line} must be greater than the start line number {start_line}."
 
   zero_based_start_line = start_line - 1
-  zero_based_end_line = end_line
+  zero_based_end_line = end_line - 1
 
   with file_path.open() as f:
     lines = f.readlines()
@@ -146,4 +161,4 @@ def edit_file(
 
   lines[zero_based_start_line:zero_based_end_line] = new_content.splitlines(True)
   file_path.write_text("".join(lines))
-  return f"The file {relative_path} has been edited."
+  return f"The file {relative_path} has been edited. You must re-read this file again to verify the change."
