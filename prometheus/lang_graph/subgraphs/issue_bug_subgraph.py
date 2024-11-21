@@ -33,7 +33,7 @@ class IssueBugSubgraph:
       IssueType.BUG, model, kg, neo4j_driver, max_token_per_neo4j_result, thread_id, checkpointer
     )
     bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
-      model, container, kg, thread_id, checkpointer
+      model, container, kg, test_commands, thread_id, checkpointer
     )
 
     workflow = StateGraph(IssueBugState)

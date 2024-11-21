@@ -4,11 +4,11 @@ from prometheus.docker.general_container import GeneralContainer
 
 
 class RunCommandInput(BaseModel):
-  command: str = Field("The command to be run in the container")
+  command: str = Field("The shell command to be run in the container")
 
 
 RUN_COMMAND_DESCRIPTION = """\
-Run a command in the container and return the result of the command. You are always at the root
+Run a shell command in the container and return the result of the command. You are always at the root
 of the codebase.
 """
 

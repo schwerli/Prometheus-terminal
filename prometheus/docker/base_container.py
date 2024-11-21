@@ -129,6 +129,7 @@ class BaseContainer(ABC):
     Returns:
         str: Output of the command as a string.
     """
+    command = f'/bin/bash -l -c "{command}"'
     self.logger.debug(f"Running command in container: {command}")
     exec_result = self.container.exec_run(command, workdir=self.workdir)
     exec_result_str = exec_result.output.decode("utf-8")

@@ -8,7 +8,7 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 
 router = APIRouter()
 
-#{
+# {
 #  "issue_number": 42,
 #  "issue_title": "Wrong behavior of calculator",
 #  "issue_body": "When I am using your calculate application, 6 divided with 2 is equal to 12, which is not right!",
@@ -18,7 +18,7 @@ router = APIRouter()
 #  "dockerfile_content": "FROM python:3.11\nWORKDIR /app\nCOPY . /app\nRUN pip install .",
 #  "test_commands": ["pytest ."],
 #  "workdir": "/app"
-#}
+# }
 
 
 class IssueAnswerRequest(BaseModel):
@@ -109,7 +109,7 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
       )
 
     # Validate test commands
-    if issue.run_test and issue.test_commands is None:
+    if issue.run_existing_test and issue.test_commands is None:
       raise HTTPException(
         status_code=400,
         detail="test_commands must be provided for user defined environment when run_test is True",

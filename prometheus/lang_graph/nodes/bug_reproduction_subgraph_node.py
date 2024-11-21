@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -16,12 +16,13 @@ class BugReproductionSubgraphNode:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    test_commands: Optional[Sequence[str]],
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
     self.bug_reproduction_subgraph = BugReproductionSubgraph(
-      model, container, kg, thread_id, checkpointer
+      model, container, kg, test_commands, thread_id, checkpointer
     )
 
   def __call__(self, state: IssueState):

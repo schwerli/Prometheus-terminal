@@ -22,6 +22,7 @@ class BugReproductionSubgraph:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    test_commands: Optional[Sequence[str]],
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
@@ -34,7 +35,7 @@ class BugReproductionSubgraph:
       messages_key="bug_reproducing_write_messages",
     )
     update_container_node = UpdateContainerNode(container, kg)
-    bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, kg)
+    bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, kg, test_commands)
     bug_reproducing_execute_tools = ToolNode(
       tools=bug_reproducing_execute_node.tools,
       name="bug_reproducing_execute_tools",

@@ -38,3 +38,8 @@ def format_agent_tool_message_history(messages: Sequence[BaseMessage]) -> str:
     elif isinstance(message, ToolMessage):
       formatted_messages.append(f"Tool output: {message.content}")
   return "\n".join(formatted_messages)
+
+
+def format_test_commands(test_commands: Sequence[str]) -> str:
+  test_commands_with_prefix = [f"$ {test_command}" for test_command in test_commands]
+  return "\n".join(test_commands_with_prefix)

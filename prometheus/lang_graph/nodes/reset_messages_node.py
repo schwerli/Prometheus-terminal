@@ -11,8 +11,7 @@ The module is specifically designed for workflows where:
 """
 
 import logging
-
-from prometheus.lang_graph.graphs.issue_state import IssueState
+from typing import Dict
 
 
 class ResetMessagesNode:
@@ -38,7 +37,7 @@ class ResetMessagesNode:
     self.message_state_key = message_state_key
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.reset_messages_node")
 
-  def __call__(self, state: IssueState):
+  def __call__(self, state: Dict):
     """Resets the specified message state for the next iteration.
 
     Handles two types of message states:

@@ -1,5 +1,6 @@
 import functools
 import logging
+from typing import Optional, Sequence
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -9,6 +10,7 @@ from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.tools import container_command
+from prometheus.utils.issue_util import format_test_commands
 
 
 class BugReproducingExecuteNode:
@@ -27,10 +29,21 @@ Assumptions:
 - Required test frameworks are available
 - You only need to focus on executing the specific test file
 
+Test Command Handling:
+1. If user-provided test commands are available:
+   - Extract the test runner being used (pytest, unittest, etc.)
+   - Adapt the command pattern to target only the specific test file
+   - Do NOT execute the entire test suite
+2. If no user commands are provided:
+   - Infer the appropriate test runner from the test file content
+   - Use standard conventions for the identified framework
+
 Process:
 1. Review the test file content from previous agent's message
-2. Identify the appropriate test command for the single file
-3. Execute the test command
+2. Identify the appropriate test command:
+   - If user commands exist: modify them to target single file
+   - If no user commands: construct appropriate command for framework
+3. Execute the test command for the single file only
 4. Report results:
    If successful execution:
    - Include the exact command used
@@ -43,10 +56,11 @@ Process:
 
 Remember:
 - Execute ONLY the single test file written by previous agent
-- Use the appropriate test runner command 
+- Adapt any full test suite commands to target single file
+- Use the appropriate test runner command
 - Always include the complete command output
 - Do not analyze or interpret the results
-- Do not attempt to fix or modify anything
+- Do not attempt to fix or modify test content
 """
 
   HUMAN_PROMPT = """\
@@ -58,6 +72,9 @@ Comments: {comments}
 Project structure:
 {project_structure}
 
+User provided test commands:
+{test_commands}
+
 Bug context summary:
 {bug_context}
 
@@ -65,8 +82,15 @@ Bug reproducing write agent message:
 {bug_reproducing_write_message}
 """
 
-  def __init__(self, model: BaseChatModel, container: BaseContainer, kg: KnowledgeGraph):
+  def __init__(
+    self,
+    model: BaseChatModel,
+    container: BaseContainer,
+    kg: KnowledgeGraph,
+    test_commands: Optional[Sequence[str]] = None,
+  ):
     self.kg = kg
+    self.test_commands = test_commands
     self.tools = self._init_tools(container)
     self.model_with_tools = model.bind_tools(self.tools)
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
@@ -89,12 +113,16 @@ Bug reproducing write agent message:
   def format_human_message(self, state: BugReproductionState) -> HumanMessage:
     last_bug_producing_write_message = state["bug_reproducing_write_messages"][-1]
     last_bug_producing_write_message_content = last_bug_producing_write_message.content
+    test_commands_str = ""
+    if self.test_commands:
+      test_commands_str = format_test_commands(self.test_commands)
     return HumanMessage(
       self.HUMAN_PROMPT.format(
         title=state["issue_title"],
         body=state["issue_body"],
         comments=state["issue_comments"],
         project_structure=self.kg.get_file_tree(),
+        test_commands=test_commands_str,
         bug_context=state["bug_context"],
         bug_reproducing_write_message=last_bug_producing_write_message_content,
       )
