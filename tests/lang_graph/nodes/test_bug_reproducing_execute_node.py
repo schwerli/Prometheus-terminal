@@ -32,7 +32,7 @@ def test_bug_reproducing_execute_node_format_message(mock_container, mock_kg):
       "issue_body": "Bug description",
       "issue_comments": ["Comment 1", "Comment 2"],
       "bug_context": "Context of the bug",
-      "bug_reproducing_write_message": [AIMessage(content="Created test file at path/to/test.py")],
+      "bug_reproducing_write_messages": [AIMessage(content="Created test file at path/to/test.py")],
     }
   )
 
@@ -56,7 +56,7 @@ def test_bug_reproducing_execute_node_execution(mock_container, mock_kg):
       "issue_body": "Bug description",
       "issue_comments": ["Comment"],
       "bug_context": "Context of the bug",
-      "bug_reproducing_write_message": [AIMessage(content="Created test file at path/to/test.py")],
+      "bug_reproducing_write_messages": [AIMessage(content="Created test file at path/to/test.py")],
       "bug_reproducing_execute_messages": [],
     }
   )
@@ -84,7 +84,7 @@ def test_bug_reproducing_execute_node_with_existing_messages(mock_container, moc
       "issue_body": "Bug description",
       "issue_comments": [],
       "bug_context": "Context",
-      "bug_reproducing_write_message": [AIMessage(content="Created test file at path/to/test.py")],
+      "bug_reproducing_write_messages": [AIMessage(content="Created test file at path/to/test.py")],
       "bug_reproducing_execute_messages": existing_messages,
     }
   )

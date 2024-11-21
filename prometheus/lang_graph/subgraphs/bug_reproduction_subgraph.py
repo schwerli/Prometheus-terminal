@@ -22,7 +22,7 @@ class BugReproductionSubgraph:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
-    test_commands: Optional[Sequence[str]],
+    test_commands: Optional[Sequence[str]] = None,
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
