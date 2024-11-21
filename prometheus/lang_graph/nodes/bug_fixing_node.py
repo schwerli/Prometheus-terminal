@@ -57,7 +57,7 @@ Please proceed with fixing the bug, documenting your analysis and changes.
     )
 
   def __call__(self, state: IssueBugState):
-    human_message = self.format_human_message()
+    human_message = self.format_human_message(state)
     message_history = [self.system_prompt, human_message] + state["bug_fixing_messages"]
 
     response = self.model_with_tool.invoke(message_history)

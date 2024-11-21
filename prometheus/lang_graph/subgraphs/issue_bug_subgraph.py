@@ -60,6 +60,7 @@ class IssueBugSubgraph:
       functools.partial(tools_condition, messages_key="bug_fixing_messages"),
       {"tools": "bug_fixing_tools", END: END},
     )
+    workflow.add_edge("bug_fixing_tools", "bug_fixing_node")
 
     self.subgraph = workflow.compile(checkpointer=checkpointer)
 

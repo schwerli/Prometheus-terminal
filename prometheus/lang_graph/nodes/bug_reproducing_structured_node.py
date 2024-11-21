@@ -40,11 +40,13 @@ The output includes:
 Analyze this information and provide the following structured output:
 
 1. reproduced_bug (boolean):
-   - True if the test file successfully demonstrates the bug
-   - False if the reproduction attempt failed or is incomplete
+   - True if the test demonstrates the core issue described in the bug
+   - The exact error message or behavior doesn't need to match precisely
+   - Consider it successful if fixing the underlying issue would make the test pass
+   - False if the test fails to demonstrate the fundamental problem or is incomplete
 
 2. reproduced_bug_failure_log (string):
-   - If reproduced_bug is False: Describe why the reproduction failed
+   - If reproduced_bug is False: Describe why the reproduction failed to demonstrate the core issue
    - If reproduced_bug is True: Return an empty string
 
 3. reproduced_bug_file (string):
@@ -62,60 +64,49 @@ Analyze this information and provide the following structured output:
 Rules for Processing:
 1. Look for explicit file paths in create_file or edit_file operations
 2. Extract execution commands from the agent's instructions
-3. Determine reproduction success based on whether the agent completed the task
+3. Focus on whether the test captures the essence of the bug, not exact message matching
 4. If multiple files are mentioned, use only the final test file path
 5. Commands must be specific to running the test file, not general setup
 
 Example Input:
 ```
 # Bug Reproducing Write Messages:
-Assistant: I've created a test file to reproduce the described bug.
-
 Tool Calls:
 create_file:
-  path: tests/unit/test_parser_bug.py
-  content: [test file content...]
+  path: tests/test_invalid_url.py
+  content: [test content showing URL validation check]
 
-I've created a test file that reproduces the parser bug. Here's how to run it:
-1. Navigate to the project root
-2. Run: python -m pytest tests/unit/test_parser_bug.py -v
-
-The test should fail with the same IndexError as reported in the bug.
+The test demonstrates the URL validation issue with http://.example.com
 
 # Bug Reproducing Execute Messages:
-Assistant: I'll execute the test file to verify it reproduces the bug.
-
 Tool Calls:
-execute_command: python -m pytest tests/unit/test_parser_bug.py -v
+run_command: pytest tests/test_invalid_url.py
 
 Output:
 ============================= test session starts ==============================
-collecting ... collected 1 item
+platform linux -- Python 3.9.20, pytest-7.4.4, pluggy-1.0.0
+collected 1 item
 
-tests/unit/test_parser_bug.py::TestParser::test_invalid_input_raises_index_error FAILED
+tests/test_invalid_url.py F                                              [100%]
 
-============================== FAILURES ======================================
-TestParser::test_invalid_input_raises_index_error
-    def test_invalid_input_raises_index_error():
->       result = parser.parse("invalid input")
-E       IndexError: string index out of range
-
-Expected failure successfully reproduced.
+FAILED tests/test_invalid_url.py::test_invalid_url - urllib3.exceptions.LocationParseError
+============================== 1 failed in 0.16s ==============================
 ```
 
 Example Output:
 ```python
 {
-    "reproduced_bug": True,
+    "reproduced_bug": True,  # True because it shows URL validation failing, even with different exception
     "reproduced_bug_failure_log": "",
-    "reproduced_bug_file": "tests/unit/test_parser_bug.py",
-    "reproduced_bug_commands": ["python -m pytest tests/unit/test_parser_bug.py -v"]
+    "reproduced_bug_file": "tests/test_invalid_url.py",
+    "reproduced_bug_commands": ["pytest tests/test_invalid_url.py"]
 }
 ```
 
 Remember:
 - Always provide all four fields
-- Keep failure logs concise but informative
+- Focus on whether the test demonstrates the core issue, not exact error matching
+- Keep failure logs focused on substantive problems, not message differences
 - Ensure commands are properly formatted and executable
 - Path separators should match the format used in the input
 """.replace("{", "{{").replace("}", "}}")
