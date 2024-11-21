@@ -1,4 +1,7 @@
-from typing import Mapping, Sequence, TypedDict
+from typing import Annotated, Mapping, Sequence, TypedDict
+
+from langchain_core.messages import BaseMessage
+from langgraph.graph.message import add_messages
 
 
 class IssueBugState(TypedDict):
@@ -11,3 +14,5 @@ class IssueBugState(TypedDict):
   reproduced_bug: bool
   reproduced_bug_file: str
   reproduced_bug_commands: Sequence[str]
+
+  bug_fixing_messages: Annotated[Sequence[BaseMessage], add_messages]

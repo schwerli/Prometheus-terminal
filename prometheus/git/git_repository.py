@@ -98,6 +98,8 @@ class GitRepository:
   def get_diff(self) -> str:
     self.repo.git.add("-A")
     diff = self.repo.git.diff("--cached")
+    if diff and not diff.endswith("\n"):
+      diff += "\n"
     self.repo.git.reset()
     return diff
 

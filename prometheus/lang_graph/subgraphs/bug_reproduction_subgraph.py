@@ -101,10 +101,11 @@ class BugReproductionSubgraph:
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
     bug_summary: str,
+    recursion_limit: int = 50,
   ):
-    config = None
+    config = {"recursion_limit": recursion_limit}
     if self.thread_id:
-      config = {"configurable": {"thread_id": self.thread_id}}
+      config["configurable"] = {"thread_id": self.thread_id}
 
     input_state = {
       "issue_title": issue_title,
@@ -114,6 +115,7 @@ class BugReproductionSubgraph:
     }
 
     output_state = self.subgraph.invoke(input_state, config)
+
     return {
       "reproduced_bug": output_state["reproduced_bug"],
       "reproduced_bug_file": output_state["reproduced_bug_file"],

@@ -1,13 +1,16 @@
+import functools
 from typing import Mapping, Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
+from langgraph.prebuilt import ToolNode, tools_condition
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueType
+from prometheus.lang_graph.nodes.bug_fixing_node import BugFixingNode
 from prometheus.lang_graph.nodes.bug_reproduction_subgraph_node import BugReproductionSubgraphNode
 from prometheus.lang_graph.nodes.issue_to_context_node import IssueToContextNode
 from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
@@ -35,15 +38,28 @@ class IssueBugSubgraph:
     bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
       model, container, kg, test_commands, thread_id, checkpointer
     )
+    bug_fixing_node = BugFixingNode(model, kg)
+    bug_fixing_tools = ToolNode(
+      tools=bug_fixing_node.tools,
+      name="bug_fixing_tools",
+      messages_key="bug_fixing_messages",
+    )
 
     workflow = StateGraph(IssueBugState)
 
     workflow.add_node("issue_to_bug_context_node", issue_to_bug_context_node)
     workflow.add_node("bug_reproduction_subgraph_node", bug_reproduction_subgraph_node)
+    workflow.add_node("bug_fixing_node", bug_fixing_node)
+    workflow.add_node("bug_fixing_tools", bug_fixing_tools)
 
     workflow.set_entry_point("issue_to_bug_context_node")
     workflow.add_edge("issue_to_bug_context_node", "bug_reproduction_subgraph_node")
-    workflow.add_edge("bug_reproduction_subgraph_node", END)
+    workflow.add_edge("bug_reproduction_subgraph_node", "bug_fixing_node")
+    workflow.add_conditional_edges(
+      "bug_fixing_node",
+      functools.partial(tools_condition, messages_key="bug_fixing_messages"),
+      {"tools": "bug_fixing_tools", END: END},
+    )
 
     self.subgraph = workflow.compile(checkpointer=checkpointer)
 
@@ -65,10 +81,3 @@ class IssueBugSubgraph:
     output_state = self.subgraph.invoke(input_state, config)
 
     self.container.cleanup()
-
-    return {
-      "bug_context": output_state["bug_context"],
-      "reproduced_bug": output_state["reproduced_bug"],
-      "reproduced_bug_file": output_state["reproduced_bug_file"],
-      "reproduced_bug_commands": output_state["reproduced_bug_commands"],
-    }

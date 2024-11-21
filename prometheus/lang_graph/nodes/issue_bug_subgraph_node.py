@@ -41,8 +41,3 @@ class IssueBugSubgraphNode:
       state["issue_body"],
       state["issue_comments"],
     )
-    return {
-      "reproduced_bug": output_state["reproduced_bug"],
-      "reproduced_bug_file": output_state["reproduced_bug_file"],
-      "reproduced_bug_commands": output_state["reproduced_bug_commands"],
-    }

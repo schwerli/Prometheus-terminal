@@ -11,7 +11,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.docker.user_defined_container import UserDefinedContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.nodes.code_editing_node import CodeEditingNode
+from prometheus.lang_graph.nodes.edit_node import CodeEditingNode
 from prometheus.lang_graph.nodes.edit_reviewer_node import EditReviewerNode
 from prometheus.lang_graph.nodes.edit_reviewer_structured_node import EditReviewerStructuredNode
 from prometheus.lang_graph.nodes.general_build_node import GeneralBuildNode
