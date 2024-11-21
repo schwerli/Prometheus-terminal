@@ -65,5 +65,5 @@ class BugFixVerificationSubgraph:
 
     return {
       "fixed_bug": output_state["fixed_bug"],
-      "test_fail_log": output_state["test_fail_log"],
+      "reproducing_test_fail_log": output_state["reproducing_test_fail_log"],
     }
