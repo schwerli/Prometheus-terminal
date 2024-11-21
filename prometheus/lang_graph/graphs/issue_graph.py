@@ -90,6 +90,8 @@ class IssueGraph:
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
     issue_type: IssueType,
+    run_build: bool,
+    run_existing_test: bool,
   ):
     config = None
     if self.thread_id:
@@ -100,6 +102,8 @@ class IssueGraph:
       "issue_body": issue_body,
       "issue_comments": issue_comments,
       "issue_type": issue_type,
+      "run_build": run_build,
+      "run_existing_test": run_existing_test,
     }
 
     output_state = self.graph.invoke(input_state, config)

@@ -4,7 +4,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 from git import Git, InvalidGitRepositoryError, Repo
 
@@ -95,8 +95,11 @@ class GitRepository:
   def pull(self):
     self.repo.git.pull()
 
-  def get_diff(self) -> str:
+  def get_diff(self, exclude_files: Optional[Sequence[str]] = None) -> str:
     self.repo.git.add("-A")
+    if exclude_files:
+      for file in exclude_files:
+        self.repo.git.reset(file)
     diff = self.repo.git.diff("--cached")
     if diff and not diff.endswith("\n"):
       diff += "\n"

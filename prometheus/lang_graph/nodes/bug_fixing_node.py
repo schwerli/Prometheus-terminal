@@ -20,6 +20,8 @@ BUG CONTEXT:
 
 {reproduction_info}
 
+{previous_edit_info}
+
 YOUR TASK:
 You are tasked with fixing this bug by making precise code changes. Important guidelines:
 1. DO NOT modify any test files - tests are the source of truth for expected behavior
@@ -41,12 +43,15 @@ Please proceed with fixing the bug, documenting your analysis and changes.
   def format_human_message(self, state: IssueBugState):
     issue_comments = format_issue_comments(state["issue_comments"])
 
+    reproduction_info = ""
     if state["reproduced_bug"]:
       reproduction_info = (
         f"BUG REPRODUCTION:\nThe bug has been reproduced in file: {state['reproduced_bug_file']}"
       )
-    else:
-      reproduction_info = "BUG REPRODUCTION:\nNo reproduction case available. Please analyze the reported behavior from the issue description."
+
+    previous_edit_info = ""
+    if state["patch"]:
+      previous_edit_info = f"You have previously made the following changes:\n{state['patch']}"
 
     return self.HUMAN_PROMPT.format(
       issue_title=state["issue_title"],
@@ -54,6 +59,7 @@ Please proceed with fixing the bug, documenting your analysis and changes.
       issue_comments=issue_comments,
       bug_context=state["bug_context"],
       reproduction_info=reproduction_info,
+      previous_edit_info=previous_edit_info,
     )
 
   def __call__(self, state: IssueBugState):

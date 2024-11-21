@@ -45,14 +45,14 @@ class IssueAnswerRequest(BaseModel):
     examples=[IssueType.AUTO],
   )
   run_build: Optional[bool] = Field(
-    default=True,
+    default=False,
     description="When editing the code, whenver we should run the build to verify the fix",
-    examples=[True],
+    examples=[False],
   )
   run_existing_test: Optional[bool] = Field(
-    default=True,
+    default=False,
     description="When editing the code, whenver we should run the existing test to verify the fix",
-    examples=[True],
+    examples=[False],
   )
   dockerfile_content: Optional[str] = Field(
     default=None,
@@ -120,6 +120,8 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
     issue.issue_body,
     issue.issue_comments if issue.issue_comments else [],
     issue.issue_type,
+    issue.run_build,
+    issue.run_existing_test,
     issue.dockerfile_content,
     issue.image_name,
     issue.workdir,

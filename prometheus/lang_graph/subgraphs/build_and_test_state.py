@@ -5,7 +5,8 @@ from langgraph.graph.message import add_messages
 
 
 class BuildAndTestState(TypedDict):
-  project_structure: str
+  run_build: bool
+  run_existing_test: bool
 
   build_messages: Annotated[Sequence[BaseMessage], add_messages]
   exist_build: bool

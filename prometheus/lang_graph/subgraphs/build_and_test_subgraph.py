@@ -8,6 +8,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.general_build_node import GeneralBuildNode
 from prometheus.lang_graph.nodes.general_build_structured_node import (
   GeneralBuildStructuredNode,
@@ -17,12 +18,6 @@ from prometheus.lang_graph.nodes.general_test_structured_node import GeneralTest
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 from prometheus.lang_graph.nodes.user_defined_build_node import UserDefinedBuildNode
 from prometheus.lang_graph.nodes.user_defined_test_node import UserDefinedTestNode
-from prometheus.lang_graph.routers.issue_answer_and_fix_need_build_router import (
-  IssueAnswerAndFixNeedBuildRouter,
-)
-from prometheus.lang_graph.routers.issue_answer_and_fix_need_test_router import (
-  IssueAnswerAndFixNeedTestRouter,
-)
 from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
 
 
@@ -31,6 +26,7 @@ class BuildAndTestSubgraph:
     self,
     container: BaseContainer,
     model: BaseChatModel,
+    kg: KnowledgeGraph,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
     thread_id: Optional[str] = None,
@@ -42,7 +38,7 @@ class BuildAndTestSubgraph:
     if build_commands:
       build_node = UserDefinedBuildNode(container)
     else:
-      build_node = GeneralBuildNode(model, container)
+      build_node = GeneralBuildNode(model, container, kg)
       build_tools = ToolNode(
         tools=build_node.tools,
         name="build_tools",
@@ -52,9 +48,9 @@ class BuildAndTestSubgraph:
 
     test_branch_node = NoopNode()
     if test_commands:
-      test_node = UserDefinedTestNode(self.container)
+      test_node = UserDefinedTestNode(container)
     else:
-      test_node = GeneralTestNode(model, self.container)
+      test_node = GeneralTestNode(model, container, kg)
       test_tools = ToolNode(
         tools=test_node.tools,
         name="test_tools",
@@ -78,7 +74,7 @@ class BuildAndTestSubgraph:
     workflow.set_entry_point("build_branch_node")
     workflow.add_conditional_edges(
       "build_branch_node",
-      IssueAnswerAndFixNeedBuildRouter(),
+      lambda state: state["run_build"],
       {True: "build_node", False: "test_branch_node"},
     )
     if build_commands:
@@ -97,7 +93,7 @@ class BuildAndTestSubgraph:
 
     workflow.add_conditional_edges(
       "test_branch_node",
-      IssueAnswerAndFixNeedTestRouter(),
+      lambda state: state["run_existing_test"],
       {True: "test_node", False: END},
     )
     if test_commands:
@@ -118,7 +114,8 @@ class BuildAndTestSubgraph:
 
   def invoke(
     self,
-    project_structure: str,
+    run_build: bool,
+    run_existing_test: bool,
     exist_build: Optional[bool] = None,
     build_command_summary: Optional[str] = None,
     build_fail_log: Optional[str] = None,
@@ -131,7 +128,8 @@ class BuildAndTestSubgraph:
       config = {"configurable": {"thread_id": self.thread_id}}
 
     input_state = {
-      "project_structure": project_structure,
+      "run_build": run_build,
+      "run_existing_test": run_existing_test,
     }
     if exist_build:
       input_state["exist_build"] = exist_build
@@ -147,6 +145,7 @@ class BuildAndTestSubgraph:
       input_state["test_fail_log"] = test_fail_log
 
     output_state = self.subgraph.invoke(input_state, config)
+
     return {
       "exist_build": output_state["exist_build"],
       "build_command_summary": output_state["build_command_summary"],

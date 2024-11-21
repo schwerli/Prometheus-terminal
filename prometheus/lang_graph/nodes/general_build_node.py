@@ -6,6 +6,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
 from prometheus.tools import container_command
 
@@ -40,7 +41,8 @@ Remember:
 - Simply execute the build and report that it was run
 """
 
-  def __init__(self, model: BaseChatModel, container: BaseContainer):
+  def __init__(self, model: BaseChatModel, container: BaseContainer, kg: KnowledgeGraph):
+    self.kg = kg
     self.tools = self._init_tools(container)
     self.model_with_tools = model.bind_tools(self.tools)
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
@@ -61,7 +63,7 @@ Remember:
     return tools
 
   def format_human_message(self, state: BuildAndTestState) -> HumanMessage:
-    message = f"The (incomplete) project structure is:\n{state['project_structure']}"
+    message = f"The (incomplete) project structure is:\n{self.kg.get_file_tree()}"
     if "build_command_summary" in state and state["build_command_summary"]:
       message += f"\n\nThe previous build summary is:\n{state['build_command_summary']}"
     return HumanMessage(message)

@@ -7,14 +7,13 @@ identify any failures.
 """
 
 import logging
-from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
+from prometheus.utils.issue_util import format_agent_tool_message_history
 
 
 class TestStructuredOutput(BaseModel):
@@ -289,38 +288,6 @@ Output:
     self.model = prompt | structured_llm
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_structured_node")
 
-  def format_test_history(self, test_messages: Sequence[BaseMessage]):
-    """Formats test execution messages into a structured history.
-
-    Processes various message types (AI, Tool) into a chronological sequence
-    of test execution steps and their outputs.
-
-    Args:
-      test_messages: Sequence of messages from test execution attempts.
-        Can include AIMessage and ToolMessage types.
-
-    Returns:
-      List of formatted strings representing the test execution history,
-      including internal thoughts, executed commands, and their outputs.
-    """
-    formatted_messages = []
-    for message in test_messages:
-      if isinstance(message, AIMessage):
-        if message.content:
-          formatted_messages.append(f"Assistant internal thought: {message.content}")
-        if (
-          message.additional_kwargs
-          and "tool_calls" in message.additional_kwargs
-          and message.additional_kwargs["tool_calls"]
-        ):
-          for tool_call in message.additional_kwargs["tool_calls"]:
-            formatted_messages.append(
-              f"Assistant executed command: {tool_call['function']['arguments']}"
-            )
-      elif isinstance(message, ToolMessage):
-        formatted_messages.append(f"Command output: {message.content}")
-    return formatted_messages
-
   def __call__(self, state: BuildAndTestState):
     """Processes test state to generate structured test analysis.
 
@@ -336,7 +303,7 @@ Output:
       - test_command_summary: String describing test framework and required commands
       - test_fail_log: String containing test failure details (empty if all passed)
     """
-    test_history = "\n".join(self.format_test_history(state["test_messages"]))
+    test_history = format_agent_tool_message_history(state["test_messages"])
     self._logger.debug(f"Test history:\n{test_history}")
     response = self.model.invoke({"test_history": test_history})
     self._logger.debug(f"GeneralTestStructuredNode response:\n{response}")

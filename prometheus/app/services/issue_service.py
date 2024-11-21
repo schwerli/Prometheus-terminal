@@ -33,6 +33,8 @@ class IssueService:
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
     issue_type: IssueType,
+    run_build: bool,
+    run_existing_test: bool,
     dockerfile_content: Optional[str] = None,
     image_name: Optional[str] = None,
     workdir: Optional[str] = None,
@@ -64,4 +66,6 @@ class IssueService:
       self.postgres_service.checkpointer,
     )
 
-    issue_graph.invoke(issue_title, issue_body, issue_comments, issue_type)
+    issue_graph.invoke(
+      issue_title, issue_body, issue_comments, issue_type, run_build, run_existing_test
+    )

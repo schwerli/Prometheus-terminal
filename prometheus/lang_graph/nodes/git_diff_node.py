@@ -7,9 +7,9 @@ output.
 """
 
 import logging
+from typing import Dict
 
 from prometheus.git.git_repository import GitRepository
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
 
 
 class GitDiffNode:
@@ -24,7 +24,7 @@ class GitDiffNode:
   def __init__(self):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.git_diff_node")
 
-  def __call__(self, state: IssueAnswerAndFixState):
+  def __call__(self, state: Dict):
     """Generates a Git diff for the current project state.
 
     Creates a Git repository instance for the project path specified in the
@@ -39,6 +39,9 @@ class GitDiffNode:
       - patch: String containing the Git diff output showing all changes made to the project.
     """
     git_repo = GitRepository(state["project_path"], None, copy_to_working_dir=False)
-    patch = git_repo.get_diff()
+    if "reproduced_bug_file" in state and state["reproduced_bug_file"]:
+      patch = git_repo.get_diff([state["reproduced_bug_file"]])
+    else:
+      patch = git_repo.get_diff()
     self._logger.debug(f"Generated patch:\n{patch}")
     return {"patch": patch}
