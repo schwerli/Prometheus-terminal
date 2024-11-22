@@ -116,15 +116,15 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
       )
 
   request.app.state.service_coordinator.answer_issue(
-    issue.issue_title,
-    issue.issue_body,
-    issue.issue_comments if issue.issue_comments else [],
-    issue.issue_type,
-    issue.run_build,
-    issue.run_existing_test,
-    issue.dockerfile_content,
-    issue.image_name,
-    issue.workdir,
-    issue.build_commands,
-    issue.test_commands,
+    issue_title=issue.issue_title,
+    issue_body=issue.issue_body,
+    issue_comments=issue.issue_comments if issue.issue_comments else [],
+    issue_type=issue.issue_type,
+    run_build=issue.run_build,
+    run_existing_test=issue.run_existing_test,
+    dockerfile_content=issue.dockerfile_content,
+    image_name=issue.image_name,
+    workdir=issue.workdir,
+    build_commands=issue.build_commands,
+    test_commands=issue.test_commands,
   )

@@ -82,7 +82,16 @@ Prioritize finding:
     query = f"""\
 {issue_description}
 
-Now find all relevant information from the codebase that can potentially be used to fix the issue.
+CONTEXT SEARCH OBJECTIVE:
+Find all relevant code and configuration that could explain or be related to this bug. Specifically search for:
+- Source code matching the described behavior or error
+- Error handling and logging code
+- Configuration settings that might affect this behavior
+- Related function calls and data flows
+
+Please exclude test files from the search as they are not relevant for fixing the issue.
+
+Focus on source files, configuration files, and logging implementations that could help diagnose and fix this bug.
 """
     return query
 

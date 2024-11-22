@@ -145,6 +145,13 @@ class BuildAndTestSubgraph:
 
     output_state = self.subgraph.invoke(input_state, config)
 
+    exist_build = False
+    build_command_summary = ""
+    build_fail_log = ""
+    exist_test = False
+    test_command_summary = ""
+    test_fail_log = ""
+
     return {
       "exist_build": output_state["exist_build"],
       "build_command_summary": output_state["build_command_summary"],

@@ -9,6 +9,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.bug_reproducing_execute_node import BugReproducingExecuteNode
+from prometheus.lang_graph.nodes.bug_reproducing_file_node import BugReproducingFileNode
 from prometheus.lang_graph.nodes.bug_reproducing_structured_node import BugReproducingStructuredNode
 from prometheus.lang_graph.nodes.bug_reproducing_write_node import BugReproducingWriteNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
@@ -28,11 +29,12 @@ class BugReproductionSubgraph:
   ):
     self.thread_id = thread_id
 
-    bug_reproducing_write_node = BugReproducingWriteNode(model, kg)
-    bug_reproducing_write_tools = ToolNode(
-      tools=bug_reproducing_write_node.tools,
-      name="bug_reproducing_write_tools",
-      messages_key="bug_reproducing_write_messages",
+    bug_reproducing_write_node = BugReproducingWriteNode(model)
+    bug_reproducing_file_node = BugReproducingFileNode(model, kg)
+    bug_reproducing_file_tools = ToolNode(
+      tools=bug_reproducing_file_node.tools,
+      name="bug_reproducing_file_tools",
+      messages_key="bug_reproducing_file_messages",
     )
     update_container_node = UpdateContainerNode(container, kg)
     bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, kg, test_commands)
@@ -42,7 +44,7 @@ class BugReproductionSubgraph:
       messages_key="bug_reproducing_execute_messages",
     )
     bug_reproducing_structured_node = BugReproducingStructuredNode(model)
-    reset_bug_reproducing_write_messages_node = ResetMessagesNode("bug_reproducing_write_messages")
+    reset_bug_reproducing_file_messages_node = ResetMessagesNode("bug_reproducing_file_messages")
     reset_bug_reproducing_execute_messages_node = ResetMessagesNode(
       "bug_reproducing_execute_messages"
     )
@@ -50,13 +52,14 @@ class BugReproductionSubgraph:
     workflow = StateGraph(BugReproductionState)
 
     workflow.add_node("bug_reproducing_write_node", bug_reproducing_write_node)
-    workflow.add_node("bug_reproducing_write_tools", bug_reproducing_write_tools)
+    workflow.add_node("bug_reproducing_file_node", bug_reproducing_file_node)
+    workflow.add_node("bug_reproducing_file_tools", bug_reproducing_file_tools)
     workflow.add_node("update_container_node", update_container_node)
     workflow.add_node("bug_reproducing_execute_node", bug_reproducing_execute_node)
     workflow.add_node("bug_reproducing_execute_tools", bug_reproducing_execute_tools)
     workflow.add_node("bug_reproducing_structured_node", bug_reproducing_structured_node)
     workflow.add_node(
-      "reset_bug_reproducing_write_messages_node", reset_bug_reproducing_write_messages_node
+      "reset_bug_reproducing_file_messages_node", reset_bug_reproducing_file_messages_node
     )
     workflow.add_node(
       "reset_bug_reproducing_execute_messages_node", reset_bug_reproducing_execute_messages_node
@@ -64,15 +67,16 @@ class BugReproductionSubgraph:
 
     workflow.set_entry_point("bug_reproducing_write_node")
 
+    workflow.add_edge("bug_reproducing_write_node", "bug_reproducing_file_node")
     workflow.add_conditional_edges(
-      "bug_reproducing_write_node",
-      functools.partial(tools_condition, messages_key="bug_reproducing_write_messages"),
+      "bug_reproducing_file_node",
+      functools.partial(tools_condition, messages_key="bug_reproducing_file_messages"),
       {
-        "tools": "bug_reproducing_write_tools",
+        "tools": "bug_reproducing_file_tools",
         END: "update_container_node",
       },
     )
-    workflow.add_edge("bug_reproducing_write_tools", "bug_reproducing_write_node")
+    workflow.add_edge("bug_reproducing_file_tools", "bug_reproducing_file_node")
     workflow.add_edge("update_container_node", "bug_reproducing_execute_node")
     workflow.add_conditional_edges(
       "bug_reproducing_execute_node",
@@ -86,10 +90,10 @@ class BugReproductionSubgraph:
     workflow.add_conditional_edges(
       "bug_reproducing_structured_node",
       lambda state: state["reproduced_bug"],
-      {True: END, False: "reset_bug_reproducing_write_messages_node"},
+      {True: END, False: "reset_bug_reproducing_file_messages_node"},
     )
     workflow.add_edge(
-      "reset_bug_reproducing_write_messages_node", "reset_bug_reproducing_execute_messages_node"
+      "reset_bug_reproducing_file_messages_node", "reset_bug_reproducing_execute_messages_node"
     )
     workflow.add_edge("reset_bug_reproducing_execute_messages_node", "bug_reproducing_write_node")
 

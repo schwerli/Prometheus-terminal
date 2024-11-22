@@ -98,7 +98,7 @@ class IssueBugSubgraph:
     workflow.add_conditional_edges(
       "bug_fix_verification_branch_node",
       lambda state: state["reproduced_bug"],
-      {True: "bug_fix_verification_subgraph_node", False: "build_or_test_branch_node"}
+      {True: "bug_fix_verification_subgraph_node", False: "build_or_test_branch_node"},
     )
     workflow.add_conditional_edges(
       "bug_fix_verification_subgraph_node",

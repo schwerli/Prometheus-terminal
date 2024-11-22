@@ -4,7 +4,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 from git import Git, InvalidGitRepositoryError, Repo
 

@@ -33,7 +33,9 @@ def read_file(relative_path: str, root_path: str, n_lines: int = 1000) -> str:
 
 
 class ReadFileWithLineNumbersInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file to read, eg. foo/bar/test.py, not absolute path")
+  relative_path: str = Field(
+    description="The relative path of the file to read, eg. foo/bar/test.py, not absolute path"
+  )
   start_line: int = Field(description="The start line number to read, 1-indexed and inclusive")
   end_line: int = Field(description="The ending line number to read, 1-indexed and exclusive")
 
@@ -41,6 +43,7 @@ class ReadFileWithLineNumbersInput(BaseModel):
 READ_FILE_WITH_LINE_NUMBERS_DESCRIPTION = """\
 Read a specific range of lines from a file and return the content with line numbers prepended.
 The line numbers are 1-indexed where start_line is inclusive and end_line is exclusive.
+For best results when analyzing code or text files, consider reading chunks of 500-1000 lines at a time.
 """
 
 
@@ -55,7 +58,9 @@ def read_file_with_line_numbers(
     return f"The file {relative_path} does not exist."
 
   if end_line < start_line:
-    return f"The end line number {end_line} must be greater than the start line number {start_line}."
+    return (
+      f"The end line number {end_line} must be greater than the start line number {start_line}."
+    )
 
   zero_based_start_line = start_line - 1
   zero_based_end_line = end_line - 1
@@ -69,7 +74,9 @@ def read_file_with_line_numbers(
 
 
 class CreateFileInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file to create, eg. foo/bar/test.py, not absolute path")
+  relative_path: str = Field(
+    description="The relative path of the file to create, eg. foo/bar/test.py, not absolute path"
+  )
   content: str = Field(description="The content of the file to create")
 
 
@@ -94,7 +101,9 @@ def create_file(relative_path: str, root_path: str, content: str) -> str:
 
 
 class DeleteInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file/dir to delete, eg. foo/bar/test.py, not absolute path")
+  relative_path: str = Field(
+    description="The relative path of the file/dir to delete, eg. foo/bar/test.py, not absolute path"
+  )
 
 
 DELETE_DESCRIPTION = """\
@@ -121,7 +130,9 @@ def delete(relative_path: str, root_path: str) -> str:
 
 
 class EditFileInput(BaseModel):
-  relative_path: str = Field(description="The relative path of the file to edit, eg. foo/bar/test.py, not absolute path")
+  relative_path: str = Field(
+    description="The relative path of the file to edit, eg. foo/bar/test.py, not absolute path"
+  )
   start_line: int = Field(description="The start line number to edit, 1-indexed and inclusive")
   end_line: int = Field(description="The ending line number to edit, 1-indexed and exclusive")
   new_content: str = Field(
@@ -148,7 +159,9 @@ def edit_file(
     return f"The file {relative_path} does not exist."
 
   if end_line < start_line:
-    return f"The end line number {end_line} must be greater than the start line number {start_line}."
+    return (
+      f"The end line number {end_line} must be greater than the start line number {start_line}."
+    )
 
   zero_based_start_line = start_line - 1
   zero_based_end_line = end_line - 1
@@ -161,4 +174,7 @@ def edit_file(
 
   lines[zero_based_start_line:zero_based_end_line] = new_content.splitlines(True)
   file_path.write_text("".join(lines))
-  return f"The file {relative_path} has been edited. You must re-read this file again to verify the change."
+
+  start_context = max(0, zero_based_start_line - 10)
+  end_context = min(len(lines), zero_based_end_line + 10)
+  return f"The file {relative_path} has been edited. The new content is:\n{pre_append_line_numbers("".join(lines[start_context:end_context]), start_context+1)}"

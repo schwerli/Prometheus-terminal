@@ -69,17 +69,14 @@ Title: {title}
 Description: {body}
 Comments: {comments}
 
-Project structure:
-{project_structure}
+Bug reproducing file message:
+{bug_reproducing_file_message}
 
 User provided test commands:
 {test_commands}
 
 Bug context summary:
 {bug_context}
-
-Bug reproducing write agent message:
-{bug_reproducing_write_message}
 """
 
   def __init__(
@@ -111,8 +108,6 @@ Bug reproducing write agent message:
     return tools
 
   def format_human_message(self, state: BugReproductionState) -> HumanMessage:
-    last_bug_producing_write_message = state["bug_reproducing_write_messages"][-1]
-    last_bug_producing_write_message_content = last_bug_producing_write_message.content
     test_commands_str = ""
     if self.test_commands:
       test_commands_str = format_test_commands(self.test_commands)
@@ -121,10 +116,9 @@ Bug reproducing write agent message:
         title=state["issue_title"],
         body=state["issue_body"],
         comments=state["issue_comments"],
-        project_structure=self.kg.get_file_tree(),
+        bug_reproducing_file_message=state["bug_reproducing_file_messages"][-1].content,
         test_commands=test_commands_str,
         bug_context=state["bug_context"],
-        bug_reproducing_write_message=last_bug_producing_write_message_content,
       )
     )
 
@@ -135,7 +129,4 @@ Bug reproducing write agent message:
 
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"BugReproducingExecuteNode response:\n{response}")
-    return {
-      "bug_reproducing_execute_messages": [response],
-      "last_bug_reproducing_execute_message": response,
-    }
+    return {"bug_reproducing_execute_messages": [response]}

@@ -27,7 +27,7 @@ You are a technical context presenter. Present ALL found context exactly as foll
 
 FORMAT RULES:
 1. Always start with relative file path
-2. Include exact line numbers for every code block
+2. Include exact starting and ending line numbers for every code block
 3. Show surrounding text/documentation as-is
 
 REQUIREMENTS:

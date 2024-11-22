@@ -79,4 +79,5 @@ Reproducing bug commands:
 
     response = self.model_with_tools.invoke(message_history)
 
+    self._logger.debug(response)
     return {"bug_fix_verify_messages": [response]}
