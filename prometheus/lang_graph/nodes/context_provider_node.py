@@ -47,29 +47,43 @@ KNOWLEDGE GRAPH STRUCTURE:
   * NEXT_CHUNK: Text chunk → next chunk
 
 CONTEXT GATHERING RULES:
-The context must enable someone with NO prior knowledge to fully understand the code. Gather:
+For ALL files you return (including documentation, config files):
+- MUST include relative file path
 
-1. Source Code Context:
-   - Complete function/method implementation
-   - Containing class/module
-   - All methods called within the code
-   - Relevant methods that call this code
-   - Required configurations and types
-   - Error handling patterns
+For source code files, ADDITIONALLY include:
+- Start line number
+- End line number
 
-2. Documentation:
-   - All related documentation sections
-   - Usage examples and implementation notes
-   - Configuration requirements
+ALWAYS return the COMPLETE implementation of:
+- The method/function mentioned in the query
+- The class if it's a class-related query
+- Functions if it's a function-related query
 
-3. KEEP SEARCHING UNTIL:
-   - Relevant method calls are explained
-   - Control flow is clear
-   - Dependencies are resolved
-   - Setup requirements are included
-   - Error handling is understood
+Example formats:
 
-STOP ONLY when someone new could understand and explain the complete functionality.
+Method in class:
+File: src/services/auth.py
+Lines 45-67:
+```python
+def validate_token(token: str) -> bool:
+    if not token:
+        return False
+    # Validation logic
+    return True
+```
+
+Documentation:
+File: docs/authentication.md
+```markdown
+# Token Authentication
+
+The `validate_token` function performs validation of authentication tokens.
+
+## Parameters
+- token (str): The JWT token to validate
+```
+
+STOP ONLY when you have gathered enough information to fully answer the query.
 
 The file tree of the codebase:
 {file_tree}
@@ -302,7 +316,11 @@ All ASTNode types: {ast_node_types}
     Returns:
       Dictionary that will update the state with the model's response messages.
     """
-    message_history = [self.system_prompt, HumanMessage(state["query"])] + state["context_messages"]
+    if "refined_query" in state and state["refined_query"]:
+      human_message = HumanMessage(state["refined_query"])
+    else:
+      human_message = HumanMessage(state["original_query"])
+    message_history = [self.system_prompt, human_message] + state["context_messages"]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"ContextProviderNode response:\n{response}")
     return {"context_messages": [response]}

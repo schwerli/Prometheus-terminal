@@ -8,7 +8,7 @@ import logging
 from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 
@@ -23,35 +23,28 @@ class ContextSummaryNode:
   """
 
   SYS_PROMPT = """\
-You are a technical context presenter. Present ALL found context exactly as follows:
+You are a technical context organizer. Present ALL relevant context while avoiding duplication:
 
-FORMAT RULES:
-1. Always start with relative file path
-2. Include exact starting and ending line numbers for every code block
-3. Show surrounding text/documentation as-is
+CONTEXT PRESERVATION RULES:
+1. For ALL files:
+   - MUST include relative file path
+   - Keep original text formatting
+   - Maintain documentation as-is
 
-REQUIREMENTS:
-- Copy-paste context exactly as provided
-- Include complete code blocks with line numbers
-- Keep all technical details intact
-- Preserve exact file relative paths
-- Maintain original text formatting
+2. For source code files:
+   - Include start and end line numbers
+   - Preserve complete implementations
+   - Keep code formatting unchanged
 
-DO NOT:
-- Summarize or paraphrase
-- Skip any technical details
-- Change code formatting
-- Remove line numbers
-- Alter file paths
-
-ONLY filter out context that is completely unrelated to the query.
+3. Smart Deduplication:
+   - If a class is included, omit its internal methods unless specifically relevant
+   - Remove duplicate file content while keeping the most comprehensive version
+   - Keep all unique implementations and documentation
   """
 
   HUMAN_PROMPT = """\
-The user query is: {query}
-
-The retrieved context from another agent:
-{context}
+All retrieve context:
+{all_context}
 """
 
   def __init__(self, model: BaseChatModel):
@@ -70,30 +63,7 @@ The retrieved context from another agent:
 
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_summary_node")
 
-  def format_messages(self, context_messages: Sequence[BaseMessage]):
-    """Formats a sequence of messages into a structured list.
-
-    Converts different types of messages (Human, AI, Tool) into a consistently
-    formatted list of strings, preserving the message source and content.
-
-    Args:
-      context_messages: Sequence of BaseMessage instances to be formatted.
-        Can include HumanMessage, AIMessage, and ToolMessage types.
-
-    Returns:
-      List of formatted message strings, each prefixed with its source type.
-    """
-    formatted_messages = []
-    for message in context_messages:
-      if isinstance(message, HumanMessage):
-        formatted_messages.append(f"Human message: {message.content}")
-      elif isinstance(message, AIMessage):
-        formatted_messages.append(f"Assistant message: {message.content}")
-      elif isinstance(message, ToolMessage):
-        formatted_messages.append(f"Tool message: {message.content}")
-    return formatted_messages
-
-  def format_human_message(self, query: str, context_messages: Sequence[BaseMessage]):
+  def format_human_message(self, all_context_provider_responses: Sequence[BaseMessage]):
     """Creates a formatted message combining query and context.
 
     Combines the user query with formatted context messages into a single
@@ -106,11 +76,10 @@ The retrieved context from another agent:
     Returns:
       HumanMessage instance containing the formatted query and context.
     """
-    formatted_context_messages = self.format_messages(context_messages)
-    human_message = HumanMessage(
-      self.HUMAN_PROMPT.format(query=query, context="\n".join(formatted_context_messages))
-    )
-    return human_message
+    all_context = ""
+    for response in all_context_provider_responses:
+      all_context += f"{response.content}\n\n"
+    return HumanMessage(self.HUMAN_PROMPT.format(all_context=all_context))
 
   def __call__(self, state: ContextProviderState):
     """Processes context state to generate organized summary.
@@ -125,12 +94,8 @@ The retrieved context from another agent:
     Returns:
       Dictionary that updates the state with the structured summary.
     """
-    human_message = self.format_human_message(state["query"], state["context_messages"])
-    self._logger.debug(f"human_message: {human_message}")
-    message_history = [
-      self.system_prompt,
-      self.format_human_message(state["query"], state["context_messages"]),
-    ]
+    human_message = self.format_human_message(state["all_context_provider_responses"])
+    message_history = [self.system_prompt, human_message]
     response = self.model.invoke(message_history)
     self._logger.debug(f"ContextSummaryNode response:\n{response}")
     return {"summary": response.content}

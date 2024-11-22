@@ -177,4 +177,4 @@ def edit_file(
 
   start_context = max(0, zero_based_start_line - 10)
   end_context = min(len(lines), zero_based_end_line + 10)
-  return f"The file {relative_path} has been edited. The new content is:\n{pre_append_line_numbers("".join(lines[start_context:end_context]), start_context+1)}"
+  return f"The file {relative_path} has been edited. The new content is:\n{pre_append_line_numbers(''.join(lines[start_context:end_context]), start_context+1)}"
