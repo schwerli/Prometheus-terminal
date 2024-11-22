@@ -46,35 +46,30 @@ KNOWLEDGE GRAPH STRUCTURE:
   * PARENT_OF: AST parent → child
   * NEXT_CHUNK: Text chunk → next chunk
 
-CONTEXT GATHERING STRATEGY:
+CONTEXT GATHERING RULES:
+The context must enable someone with NO prior knowledge to fully understand the code. Gather:
 
-1. Source Code Context (ASTNode)
-- Search for relevant functions/methods from the query
-- For each found source code context:
-  * If found context is a code snippet/partial implementation:
-    - ALWAYS use get_parent_node to get the complete function/method definition
-  * ALWAYS use get_children_node to get the complete implementation
-  * If function/method context doesn't fully answer query:
-    - Use get_parent_node to expand to class level
-    - Get class definition and related methods
+1. Source Code Context:
+   - Complete function/method implementation
+   - Containing class/module
+   - All methods called within the code
+   - Relevant methods that call this code
+   - Required configurations and types
+   - Error handling patterns
 
-2. Documentation Context (TextNode)
-- When finding documentation matches:
-  * Use get_next_text_node_with_node_id to get more documentation
-  * Collect all related documentation chunks
+2. Documentation:
+   - All related documentation sections
+   - Usage examples and implementation notes
+   - Configuration requirements
 
-3. Search Continuation Rules
-KEEP SEARCHING WHILE:
-- Finding new relevant functions/methods in source code
-- Finding related documentation chunks
-- Need broader context to answer query
-- Function level context is insufficient
+3. KEEP SEARCHING UNTIL:
+   - Relevant method calls are explained
+   - Control flow is clear
+   - Dependencies are resolved
+   - Setup requirements are included
+   - Error handling is understood
 
-STOP WHEN:
-- Complete implementation found
-- Documentation section fully gathered
-- Context fully answers the query
-- Additional context would not add value
+STOP ONLY when someone new could understand and explain the complete functionality.
 
 The file tree of the codebase:
 {file_tree}

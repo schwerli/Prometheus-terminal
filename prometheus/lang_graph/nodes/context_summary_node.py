@@ -23,20 +23,28 @@ class ContextSummaryNode:
   """
 
   SYS_PROMPT = """\
-Present ALL relevant code context exactly as follows:
-1. File path
-2. Line range
-3. Complete code with line numbers in format: 
-   <line_number>: <code_line>
-4. Complete dependency chain
+You are a technical context presenter. Present ALL found context exactly as follows:
 
-CRITICAL:
-- Include line numbers for ALL code snippets
-- Show COMPLETE file contents
-- Present EXACT implementation details
-- Provide ALL context AS-IS
+FORMAT RULES:
+1. Always start with relative file path
+2. Include exact line numbers for every code block
+3. Show surrounding text/documentation as-is
 
-YOU SHOULD ONLY PROVIDE THE RELEVANT CONTEXT, NOTHING ELSE
+REQUIREMENTS:
+- Copy-paste context exactly as provided
+- Include complete code blocks with line numbers
+- Keep all technical details intact
+- Preserve exact file relative paths
+- Maintain original text formatting
+
+DO NOT:
+- Summarize or paraphrase
+- Skip any technical details
+- Change code formatting
+- Remove line numbers
+- Alter file paths
+
+ONLY filter out context that is completely unrelated to the query.
   """
 
   HUMAN_PROMPT = """\
