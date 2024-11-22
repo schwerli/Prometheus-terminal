@@ -10,6 +10,17 @@ from prometheus.utils.issue_util import format_issue_comments
 
 class BugFixingNode(EditNode):
   HUMAN_PROMPT = """\
+YOUR TASK:
+You are tasked with fixing this bug by making precise code changes. Important guidelines:
+1. DO NOT modify any test files - tests are the source of truth for expected behavior
+2. Make minimal, focused changes to fix the bug while preserving existing functionality
+3. For each change:
+   - Read current file state
+   - Plan precise changes
+   - Make the change
+
+Please proceed with fixing the bug, documenting your analysis and changes.
+
 ISSUE INFORMATION:
 Title: {issue_title}
 Description: {issue_body}
@@ -21,18 +32,6 @@ BUG CONTEXT:
 {reproduction_info}
 
 {previous_edit_info}
-
-YOUR TASK:
-You are tasked with fixing this bug by making precise code changes. Important guidelines:
-1. DO NOT modify any test files - tests are the source of truth for expected behavior
-2. Make minimal, focused changes to fix the bug while preserving existing functionality
-3. For each change:
-   - Read current file state
-   - Plan precise changes
-   - Make the change
-   - Verify immediately
-
-Please proceed with fixing the bug, documenting your analysis and changes.
 """
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):

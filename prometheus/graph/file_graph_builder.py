@@ -106,8 +106,8 @@ class FileGraphBuilder:
 
     ast_root_node = ASTNode(
       type=tree.root_node.type,
-      start_line=tree.root_node.start_point[0],
-      end_line=tree.root_node.end_point[0],
+      start_line=tree.root_node.start_point[0]+1,
+      end_line=tree.root_node.end_point[0]+1,
       text=tree.root_node.text.decode("utf-8"),
     )
     kg_ast_root_node = KnowledgeGraphNode(next_node_id, ast_root_node)
@@ -128,8 +128,8 @@ class FileGraphBuilder:
       for tree_sitter_child_node in tree_sitter_node.children:
         child_ast_node = ASTNode(
           type=tree_sitter_child_node.type,
-          start_line=tree_sitter_child_node.start_point[0],
-          end_line=tree_sitter_child_node.end_point[0],
+          start_line=tree_sitter_child_node.start_point[0]+1,
+          end_line=tree_sitter_child_node.end_point[0]+1,
           text=tree_sitter_child_node.text.decode("utf-8"),
         )
         kg_child_ast_node = KnowledgeGraphNode(next_node_id, child_ast_node)

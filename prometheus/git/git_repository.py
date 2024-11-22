@@ -4,7 +4,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 from git import Git, InvalidGitRepositoryError, Repo
 
@@ -95,8 +95,11 @@ class GitRepository:
   def pull(self):
     self.repo.git.pull()
 
-  def get_diff(self) -> str:
+  def get_diff(self, excluded_files: Optional[Sequence[str]] = None) -> str:
     self.repo.git.add("-A")
+    if excluded_files:
+      for file in excluded_files:
+        self.repo.git.reset(file)
     diff = self.repo.git.diff("--cached")
     if diff and not diff.endswith("\n"):
       diff += "\n"
@@ -111,7 +114,7 @@ class GitRepository:
       shutil.rmtree(self.repo.working_dir)
       self.repo = None
 
-  def create_and_push_branch(self, branch_name: str, commit_message: str):
+  def create_and_push_branch(self, branch_name: str, commit_message: str, excluded_files: Optional[Sequence[str]] = None):
     """Create a new branch, commit changes, and push to remote.
 
     This method creates a new branch, switches to it, stages all changes,
@@ -125,5 +128,8 @@ class GitRepository:
     new_branch = self.repo.create_head(branch_name)
     new_branch.checkout()
     self.repo.git.add(A=True)
+    if excluded_files:
+      for file in excluded_files:
+        self.repo.git.reset(file)
     self.repo.index.commit(commit_message)
     self.repo.git.push("--set-upstream", "origin", branch_name)

@@ -8,7 +8,7 @@ from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVer
 
 
 class BugFixVerifyStructureOutput(BaseModel):
-  fixed_bug: bool = Field(description="Whether the bug is fixed (test passed)")
+  reproducing_test_passed: bool = Field(description="Whether the bug is fixed (test passed)")
   reproducing_test_fail_log: str = Field(
     description="If the test failed, contains the complete test failure log"
   )
@@ -16,28 +16,75 @@ class BugFixVerifyStructureOutput(BaseModel):
 
 class BugFixVerifyStructuredNode:
   SYS_PROMPT = """\
-You are a test result parser. Your only task is to:
-1. Check if the test output contains exactly "Bug resolved"
-2. If it doesn't contain "Bug resolved", copy the complete test output as the failure log
+You are a test result parser. Your only task is to check if the bug reproducing test now passes after code changes.
+
+Your task is to:
+1. Check if the test passes by looking for pytest pass indicators:
+   - Test summary showing "passed" or "PASSED"
+   - Warning is ok
+   - No "FAILURES" section
+2. If the test fails, capture the complete failure output
 
 Return:
-- fixed_bug: true ONLY if the test output contains exactly "Bug resolved", false otherwise
-- reproducing_test_fail_log: empty string if "Bug resolved" is found, complete test output otherwise
+- reproducing_test_passed: true ONLY if the test passes completely, false otherwise
+- reproducing_test_fail_log: empty string if test passes, complete test output if it fails
 
-Example for passing test (contains "Bug resolved"):
+Example of Fixed Bug (Test Passes):
+```
+Test Execute Messages:
+run_command: pytest tests/test_json_parser.py
+
+Output:
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.4.4, pluggy-1.0.0
+collected 1 item
+
+tests/test_json_parser.py .                                              [100%]
+
+============================== 1 passed in 0.16s =============================
+```
+
+Example Output for Fixed Bug:
 {
-    "fixed_bug": true,
+    "reproducing_test_passed": true,
     "reproducing_test_fail_log": ""
 }
 
-Example for failing test (doesn't contain "Bug resolved"):
+Example of Unfixed Bug (Test Still Fails):
+```
+Test Execute Messages:
+run_command: pytest tests/test_json_parser.py
+
+Output:
+============================= test session starts ==============================
+platform linux -- Python 3.9.20, pytest-7.4.4, pluggy-1.0.0
+collected 1 item
+
+tests/test_json_parser.py F                                              [100%]
+
+================================= FAILURES ==================================
+_________________________ test_empty_array_parsing _________________________
+    def test_empty_array_parsing():
+>       assert parser.parse_array(['[', ']']) == []
+E       ValueError: Empty array not supported
+
+tests/test_json_parser.py:7: ValueError
+=========================== short test summary info ==========================
+FAILED tests/test_json_parser.py::test_empty_array_parsing - ValueError
+============================== 1 failed in 0.16s =============================
+```
+
+Example Output for Unfixed Bug:
 {
-    "fixed_bug": false,
-    "reproducing_test_fail_log": "<complete test output>"
+    "reproducing_test_passed": false,
+    "reproducing_test_fail_log": "<complete test output above>"
 }
 
-Important: The fixed_bug field should ONLY be true if the exact string "Bug resolved" is found in the test output.
-Any other output, even if it suggests success, should be treated as a failure.
+Important:
+- Only look at test pass/fail status
+- A single failing test means the bug isn't fixed
+- Include complete test output in failure log
+- Any error or failure means the bug isn't fixed yet
 """.replace("{", "{{").replace("}", "}}")
 
   def __init__(self, model: BaseChatModel):
@@ -54,6 +101,6 @@ Any other output, even if it suggests success, should be treated as a failure.
     self._logger.debug(f"BugFixVerifyStructuredNode response:\n{response}")
 
     return {
-      "fixed_bug": response.fixed_bug,
+      "reproducing_test_passed": response.reproducing_test_passed,
       "reproducing_test_fail_log": response.reproducing_test_fail_log,
     }

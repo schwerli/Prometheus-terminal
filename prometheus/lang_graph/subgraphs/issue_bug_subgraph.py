@@ -6,6 +6,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.errors import GraphRecursionError
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -17,6 +18,7 @@ from prometheus.lang_graph.nodes.bug_fixing_node import BugFixingNode
 from prometheus.lang_graph.nodes.bug_reproduction_subgraph_node import BugReproductionSubgraphNode
 from prometheus.lang_graph.nodes.build_and_test_subgraph_node import BuildAndTestSubgraphNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
+from prometheus.lang_graph.nodes.issue_bug_responder_node import IssueBugResponderNode
 from prometheus.lang_graph.nodes.issue_to_context_node import IssueToContextNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
@@ -52,7 +54,7 @@ class IssueBugSubgraph:
       name="bug_fixing_tools",
       messages_key="bug_fixing_messages",
     )
-    git_diff_node = GitDiffNode(kg)
+    git_diff_node = GitDiffNode(kg, exclude_reproduced_bug_file=True)
     reset_bug_fixing_messages_node = ResetMessagesNode("bug_fixing_messages")
     update_container_node = UpdateContainerNode(self.container, kg)
 
@@ -64,6 +66,7 @@ class IssueBugSubgraph:
     build_and_test_subgraph_node = BuildAndTestSubgraphNode(
       container, model, kg, build_commands, test_commands, thread_id, checkpointer
     )
+    issue_bug_responder_node = IssueBugResponderNode(model)
 
     workflow = StateGraph(IssueBugState)
 
@@ -81,6 +84,7 @@ class IssueBugSubgraph:
     workflow.add_node("bug_fix_verification_subgraph_node", bug_fix_verification_subgraph_node)
     workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
     workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
+    workflow.add_node("issue_bug_responder_node", issue_bug_responder_node)
 
     workflow.set_entry_point("issue_to_bug_context_node")
     workflow.add_edge("issue_to_bug_context_node", "bug_reproduction_subgraph_node")
@@ -108,13 +112,14 @@ class IssueBugSubgraph:
     workflow.add_conditional_edges(
       "build_or_test_branch_node",
       lambda state: state["run_build"] or state["run_existing_test"],
-      {True: "build_and_test_subgraph_node", False: END},
+      {True: "build_and_test_subgraph_node", False: "issue_bug_responder_node"},
     )
     workflow.add_conditional_edges(
       "build_and_test_subgraph_node",
       lambda state: state["build_fail_log"] or state["existing_test_fail_log"],
-      {True: "bug_fixing_node", False: END},
+      {True: "bug_fixing_node", False: "issue_bug_responder_node"},
     )
+    workflow.add_edge("issue_bug_responder_node", END)
 
     self.subgraph = workflow.compile(checkpointer=checkpointer)
 
@@ -125,15 +130,11 @@ class IssueBugSubgraph:
     issue_comments: Sequence[Mapping[str, str]],
     run_build: bool,
     run_existing_test: bool,
-    recursion_limit: int = 300,
+    recursion_limit: int = 100,
   ):
     config = {"recursion_limit": recursion_limit}
     if self.thread_id:
       config["configurable"] = {"thread_id": self.thread_id}
-
-    if not self.container.is_running():
-      self.container.build_docker_image()
-      self.container.start_container()
 
     input_state = {
       "issue_title": issue_title,
@@ -143,6 +144,19 @@ class IssueBugSubgraph:
       "run_existing_test": run_existing_test,
     }
 
-    output_state = self.subgraph.invoke(input_state, config)
-
-    self.container.cleanup()
+    try:
+      if not self.container.is_running():
+        self.container.build_docker_image()
+        self.container.start_container()
+      output_state = self.subgraph.invoke(input_state, config)
+      return {
+        "issue_response": output_state["issue_response"],
+        "reproduced_bug_file": output_state.get("reproduced_bug_file", "")
+      }
+    except GraphRecursionError:
+      return {
+        "issue_response": "",
+        "reproduced_bug_file": ""
+      }
+    finally:
+      self.container.cleanup()

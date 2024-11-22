@@ -88,21 +88,37 @@ def test_edit_file(temp_test_dir):
 
   # Test editing middle lines
   result = edit_file(
-    "edit_test.txt", str(temp_test_dir), 2, 4, "new line 2\nnew line 3\nnew line 4"
+      "edit_test.txt", str(temp_test_dir), 2, 4, "new line 2\nnew line 3\nnew line 4"
   )
-  assert result == "The file edit_test.txt has been edited."
-
-  file_content = read_file("edit_test.txt", str(temp_test_dir))
-  expected = "1. line 1\n2. new line 2\n3. new line 3\n4. new line 4\n5. line 5"
-  assert file_content == expected
+  assert result.startswith("The file edit_test.txt has been edited.")
+  assert "1. line 1" in result
+  assert "2. new line 2" in result
+  assert "3. new line 3" in result
+  assert "4. new line 4" in result
+  assert "5. line 4" in result
+  assert "6. line 5" in result
 
   # Test editing with invalid range
   result = edit_file("edit_test.txt", str(temp_test_dir), 4, 2, "invalid")
-  assert result == "The end line number 2 is less than the start line number 4."
+  assert result == "The end line number 2 must be greater than the start line number 4."
 
   # Test editing nonexistent file
   result = edit_file("nonexistent.txt", str(temp_test_dir), 1, 2, "content")
   assert result == "The file nonexistent.txt does not exist."
+
+  # Test editing with absolute path
+  result = edit_file("/absolute/path/file.txt", str(temp_test_dir), 1, 2, "content")
+  assert result == "relative_path: /absolute/path/file.txt is a abolsute path, not relative path."
+
+  # Test editing first line
+  result = edit_file("edit_test.txt", str(temp_test_dir), 1, 1, "new first line")
+  assert result.startswith("The file edit_test.txt has been edited.")
+  assert "1. new first line" in result
+
+  # Test editing last line
+  result = edit_file("edit_test.txt", str(temp_test_dir), 5, 5, "new last line")
+  assert result.startswith("The file edit_test.txt has been edited.")
+  assert "5. new last line" in result
 
 
 def test_create_file_already_exists(temp_test_dir):

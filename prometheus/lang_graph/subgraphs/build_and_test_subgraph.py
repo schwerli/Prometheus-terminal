@@ -120,7 +120,7 @@ class BuildAndTestSubgraph:
     build_fail_log: Optional[str] = None,
     exist_test: Optional[bool] = None,
     test_command_summary: Optional[str] = None,
-    test_fail_log: Optional[str] = None,
+    existing_test_fail_log: Optional[str] = None,
   ) -> Mapping[str, Union[bool, str]]:
     config = None
     if self.thread_id:
@@ -140,23 +140,16 @@ class BuildAndTestSubgraph:
       input_state["exist_test"] = exist_test
     if test_command_summary:
       input_state["test_command_summary"] = test_command_summary
-    if test_fail_log:
-      input_state["test_fail_log"] = test_fail_log
+    if existing_test_fail_log:
+      input_state["existing_test_fail_log"] = existing_test_fail_log
 
     output_state = self.subgraph.invoke(input_state, config)
 
-    exist_build = False
-    build_command_summary = ""
-    build_fail_log = ""
-    exist_test = False
-    test_command_summary = ""
-    test_fail_log = ""
-
     return {
-      "exist_build": output_state["exist_build"],
-      "build_command_summary": output_state["build_command_summary"],
-      "build_fail_log": output_state["build_fail_log"],
-      "exist_test": output_state["exist_test"],
-      "test_command_summary": output_state["test_command_summary"],
-      "test_fail_log": output_state["test_fail_log"],
+      "exist_build": output_state.get("exist_build", False),
+      "build_command_summary": output_state.get("build_command_summary", ""),
+      "build_fail_log": output_state.get("build_fail_log", ""),
+      "exist_test": output_state.get("exist_test", False),
+      "test_command_summary": output_state.get("test_command_summary", ""),
+      "existing_test_fail_log": output_state.get("existing_test_fail_log", ""),
     }

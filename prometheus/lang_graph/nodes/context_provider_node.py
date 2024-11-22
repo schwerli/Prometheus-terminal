@@ -84,6 +84,7 @@ The `validate_token` function performs validation of authentication tokens.
 ```
 
 STOP ONLY when you have gathered enough information to fully answer the query.
+YOU MUST INCLUDE THE LINE NUMBERS.
 
 The file tree of the codebase:
 {file_tree}
@@ -320,7 +321,7 @@ All ASTNode types: {ast_node_types}
       human_message = HumanMessage(state["refined_query"])
     else:
       human_message = HumanMessage(state["original_query"])
-    message_history = [self.system_prompt, human_message] + state["context_messages"]
+    message_history = [self.system_prompt, human_message] + state["context_provider_messages"]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"ContextProviderNode response:\n{response}")
-    return {"context_messages": [response]}
+    return {"context_provider_messages": [response]}

@@ -64,6 +64,6 @@ class BugFixVerificationSubgraph:
     output_state = self.subgraph.invoke(input_state, config)
 
     return {
-      "fixed_bug": output_state["fixed_bug"],
+      "reproducing_test_passed": output_state["reproducing_test_passed"],
       "reproducing_test_fail_log": output_state["reproducing_test_fail_log"],
     }

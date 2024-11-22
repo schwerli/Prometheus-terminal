@@ -19,13 +19,6 @@ class IssueState(TypedDict):
   run_build: bool
   run_existing_test: bool
 
-  classification_context: str
-
-  question_context: str
-
-  bug_context: str
-  reproduced_bug: bool
   reproduced_bug_file: str
-  reproduced_bug_commands: Sequence[str]
 
   issue_response: str

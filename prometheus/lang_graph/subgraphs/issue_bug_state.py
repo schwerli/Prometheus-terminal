@@ -21,13 +21,15 @@ class IssueBugState(TypedDict):
 
   patch: str
 
-  fixed_bug: bool
+  reproducing_test_passed: bool
   reproducing_test_fail_log: str
 
   exist_build: bool
   build_command_summary: str
-  build_fail_log: str = ""
+  build_fail_log: str
 
   exist_test: bool
   test_command_summary: str
-  existing_test_fail_log: str = ""
+  existing_test_fail_log: str
+
+  issue_response: str

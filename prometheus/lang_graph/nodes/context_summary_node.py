@@ -40,6 +40,8 @@ CONTEXT PRESERVATION RULES:
    - If a class is included, omit its internal methods unless specifically relevant
    - Remove duplicate file content while keeping the most comprehensive version
    - Keep all unique implementations and documentation
+
+YOU MUST INCLUDE THE LINE NUMBERS.
   """
 
   HUMAN_PROMPT = """\

@@ -23,7 +23,8 @@ a query and guides the ContextProvider to find more relevant context if needed.
 
 Your task:
 1. Determine if the current context is sufficient for someone with no prior knowledge about the codebase to address the query
-2. If context is insufficient, generate a refined query to help ContextProvider find more relevant information
+2. If context is insufficient, generate a refined query to help ContextProvider find more relevant information.
+   The refined query should be self-contained.
 
 Example 1:
 Input:
@@ -65,6 +66,8 @@ Output:
   "refined_query": ""
 }
 ```
+
+DO NOT ASK QUESTION THAT ContextProvider PREVIOUSLY HAS RESPONDED.
 """.replace("{", "{{").replace("}", "}}")
 
   HUMAN_PROMPT = """\

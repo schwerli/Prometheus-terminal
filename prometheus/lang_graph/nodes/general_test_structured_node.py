@@ -301,7 +301,7 @@ Output:
       Dictionary that updates the state containing:
       - exist_test: Boolean indicating if a test framework exists
       - test_command_summary: String describing test framework and required commands
-      - test_fail_log: String containing test failure details (empty if all passed)
+      - existing_test_fail_log: String containing test failure details (empty if all passed)
     """
     test_history = format_agent_tool_message_history(state["test_messages"])
     self._logger.debug(f"Test history:\n{test_history}")
@@ -310,5 +310,5 @@ Output:
     return {
       "exist_test": response.exist_test,
       "test_command_summary": response.command_summary,
-      "test_fail_log": response.fail_log,
+      "existing_test_fail_log": response.fail_log,
     }

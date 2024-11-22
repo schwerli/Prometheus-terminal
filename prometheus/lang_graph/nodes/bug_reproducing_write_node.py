@@ -13,59 +13,89 @@ class BugReproducingWriteStructuredOutput(BaseModel):
 
 class BugReproducingWriteNode:
   SYS_PROMPT = """\
-You are an agent that generates minimal self-contained code that reproduce reported bugs.
-Your generated code must correctly identify and report the bug status.
+You are an agent that writes test cases for reproduce the reported bug.
+Your role is to create minimal test code that fails because of the reported bug, and the same test code should pass if the bug is fixed.
 
 REQUIREMENTS:
-1. Create minimal, self-contained, complete, runnable code that checks for the bug
-2. ALWAYS print exactly "Bug reproduced" when the bug is found
-3. ALWAYS print exactly "Bug resolved" when the bug is fixed
-4. Include all necessary imports
-5. Add clear comments explaining what the bug is
+1. Create minimal test code that uses the EXISTING implementation - do NOT reimplement the buggy code
+2. Use proper test assertions (assert statements or testing framework assertions)
+3. The test should FAIL if the bug still exists
+4. The test should PASS when the bug is fixed
+5. Include necessary imports to run the test
+6. Add clear comments explaining the expected vs actual behavior
 
-EXAMPLES:
+INPUT EXAMPLE:
+```
+ISSUE INFORMATION:
+Title: JSON parser fails with empty arrays
+Description: The JsonParser class crashes when trying to parse an empty array "[]". This should be valid JSON!
+Comments: ["Also fails with nested empty arrays like [[], []]"]
 
-Python Example (String Case Bug):
+Bug context summary:
+### Relevant Context Regarding the Reported Issue with JsonParser
+#### Source Code
+##### Class: JsonParser
+File: `src/json/parser.py`
+Lines 10-25:
 ```python
-def check_case_sensitive_replace():
-    # Bug: str.replace() fails to respect case sensitivity
-    text = "Hello HELLO hello"
-    
-    try:
-        result = text.replace("hello", "hi", case_sensitive=True)  # Bug: parameter doesn't exist
-        print("Bug resolved")
-    except TypeError:
-        print("Bug reproduced")
-
-if __name__ == "__main__":
-    check_case_sensitive_replace()
+class JsonParser:
+    def parse_array(self, tokens: list) -> list:
+        if len(tokens) < 2:  # Need at least [ and ]
+            raise ValueError("Invalid array")
+        
+        if tokens[0] != '[' or tokens[-1] != ']':
+            raise ValueError("Array must start with [ and end with ]")
+            
+        # Extract contents between brackets
+        contents = tokens[1:-1]
+        
+        # Parse contents (bug: doesn't handle empty array case)
+        if not contents:
+            raise ValueError("Empty array not supported")
+            
+        return self._parse_array_contents(contents)
+```
+### Potential Issues
+1. The parser explicitly raises an error for empty arrays instead of returning an empty list
+2. The error handling for nested empty arrays is missing
 ```
 
-JavaScript Example (Array Sum Bug):
-```javascript
-function checkNegativeArraySum() {
-    // Bug: Array.reduce() gives wrong results with negative numbers
-    const numbers = [-1, -2, -3];
-    const sum = numbers.reduce((a, b) => a + b, -0);  // Bug: -0 causes incorrect sign
-    
-    if (sum === -6) {
-        console.log("Bug resolved");
-    } else {
-        console.log("Bug reproduced");
-    }
-}
+EXPECTED OUTPUT:
+```python
+import unittest
+from src.json.parser import JsonParser
 
-checkNegativeArraySum();
+class TestJsonParser(unittest.TestCase):
+    def test_empty_array_parsing(self):
+        # Bug: JsonParser fails to parse empty arrays
+        # Test will pass when the bug is fixed (empty arrays are handled correctly)
+        parser = JsonParser()
+        
+        # Should return empty list, not raise an exception
+        result = parser.parse_array(['[', ']'])
+        self.assertEqual(result, [])
+        
+    def test_nested_empty_arrays(self):
+        # Bug: JsonParser fails with nested empty arrays
+        # Test will pass when the bug is fixed
+        parser = JsonParser()
+        
+        result = parser.parse_array(['[', '[', ']', ',', '[', ']', ']'])
+        self.assertEqual(result, [[], []])
+
+if __name__ == '__main__':
+    unittest.main()
 ```
 
 RESPONSE FORMAT:
-1. Write minimal but complete code
-2. Check for bug presence
-3. ALWAYS use exact messages:
-   - Print "Bug reproduced" when bug is found
-   - Print "Bug resolved" when bug is fixed
+1. Import and use the EXISTING implementation
+2. Write minimal test code using proper assertions
+3. Tests should:
+   - FAIL while the bug exists
+   - PASS when the bug is fixed
+4. Use appropriate testing framework (unittest, pytest, etc.)
 
-Remember: Focus on clearly identifying the bug state with the correct output message!
+Remember: Write tests that verify the correct behavior, not the buggy behavior!
 """.replace("{", "{{").replace("}", "}}")
 
   HUMAN_PROMPT = """\

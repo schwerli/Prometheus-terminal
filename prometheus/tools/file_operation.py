@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from pathlib import Path
@@ -6,6 +7,8 @@ from pydantic import BaseModel, Field
 
 from prometheus.utils.str_util import pre_append_line_numbers
 
+
+logger = logging.getLogger("prometheus.tools.file_operation")
 
 class ReadFileInput(BaseModel):
   relative_path: str = Field("The relative path of the file to read")
@@ -143,7 +146,6 @@ class EditFileInput(BaseModel):
 EDIT_FILE_DESCRIPTION = """\
 Edit a specific range of lines in an existing file.
 Replaces the content between start_line (inclusive, 1-indexed) and end_line (exclusive, 1-indexed) with the new content.
-Automatically adds a newline to the new content if it doesn't end with one.
 Returns an error message if the file doesn't exist or if end_line is less than or equal to start_line.
 """
 
@@ -151,6 +153,10 @@ Returns an error message if the file doesn't exist or if end_line is less than o
 def edit_file(
   relative_path: str, root_path: str, start_line: int, end_line: int, new_content: str
 ) -> str:
+  logger.info(f"relative_path: {relative_path}")
+  logger.info(f"start_line: {start_line}")
+  logger.info(f"end_line: {end_line}")
+  logger.info(f"new_content: {new_content}")
   if os.path.isabs(relative_path):
     return f"relative_path: {relative_path} is a abolsute path, not relative path."
 
@@ -177,4 +183,7 @@ def edit_file(
 
   start_context = max(0, zero_based_start_line - 10)
   end_context = min(len(lines), zero_based_end_line + 10)
-  return f"The file {relative_path} has been edited. The new content is:\n{pre_append_line_numbers(''.join(lines[start_context:end_context]), start_context+1)}"
+
+  return_text = pre_append_line_numbers(''.join(lines[start_context:end_context]), start_context+1)
+  logger.info(f"return_text: {return_text}")
+  return f"The file {relative_path} has been edited. The new content is:\n{return_text}"

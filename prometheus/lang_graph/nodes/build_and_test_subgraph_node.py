@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -23,6 +24,7 @@ class BuildAndTestSubgraphNode:
     self.build_and_test_subgraph = BuildAndTestSubgraph(
       container, model, kg, build_commands, test_commands, thread_id, checkpointer
     )
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.build_and_test_subgraph_node")
 
   def __call__(self, state: IssueBugState):
     exist_build = None
@@ -42,6 +44,8 @@ class BuildAndTestSubgraphNode:
       test_command_summary = state["test_command_summary"]
       existing_test_fail_log = state["existing_test_fail_log"]
 
+    self._logger.info("Enters BuildAndTestSubgraphNode")
+
     output_state = self.build_and_test_subgraph.invoke(
       state["run_build"],
       state["run_existing_test"],
@@ -53,11 +57,19 @@ class BuildAndTestSubgraphNode:
       existing_test_fail_log,
     )
 
+    self._logger.info("Exits BuildAndTestSubgraphNode")
+    self._logger.debug(f"exist_build: {output_state['exist_build']}")
+    self._logger.debug(f"build_command_summary: {output_state['build_command_summary']}")
+    self._logger.debug(f"build_fail_log: {output_state['build_fail_log']}")
+    self._logger.debug(f"exist_test: {output_state['exist_test']}")
+    self._logger.debug(f"test_command_summary: {output_state['test_command_summary']}")
+    self._logger.debug(f"existing_test_fail_log: {output_state['existing_test_fail_log']}")
+
     return {
       "exist_build": output_state["exist_build"],
       "build_command_summary": output_state["build_command_summary"],
       "build_fail_log": output_state["build_fail_log"],
       "exist_test": output_state["exist_test"],
       "test_command_summary": output_state["test_command_summary"],
-      "existing_test_fail_log": output_state["test_fail_log"],
+      "existing_test_fail_log": output_state["existing_test_fail_log"],
     }

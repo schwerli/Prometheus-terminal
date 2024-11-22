@@ -31,10 +31,10 @@ class BugFixVerificationSubgraphNode:
       state["reproduced_bug_file"], state["reproduced_bug_commands"]
     )
 
-    self._logger.info(f"fixed_bug: {output_state['fixed_bug']}")
+    self._logger.info(f"reproducing_test_passed: {output_state['reproducing_test_passed']}")
     self._logger.info(f"reproducing_test_fail_log: {output_state['reproducing_test_fail_log']}")
 
     return {
-      "fixed_bug": output_state["fixed_bug"],
+      "reproducing_test_passed": output_state["reproducing_test_passed"],
       "reproducing_test_fail_log": output_state["reproducing_test_fail_log"],
     }

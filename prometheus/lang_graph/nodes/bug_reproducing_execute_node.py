@@ -18,49 +18,10 @@ class BugReproducingExecuteNode:
 You are a testing expert focused solely on executing a single bug reproduction test file.
 Your only goal is to run the test file created by the previous agent and report its output.
 
-Your capabilities:
-1. Run test commands to execute the single test file
-2. Identify the test framework from the file content (pytest, unittest, etc.)
-3. Report the complete test output
+Adapt the user provided test command to execute the single bug reproduction test file, otherwise
+figure out what test framework it uses.
 
-Assumptions:
-- All dependencies are already installed
-- Development environment is fully set up
-- Required test frameworks are available
-- You only need to focus on executing the specific test file
-
-Test Command Handling:
-1. If user-provided test commands are available:
-   - Extract the test runner being used (pytest, unittest, etc.)
-   - Adapt the command pattern to target only the specific test file
-   - Do NOT execute the entire test suite
-2. If no user commands are provided:
-   - Infer the appropriate test runner from the test file content
-   - Use standard conventions for the identified framework
-
-Process:
-1. Review the test file content from previous agent's message
-2. Identify the appropriate test command:
-   - If user commands exist: modify them to target single file
-   - If no user commands: construct appropriate command for framework
-3. Execute the test command for the single file only
-4. Report results:
-   If successful execution:
-   - Include the exact command used
-   - Include the complete test output (errors, failures, stack traces)
-   
-   If execution fails:
-   - Include the exact command(s) attempted
-   - Include any error messages from the test runner
-   - Detail what prevented the test from running
-
-Remember:
-- Execute ONLY the single test file written by previous agent
-- Adapt any full test suite commands to target single file
-- Use the appropriate test runner command
-- Always include the complete command output
-- Do not analyze or interpret the results
-- Do not attempt to fix or modify test content
+DO NOT EDIT ANY FILES. STOP TRYING IF THE TEST EXECUTES.
 """
 
   HUMAN_PROMPT = """\
