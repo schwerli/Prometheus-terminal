@@ -21,6 +21,4 @@ class IssueState(TypedDict):
 
   patch: str
 
-  reproduced_bug_file: str
-
   issue_response: str

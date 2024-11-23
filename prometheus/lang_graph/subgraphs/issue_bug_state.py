@@ -13,16 +13,9 @@ class IssueBugState(TypedDict):
 
   bug_context: str
 
-  reproduced_bug: bool
-  reproduced_bug_file: str
-  reproduced_bug_commands: Sequence[str]
-
   bug_fixing_messages: Annotated[Sequence[BaseMessage], add_messages]
 
   patch: str
-
-  reproducing_test_passed: bool
-  reproducing_test_fail_log: str
 
   exist_build: bool
   build_command_summary: str
