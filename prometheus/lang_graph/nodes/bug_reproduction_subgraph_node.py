@@ -7,8 +7,8 @@ from langgraph.errors import GraphRecursionError
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.graphs.issue_state import IssueState
 from prometheus.lang_graph.subgraphs.bug_reproduction_subgraph import BugReproductionSubgraph
+from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 
 
 class BugReproductionSubgraphNode:
@@ -26,7 +26,7 @@ class BugReproductionSubgraphNode:
       model, container, kg, test_commands, thread_id, checkpointer
     )
 
-  def __call__(self, state: IssueState):
+  def __call__(self, state: IssueBugState):
     self._logger.info("Enter bug_reproduction_subgraph")
     self._logger.debug(f"issue_title: {state['issue_title']}")
     self._logger.debug(f"issue_body: {state['issue_body']}")

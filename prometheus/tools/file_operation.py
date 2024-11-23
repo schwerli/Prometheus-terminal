@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 
 from prometheus.utils.str_util import pre_append_line_numbers
 
-
 logger = logging.getLogger("prometheus.tools.file_operation")
+
 
 class ReadFileInput(BaseModel):
   relative_path: str = Field("The relative path of the file to read")
@@ -184,6 +184,8 @@ def edit_file(
   start_context = max(0, zero_based_start_line - 10)
   end_context = min(len(lines), zero_based_end_line + 10)
 
-  return_text = pre_append_line_numbers(''.join(lines[start_context:end_context]), start_context+1)
+  return_text = pre_append_line_numbers(
+    "".join(lines[start_context:end_context]), start_context + 1
+  )
   logger.info(f"return_text: {return_text}")
   return f"The file {relative_path} has been edited. The new content is:\n{return_text}"

@@ -3,7 +3,6 @@ import logging
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from prometheus.lang_graph.graphs.issue_state import IssueState
 from prometheus.lang_graph.subgraphs.issue_question_state import IssueQuestionState
 from prometheus.utils.issue_util import format_issue_comments
 

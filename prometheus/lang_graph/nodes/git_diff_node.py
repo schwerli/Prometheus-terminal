@@ -22,7 +22,7 @@ class GitDiffNode:
   workflow to capture code modifications made during issue resolution.
   """
 
-  def __init__(self, kg: KnowledgeGraph, exclude_reproduced_bug_file: bool=False):
+  def __init__(self, kg: KnowledgeGraph, exclude_reproduced_bug_file: bool = False):
     self.kg = kg
     self.exclude_reproduced_bug_file = exclude_reproduced_bug_file
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.git_diff_node")
@@ -43,7 +43,7 @@ class GitDiffNode:
     """
     git_repo = GitRepository(self.kg.get_local_path(), None, copy_to_working_dir=False)
     if self.exclude_reproduced_bug_file:
-      patch = git_repo.get_diff(state["reproduced_bug_file"])
+      patch = git_repo.get_diff([state["reproduced_bug_file"]])
     else:
       patch = git_repo.get_diff()
     self._logger.debug(f"Generated patch:\n{patch}")

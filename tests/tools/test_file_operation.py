@@ -88,7 +88,7 @@ def test_edit_file(temp_test_dir):
 
   # Test editing middle lines
   result = edit_file(
-      "edit_test.txt", str(temp_test_dir), 2, 4, "new line 2\nnew line 3\nnew line 4"
+    "edit_test.txt", str(temp_test_dir), 2, 4, "new line 2\nnew line 3\nnew line 4"
   )
   assert result.startswith("The file edit_test.txt has been edited.")
   assert "1. line 1" in result

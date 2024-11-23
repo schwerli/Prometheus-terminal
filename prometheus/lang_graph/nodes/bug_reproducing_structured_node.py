@@ -10,7 +10,9 @@ from prometheus.utils.issue_util import format_agent_tool_message_history, forma
 
 
 class BugReproducingStructuredOutput(BaseModel):
-  reproduced_bug: bool = Field(description="True if test fails in a way that demonstrates the underlying bug")
+  reproduced_bug: bool = Field(
+    description="True if test fails in a way that demonstrates the underlying bug"
+  )
   reproduced_bug_failure_log: str = Field(
     description="If test passes or fails in a way unrelated to the bug, explain why. Empty if failure demonstrates the bug"
   )

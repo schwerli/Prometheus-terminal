@@ -4,9 +4,9 @@ from typing import Mapping, Optional, Sequence
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from langgraph.errors import GraphRecursionError
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -106,7 +106,7 @@ class IssueBugSubgraph:
     )
     workflow.add_conditional_edges(
       "bug_fix_verification_subgraph_node",
-      lambda state: state["fixed_bug"],
+      lambda state: state["reproducing_test_passed"],
       {True: "build_or_test_branch_node", False: "bug_fixing_node"},
     )
     workflow.add_conditional_edges(
@@ -151,12 +151,14 @@ class IssueBugSubgraph:
       output_state = self.subgraph.invoke(input_state, config)
       return {
         "issue_response": output_state["issue_response"],
-        "reproduced_bug_file": output_state.get("reproduced_bug_file", "")
+        "patch": output_state["patch"],
+        "reproduced_bug_file": output_state.get("reproduced_bug_file", ""),
       }
     except GraphRecursionError:
       return {
         "issue_response": "",
-        "reproduced_bug_file": ""
+        "patch": output_state.get("patch", ""),
+        "reproduced_bug_file": "",
       }
     finally:
       self.container.cleanup()

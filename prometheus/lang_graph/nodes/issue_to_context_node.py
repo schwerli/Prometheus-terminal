@@ -30,9 +30,8 @@ class IssueToContextNode:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_to_context_node")
     self.type_of_context = type_of_context
     self.context_provider_subgraph = ContextProviderSubgraph(
-      model, kg, neo4j_driver, max_token_per_neo4j_result, checkpointer
+      model, kg, neo4j_driver, max_token_per_neo4j_result, thread_id, checkpointer
     )
-    self.thread_id = thread_id
 
   def format_issue(self, state: Union[IssueAnswerAndFixState, IssueClassificationState]) -> str:
     return f"""\
@@ -214,6 +213,6 @@ Prioritize finding:
     else:
       raise ValueError(f"Unknown context type: {self.type_of_context}")
 
-    context = self.context_provider_subgraph.invoke(query, self.thread_id)
+    context = self.context_provider_subgraph.invoke(query)
     self._logger.info(f"{state_context_key}: {context}")
     return {state_context_key: context}
