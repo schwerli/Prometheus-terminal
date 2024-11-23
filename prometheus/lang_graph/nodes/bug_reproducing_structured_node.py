@@ -35,8 +35,8 @@ You'll receive:
 
 Your task is to verify if the test properly demonstrates the underlying bug:
 - Test MUST FAIL at this stage (we haven't fixed the bug yet)
+- The failure should match the error message/behavior described in the issue
 - The failure should demonstrate the same underlying issue described in the bug report
-- Exact error messages or failure types may vary, as long as they expose the same core problem
 - Test passing means it's not properly detecting the bug
 
 Provide the following information:
@@ -139,10 +139,9 @@ Example Output for Issue With Test:
 
 Remember:
 - Test MUST fail at this stage since we haven't fixed the bug
+- The test failure should match the error/behavior described in the issue.
 - Focus on whether the failure demonstrates the core issue from the bug report
-- The exact nature of the failure (error type, message) is less important than showing the underlying problem
 - A passing test means the bug isn't being checked
-- Path separators should match the format used in the input
 - Commands should be properly formatted and executable
 """.replace("{", "{{").replace("}", "}}")
 

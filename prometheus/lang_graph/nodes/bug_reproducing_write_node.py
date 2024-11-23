@@ -23,12 +23,21 @@ REQUIREMENTS:
 4. The test should PASS when the bug is fixed
 5. Include necessary imports to run the test
 6. Add clear comments explaining the expected vs actual behavior
+7. If the issue description or comments contain specific examples of failing cases, use those exact examples in your test cases
 
 INPUT EXAMPLE:
 ```
 ISSUE INFORMATION:
 Title: JSON parser fails with empty arrays
-Description: The JsonParser class crashes when trying to parse an empty array "[]". This should be valid JSON!
+Description: The JsonParser class crashes when trying to parse an empty array.
+
+Minimal reproducing example:
+```python
+from src.json.parser import JsonParser
+
+parser = JsonParser()
+result = parser.parse_array(['[', ']']) # Raise ValueError!
+```
 Comments: ["Also fails with nested empty arrays like [[], []]"]
 
 Bug context summary:
