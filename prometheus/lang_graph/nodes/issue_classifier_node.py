@@ -4,9 +4,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import (
-  IssueType,
-)
+from prometheus.lang_graph.graphs.issue_state import IssueType
 from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClassificationState
 from prometheus.utils.issue_util import format_issue_comments
 

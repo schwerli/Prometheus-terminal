@@ -6,12 +6,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.graphs.issue_state import IssueState
+from prometheus.lang_graph.graphs.issue_state import IssueState, IssueType
 from prometheus.lang_graph.subgraphs.context_provider_subgraph import ContextProviderSubgraph
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import (
-  IssueAnswerAndFixState,
-  IssueType,
-)
 from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClassificationState
 from prometheus.utils.issue_util import format_issue_comments
 
@@ -33,7 +29,7 @@ class IssueToContextNode:
       model, kg, neo4j_driver, max_token_per_neo4j_result, thread_id, checkpointer
     )
 
-  def format_issue(self, state: Union[IssueAnswerAndFixState, IssueClassificationState]) -> str:
+  def format_issue(self, state: IssueClassificationState) -> str:
     return f"""\
 A user has reported the following issue to the codebase:
 Title:

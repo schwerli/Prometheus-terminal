@@ -8,7 +8,6 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
 from prometheus.tools import container_command
 
 
@@ -86,7 +85,7 @@ Remember:
       message += f"\n\nThe previous test summary is:\n{state['test_command_summary']}"
     return HumanMessage(message)
 
-  def __call__(self, state: IssueAnswerAndFixState):
+  def __call__(self, state: BuildAndTestState):
     if "exist_test" in state and not state["exist_test"]:
       self._logger.info("exist_test is false, skipping test.")
       return {
