@@ -35,8 +35,8 @@ You'll receive:
 
 Your task is to verify if the test properly demonstrates the underlying bug:
 - Test MUST FAIL at this stage (we haven't fixed the bug yet)
-- The failure should match the error message/behavior described in the issue
-- The failure should demonstrate the same underlying issue described in the bug report
+- The failure must match the error message/behavior described in the issue
+- The failure must demonstrate the same underlying issue described in the bug report
 - Test passing means it's not properly detecting the bug
 
 Provide the following information:
