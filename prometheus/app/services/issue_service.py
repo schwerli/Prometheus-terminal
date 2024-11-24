@@ -76,5 +76,11 @@ class IssueService:
         output_state["patch"],
         output_state["reproduced_bug_file"],
       )
+    elif output_state["issue_type"] == IssueType.QUESTION:
+      return (
+        output_state["issue_response"],
+        "",
+        "",
+      )
 
     return "", "", ""

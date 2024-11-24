@@ -128,6 +128,7 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
     workdir=issue.workdir,
     build_commands=issue.build_commands,
     test_commands=issue.test_commands,
+    push_to_remote=issue.push_to_remote,
   )
   return {
     "issue_response": issue_response,

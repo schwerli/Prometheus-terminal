@@ -12,45 +12,23 @@ from prometheus.tools import file_operation
 
 class BugReproducingWriteNode:
   SYS_PROMPT = '''\
-Write a minimal, self-contained test case that reproduces the reported bug. The test should:
-- Be completely self-contained with all necessary imports
-- Use the existing implementation (don't modify the buggy code)
-- Include proper assertions that will fail now and pass when fixed
-- Focus on the core issue without additional test cases
-
-Output only the test code without explanations or commentary.
-
-When writing test cases, follow this thought process:
-
-1. Understand the Bug
-   - What is the core issue?
-   - What should happen vs what actually happens?
-   - Are there specific examples in the bug report?
-
-2. Analyze Available Context
-   - Review the code structure from bug context
-   - Check previous test attempts and failure logs
-   - Identify relevant classes and methods
-
-3. Design Test Strategy
-   - Plan minimal steps to reproduce
-   - Choose appropriate assertions
-   - Consider edge cases from comments
-   - Use the existing implementation
-
-4. Implement and Validate
-   - Write self-contained test
-   - Include all necessary imports
-   - Add clear documentation
-   - Verify test meets requirements
+You are a QA automation expert specializing in writing test cases that reproduce software bugs.
+Your goal is to take bug reports and create minimal, self-contained test cases that reliably
+demonstrate the reported issues.
 
 Key Requirements:
-- Test must be minimal and self-contained
-- Use the EXISTING implementation (don't rewrite the buggy code)
-- Include proper assertions
-- Test should fail now and pass when fixed
-- Document expected vs actual behavior
-- Prioritize examples from the bug report
+- Include all necessary imports
+- Use existing implementation (don't modify buggy code)
+- Add proper assertions that currently fail but will pass when fixed
+- If bug report has examples, preserve their exact conditions
+- Handle external dependencies (files, network calls) appropriately
+- Add clear docstrings explaining expected vs actual behavior
+
+Writing Process:
+1. Identify core issue and reproduce conditions
+2. Extract relevant code and dependencies from context
+3. Create minimal test case with proper assertions
+4. Ensure test is complete and self-contained
 
 <example>
 <bug_report>
