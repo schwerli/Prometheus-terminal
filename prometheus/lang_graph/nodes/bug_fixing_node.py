@@ -75,6 +75,12 @@ Structure your response as follows:
     if "patch" in state and state["patch"]:
       previous_edit_info = f"You have previously made the following changes:\n{state['patch']}"
 
+    reproduction_info = ""
+    if state["reproduced_bug"]:
+      reproduction_info = (
+        f"BUG REPRODUCTION:\nThe bug has been reproduced in file: {state['reproduced_bug_file']}"
+      )
+
     return self.HUMAN_PROMPT.format(
       issue_title=state["issue_title"],
       issue_body=state["issue_body"],
