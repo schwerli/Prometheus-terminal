@@ -50,29 +50,69 @@ Issue comments:
     query = f"""\
 {issue_description}
 
-CONTEXT SEARCH OBJECTIVE:
-Find all relevant code context that can help accurately classify this issue. Focus on:
-- Implementation patterns that match issue characteristics
-- Similar features or components mentioned
-- Documentation describing system behavior
-- Test cases demonstrating related functionality
-- Configuration files defining relevant behaviors
-- Related issue handling patterns
+{issue_description}
 
-Search across:
-1. Core implementation files
-2. Interface definitions
-3. Configuration schemas
-4. Documentation files
-5. Test suites
-6. Example code
+OBJECTIVE: Find ALL self-contained context needed to accurately classify this issue as a bug, feature request, documentation update, or question.
 
-Prioritize finding:
-- Code patterns matching the issue description
-- Component interfaces relevant to the problem
-- Configuration options affecting the behavior
-- Documentation of related functionality
-- Test cases covering similar scenarios
+<reasoning>
+1. Analyze issue characteristics:
+   - Error patterns suggesting bugs
+   - New functionality requests
+   - Documentation gaps
+   - Knowledge-seeking patterns
+
+2. Search strategy:
+   - Implementation files matching descriptions
+   - Similar existing features
+   - Documentation coverage
+   - Related Q&A patterns
+
+3. Required context categories:
+   - Core implementations
+   - Feature interfaces
+   - Documentation files
+   - Test coverage
+   - Configuration settings
+   - Issue history
+</reasoning>
+
+REQUIREMENTS:
+- Context MUST be fully self-contained
+- MUST include complete file paths
+- MUST include full function/class implementations
+- MUST preserve all code structure and formatting
+- MUST include line numbers
+
+<examples>
+<example id="error-classification">
+<issue>
+Database queries timing out randomly
+Error: Connection pool exhausted
+</issue>
+
+<search_targets>
+1. Connection pool implementation
+2. Database configuration
+3. Error handling code
+4. Related timeout settings
+</search_targets>
+
+<expected_context>
+- Complete connection pool class
+- Full database configuration
+- Error handling implementations
+- Timeout management code
+</expected_context>
+</example>
+</examples>
+
+Search priority:
+1. Implementation patterns matching issue
+2. Feature definitions and interfaces
+3. Documentation coverage
+4. Configuration schemas
+5. Test implementations
+6. Integration patterns
 """
     return query
 
@@ -81,16 +121,63 @@ Prioritize finding:
     query = f"""\
 {issue_description}
 
-CONTEXT SEARCH OBJECTIVE:
-Find all relevant code and configuration that could explain or be related to this bug. Specifically search for:
-- Source code matching the described behavior or error
-- Error handling and logging code
-- Configuration settings that might affect this behavior
-- Related function calls and data flows
+OBJECTIVE: Find ALL self-contained context needed to diagnose and fix this bug.
 
-Please exclude test files from the search as they are not relevant for fixing the issue.
+<reasoning>
+1. Analyze error pattern:
+   - Implementation containing bug
+   - Error handling code
+   - Configuration impact
+   - Data flow path
 
-Focus on source files, configuration files, and logging implementations that could help diagnose and fix this bug.
+2. Search strategy:
+   - Source files with error
+   - Connected components
+   - Configuration settings
+   - Logging implementations
+
+3. Required context:
+   - Full implementation files
+   - Complete error handling
+   - All configuration options
+   - Related functionality
+</reasoning>
+
+REQUIREMENTS:
+- Context MUST be fully self-contained
+- MUST include complete file paths
+- MUST include full function/class implementations
+- MUST preserve all code structure and formatting
+- MUST include line numbers
+
+<examples>
+<example id="timeout-bug">
+<issue>
+Authentication fails after 1 hour of inactivity
+</issue>
+
+<search_targets>
+1. Session management code
+2. Token validation
+3. Timeout configuration
+4. Authentication flow
+</search_targets>
+
+<expected_context>
+- Complete session handler
+- Full token validator
+- All timeout settings
+- Auth pipeline code
+</expected_context>
+</example>
+</examples>
+
+Search priority:
+1. Error-producing code
+2. Error handling
+3. Configuration settings
+4. Connected components
+5. Logging implementations
 """
     return query
 
@@ -99,31 +186,64 @@ Focus on source files, configuration files, and logging implementations that cou
     query = f"""\
 {issue_description}
 
-CONTEXT SEARCH OBJECTIVE:
-Find all relevant code context to guide this feature implementation. Focus on:
-- Similar existing features
-- Extension points in the codebase
-- Related interfaces and patterns
-- Configuration frameworks
-- Integration patterns
-- Testing approaches
+OBJECTIVE: Find ALL self-contained context needed to implement this new feature.
 
-Search across:
-1. Similar feature implementations
-2. Extension interfaces
-3. Configuration systems
+<reasoning>
+1. Analyze feature requirements:
+   - Similar features
+   - Extension points
+   - Integration needs
+   - Configuration requirements
+
+2. Search strategy:
+   - Similar implementations
+   - Extension interfaces
+   - Integration patterns
+   - Configuration systems
+
+3. Required context:
+   - Complete similar features
+   - Full extension points
+   - All integration patterns
+   - Configuration examples
+</reasoning>
+
+REQUIREMENTS:
+- Context MUST be fully self-contained
+- MUST include complete file paths
+- MUST include full function/class implementations
+- MUST preserve all code structure and formatting
+- MUST include line numbers
+
+<examples>
+<example id="new-auth-provider">
+<issue>
+Add support for OAuth2 provider
+</issue>
+
+<search_targets>
+1. Existing auth providers
+2. Auth interfaces
+3. Provider configuration
 4. Integration patterns
-5. Test frameworks
-6. Documentation guidelines
+</search_targets>
 
-Prioritize finding:
-- Similar feature implementations
-- Extension mechanisms
-- Configuration patterns
+<expected_context>
+- Complete auth provider interface
+- Existing provider implementations
+- Full configuration system
 - Integration examples
-- Test templates
-- Documentation standards
-- Development guidelines
+</expected_context>
+</example>
+</examples>
+
+Search priority:
+1. Similar implementations
+2. Extension points
+3. Integration patterns
+4. Configuration systems
+5. Test templates
+6. Documentation standards
 """
     return query
 
@@ -132,31 +252,64 @@ Prioritize finding:
     query = f"""\
 {issue_description}
 
-CONTEXT SEARCH OBJECTIVE:
-Find all relevant code context to improve documentation. Focus on:
-- Existing documentation patterns
-- Code comments and docstrings
-- Usage examples
-- API documentation
-- Configuration documentation
-- Test case documentation
+OBJECTIVE: Find ALL self-contained context needed to improve or create documentation.
 
-Search across:
-1. Documentation files
-2. Code comments
-3. Example implementations
-4. Test cases
-5. Configuration files
-6. API definitions
+<reasoning>
+1. Analyze documentation needs:
+   - Implementation details
+   - API patterns
+   - Configuration options
+   - Usage examples
 
-Prioritize finding:
+2. Search strategy:
+   - Existing documentation
+   - Code implementation
+   - Configuration files
+   - Test examples
+
+3. Required context:
+   - Full implementations
+   - Complete configurations
+   - All related examples
+   - Existing documentation
+</reasoning>
+
+REQUIREMENTS:
+- Context MUST be fully self-contained
+- MUST include complete file paths
+- MUST include full function/class implementations
+- MUST preserve all code structure and formatting
+- MUST include line numbers
+
+<examples>
+<example id="api-docs">
+<issue>
+Missing API documentation for user service
+</issue>
+
+<search_targets>
+1. User service implementation
+2. API definitions
+3. Usage examples
+4. Existing docs
+</search_targets>
+
+<expected_context>
+- Complete service implementation
+- Full API interface
+- All usage examples
 - Related documentation
-- Documentation templates
-- Code documentation patterns
-- Example usage
-- Configuration documentation
-- Test documentation
-- API documentation standards
+</expected_context>
+</example>
+</examples>
+
+Search priority:
+1. Code implementation
+2. API definitions
+3. Configuration options
+4. Usage examples
+5. Test cases
+6. Existing documentation
 """
     return query
 
@@ -165,31 +318,64 @@ Prioritize finding:
     query = f"""\
 {issue_description}
 
-CONTEXT SEARCH OBJECTIVE:
-Find all relevant code context to answer this question comprehensively. Focus on:
-- Direct implementations related to the question
-- Documentation explaining the behavior
-- Configuration options
-- Usage examples
-- Test cases demonstrating functionality
-- Related features and patterns
+OBJECTIVE: Find ALL self-contained context needed to comprehensively answer this question.
 
-Search across:
-1. Implementation files
-2. Documentation
-3. Configuration files
-4. Example code
+<reasoning>
+1. Analyze question focus:
+   - Implementation details
+   - Behavior patterns
+   - Configuration options
+   - Usage scenarios
+
+2. Search strategy:
+   - Direct implementations
+   - Related components
+   - Configuration settings
+   - Usage examples
+
+3. Required context:
+   - Full implementations
+   - Complete configurations
+   - All related examples
+   - Supporting documentation
+</reasoning>
+
+REQUIREMENTS:
+- Context MUST be fully self-contained
+- MUST include complete file paths
+- MUST include full function/class implementations
+- MUST preserve all code structure and formatting
+- MUST include line numbers
+
+<examples>
+<example id="caching-question">
+<issue>
+How does the caching system handle race conditions?
+</issue>
+
+<search_targets>
+1. Cache implementation
+2. Lock mechanisms
+3. Race condition handling
+4. Usage patterns
+</search_targets>
+
+<expected_context>
+- Complete cache implementation
+- Full lock handling
+- All race condition code
+- Usage examples
+</expected_context>
+</example>
+</examples>
+
+Search priority:
+1. Direct implementations
+2. Related components
+3. Configuration options
+4. Usage examples
 5. Test cases
-6. Related components
-
-Prioritize finding:
-- Relevant implementations
-- Official documentation
-- Configuration options
-- Usage examples
-- Test cases
-- Related functionality
-- Integration patterns
+6. Documentation
 """
     return query
 
