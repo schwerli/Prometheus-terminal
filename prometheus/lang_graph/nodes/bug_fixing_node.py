@@ -38,6 +38,8 @@ Bug Context:
 Previous Changes:
 {previous_edit_info}
 
+{reproduction_info}
+
 OUTPUT FORMAT:
 Structure your response as follows:
 1. BUG ANALYSIS:
@@ -79,6 +81,7 @@ Structure your response as follows:
       issue_comments=issue_comments,
       bug_context=state["bug_context"],
       previous_edit_info=previous_edit_info,
+      reproduction_info=reproduction_info,
     )
 
   def __call__(self, state: IssueBugState):
