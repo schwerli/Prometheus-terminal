@@ -66,6 +66,11 @@ class IssueService:
       self.postgres_service.checkpointer,
     )
 
-    issue_graph.invoke(
+    output_state = issue_graph.invoke(
       issue_title, issue_body, issue_comments, issue_type, run_build, run_existing_test
     )
+
+    if output_state["issue_type"] == IssueType.BUG:
+      return output_state["issue_response"], output_state["patch"], output_state["reproduced_bug_file"]
+    
+    return "", "", ""

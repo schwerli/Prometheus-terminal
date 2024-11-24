@@ -107,3 +107,5 @@ class IssueGraph:
     }
 
     output_state = self.graph.invoke(input_state, config)
+
+    return output_state

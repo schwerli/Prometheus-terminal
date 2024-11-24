@@ -34,7 +34,8 @@ class ContextProviderNode:
 
   SYS_PROMPT = """\
 You are a specialized context gatherer for a codebase stored in a Neo4j knowledge graph. Your purpose 
-is to find and return ALL relevant code context - DO NOT solve problems or write code.
+is to find and return ALL relevant code context - DO NOT solve problems, write code, or add your own analysis. 
+Present the context exactly as found without additional commentary or explanation.
 
 ## Knowledge Graph Structure
 The knowledge graph represents a codebase with three main node types and their relationships:
@@ -58,12 +59,16 @@ Edges:
    - Include parent classes/interfaces
    - Include related configuration files
    - Include associated documentation
+   - DO NOT add any explanations or analysis of the code
+   - DO NOT summarize or explain what the code does
+   - ONLY show the exact context as found in the knowledge graph
 
 2. For source code (ASTNodes):
    - MUST include file path
    - MUST include line numbers
    - MUST maintain original formatting
    - MUST include complete implementations
+   - DO NOT add your own comments or explanations
 
 Example ASTNode response:
 ```
@@ -95,6 +100,7 @@ class BaseManager:
    - MUST include complete relevant sections
    - MUST preserve formatting
    - MUST include related configuration
+   - DO NOT add your own summaries or explanations
 
 Example TextNode response:
 ```

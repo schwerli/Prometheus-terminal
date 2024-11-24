@@ -136,27 +136,33 @@ class EditFileInput(BaseModel):
   relative_path: str = Field(
     description="The relative path of the file to edit, eg. foo/bar/test.py, not absolute path"
   )
-  start_line: int = Field(description="The start line number to edit, 1-indexed and inclusive")
-  end_line: int = Field(description="The ending line number to edit, 1-indexed and exclusive")
+  old_content: str = Field(description="The exact string content to be replaced in the file. Must match exactly one occurrence in the file")
   new_content: str = Field(
-    description="The new content to write to the file between start_line and end_line"
+    description="The new content that will replace the old_content in the file"
   )
 
 
 EDIT_FILE_DESCRIPTION = """\
-Edit a specific range of lines in an existing file.
-Replaces the content between start_line (inclusive, 1-indexed) and end_line (exclusive, 1-indexed) with the new content.
-Returns an error message if the file doesn't exist or if end_line is less than or equal to start_line.
+Edit a file by replacing specific content with new content.
+Performs an exact string replacement of old_content with new_content.
+Returns an error message if:
+- The file doesn't exist
+- The old_content is not found in the file
+- The old_content matches multiple locations (in which case more context is needed)
+- The provided path is absolute instead of relative
+
+Example usage:
+edit_file(
+    relative_path="src/calculator.py",
+    old_content="return a * b",
+    new_content="return a / b"
+)
 """
 
 
 def edit_file(
-  relative_path: str, root_path: str, start_line: int, end_line: int, new_content: str
+  relative_path: str, root_path: str, old_content: str, new_content: str
 ) -> str:
-  logger.info(f"relative_path: {relative_path}")
-  logger.info(f"start_line: {start_line}")
-  logger.info(f"end_line: {end_line}")
-  logger.info(f"new_content: {new_content}")
   if os.path.isabs(relative_path):
     return f"relative_path: {relative_path} is a abolsute path, not relative path."
 
@@ -164,28 +170,18 @@ def edit_file(
   if not file_path.exists():
     return f"The file {relative_path} does not exist."
 
-  if end_line < start_line:
-    return (
-      f"The end line number {end_line} must be greater than the start line number {start_line}."
-    )
+  content = file_path.read_text()
+  
+  occurrences = content.count(old_content)
+  
+  if occurrences == 0:
+      return f"No match found for the specified content in {relative_path}. Please verify the content to replace."
+  
+  if occurrences > 1:
+      return (f"Found {occurrences} occurrences of the specified content in {relative_path}. "
+              "Please provide more context to ensure a unique match.")
+  
+  new_content_full = content.replace(old_content, new_content)
+  file_path.write_text(new_content_full)
 
-  zero_based_start_line = start_line - 1
-  zero_based_end_line = end_line - 1
-
-  with file_path.open() as f:
-    lines = f.readlines()
-
-  if not new_content.endswith("\n"):
-    new_content += "\n"
-
-  lines[zero_based_start_line:zero_based_end_line] = new_content.splitlines(True)
-  file_path.write_text("".join(lines))
-
-  start_context = max(0, zero_based_start_line - 10)
-  end_context = min(len(lines), zero_based_end_line + 10)
-
-  return_text = pre_append_line_numbers(
-    "".join(lines[start_context:end_context]), start_context + 1
-  )
-  logger.info(f"return_text: {return_text}")
-  return f"The file {relative_path} has been edited. The new content is:\n{return_text}"
+  return f"Successfully edited {relative_path}."

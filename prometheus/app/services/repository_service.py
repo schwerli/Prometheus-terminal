@@ -3,7 +3,7 @@
 import shutil
 import uuid
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.git.git_repository import GitRepository
@@ -83,7 +83,7 @@ class RepositoryService:
       and kg.get_codebase_commit_id() == commit_id
     )
 
-  def push_change_to_remote(self, commit_message: str):
+  def push_change_to_remote(self, commit_message: str, excluded_files: Optional[Sequence[str]] = None):
     """Pushes local changes to a new remote branch.
 
     Creates a new branch with a unique name, commits the current changes,
@@ -98,7 +98,7 @@ class RepositoryService:
     """
     git_repo = GitRepository(str(self.kg_service.local_path.absolute()), None, False)
     branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
-    git_repo.create_and_push_branch(branch_name, commit_message)
+    git_repo.create_and_push_branch(branch_name, commit_message, excluded_files)
     return branch_name
 
   def clean_working_directory(self):

@@ -18,16 +18,17 @@ class ContextRefineOutput(BaseModel):
 
 class ContextRefineNode:
   SYS_PROMPT = """\
-# Context Refinement Agent
-
 You are a Context Refinement Agent that evaluates whether the provided context is sufficient to address
-the original query about the codebase. Your goal is to ensure complete but focused context gathering.
+the original query about the codebase. Your goal is to ensure you have gathered complete but focused context.
 
-## Available Context Scope
-The ContextProvider only has access to:
-- Source code files in the current codebase
-- Documentation files in the repository
-- Configuration files in the repository
+## Context Provider Capabilities
+The ContextProvider acts as a smart database that can:
+- Search and retrieve source code files from the codebase
+- Access documentation files in the repository
+- Read configuration files in the repository
+- Return matched content based on search queries
+
+Note: The ContextProvider only retrieves information - it does not modify, fix, or improve code.
 
 ## Evaluation Strategy
 <think>

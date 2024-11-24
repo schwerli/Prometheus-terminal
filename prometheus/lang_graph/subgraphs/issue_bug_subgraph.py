@@ -116,7 +116,7 @@ class IssueBugSubgraph:
     )
     workflow.add_conditional_edges(
       "build_and_test_subgraph_node",
-      lambda state: state["build_fail_log"] or state["existing_test_fail_log"],
+      lambda state: bool(state["build_fail_log"]) or bool(state["existing_test_fail_log"]),
       {True: "bug_fixing_node", False: "issue_bug_responder_node"},
     )
     workflow.add_edge("issue_bug_responder_node", END)
@@ -130,7 +130,7 @@ class IssueBugSubgraph:
     issue_comments: Sequence[Mapping[str, str]],
     run_build: bool,
     run_existing_test: bool,
-    recursion_limit: int = 100,
+    recursion_limit: int = 150,
   ):
     config = {"recursion_limit": recursion_limit}
     if self.thread_id:
@@ -157,7 +157,7 @@ class IssueBugSubgraph:
     except GraphRecursionError:
       return {
         "issue_response": "",
-        "patch": output_state.get("patch", ""),
+        "patch": "",
         "reproduced_bug_file": "",
       }
     finally:

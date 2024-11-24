@@ -12,121 +12,43 @@ from prometheus.tools import file_operation
 
 class BugReproducingFileNode:
   SYS_PROMPT = """\
-You are a specialized file management agent responsible for handling bug reproduction code. Your task is to manage the placement and creation of bug reproducing code files in the project.
+You are a test file manager responsible for extracting and managing bug reproduction test code. Your primary responsibilities are:
 
-THOUGHT PROCESS:
-1. Analyze the input:
-   - Check if a bug reproducing file path is provided
-   - Review the code content to determine appropriate file type
-   - Examine project structure for logical file placement
-2. Plan file operations:
-   - Determine if existing file needs deletion
-   - Choose appropriate file location and name
-   - Plan verification steps
-3. Execute operations:
-   - Perform necessary file operations in correct order
-   - Verify results
-   - Prepare response message
+1. Extract complete test code from the provided bug reproducing code
+2. Handle file operations to save the test code appropriately
 
-REQUIREMENTS:
-1. Handle existing files:
-   - Delete file if it exists at the provided path
-   - Create new file at the same path
-   - Write provided code into the file
+Follow these steps for each task:
 
-2. Handle new files:
-   - Choose appropriate location (typically in 'tests' directory)
-   - Create descriptive filename based on bug
-   - Write provided code into the file
+1. Code Extraction:
+- Analyze the bug_reproducing_code to identify the complete test code
+- Ensure all necessary imports and dependencies are included
+- Maintain the original code structure and formatting
+- Extract only the relevant test code, excluding any explanatory text or comments not part of the code
 
-3. File naming and placement:
-   - Use correct file extension for code language
-   - Place files in logical project locations
-   - Use clear, descriptive names reflecting the bug
+2. File Management:
+If a reproduced_bug_file path exists:
+- Use the delete tool to remove the existing file
+- Use the create_file tool to recreate the file with the extracted test code
+- Maintain the original file extension and location
 
-4. Verification:
-   - Confirm all file operations succeed
-   - Only modify intended files
-   - Verify final file contents
+If no reproduced_bug_file path exists:
+- Determine appropriate file name based on the test content (e.g., test_[feature].py for Python tests)
+- Choose a suitable location in the project structure for the test file
+- Use the create_file tool to create the new file with the extracted test code
+- Return the created file path in your response
 
-AVAILABLE TOOLS:
-- read_file: Verify file existence and contents
-- create_file: Write new files with provided content
-- delete: Remove existing files
+Requirements:
+- Always confirm file operations were successful
+- Maintain proper file extensions based on the programming language
+- Ensure the file path is within the project structure
+- Handle any file operation errors gracefully
 
-<example>
-<input>
-<bug_reproducing_code>
-import unittest
-from myproject.parser import JsonParser
+Tools available:
+- read_file: Read contents of a file
+- create_file: Create a new file with specified content
+- delete: Delete an existing file
 
-class TestEmptyArrays(unittest.TestCase):
-    def test_empty_array(self):
-        parser = JsonParser()
-        result = parser.parse_array(['[', ']'])
-        self.assertEqual(result, [])
-</bug_reproducing_code>
-<reproduced_bug_file>tests/parser/test_empty_arrays.py</reproduced_bug_file>
-</input>
-
-<reasoning>
-1. Input Analysis:
-   - Existing file path provided: tests/parser/test_empty_arrays.py
-   - Content is Python unittest code
-   - Tests JSON parser empty array bug
-
-2. Operation Planning:
-   - Need to delete existing file first
-   - Will create new file at same path
-   - Should verify file contents after creation
-
-3. Execution Steps:
-   - Delete existing file
-   - Create new file with provided code
-   - Verify content matches
-</reasoning>
-
-<tool_usage>
-1. Delete existing file:
-   delete(path="tests/parser/test_empty_arrays.py")
-
-2. Create new file:
-   create_file(
-     path="tests/parser/test_empty_arrays.py",
-     content=provided_code
-   )
-
-3. Verify content:
-   content = read_file(path="tests/parser/test_empty_arrays.py")
-   # Verify content matches provided code
-</tool_usage>
-
-<output>
-Bug reproducing code has been written to: tests/parser/test_empty_arrays.py
-</output>
-</example>
-
-RESPONSE FORMAT:
-Your response should follow this structure:
-<thought_process>
-1. Analyze the provided code and path
-2. Plan required file operations
-3. List verification steps
-</thought_process>
-
-<operations>
-Execute necessary file operations using available tools
-</operations>
-
-<response>
-"Bug reproducing code has been written to: {file_path}"
-</response>
-
-Remember:
-- Only modify the specific target file
-- Always verify operations succeed
-- Provide exactly the required response message
-- Use tools in the correct order (delete -> create -> verify)
+Only respond with the path of the file where the test code was saved
 """
 
   HUMAN_PROMPT = """\
@@ -194,7 +116,7 @@ Bug reproducing file:
       reproduced_bug_file = state["reproduced_bug_file"]
     return HumanMessage(
       self.HUMAN_PROMPT.format(
-        bug_reproducing_code=state["bug_reproducing_code"],
+        bug_reproducing_code=state["bug_reproducing_write_messages"][-1].content,
         reproduced_bug_file=reproduced_bug_file,
         project_structure=self.kg.get_file_tree(),
       )

@@ -66,6 +66,9 @@ Your goal is to maintain maximum useful information while ensuring clarity and a
    - Preserve class structure
    - Maintain configuration blocks
    - Include full documentation sections
+   - DO NOT add explanations or analysis
+   - DO NOT add your own commentary
+   - Present the context as they are
 
 3. **Smart Deduplication**
    - Keep most comprehensive versions

@@ -177,7 +177,7 @@ Log from executing bug reproducing file:
       title=state["issue_title"],
       body=state["issue_body"],
       comments=format_issue_comments(state["issue_comments"]),
-      bug_reproducing_code=state["bug_reproducing_code"],
+      bug_reproducing_code=state["bug_reproducing_write_messages"][-1].content,
       bug_reproducing_file_message=state["bug_reproducing_file_messages"][-1].content,
       bug_reproducing_log=bug_reproducing_log,
     )

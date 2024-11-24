@@ -66,6 +66,7 @@ class ServiceCoordinator:
 
   def answer_issue(
     self,
+    issue_number: int,
     issue_title: str,
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
@@ -77,8 +78,9 @@ class ServiceCoordinator:
     workdir: Optional[str] = None,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
+    push_to_remote: Optional[bool] = None,
   ):
-    self.issue_service.answer_issue(
+    issue_response, patch, reproduced_bug_file = self.issue_service.answer_issue(
       issue_title,
       issue_body,
       issue_comments,
@@ -91,6 +93,11 @@ class ServiceCoordinator:
       build_commands,
       test_commands,
     )
+
+    remote_branch_name = None
+    if patch and push_to_remote:
+      remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}", [reproduced_bug_file])
+    return issue_response, patch, remote_branch_name
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()

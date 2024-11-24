@@ -115,7 +115,8 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
         detail="test_commands must be provided for user defined environment when run_test is True",
       )
 
-  request.app.state.service_coordinator.answer_issue(
+  issue_response, patch, remote_branch_name = request.app.state.service_coordinator.answer_issue(
+    issue_number=issue.issue_number,
     issue_title=issue.issue_title,
     issue_body=issue.issue_body,
     issue_comments=issue.issue_comments if issue.issue_comments else [],
@@ -128,3 +129,8 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
     build_commands=issue.build_commands,
     test_commands=issue.test_commands,
   )
+  return {
+    "issue_response": issue_response,
+    "patch": patch,
+    "remote_branch_name": remote_branch_name,
+  }
