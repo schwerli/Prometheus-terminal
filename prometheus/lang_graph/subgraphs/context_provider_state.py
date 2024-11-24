@@ -11,7 +11,8 @@ class ContextProviderState(TypedDict):
   remaining_steps: RemainingSteps
 
   context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
-  all_context_provider_responses: Annotated[Sequence[BaseMessage], add_messages]
+  all_context_refine_queries: Annotated[Sequence[BaseMessage], add_messages]
+  all_previous_context_provider_responses: Annotated[Sequence[BaseMessage], add_messages]
 
   has_sufficient_context: bool
   refined_query: str

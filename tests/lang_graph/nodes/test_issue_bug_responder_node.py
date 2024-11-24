@@ -1,4 +1,3 @@
-
 import pytest
 
 from prometheus.lang_graph.nodes.issue_bug_responder_node import IssueBugResponderNode

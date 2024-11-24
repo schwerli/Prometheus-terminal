@@ -1,6 +1,7 @@
 import logging
 
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
@@ -33,16 +34,17 @@ Note: The ContextProvider only retrieves information - it does not modify, fix, 
 ## Evaluation Strategy
 <think>
 1. Compare original query requirements vs. provided context
-2. Check implementation completeness:
+2. Review previous queries and responses to avoid redundancy
+3. Check implementation completeness:
    - Full function/method definitions
    - Supporting classes/utilities
    - Configuration settings
    - Related tests/examples
-3. Identify critical missing pieces:
+4. Identify critical missing pieces:
    - Core implementation gaps
    - Missing configuration
    - Absent documentation
-4. Consider query completion:
+5. Consider query completion:
    - Can someone answer the query completely?
    - Are all technical details present?
    - Is the context self-contained?
@@ -54,126 +56,114 @@ Note: The ContextProvider only retrieves information - it does not modify, fix, 
    - DO NOT expand scope to related topics
    - Keep refinements self-contained
 
-2. **Be Specific**
+2. **Avoid Redundancy**
+   - Review previous refinement queries
+   - Don't request information already found
+   - Build on existing context incrementally
+
+3. **Be Specific**
    - Target exact functions/classes/files
    - Specify precise information needed
    - Include contextual hints for search
 
-3. **Maintain Context**
+4. **Maintain Context**
    - Reference previously found files/classes
    - Build on existing context
    - Avoid repeating found information
 
 ## Examples
 
-<example id="authentication">
-<query>How does token validation work in the auth system?</query>
+<example id="dependency-injection">
+<query>How does service registration work in the DI container?</query>
+
+<context_history>
+<interaction_1>
 <context>
-Found in auth.py:
+Found in container.py:
 ```python
-def validate_token(token: str) -> bool:
-    if not token:
-        return False
-    # Validation logic
-    return True
+def register_service(self, interface, implementation):
+    self._services[interface] = implementation
 ```
 </context>
+<refined_query>Look for service lifetime configuration and scope handling in container.py</refined_query>
+</interaction_1>
+
+<interaction_2>
+<context>
+Found in container.py:
+```python
+def register_scoped(self, interface, implementation):
+    self._scoped[interface] = implementation
+
+def register_singleton(self, interface, implementation):
+    self._singletons[interface] = implementation
+```
+</context>
+</interaction_2>
+</context_history>
 
 <thought-process>
-1. Current context shows basic validation function
+1. Current context shows:
+   - Basic registration
+   - Scoped registration
+   - Singleton registration
 2. Missing:
-   - Complete validation logic
-   - Token structure/format
-   - Configuration settings
-3. Critical gap: actual validation implementation
-4. Need: validation logic details only
+   - Service resolution
+   - Dependency graph handling
+3. Previous queries covered:
+   - Service configuration
+   - Scope handling
+4. Context incomplete without resolution logic
 </thought-process>
 
 <output>
 {
     "has_sufficient_context": false,
-    "refined_query": "Look for the actual token validation implementation in validate_token function from auth.py, including signature verification and expiration checks."
+    "refined_query": "Find the service resolution and dependency graph handling methods in container.py"
 }
 </output>
 </example>
 
-<example id="database">
-<query>How are database queries logged?</query>
-<context>
-Found in db_logger.py:
-```python
-class DBLogger:
-    def __init__(self, config: LogConfig):
-        self.log_level = config.level
-        self.output_path = config.path
-```
+<example id="caching">
+<query>How does cache invalidation work?</query>
 
-Found in config.yaml:
-```yaml
-logging:
-  level: DEBUG
-  path: /var/log/db
+<context_history>
+<interaction_1>
+<context>
+Found in cache.py:
+```python
+class Cache:
+    def set(self, key: str, value: Any, ttl: int = None):
+        self._store[key] = value
+        if ttl:
+            self._ttls[key] = time.time() + ttl
 ```
 </context>
+<refined_query>Look for cache invalidation and cleanup methods in Cache class</refined_query>
+</interaction_1>
 
-<thought-process>
-1. Current context shows:
-   - Logger initialization
-   - Basic configuration
-2. Missing:
-   - Actual logging implementation
-   - Query capture mechanism
-   - Log format/structure
-3. Critical gap: logging methods
-4. Context incomplete without implementation
-</thought-process>
-
-<output>
-{
-    "has_sufficient_context": false,
-    "refined_query": "Find the DBLogger methods that handle query logging and formatting in db_logger.py"
-}
-</output>
-</example>
-
-<example id="config">
-<query>How are nested JSON config values accessed?</query>
+<interaction_2>
 <context>
-Found in config_parser.py:
+Found in cache.py:
 ```python
-class ConfigParser:
-    def __init__(self, config_file):
-        self.config = json.load(config_file)
-    
-    def get_value(self, key: str) -> Any:
-        parts = key.split('.')
-        current = self.config
-        for part in parts:
-            if not isinstance(current, dict):
-                return None
-            current = current.get(part)
-        return current
-```
-
-Found example:
-```python
-parser = ConfigParser('settings.json')
-db_host = parser.get_value('database.host')
-api_timeout = parser.get_value('api.settings.timeout')
+def invalidate(self, key: str):
+    self._store.pop(key, None)
+    self._ttls.pop(key, None)
 ```
 </context>
+</interaction_2>
+</context_history>
 
 <thought-process>
-1. Current context shows:
-   - Complete implementation
-   - Usage examples
-   - Key handling logic
-2. Has all core components:
-   - Parser class
-   - Access method
-   - Example usage
-3. Documentation could help but not critical
-4. Can fully answer how nested values are accessed
+1. Have complete implementation:
+   - Cache storage
+   - TTL handling
+   - Manual invalidation
+2. Previous queries covered:
+   - Invalidation methods
+   - TTL configuration
+3. Context is sufficient for understanding
+   cache invalidation mechanisms
 </thought-process>
 
 <output>
@@ -200,6 +190,7 @@ Guidelines for refined queries:
 - Must relate directly to original query
 - Must not expand scope to new aspects
 - Must build on existing context
+- Must not repeat previous queries
 
 Remember: Only request additional context if it's critically needed to answer the original query. Don't expand scope to related but unnecessary information.
 """.replace("{", "{{").replace("}", "}}")
@@ -208,11 +199,9 @@ Remember: Only request additional context if it's critically needed to answer th
 Original query:
 {original_query}
 
-ContextProvider preivous responses:
-{previous_responses}
+Your interaction with ContextProvider:
 
-ContextProvider current response:
-{current_response}
+{interaction}
 """
 
   def __init__(self, model: BaseChatModel):
@@ -224,15 +213,23 @@ ContextProvider current response:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_refine_node")
 
   def format_human_message(self, state: ContextProviderState) -> str:
-    previous_responses = ""
-    if "all_context_provider_responses" in state and state["all_context_provider_responses"]:
-      for response in state["all_context_provider_responses"]:
-        previous_responses += response.content + "\n"
+    interaction = ""
+    if (
+      "all_previous_context_provider_responses" in state
+      and state["all_previous_context_provider_responses"]
+    ):
+      for index in range(len(state["all_previous_context_provider_responses"])):
+        context_provider_answer = state["all_previous_context_provider_responses"][index].content
+        context_refine_query = state["all_context_refine_queries"][index].content
+        interaction += "ContextProvider agent response:\n" + context_provider_answer + "\n\n"
+        interaction += "You refined query:\n" + context_refine_query + "\n\n"
 
+    interaction += (
+      "ContextProvider agent response:\n" + state["context_provider_messages"][-1].content + "\n\n"
+    )
     return self.HUMAN_PROMPT.format(
       original_query=state["original_query"],
-      previous_responses=previous_responses,
-      current_response=state["context_provider_messages"][-1].content,
+      interaction=interaction,
     )
 
   def __call__(self, state: ContextProviderState):
@@ -244,5 +241,6 @@ ContextProvider current response:
     return {
       "has_sufficient_context": response.has_sufficient_context,
       "refined_query": response.refined_query,
-      "all_context_provider_responses": state["context_provider_messages"][-1].content,
+      "all_previous_context_provider_responses": [state["context_provider_messages"][-1]],
+      "all_context_refine_queries": [AIMessage(response.refined_query)],
     }
