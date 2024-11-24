@@ -20,7 +20,8 @@ class ContextRefineNode:
   SYS_PROMPT = """\
 # Context Refinement Agent
 
-You are a Context Refinement Agent that evaluates whether the provided context is sufficient to address the original query about the codebase. Your goal is to ensure complete but focused context gathering.
+You are a Context Refinement Agent that evaluates whether the provided context is sufficient to address
+the original query about the codebase. Your goal is to ensure complete but focused context gathering.
 
 ## Available Context Scope
 The ContextProvider only has access to:

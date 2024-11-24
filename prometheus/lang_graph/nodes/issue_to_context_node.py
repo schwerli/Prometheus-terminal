@@ -121,63 +121,98 @@ Search priority:
     query = f"""\
 {issue_description}
 
-OBJECTIVE: Find ALL self-contained context needed to diagnose and fix this bug.
+OBJECTIVE: Systematically identify and gather ALL code context required to understand and fix this bug.
 
 <reasoning>
-1. Analyze error pattern:
-   - Implementation containing bug
-   - Error handling code
-   - Configuration impact
-   - Data flow path
+To fix any bug, we need to:
+1. Trace the execution path:
+   - Where is the error first manifested?
+   - What functions/methods are in the direct call stack?
+   - What class/object state is involved?
 
-2. Search strategy:
-   - Source files with error
-   - Connected components
-   - Configuration settings
-   - Logging implementations
+2. Identify dependencies:
+   - What initializes the involved objects?
+   - What methods modify the relevant state?
+   - What helper functions are called?
+   - What configuration affects behavior?
 
-3. Required context:
-   - Full implementation files
-   - Complete error handling
-   - All configuration options
-   - Related functionality
+3. Analyze data flow:
+   - How is data passed between components?
+   - Where are values modified?
+   - What validation occurs?
+   - What type conversions happen?
 </reasoning>
 
-REQUIREMENTS:
-- Context MUST be fully self-contained
-- MUST include complete file paths
-- MUST include full function/class implementations
-- MUST preserve all code structure and formatting
-- MUST include line numbers
+REQUIRED CONTEXT - Gather:
+1. Class/Type Definitions:
+   - Complete class implementation
+   - All parent classes and interfaces
+   - Member variable declarations
+   - Constructor/initialization logic
+
+2. Method Implementations:
+   - Full method definitions
+   - Helper functions called within
+   - Validation methods
+   - Error handling code
+
+3. Configuration/State:
+   - Default values
+   - Configuration files
+   - Environment variables
+   - Global state
 
 <examples>
-<example id="timeout-bug">
-<issue>
-Authentication fails after 1 hour of inactivity
-</issue>
+<example id="calculation-error">
+<bug>
+total = ShoppingCart(items).calculate_total()
+assert total == 150  # Fails, actual: 165
+</bug>
 
-<search_targets>
-1. Session management code
-2. Token validation
-3. Timeout configuration
-4. Authentication flow
-</search_targets>
+<analysis>
+Need to examine:
+1. ShoppingCart initialization
+   - How are items stored?
+   - What happens during construction?
+2. calculate_total implementation
+   - Core calculation logic
+   - Any price modifiers
+3. Called methods
+   - Price lookup
+   - Discount calculation
+   - Tax computation
+</analysis>
 
-<expected_context>
-- Complete session handler
-- Full token validator
-- All timeout settings
-- Auth pipeline code
-</expected_context>
+<required_context>
+# File: shopping/cart.py
+class ShoppingCart:
+    def __init__(self, items):
+        # Full constructor
+    
+    def calculate_total(self):
+        # Complete method
+
+# File: shopping/pricing.py
+def get_item_price(item):
+    # Price lookup logic
+
+def apply_discounts(subtotal):
+    # Discount rules
+
+def calculate_tax(amount):
+    # Tax calculation
+</required_context>
 </example>
 </examples>
 
-Search priority:
-1. Error-producing code
-2. Error handling
-3. Configuration settings
-4. Connected components
-5. Logging implementations
+CONSTRAINTS:
+- Include complete relative file paths
+- Include full class/function implementations
+- Preserve all code formatting and comments
+- Must include line numbers where relevant
+- Show all configuration that affects behavior
+
+Return all context that could influence the bug's behavior.
 """
     return query
 

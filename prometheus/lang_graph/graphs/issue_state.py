@@ -19,6 +19,8 @@ class IssueState(TypedDict):
   run_build: bool
   run_existing_test: bool
 
+  reproduced_bug_file: str
+
   patch: str
 
   issue_response: str

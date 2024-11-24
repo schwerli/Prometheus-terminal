@@ -11,7 +11,11 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueType
+from prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node import (
+  BugFixVerificationSubgraphNode,
+)
 from prometheus.lang_graph.nodes.bug_fixing_node import BugFixingNode
+from prometheus.lang_graph.nodes.bug_reproduction_subgraph_node import BugReproductionSubgraphNode
 from prometheus.lang_graph.nodes.build_and_test_subgraph_node import BuildAndTestSubgraphNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.issue_bug_responder_node import IssueBugResponderNode
@@ -41,7 +45,9 @@ class IssueBugSubgraph:
     issue_to_bug_context_node = IssueToContextNode(
       IssueType.BUG, model, kg, neo4j_driver, max_token_per_neo4j_result, thread_id, checkpointer
     )
-
+    bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
+      model, container, kg, test_commands, thread_id, checkpointer
+    )
     bug_fixing_node = BugFixingNode(model, kg)
     bug_fixing_tools = ToolNode(
       tools=bug_fixing_node.tools,
@@ -52,6 +58,10 @@ class IssueBugSubgraph:
     reset_bug_fixing_messages_node = ResetMessagesNode("bug_fixing_messages")
     update_container_node = UpdateContainerNode(self.container, kg)
 
+    bug_fix_verification_branch_node = NoopNode()
+    bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(
+      model, container, thread_id, checkpointer
+    )
     build_or_test_branch_node = NoopNode()
     build_and_test_subgraph_node = BuildAndTestSubgraphNode(
       container, model, kg, build_commands, test_commands, thread_id, checkpointer
@@ -62,6 +72,7 @@ class IssueBugSubgraph:
 
     workflow.add_node("issue_to_bug_context_node", issue_to_bug_context_node)
 
+    workflow.add_node("bug_reproduction_subgraph_node", bug_reproduction_subgraph_node)
 
     workflow.add_node("bug_fixing_node", bug_fixing_node)
     workflow.add_node("bug_fixing_tools", bug_fixing_tools)
@@ -69,12 +80,15 @@ class IssueBugSubgraph:
     workflow.add_node("reset_bug_fixing_messages_node", reset_bug_fixing_messages_node)
     workflow.add_node("update_container_node", update_container_node)
 
+    workflow.add_node("bug_fix_verification_branch_node", bug_fix_verification_branch_node)
+    workflow.add_node("bug_fix_verification_subgraph_node", bug_fix_verification_subgraph_node)
     workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
     workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
     workflow.add_node("issue_bug_responder_node", issue_bug_responder_node)
 
     workflow.set_entry_point("issue_to_bug_context_node")
-    workflow.add_edge("issue_to_bug_context_node", "bug_fixing_node")
+    workflow.add_edge("issue_to_bug_context_node", "bug_reproduction_subgraph_node")
+    workflow.add_edge("bug_reproduction_subgraph_node", "bug_fixing_node")
     workflow.add_conditional_edges(
       "bug_fixing_node",
       functools.partial(tools_condition, messages_key="bug_fixing_messages"),
@@ -83,8 +97,18 @@ class IssueBugSubgraph:
     workflow.add_edge("bug_fixing_tools", "bug_fixing_node")
     workflow.add_edge("git_diff_node", "reset_bug_fixing_messages_node")
     workflow.add_edge("reset_bug_fixing_messages_node", "update_container_node")
-    workflow.add_edge("update_container_node", "build_or_test_branch_node")
+    workflow.add_edge("update_container_node", "bug_fix_verification_branch_node")
 
+    workflow.add_conditional_edges(
+      "bug_fix_verification_branch_node",
+      lambda state: state["reproduced_bug"],
+      {True: "bug_fix_verification_subgraph_node", False: "build_or_test_branch_node"},
+    )
+    workflow.add_conditional_edges(
+      "bug_fix_verification_subgraph_node",
+      lambda state: state["reproducing_test_passed"],
+      {True: "build_or_test_branch_node", False: "bug_fixing_node"},
+    )
     workflow.add_conditional_edges(
       "build_or_test_branch_node",
       lambda state: state["run_build"] or state["run_existing_test"],
@@ -128,11 +152,13 @@ class IssueBugSubgraph:
       return {
         "issue_response": output_state["issue_response"],
         "patch": output_state["patch"],
+        "reproduced_bug_file": output_state.get("reproduced_bug_file", ""),
       }
     except GraphRecursionError:
       return {
         "issue_response": "",
         "patch": output_state.get("patch", ""),
+        "reproduced_bug_file": "",
       }
     finally:
       self.container.cleanup()

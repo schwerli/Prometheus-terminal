@@ -14,7 +14,7 @@ router = APIRouter()
 #  "issue_body": "When I am using your calculate application, 6 divided with 2 is equal to 12, which is not right!",
 #  "issue_type": "bug",
 #  "run_build": false,
-#  "run_test": true,
+#  "run_existing_test": true,
 #  "dockerfile_content": "FROM python:3.11\nWORKDIR /app\nCOPY . /app\nRUN pip install .",
 #  "test_commands": ["pytest ."],
 #  "workdir": "/app"
