@@ -22,3 +22,22 @@ PROMETHEUS_GITHUB_ACCESS_TOKEN=...
 You can also create a `.env` file with these varaibles.
 
 Now, simply run `docker compose up`, and you can access Promtheus at `http://localhost:9001` and the OpenAPI docs at `http://localhost:9001/docs`
+
+
+```
+docker run \
+  -p 5432:5432 \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=postgres \
+  postgres
+```
+
+```
+docker run \
+  -p 7474:7474 \
+  -p 7687:7687 \
+  -e NEO4J_AUTH=neo4j/password \
+  -e NEO4J_PLUGINS='["apoc"]' \
+  neo4j
+```

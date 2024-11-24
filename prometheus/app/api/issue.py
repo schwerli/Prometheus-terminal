@@ -4,18 +4,32 @@ from fastapi import APIRouter, HTTPException, Request
 from litellm import Field
 from pydantic import BaseModel
 
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import ResponseModeEnum
+from prometheus.lang_graph.graphs.issue_state import IssueType
 
 router = APIRouter()
 
+# {
+#  "issue_number": 42,
+#  "issue_title": "Wrong behavior of calculator",
+#  "issue_body": "When I am using your calculate application, 6 divided with 2 is equal to 12, which is not right!",
+#  "issue_type": "bug",
+#  "run_build": false,
+#  "run_existing_test": true,
+#  "dockerfile_content": "FROM python:3.11\nWORKDIR /app\nCOPY . /app\nRUN pip install .",
+#  "test_commands": ["pytest ."],
+#  "workdir": "/app"
+# }
 
-class IssueAnswerAndFixRequest(BaseModel):
-  number: int = Field(description="The number of the issue", examples=[42])
-  title: str = Field(description="The title of the issue", examples=["There is a memory leak"])
-  body: str = Field(
+
+class IssueAnswerRequest(BaseModel):
+  issue_number: int = Field(description="The number of the issue", examples=[42])
+  issue_title: str = Field(
+    description="The title of the issue", examples=["There is a memory leak"]
+  )
+  issue_body: str = Field(
     description="The description of the issue", examples=["foo/bar.c is causing a memory leak"]
   )
-  comments: Optional[Sequence[Mapping[str, str]]] = Field(
+  issue_comments: Optional[Sequence[Mapping[str, str]]] = Field(
     default=None,
     description="Comments on the issue",
     examples=[
@@ -25,20 +39,20 @@ class IssueAnswerAndFixRequest(BaseModel):
       ]
     ],
   )
-  response_mode: Optional[ResponseModeEnum] = Field(
-    default=ResponseModeEnum.AUTO,
-    description="The mode of response: auto (automatically determine whether to fix), only_answer (provide answer without changes), or answer_and_fix (provide answer and fix code)",
-    examples=[ResponseModeEnum.AUTO, ResponseModeEnum.ONLY_ANSWER, ResponseModeEnum.ANSWER_AND_FIX],
+  issue_type: IssueType = Field(
+    default=IssueType.AUTO,
+    description="The type of the issue, set to auto if you do not know",
+    examples=[IssueType.AUTO],
   )
   run_build: Optional[bool] = Field(
-    default=True,
+    default=False,
     description="When editing the code, whenver we should run the build to verify the fix",
-    examples=[True],
+    examples=[False],
   )
-  run_test: Optional[bool] = Field(
-    default=True,
-    description="When editing the code, whenver we should run the test to verify the fix",
-    examples=[True],
+  run_existing_test: Optional[bool] = Field(
+    default=False,
+    description="When editing the code, whenver we should run the existing test to verify the fix",
+    examples=[False],
   )
   dockerfile_content: Optional[str] = Field(
     default=None,
@@ -72,20 +86,8 @@ class IssueAnswerAndFixRequest(BaseModel):
   )
 
 
-@router.post(
-  "/answer_and_fix/",
-  summary="Answer and optionally also fix an issue",
-  description="""
-    Use Prometheus to answer and optionally also fix an issue.
-    
-    When only_answer is false, Promestheus will edit the code to fix the issue, push the change to a remote branch.
-    run_build or run_test when set to True, will use build/test to verify the correctness of the genenerated changes.
-    """,
-  response_description="""
-    A response containing the answer and the remote branch name.
-    """,
-)
-def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
+@router.post("/answer/")
+def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
   if not request.app.state.service_coordinator.exists_knowledge_graph():
     raise HTTPException(
       status_code=404,
@@ -107,28 +109,25 @@ def answer_and_fix_issue(issue: IssueAnswerAndFixRequest, request: Request):
       )
 
     # Validate test commands
-    if issue.run_test and issue.test_commands is None:
+    if issue.run_existing_test and issue.test_commands is None:
       raise HTTPException(
         status_code=400,
         detail="test_commands must be provided for user defined environment when run_test is True",
       )
 
-  issue_response, patch, remote_branch_name = (
-    request.app.state.service_coordinator.answer_and_fix_issue(
-      issue.number,
-      issue.title,
-      issue.body,
-      issue.comments if issue.comments else [],
-      issue.response_mode,
-      issue.run_build,
-      issue.run_test,
-      issue.dockerfile_content,
-      issue.image_name,
-      issue.workdir,
-      issue.build_commands,
-      issue.test_commands,
-      issue.push_to_remote,
-    )
+  issue_response, patch, remote_branch_name = request.app.state.service_coordinator.answer_issue(
+    issue_number=issue.issue_number,
+    issue_title=issue.issue_title,
+    issue_body=issue.issue_body,
+    issue_comments=issue.issue_comments if issue.issue_comments else [],
+    issue_type=issue.issue_type,
+    run_build=issue.run_build,
+    run_existing_test=issue.run_existing_test,
+    dockerfile_content=issue.dockerfile_content,
+    image_name=issue.image_name,
+    workdir=issue.workdir,
+    build_commands=issue.build_commands,
+    test_commands=issue.test_commands,
   )
   return {
     "issue_response": issue_response,

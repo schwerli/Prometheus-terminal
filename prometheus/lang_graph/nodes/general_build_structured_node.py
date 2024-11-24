@@ -7,14 +7,13 @@ identify any failures.
 """
 
 import logging
-from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
+from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
+from prometheus.utils.issue_util import format_agent_tool_message_history
 
 
 class BuildStructuredOutput(BaseModel):
@@ -240,39 +239,7 @@ Output:
     self.model = prompt | structured_llm
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_structured_node")
 
-  def format_build_history(self, build_messages: Sequence[BaseMessage]):
-    """Formats build execution messages into a structured history.
-
-    Processes various message types (AI, Tool) into a chronological sequence
-    of build execution steps and their outputs.
-
-    Args:
-      build_messages: Sequence of messages from build execution attempts.
-        Can include AIMessage and ToolMessage types.
-
-    Returns:
-      List of formatted strings representing the build execution history,
-      including internal thoughts, executed commands, and their outputs.
-    """
-    formatted_messages = []
-    for message in build_messages:
-      if isinstance(message, AIMessage):
-        if message.content:
-          formatted_messages.append(f"Assistant internal thought: {message.content}")
-        if (
-          message.additional_kwargs
-          and "tool_calls" in message.additional_kwargs
-          and message.additional_kwargs["tool_calls"]
-        ):
-          for tool_call in message.additional_kwargs["tool_calls"]:
-            formatted_messages.append(
-              f"Assistant executed command: {tool_call['function']['arguments']}"
-            )
-      elif isinstance(message, ToolMessage):
-        formatted_messages.append(f"Command output: {message.content}")
-    return formatted_messages
-
-  def __call__(self, state: IssueAnswerAndFixState):
+  def __call__(self, state: BuildAndTestState):
     """Processes build state to generate structured build analysis.
 
     Analyzes the build execution history to determine build system presence,
@@ -287,7 +254,8 @@ Output:
       - build_command_summary: String describing build system and required commands
       - build_fail_log: String containing error logs (empty if successful)
     """
-    build_history = "\n".join(self.format_build_history(state["build_messages"]))
+    build_history = format_agent_tool_message_history(state["build_messages"])
+    self._logger.debug(f"Build history:\n{build_history}")
     response = self.model.invoke({"build_history": build_history})
     self._logger.debug(f"BuildStructuredOutput response:\n{response}")
 

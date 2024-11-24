@@ -48,12 +48,12 @@ def test_read_file_with_line_numbers(temp_test_dir):
 
   # Test reading specific lines
   result = read_file_with_line_numbers("test_lines.txt", str(temp_test_dir), 2, 4)
-  expected = "2. line 2\n3. line 3\n4. line 4"
+  expected = "2. line 2\n3. line 3"
   assert result == expected
 
   # Test invalid range
   result = read_file_with_line_numbers("test_lines.txt", str(temp_test_dir), 4, 2)
-  assert result == "The end line number 2 is less than the start line number 4."
+  assert result == "The end line number 2 must be greater than the start line number 4."
 
 
 def test_delete(temp_test_dir):
@@ -83,26 +83,35 @@ def test_delete_nonexistent(temp_test_dir):
 
 def test_edit_file(temp_test_dir):
   """Test editing specific lines in a file."""
+  # Test case 1: Successfully edit a single occurrence
   initial_content = "line 1\nline 2\nline 3\nline 4\nline 5"
   create_file("edit_test.txt", str(temp_test_dir), initial_content)
+  result = edit_file("edit_test.txt", str(temp_test_dir), "line 2", "new line 2")
+  assert result == "Successfully edited edit_test.txt."
 
-  # Test editing middle lines
-  result = edit_file(
-    "edit_test.txt", str(temp_test_dir), 2, 4, "new line 2\nnew line 3\nnew line 4"
-  )
-  assert result == "The file edit_test.txt has been edited."
+  # Test case 2: Absolute path error
+  result = edit_file("/edit_test.txt", str(temp_test_dir), "line 2", "new line 2")
+  assert result == "relative_path: /edit_test.txt is a abolsute path, not relative path."
 
-  file_content = read_file("edit_test.txt", str(temp_test_dir))
-  expected = "1. line 1\n2. new line 2\n3. new line 3\n4. new line 4\n5. line 5"
-  assert file_content == expected
-
-  # Test editing with invalid range
-  result = edit_file("edit_test.txt", str(temp_test_dir), 4, 2, "invalid")
-  assert result == "The end line number 2 is less than the start line number 4."
-
-  # Test editing nonexistent file
-  result = edit_file("nonexistent.txt", str(temp_test_dir), 1, 2, "content")
+  # Test case 3: File doesn't exist
+  result = edit_file("nonexistent.txt", str(temp_test_dir), "line 2", "new line 2")
   assert result == "The file nonexistent.txt does not exist."
+
+  # Test case 4: No matches found
+  result = edit_file("edit_test.txt", str(temp_test_dir), "nonexistent line", "new content")
+  assert (
+    result
+    == "No match found for the specified content in edit_test.txt. Please verify the content to replace."
+  )
+
+  # Test case 5: Multiple occurrences
+  duplicate_content = "line 1\nline 2\nline 2\nline 3"
+  create_file("duplicate_test.txt", str(temp_test_dir), duplicate_content)
+  result = edit_file("duplicate_test.txt", str(temp_test_dir), "line 2", "new line 2")
+  assert (
+    result
+    == "Found 2 occurrences of the specified content in duplicate_test.txt. Please provide more context to ensure a unique match."
+  )
 
 
 def test_create_file_already_exists(temp_test_dir):

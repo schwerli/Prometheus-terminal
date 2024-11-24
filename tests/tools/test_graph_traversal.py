@@ -58,8 +58,8 @@ def test_find_ast_node_with_text(neo4j_container_with_kg_fixture):  # noqa: F811
   assert f"'relative_path': '{relative_path}'" in result
   assert "'text': 'System.out.println(\"Hello world!\")'" in result
   assert "'type': 'method_invocation'" in result
-  assert "'start_line': 2" in result
-  assert "'end_line': 2" in result
+  assert "'start_line': 3" in result
+  assert "'end_line': 3" in result
 
 
 @pytest.mark.slow
@@ -81,8 +81,8 @@ def test_find_ast_node_with_type(neo4j_container_with_kg_fixture):  # noqa: F811
   assert f"'relative_path': '{relative_path}'" in result
   assert "'text': '(\"Hello world!\")'" in result
   assert f"'type': '{type}'" in result
-  assert "'start_line': 2" in result
-  assert "'end_line': 2" in result
+  assert "'start_line': 3" in result
+  assert "'end_line': 3" in result
 
 
 @pytest.mark.slow
@@ -101,8 +101,8 @@ def test_find_ast_node_with_text_in_file(neo4j_container_with_kg_fixture):  # no
   assert f"'relative_path': '{relative_path}'" in result
   assert f"'text': '{text}'" in result
   assert "'type': 'identifier'" in result
-  assert "'start_line': 3" in result
-  assert "'end_line': 3" in result
+  assert "'start_line': 4" in result
+  assert "'end_line': 4" in result
 
 
 @pytest.mark.slow
@@ -121,8 +121,8 @@ def test_find_ast_node_with_type_in_file(neo4j_container_with_kg_fixture):  # no
   assert f"'relative_path': '{relative_path}'" in result
   assert "'text': '\"Hello world!\"'" in result
   assert f"'type': '{type}'" in result
-  assert "'start_line': 3" in result
-  assert "'end_line': 3" in result
+  assert "'start_line': 4" in result
+  assert "'end_line': 4" in result
 
 
 @pytest.mark.slow
@@ -250,8 +250,8 @@ def test_get_parent_node(neo4j_container_with_kg_fixture):  # noqa: F811
   assert "ParentNode" in result
   assert "ASTNode" in result
 
-  assert "'start_line': 2" in result
-  assert "'end_line': 2" in result
+  assert "'start_line': 3" in result
+  assert "'end_line': 3" in result
   assert "'type': 'parameter_list'" in result
   assert "'text': '()'" in result
 

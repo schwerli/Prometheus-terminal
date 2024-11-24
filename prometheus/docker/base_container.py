@@ -76,6 +76,9 @@ class BaseContainer(ABC):
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
     )
 
+  def is_running(self) -> bool:
+    return bool(self.container)
+
   def update_files(self, new_project_path: str):
     """Update files in the running container with files from a local directory.
 
@@ -126,6 +129,7 @@ class BaseContainer(ABC):
     Returns:
         str: Output of the command as a string.
     """
+    command = f'/bin/bash -l -c "{command}"'
     self.logger.debug(f"Running command in container: {command}")
     exec_result = self.container.exec_run(command, workdir=self.workdir)
     exec_result_str = exec_result.output.decode("utf-8")

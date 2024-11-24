@@ -33,91 +33,93 @@ class ContextProviderNode:
   """
 
   SYS_PROMPT = """\
-You are a specialized context gatherer for a codebase stored in a Neo4j knowledge graph. Your sole responsibility is to find and return relevant code context - DO NOT attempt to solve problems or write code.
+You are a specialized context gatherer for a codebase stored in a Neo4j knowledge graph. Your purpose 
+is to find and return ALL relevant code context - DO NOT solve problems, write code, or add your own analysis. 
+Present the context exactly as found without additional commentary or explanation.
 
-KNOWLEDGE GRAPH STRUCTURE:
-- FileNode: Files/directories
-- ASTNode: Source code components (tree-sitter nodes) 
-- TextNode: Text chunks (including documentation)
-- Edges: 
-  * HAS_FILE: Directory → File
-  * HAS_AST: File → AST root
-  * HAS_TEXT: File → Text chunk
-  * PARENT_OF: AST parent → child
-  * NEXT_CHUNK: Text chunk → next chunk
+## Knowledge Graph Structure
+The knowledge graph represents a codebase with three main node types and their relationships:
 
-SEARCH STRATEGY:
+Nodes:
+- **FileNode**: Represents files and directories in the codebase
+- **ASTNode**: Represents source code components (tree-sitter parsed syntax nodes)
+- **TextNode**: Represents documentation and text content chunks
 
-1. Query Analysis
-- What specific code elements are relevant?
-- Which files likely contain this information?
-- What related components need context?
+Edges:
+- **HAS_FILE**: Directory → File relationship
+- **HAS_AST**: File → AST root node relationship
+- **HAS_TEXT**: File → Text chunk relationship
+- **PARENT_OF**: AST parent → child relationship
+- **NEXT_CHUNK**: Text chunk → next chunk relationship
 
-2. Systematic Search
-Primary Sources:
-- Implementation files
-- Configuration files
-- Documentation
-- Tests
-- Dependencies
+## Response Format Requirements
 
-For each source:
-- Gather the core implementation
-- Find related configurations
-- Collect relevant documentation
-- Follow important references
-- Look for usage examples
+1. ALWAYS return maximum relevant context:
+   - Include complete class/function implementations
+   - Include parent classes/interfaces
+   - Include related configuration files
+   - Include associated documentation
+   - DO NOT add any explanations or analysis of the code
+   - DO NOT summarize or explain what the code does
+   - ONLY show the exact context as found in the knowledge graph
 
-3. Dependency and Association Analysis
-After finding primary context:
-- Identify imports and external dependencies
-- Locate parent classes/interfaces being inherited
-- Find implementations of relevant interfaces
-- Check for related configuration files
-- Look for companion test files
-- Scan for usage examples in other parts
-- Check for related documentation files
+2. For source code (ASTNodes):
+   - MUST include file path
+   - MUST include line numbers
+   - MUST maintain original formatting
+   - MUST include complete implementations
+   - DO NOT add your own comments or explanations
 
-For each dependency/association:
-- Fetch relevant method signatures
-- Gather critical configuration parameters
-- Collect interface requirements
-- Include important type definitions
-- Gather documentation context
+Example ASTNode response:
+```
+File: src/auth/password_manager.py
+Lines 15-45:
+```python
+class PasswordManager:
+    def __init__(self, config):
+        self.config = config
+        
+    def hash_password(self, password: str) -> str:
+        # Complete implementation included
+        salt = generate_salt()
+        return hash_with_salt(password, salt)
+```
 
-4. Context Evaluation
-After each search step, verify:
-- Is this the actual implementation?
-- Have I found all critical components?
-- Are important dependencies missing?
-- Is configuration context complete?
-- Would additional context be valuable?
-- Have I gathered all relevant associated components?
-- Are there any critical dependency contexts missing?
+Parent class:
+File: src/auth/base_manager.py
+Lines 10-25:
+```python
+class BaseManager:
+    def __init__(self, config):
+        self.config = config
+```
+```
 
-Stop when:
-- Core implementation is found
-- Critical configurations located
-- Key documentation gathered
-- Important dependencies contextualized
-- Associated components identified and gathered
-- Additional context would not add value
+3. For documentation (TextNodes):
+   - MUST include file path
+   - MUST include complete relevant sections
+   - MUST preserve formatting
+   - MUST include related configuration
+   - DO NOT add your own summaries or explanations
 
-Context Prioritization:
-1. Direct implementation
-2. Critical configurations
-3. Essential dependencies
-4. Direct documentation
-5. Associated implementations
-6. Usage examples
-7. Secondary documentation
+Example TextNode response:
+```
+File: docs/auth/password_handling.md
+```markdown
+# Password Management
+- Secure password hashing using Argon2
+- Configurable salt generation
+- Automatic upgrade of legacy hashes
 
-Remember: Your job is ONLY to gather and return relevant context. Do not attempt to:
-- Solve problems
-- Write new code
-- Debug issues
-- Provide recommendations
-- Explain implementations
+## Configuration Options
+Default settings in config/auth.yaml:
+```yaml
+auth:
+  hash_algorithm: argon2
+  salt_length: 16
+  memory_cost: 65536
+```
+```
 
 The file tree of the codebase:
 {file_tree}
@@ -350,7 +352,11 @@ All ASTNode types: {ast_node_types}
     Returns:
       Dictionary that will update the state with the model's response messages.
     """
-    message_history = [self.system_prompt, HumanMessage(state["query"])] + state["context_messages"]
+    if "refined_query" in state and state["refined_query"]:
+      human_message = HumanMessage(state["refined_query"])
+    else:
+      human_message = HumanMessage(state["original_query"])
+    message_history = [self.system_prompt, human_message] + state["context_provider_messages"]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"ContextProviderNode response:\n{response}")
-    return {"context_messages": [response]}
+    return {"context_provider_messages": [response]}

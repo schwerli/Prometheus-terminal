@@ -5,7 +5,8 @@ workflows without performing any operations. It acts as a structural element in
 node graphs where a connection is needed but no processing is required.
 """
 
-from typing import Any
+import logging
+from typing import Dict
 
 
 class NoopNode:
@@ -17,7 +18,10 @@ class NoopNode:
   should occur.
   """
 
-  def __call__(self, _: Any) -> None:
+  def __init__(self):
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.noop_node")
+
+  def __call__(self, state: Dict) -> None:
     """Routes the workflow without performing any operations.
 
     Accepts any input and returns None, serving as a pass-through point
@@ -29,4 +33,7 @@ class NoopNode:
     Returns:
       None always, as this node performs no operations.
     """
+    for key, value in state.items():
+      if isinstance(value, bool):
+        self._logger.debug(f"State {key}: {value}")
     return

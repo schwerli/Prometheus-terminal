@@ -1,12 +1,3 @@
-"""Test execution handler for software projects in containerized environments.
-
-This module provides functionality to automatically detect and execute tests for
-software projects in Ubuntu containers. It analyzes project structures to identify
-testing frameworks, installs necessary dependencies, and executes appropriate test
-commands while maintaining a strict boundary around test execution (no modifications
-or analysis).
-"""
-
 import functools
 import logging
 
@@ -14,8 +5,9 @@ from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-from prometheus.docker.general_container import GeneralContainer
-from prometheus.lang_graph.subgraphs.issue_answer_and_fix_state import IssueAnswerAndFixState
+from prometheus.docker.base_container import BaseContainer
+from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
 from prometheus.tools import container_command
 
 
@@ -66,38 +58,14 @@ Remember:
 - Simply execute the tests and report that they were run
 """
 
-  def __init__(self, model: BaseChatModel, container: GeneralContainer, before_edit: bool):
-    """Initializes the GeneralTestNode with model, container, and test phase.
-
-    Sets up the test executor with necessary tools, prompts, and logging
-    configuration for executing tests in a container environment.
-
-    Args:
-      model: Language model instance that will be used for test framework
-        detection and command generation. Must be a BaseChatModel implementation.
-      container: GeneralContainer instance where the test commands will be
-        executed. Should be properly configured with an Ubuntu environment.
-      before_edit: Boolean flag indicating whether this test attempt is
-        happening before or after code edits. Affects behavior and logging.
-    """
+  def __init__(self, model: BaseChatModel, container: BaseContainer, kg: KnowledgeGraph):
+    self.kg = kg
     self.tools = self._init_tools(container)
     self.model_with_tools = model.bind_tools(self.tools)
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self.before_edit = before_edit
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_node")
 
-  def _init_tools(self, container: GeneralContainer):
-    """Initializes container operation tools.
-
-    Creates and configures the necessary tools for executing commands
-    in the container environment.
-
-    Args:
-      container: GeneralContainer instance where commands will be executed.
-
-    Returns:
-      List of StructuredTool instances configured for container operations.
-    """
+  def _init_tools(self, container: BaseContainer):
     tools = []
 
     run_command_fn = functools.partial(container_command.run_command, container=container)
@@ -111,39 +79,15 @@ Remember:
 
     return tools
 
-  def format_human_message(self, state: IssueAnswerAndFixState) -> HumanMessage:
-    """Creates a formatted message containing project structure information.
-
-    Formats the project structure and, if applicable, previous test summary
-    into a message for the language model.
-
-    Args:
-      state: Current state containing project structure and optional previous test information.
-
-    Returns:
-      HumanMessage instance containing formatted project information.
-    """
-    message = f"The (incomplete) project structure is:\n{state['project_structure']}"
-    if not self.before_edit:
+  def format_human_message(self, state: BuildAndTestState) -> HumanMessage:
+    message = f"The (incomplete) project structure is:\n{self.kg.get_file_tree()}"
+    if "test_command_summary" in state and state["test_command_summary"]:
       message += f"\n\nThe previous test summary is:\n{state['test_command_summary']}"
     return HumanMessage(message)
 
-  def __call__(self, state: IssueAnswerAndFixState):
-    """Executes the test process based on the current state.
-
-    Analyzes the project structure to identify testing frameworks and executes
-    appropriate test commands in the container environment. Skips test execution
-    if the state indicates no test framework exists.
-
-    Args:
-      state: Current state containing project information and test status.
-
-    Returns:
-      Dictionary containing test execution messages and results to update the state.
-      Key 'test_messages' contains a list of execution-related messages.
-    """
-    if not self.before_edit and "exist_test" in state and not state["exist_test"]:
-      self._logger.debug("exist_test is false, skipping test.")
+  def __call__(self, state: BuildAndTestState):
+    if "exist_test" in state and not state["exist_test"]:
+      self._logger.info("exist_test is false, skipping test.")
       return {
         "build_messages": [
           AIMessage(content="Previous agent determined there is no test framework.")

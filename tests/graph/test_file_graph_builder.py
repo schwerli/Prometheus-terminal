@@ -33,9 +33,9 @@ def test_build_python_file_graph():
 
   # Test if some of the nodes exists
   argument_list_ast_node = ASTNode(
-    type="argument_list", start_line=0, end_line=0, text='("Hello world!")'
+    type="argument_list", start_line=1, end_line=1, text='("Hello world!")'
   )
-  string_ast_node = ASTNode(type="string", start_line=0, end_line=0, text='"Hello world!"')
+  string_ast_node = ASTNode(type="string", start_line=1, end_line=1, text='"Hello world!"')
 
   found_argument_list_ast_node = False
   for kg_node in kg_nodes:
