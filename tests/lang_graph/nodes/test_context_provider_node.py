@@ -8,21 +8,56 @@ from tests.test_utils.util import FakeListChatWithToolsModel
 
 
 @pytest.mark.slow
-def test_context_provider_node(neo4j_container_with_kg_fixture):  # noqa: F811
+def test_context_provider_node_basic_query(neo4j_container_with_kg_fixture):  # noqa: F811
+  """Test basic query handling with the ContextProviderNode."""
   neo4j_container, kg = neo4j_container_with_kg_fixture
   fake_response = "Fake response"
   fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
-  node = ContextProviderNode(fake_llm, kg, neo4j_container.get_driver(), 1000)
+  node = ContextProviderNode(
+    model=fake_llm, kg=kg, neo4j_driver=neo4j_container.get_driver(), max_token_per_result=1000
+  )
 
   test_messages = [
     AIMessage(content="This code handles file processing"),
     ToolMessage(content="Found implementation in utils.py", tool_call_id="test_tool_call_1"),
   ]
   test_state = ContextProviderState(
-    {"query": "How does the error handling work?", "context_messages": test_messages}
+    {
+      "original_query": "How does the error handling work?",
+      "context_provider_messages": test_messages,
+    }
   )
 
   result = node(test_state)
 
-  assert "context_messages" in result
-  assert result["context_messages"][0].content == fake_response
+  assert "context_provider_messages" in result
+  assert len(result["context_provider_messages"]) == 1
+  assert result["context_provider_messages"][0].content == fake_response
+
+
+@pytest.mark.slow
+def test_context_provider_node_refined_query(neo4j_container_with_kg_fixture):  # noqa: F811
+  """Test handling of refined queries in the ContextProviderNode."""
+  neo4j_container, kg = neo4j_container_with_kg_fixture
+  fake_response = "Response for refined query"
+  fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
+  node = ContextProviderNode(
+    model=fake_llm, kg=kg, neo4j_driver=neo4j_container.get_driver(), max_token_per_result=1000
+  )
+
+  test_messages = [
+    AIMessage(content="Previous context about error handling"),
+  ]
+  test_state = ContextProviderState(
+    {
+      "original_query": "How does the error handling work?",
+      "refined_query": "Show me the error handling implementation in the file processor",
+      "context_provider_messages": test_messages,
+    }
+  )
+
+  result = node(test_state)
+
+  assert "context_provider_messages" in result
+  assert len(result["context_provider_messages"]) == 1
+  assert result["context_provider_messages"][0].content == fake_response

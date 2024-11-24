@@ -110,7 +110,9 @@ class BugReproductionSubgraph:
       lambda state: state["reproduced_bug"],
       {True: END, False: "reset_bug_reproducing_write_messages_node"},
     )
-    workflow.add_edge("reset_bug_reproducing_write_messages_node", "reset_bug_reproducing_file_messages_node")
+    workflow.add_edge(
+      "reset_bug_reproducing_write_messages_node", "reset_bug_reproducing_file_messages_node"
+    )
     workflow.add_edge(
       "reset_bug_reproducing_file_messages_node", "reset_bug_reproducing_execute_messages_node"
     )

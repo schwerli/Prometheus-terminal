@@ -71,6 +71,10 @@ class IssueService:
     )
 
     if output_state["issue_type"] == IssueType.BUG:
-      return output_state["issue_response"], output_state["patch"], output_state["reproduced_bug_file"]
-    
+      return (
+        output_state["issue_response"],
+        output_state["patch"],
+        output_state["reproduced_bug_file"],
+      )
+
     return "", "", ""

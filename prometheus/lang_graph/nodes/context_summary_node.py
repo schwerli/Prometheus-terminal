@@ -5,10 +5,9 @@ KnowledgeGraph traversal context into a single summary.
 """
 
 import logging
-from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 
@@ -273,9 +272,9 @@ All retrieve context:
     all_context = ""
     for response in state["all_context_provider_responses"]:
       all_context += f"{response.content}\n\n"
-    return HumanMessage(self.HUMAN_PROMPT.format(
-      original_query=state["original_query"],
-      all_context=all_context))
+    return HumanMessage(
+      self.HUMAN_PROMPT.format(original_query=state["original_query"], all_context=all_context)
+    )
 
   def __call__(self, state: ContextProviderState):
     """Processes context state to generate organized summary.

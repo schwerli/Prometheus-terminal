@@ -83,7 +83,9 @@ class RepositoryService:
       and kg.get_codebase_commit_id() == commit_id
     )
 
-  def push_change_to_remote(self, commit_message: str, excluded_files: Optional[Sequence[str]] = None):
+  def push_change_to_remote(
+    self, commit_message: str, excluded_files: Optional[Sequence[str]] = None
+  ):
     """Pushes local changes to a new remote branch.
 
     Creates a new branch with a unique name, commits the current changes,

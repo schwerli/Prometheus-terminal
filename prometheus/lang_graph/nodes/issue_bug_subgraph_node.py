@@ -46,5 +46,5 @@ class IssueBugSubgraphNode:
     return {
       "issue_response": output_state["issue_response"],
       "patch": output_state["patch"],
-      "reproduced_bug_file": output_state["reproduced_bug_file"]
+      "reproduced_bug_file": output_state["reproduced_bug_file"],
     }

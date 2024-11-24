@@ -136,7 +136,9 @@ class EditFileInput(BaseModel):
   relative_path: str = Field(
     description="The relative path of the file to edit, eg. foo/bar/test.py, not absolute path"
   )
-  old_content: str = Field(description="The exact string content to be replaced in the file. Must match exactly one occurrence in the file")
+  old_content: str = Field(
+    description="The exact string content to be replaced in the file. Must match exactly one occurrence in the file"
+  )
   new_content: str = Field(
     description="The new content that will replace the old_content in the file"
   )
@@ -160,9 +162,7 @@ edit_file(
 """
 
 
-def edit_file(
-  relative_path: str, root_path: str, old_content: str, new_content: str
-) -> str:
+def edit_file(relative_path: str, root_path: str, old_content: str, new_content: str) -> str:
   if os.path.isabs(relative_path):
     return f"relative_path: {relative_path} is a abolsute path, not relative path."
 
@@ -171,16 +171,18 @@ def edit_file(
     return f"The file {relative_path} does not exist."
 
   content = file_path.read_text()
-  
+
   occurrences = content.count(old_content)
-  
+
   if occurrences == 0:
-      return f"No match found for the specified content in {relative_path}. Please verify the content to replace."
-  
+    return f"No match found for the specified content in {relative_path}. Please verify the content to replace."
+
   if occurrences > 1:
-      return (f"Found {occurrences} occurrences of the specified content in {relative_path}. "
-              "Please provide more context to ensure a unique match.")
-  
+    return (
+      f"Found {occurrences} occurrences of the specified content in {relative_path}. "
+      "Please provide more context to ensure a unique match."
+    )
+
   new_content_full = content.replace(old_content, new_content)
   file_path.write_text(new_content_full)
 

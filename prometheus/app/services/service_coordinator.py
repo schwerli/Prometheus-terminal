@@ -96,7 +96,9 @@ class ServiceCoordinator:
 
     remote_branch_name = None
     if patch and push_to_remote:
-      remote_branch_name = self.repository_service.push_change_to_remote(f"Fixes #{issue_number}", [reproduced_bug_file])
+      remote_branch_name = self.repository_service.push_change_to_remote(
+        f"Fixes #{issue_number}", [reproduced_bug_file]
+      )
     return issue_response, patch, remote_branch_name
 
   def exists_knowledge_graph(self) -> bool:

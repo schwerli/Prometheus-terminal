@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.bug_reproducing_write_node import BugReproducingWriteNode
@@ -16,54 +15,66 @@ def mock_kg():
   return kg
 
 
-def test_bug_reproducing_write_node_format_message(mock_kg):
-  """Test that human messages are formatted correctly with state data."""
-  fake_llm = FakeListChatWithToolsModel(responses=["test"])
-  node = BugReproducingWriteNode(fake_llm, mock_kg)
-
-  test_state = BugReproductionState(
+@pytest.fixture
+def test_state():
+  return BugReproductionState(
     {
       "issue_title": "Test Bug",
       "issue_body": "Bug description",
       "issue_comments": ["Comment 1", "Comment 2"],
       "bug_context": "Context of the bug",
       "reproduced_bug_file": "test/file.py",
-      "last_bug_reproducing_execute_message": AIMessage(content="Previous attempt"),
+      "reproduced_bug_failure_log": "Test failure log",
       "bug_reproducing_write_messages": [],
     }
   )
 
-  message = node.format_human_message(test_state)
 
-  assert isinstance(message, HumanMessage)
-  assert "Test Bug" in message.content
-  assert "Bug description" in message.content
-  assert "Comment 1" in message.content
-  assert "test/file.py" in message.content
-  assert "Previous attempt" in message.content
-
-
-def test_bug_reproducing_write_node_execution(mock_kg):
-  fake_response = "Created test file at path/to/test.py"
-  fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
+def test_format_human_message_with_previous_data(mock_kg, test_state):
+  """Test message formatting with previous reproduction data."""
+  fake_llm = FakeListChatWithToolsModel(responses=["test"])
   node = BugReproducingWriteNode(fake_llm, mock_kg)
 
-  test_messages = [
-    AIMessage(content="Previous message"),
-    ToolMessage(content="Tool result", tool_call_id="test_call_1"),
-  ]
+  message = node.format_human_message(test_state)
 
-  test_state = BugReproductionState(
+  assert isinstance(message, str)
+  assert "Test Bug" in message
+  assert "Bug description" in message
+  assert "Comment 1" in message
+  assert "Comment 2" in message
+  assert "test/file.py" in message
+  assert "Test failure log" in message
+
+
+def test_format_human_message_without_previous_data(mock_kg):
+  """Test message formatting without previous reproduction data."""
+  fake_llm = FakeListChatWithToolsModel(responses=["test"])
+  node = BugReproducingWriteNode(fake_llm, mock_kg)
+
+  state = BugReproductionState(
     {
       "issue_title": "Test Bug",
       "issue_body": "Bug description",
       "issue_comments": ["Comment"],
       "bug_context": "Context of the bug",
-      "reproduced_bug_file": "test/file.py",
-      "last_bug_reproducing_execute_message": AIMessage(content="Previous attempt"),
-      "bug_reproducing_write_messages": test_messages,
+      "bug_reproducing_write_messages": [],
     }
   )
+
+  message = node.format_human_message(state)
+
+  assert isinstance(message, str)
+  assert "Test Bug" in message
+  assert "Bug description" in message
+  assert "Previous bug reproducing file\n" in message
+  assert "Previous bug reproducing fail log\n" in message
+
+
+def test_call_method(mock_kg, test_state):
+  """Test the __call__ method execution."""
+  fake_response = "Created test file"
+  fake_llm = FakeListChatWithToolsModel(responses=[fake_response])
+  node = BugReproducingWriteNode(fake_llm, mock_kg)
 
   result = node(test_state)
 
