@@ -42,11 +42,11 @@ class IssueBugSubgraph:
     self.container = container
     self.thread_id = thread_id
 
+    bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
+      model, container, kg, neo4j_driver, max_token_per_neo4j_result, test_commands, thread_id, checkpointer
+    )
     issue_to_bug_context_node = IssueToContextNode(
       IssueType.BUG, model, kg, neo4j_driver, max_token_per_neo4j_result, thread_id, checkpointer
-    )
-    bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
-      model, container, kg, test_commands, thread_id, checkpointer
     )
     bug_fixing_node = BugFixingNode(model, kg)
     bug_fixing_tools = ToolNode(
@@ -70,9 +70,9 @@ class IssueBugSubgraph:
 
     workflow = StateGraph(IssueBugState)
 
-    workflow.add_node("issue_to_bug_context_node", issue_to_bug_context_node)
-
     workflow.add_node("bug_reproduction_subgraph_node", bug_reproduction_subgraph_node)
+
+    workflow.add_node("issue_to_bug_context_node", issue_to_bug_context_node)
 
     workflow.add_node("bug_fixing_node", bug_fixing_node)
     workflow.add_node("bug_fixing_tools", bug_fixing_tools)
@@ -86,9 +86,9 @@ class IssueBugSubgraph:
     workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
     workflow.add_node("issue_bug_responder_node", issue_bug_responder_node)
 
-    workflow.set_entry_point("issue_to_bug_context_node")
-    workflow.add_edge("issue_to_bug_context_node", "bug_reproduction_subgraph_node")
-    workflow.add_edge("bug_reproduction_subgraph_node", "bug_fixing_node")
+    workflow.set_entry_point("bug_reproduction_subgraph_node")
+    workflow.add_edge("bug_reproduction_subgraph_node", "issue_to_bug_context_node")
+    workflow.add_edge("issue_to_bug_context_node", "bug_fixing_node")
     workflow.add_conditional_edges(
       "bug_fixing_node",
       functools.partial(tools_condition, messages_key="bug_fixing_messages"),

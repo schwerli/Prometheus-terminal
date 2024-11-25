@@ -35,9 +35,6 @@ Bug reproducing file message:
 
 User provided test commands:
 {test_commands}
-
-Bug context summary:
-{bug_context}
 """
 
   def __init__(
@@ -79,7 +76,6 @@ Bug context summary:
         comments=state["issue_comments"],
         bug_reproducing_file_message=state["bug_reproducing_file_messages"][-1].content,
         test_commands=test_commands_str,
-        bug_context=state["bug_context"],
       )
     )
 

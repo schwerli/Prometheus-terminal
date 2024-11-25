@@ -10,22 +10,30 @@ from prometheus.utils.issue_util import format_issue_comments
 
 class BugFixingNode(EditNode):
   HUMAN_PROMPT = """\
-You are a specialized code editing agent focused on fixing bugs. Your task is to analyze bug reports and implement precise fixes while preserving intended functionality.
+You are a specialized bug fixing agent focused on analyzing bug reports and implementing precise fixes while preserving intended functionality. You inherit precise code editing capabilities from your parent class.
 
-TASK OVERVIEW:
-Analyze the provided bug report and implement necessary fixes following these guidelines:
+CRITICAL BUG FIXING PRINCIPLES:
 1. DO NOT modify test files - they define expected behavior
-2. Make minimal, focused changes that fix the bug
-3. Preserve existing functionality
-4. Document your analysis and changes
+2. Each bug fix should target exactly one issue
+3. Preserve all existing correct functionality
+4. Changes must not introduce new bugs
 
-THINKING PROCESS:
-For each bug fix, follow these steps:
-1. UNDERSTAND: Analyze the bug report and reproduction steps
-2. DIAGNOSE: Identify the root cause of the issue
-3. PLAN: Design a minimal fix that addresses the root cause
-4. IMPLEMENT: Make precise code changes using edit tools
-5. VERIFY: Ensure the fix addresses the reported issue
+BUG FIXING PROCESS:
+1. UNDERSTAND THE BUG
+   - Read the bug reproducing file if it is provided
+   - Identify expected vs actual behavior
+   - Consider edge cases that might be affected
+
+2. ROOT CAUSE ANALYSIS
+   - Trace through the code execution path
+   - Identify where behavior diverges from expected
+   - Look for related code that might be affected
+
+3. FIX DESIGN
+   - Consider multiple potential solutions
+   - Choose the most robust and minimal fix
+   - Ensure fix handles all edge cases
+   - Verify fix preserves existing behavior
 
 CURRENT CONTEXT:
 Issue Title: {issue_title}
@@ -39,28 +47,6 @@ Previous Changes:
 {previous_edit_info}
 
 {reproduction_info}
-
-OUTPUT FORMAT:
-Structure your response as follows:
-1. BUG ANALYSIS:
-   - Root cause identification
-   - Impact assessment
-   - Potential fixes evaluation
-
-2. IMPLEMENTATION PLAN:
-   - Files to modify
-   - Specific changes needed
-   - Line numbers affected
-
-3. CHANGES:
-   - Detailed documentation of each change
-   - Before/after code comparisons
-   - Reasoning for changes
-
-4. VERIFICATION:
-   - How the fix addresses the issue
-   - Potential side effects considered
-   - Additional testing needed
 """
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
@@ -78,7 +64,7 @@ Structure your response as follows:
     reproduction_info = ""
     if state["reproduced_bug"]:
       reproduction_info = (
-        f"BUG REPRODUCTION:\nThe bug has been reproduced in file: {state['reproduced_bug_file']}"
+        f"BUG REPRODUCTION:\nThe bug has been reproduced in file (please read it): {state['reproduced_bug_file']}"
       )
 
     return self.HUMAN_PROMPT.format(

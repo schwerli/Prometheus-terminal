@@ -5,6 +5,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
+import neo4j
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -12,6 +13,7 @@ from prometheus.lang_graph.nodes.bug_reproducing_execute_node import BugReproduc
 from prometheus.lang_graph.nodes.bug_reproducing_file_node import BugReproducingFileNode
 from prometheus.lang_graph.nodes.bug_reproducing_structured_node import BugReproducingStructuredNode
 from prometheus.lang_graph.nodes.bug_reproducing_write_node import BugReproducingWriteNode
+from prometheus.lang_graph.nodes.issue_to_context_node import IssueToContextNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
 from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNode
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
@@ -23,11 +25,15 @@ class BugReproductionSubgraph:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    neo4j_driver: neo4j.Driver,
+    max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]] = None,
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self.thread_id = thread_id
+
+    bug_reproducing_context_node = IssueToContextNode("bug_reproducing", model, kg, neo4j_driver, max_token_per_neo4j_result)
 
     bug_reproducing_write_node = BugReproducingWriteNode(model, kg)
     bug_reproducing_write_tools = ToolNode(
@@ -57,6 +63,7 @@ class BugReproductionSubgraph:
 
     workflow = StateGraph(BugReproductionState)
 
+    workflow.add_node("bug_reproducing_context_node", bug_reproducing_context_node)
     workflow.add_node("bug_reproducing_write_node", bug_reproducing_write_node)
     workflow.add_node("bug_reproducing_write_tools", bug_reproducing_write_tools)
     workflow.add_node("bug_reproducing_file_node", bug_reproducing_file_node)
@@ -75,8 +82,9 @@ class BugReproductionSubgraph:
       "reset_bug_reproducing_execute_messages_node", reset_bug_reproducing_execute_messages_node
     )
 
-    workflow.set_entry_point("bug_reproducing_write_node")
+    workflow.set_entry_point("bug_reproducing_context_node")
 
+    workflow.add_edge("bug_reproducing_context_node", "bug_reproducing_write_node")
     workflow.add_conditional_edges(
       "bug_reproducing_write_node",
       functools.partial(tools_condition, messages_key="bug_reproducing_write_messages"),
@@ -125,8 +133,7 @@ class BugReproductionSubgraph:
     issue_title: str,
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
-    bug_context: str,
-    recursion_limit: int = 50,
+    recursion_limit: int = 35,
   ):
     config = {"recursion_limit": recursion_limit}
     if self.thread_id:
@@ -136,7 +143,6 @@ class BugReproductionSubgraph:
       "issue_title": issue_title,
       "issue_body": issue_body,
       "issue_comments": issue_comments,
-      "bug_context": bug_context,
     }
 
     output_state = self.subgraph.invoke(input_state, config)

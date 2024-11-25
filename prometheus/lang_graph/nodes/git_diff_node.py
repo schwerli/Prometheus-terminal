@@ -42,7 +42,7 @@ class GitDiffNode:
       - patch: String containing the Git diff output showing all changes made to the project.
     """
     git_repo = GitRepository(self.kg.get_local_path(), None, copy_to_working_dir=False)
-    if self.exclude_reproduced_bug_file:
+    if self.exclude_reproduced_bug_file and "reproduced_bug_file" in state and state["reproduced_bug_file"]:
       patch = git_repo.get_diff([state["reproduced_bug_file"]])
     else:
       patch = git_repo.get_diff()

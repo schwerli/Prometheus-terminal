@@ -9,7 +9,7 @@ class BugReproductionState(TypedDict):
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
 
-  bug_context: str
+  bug_reproducing_context: str
 
   bug_reproducing_write_messages: Annotated[Sequence[BaseMessage], add_messages]
   bug_reproducing_file_messages: Annotated[Sequence[BaseMessage], add_messages]

@@ -4,6 +4,7 @@ from typing import Optional, Sequence
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
+import neo4j
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -17,13 +18,15 @@ class BugReproductionSubgraphNode:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    neo4j_driver: neo4j.Driver,
+    max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]],
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
     self.bug_reproduction_subgraph = BugReproductionSubgraph(
-      model, container, kg, test_commands, thread_id, checkpointer
+      model, container, kg, neo4j_driver, max_token_per_neo4j_result, test_commands, thread_id, checkpointer
     )
 
   def __call__(self, state: IssueBugState):
@@ -31,14 +34,12 @@ class BugReproductionSubgraphNode:
     self._logger.debug(f"issue_title: {state['issue_title']}")
     self._logger.debug(f"issue_body: {state['issue_body']}")
     self._logger.debug(f"issue_comments: {state['issue_comments']}")
-    self._logger.debug(f"bug_context: {state['bug_context']}")
 
     try:
       output_state = self.bug_reproduction_subgraph.invoke(
         state["issue_title"],
         state["issue_body"],
         state["issue_comments"],
-        state["bug_context"],
       )
     except GraphRecursionError:
       self._logger.info("Recursion limit reached, returning reproduced_bug=False")
