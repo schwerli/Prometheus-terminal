@@ -10,5 +10,4 @@ class BugFixVerficationState(TypedDict):
 
   bug_fix_verify_messages: Annotated[Sequence[BaseMessage], add_messages]
 
-  reproducing_test_passed: bool
   reproducing_test_fail_log: str

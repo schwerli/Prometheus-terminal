@@ -38,6 +38,6 @@ Now please think about what went wrong, and retrieve new context that may help m
     )
 
   def __call__(self, state: IssueBugState):
-    human_message = HumanMessage(self.HUMAN_PROMPT.format(state))
+    human_message = self.format_human_message(state)
     self._logger.debug(f"Sending query to context provider:\n{human_message}")
     return {"context_provider_messages": [human_message]}

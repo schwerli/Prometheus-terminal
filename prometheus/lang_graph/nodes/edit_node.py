@@ -7,6 +7,7 @@ while maintaining code integrity.
 """
 
 import functools
+import logging
 from typing import Dict
 
 from langchain.tools import StructuredTool
@@ -20,7 +21,8 @@ from prometheus.tools import file_operation
 class EditNode:
   SYS_PROMPT = """\
 You are a specialized editing agent responsible for implementing precise changes to files. You must think
-carefully through each edit and explain your reasoning before making changes.
+carefully through each edit and explain your reasoning before making changes. After making your changes,
+summarize why the bug happens and what is your changes.
 
 ROLE AND RESPONSIBILITIES:
 - Make precise, minimal code changes that solve the problem
@@ -159,12 +161,14 @@ IMPORTANT REMINDERS:
 - When replacing multiple lines, include all of them in old_content
 - If multiple matches are found, include more context in old_content
 - Verify the uniqueness of the match before making changes
+- After making your changes, summarize why the bug happens and what is your changes.
 """
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.tools = self._init_tools(kg.get_local_path())
-    self.model_with_tool = model.bind_tools(self.tools)
+    self.model_with_tools = model.bind_tools(self.tools)
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.edit_node")
 
   def _init_tools(self, root_path: str):
     """Initializes file operation tools with the given root path.

@@ -3,7 +3,7 @@ import logging
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
@@ -18,7 +18,7 @@ Given an issue description, create a minimal test that demonstrates the problem.
 Requirements:
 - Include all necessary imports
 - Must use the example from the issue if provided
-- Write assertions that fail now but will pass when fixed
+- Write minimal number of assertions that fail now but will pass when fixed
 - Keep tests minimal and focused
 
 <example>
@@ -140,8 +140,7 @@ case following the thought process above. Pay special attention to maintaining c
     return tools
 
   def __call__(self, state: BugReproductionState):
-    human_message = HumanMessage(self.format_human_message(state))
-    message_history = [self.system_prompt, human_message] + state["bug_reproducing_write_messages"]
+    message_history = [self.system_prompt] + state["bug_reproducing_write_messages"]
     response = self.model_with_tools.invoke(message_history)
 
     self._logger.debug(f"BugReproducingWriteNode response:\n{response}")
