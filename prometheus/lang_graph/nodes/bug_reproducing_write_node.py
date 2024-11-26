@@ -109,23 +109,7 @@ if __name__ == '__main__':
 
 Study the bug report, similar test cases, and any previous test attempts. Then write a minimal, self-contained test
 case following the thought process above. Pay special attention to maintaining consistency with the testing patterns shown in the similar test cases.
-'''.replace("{", "{{").replace("}", "}}")
-
-  HUMAN_PROMPT = """\
-ISSUE INFORMATION:
-Title: {title}
-Description: {body}
-Comments: {comments}
-
-Bug reproducing context:
-{bug_reproducing_context}
-
-Previous bug reproducing file
-{previous_bug_reproducing_file}
-
-Previous bug reproducing fail log
-{previous_bug_reproducing_fail_log}
-"""
+'''
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
     self.tools = self._init_tools(kg.get_local_path())
@@ -154,22 +138,6 @@ Previous bug reproducing fail log
     tools.append(read_file_tool)
 
     return tools
-
-  def format_human_message(self, state: BugReproductionState):
-    previous_bug_reproducing_file = ""
-    if "reproduced_bug_file" in state and state["reproduced_bug_file"]:
-      previous_bug_reproducing_file = state["reproduced_bug_file"]
-    previous_bug_reproducing_fail_log = ""
-    if "reproduced_bug_failure_log" in state and state["reproduced_bug_failure_log"]:
-      previous_bug_reproducing_fail_log = state["reproduced_bug_failure_log"]
-    return self.HUMAN_PROMPT.format(
-      title=state["issue_title"],
-      body=state["issue_body"],
-      comments=state["issue_comments"],
-      bug_reproducing_context=state["bug_reproducing_context"],
-      previous_bug_reproducing_file=previous_bug_reproducing_file,
-      previous_bug_reproducing_fail_log=previous_bug_reproducing_fail_log,
-    )
 
   def __call__(self, state: BugReproductionState):
     human_message = HumanMessage(self.format_human_message(state))

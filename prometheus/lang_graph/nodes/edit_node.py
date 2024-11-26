@@ -7,6 +7,7 @@ while maintaining code integrity.
 """
 
 import functools
+from typing import Dict
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -224,3 +225,10 @@ IMPORTANT REMINDERS:
     tools.append(edit_file_tool)
 
     return tools
+
+  def __call__(self, state: Dict):
+    message_history = [self.system_prompt] + state["edit_messages"]
+    response = self.model_with_tools.invoke(message_history)
+
+    self._logger.debug(f"EditNode response:\n{response}")
+    return {"edit_messages": [response]}

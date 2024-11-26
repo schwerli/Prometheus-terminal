@@ -1,10 +1,10 @@
 import logging
 from typing import Optional, Sequence
 
+import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
-import neo4j
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -26,7 +26,14 @@ class BugReproductionSubgraphNode:
   ):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
     self.bug_reproduction_subgraph = BugReproductionSubgraph(
-      model, container, kg, neo4j_driver, max_token_per_neo4j_result, test_commands, thread_id, checkpointer
+      model,
+      container,
+      kg,
+      neo4j_driver,
+      max_token_per_neo4j_result,
+      test_commands,
+      thread_id,
+      checkpointer,
     )
 
   def __call__(self, state: IssueBugState):

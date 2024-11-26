@@ -8,9 +8,8 @@ from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVer
 
 
 class BugFixVerifyStructureOutput(BaseModel):
-  reproducing_test_passed: bool = Field(description="Whether the bug is fixed (test passed)")
   reproducing_test_fail_log: str = Field(
-    description="If the test failed, contains the complete test failure log"
+    description="If the test failed, contains the complete test failure log. Otherwise empty string"
   )
 
 
@@ -19,14 +18,13 @@ class BugFixVerifyStructuredNode:
 You are a test result parser. Your only task is to check if the bug reproducing test now passes after code changes.
 
 Your task is to:
-1. Check if the test passes by looking for pytest pass indicators:
+1. Check if the test passes by looking for test pass indicators:
    - Test summary showing "passed" or "PASSED"
    - Warning is ok
    - No "FAILURES" section
 2. If the test fails, capture the complete failure output
 
 Return:
-- reproducing_test_passed: true ONLY if the test passes completely, false otherwise
 - reproducing_test_fail_log: empty string if test passes, complete test output if it fails
 
 Example of Fixed Bug (Test Passes):
@@ -46,7 +44,6 @@ tests/test_json_parser.py .                                              [100%]
 
 Example Output for Fixed Bug:
 {
-    "reproducing_test_passed": true,
     "reproducing_test_fail_log": ""
 }
 
@@ -76,7 +73,6 @@ FAILED tests/test_json_parser.py::test_empty_array_parsing - ValueError
 
 Example Output for Unfixed Bug:
 {
-    "reproducing_test_passed": false,
     "reproducing_test_fail_log": "<complete test output above>"
 }
 
@@ -101,6 +97,5 @@ Important:
     self._logger.debug(f"BugFixVerifyStructuredNode response:\n{response}")
 
     return {
-      "reproducing_test_passed": response.reproducing_test_passed,
       "reproducing_test_fail_log": response.reproducing_test_fail_log,
     }

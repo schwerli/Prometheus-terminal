@@ -12,7 +12,6 @@ from prometheus.lang_graph.nodes.issue_bug_subgraph_node import IssueBugSubgraph
 from prometheus.lang_graph.nodes.issue_classification_subgraph_node import (
   IssueClassificationSubgraphNode,
 )
-from prometheus.lang_graph.nodes.issue_question_subgraph_node import IssueQuestionSubgraphNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 
 
@@ -46,16 +45,12 @@ class IssueGraph:
       thread_id,
       checkpointer,
     )
-    issue_question_subgraph_node = IssueQuestionSubgraphNode(
-      model, kg, neo4j_driver, max_token_per_neo4j_result, thread_id, checkpointer
-    )
 
     workflow = StateGraph(IssueState)
 
     workflow.add_node("issue_type_branch_node", issue_type_branch_node)
     workflow.add_node("issue_classification_subgraph_node", issue_classification_subgraph_node)
     workflow.add_node("issue_bug_subgraph_node", issue_bug_subgraph_node)
-    workflow.add_node("issue_question_subgraph_node", issue_question_subgraph_node)
 
     workflow.set_entry_point("issue_type_branch_node")
     workflow.add_conditional_edges(
@@ -66,7 +61,7 @@ class IssueGraph:
         IssueType.BUG: "issue_bug_subgraph_node",
         IssueType.FEATURE: END,
         IssueType.DOCUMENTATION: END,
-        IssueType.QUESTION: "issue_question_subgraph_node",
+        IssueType.QUESTION: END,
       },
     )
     workflow.add_conditional_edges(
@@ -76,11 +71,10 @@ class IssueGraph:
         IssueType.BUG: "issue_bug_subgraph_node",
         IssueType.FEATURE: END,
         IssueType.DOCUMENTATION: END,
-        IssueType.QUESTION: "issue_question_subgraph_node",
+        IssueType.QUESTION: END,
       },
     )
     workflow.add_edge("issue_bug_subgraph_node", END)
-    workflow.add_edge("issue_question_subgraph_node", END)
 
     self.graph = workflow.compile(checkpointer=checkpointer)
 

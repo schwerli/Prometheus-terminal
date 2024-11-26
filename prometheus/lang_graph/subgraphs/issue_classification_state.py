@@ -1,4 +1,7 @@
-from typing import Mapping, Sequence, TypedDict
+from typing import Annotated, Mapping, Sequence, TypedDict
+
+from langchain_core.messages import BaseMessage
+from langgraph.graph.message import add_messages
 
 
 class IssueClassificationState(TypedDict):
@@ -8,5 +11,5 @@ class IssueClassificationState(TypedDict):
   issue_comments: Sequence[Mapping[str, str]]
 
   # Attributes generated and by the subgraph
-  classification_context: str
+  context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
   issue_type: str
