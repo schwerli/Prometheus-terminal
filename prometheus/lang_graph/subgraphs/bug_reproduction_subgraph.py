@@ -9,9 +9,6 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.nodes.bug_reproducing_context_follow_up_message_node import (
-  BugReproducingContextFollowUpMessageNode,
-)
 from prometheus.lang_graph.nodes.bug_reproducing_execute_node import BugReproducingExecuteNode
 from prometheus.lang_graph.nodes.bug_reproducing_file_node import BugReproducingFileNode
 from prometheus.lang_graph.nodes.bug_reproducing_structured_node import BugReproducingStructuredNode
@@ -75,7 +72,6 @@ class BugReproductionSubgraph:
     reset_bug_reproducing_execute_messages_node = ResetMessagesNode(
       "bug_reproducing_execute_messages"
     )
-    bug_reproducing_context_follow_up_message_node = BugReproducingContextFollowUpMessageNode()
 
     workflow = StateGraph(BugReproductionState)
 
@@ -100,10 +96,6 @@ class BugReproductionSubgraph:
     )
     workflow.add_node(
       "reset_bug_reproducing_execute_messages_node", reset_bug_reproducing_execute_messages_node
-    )
-    workflow.add_node(
-      "bug_reproducing_context_follow_up_message_node",
-      bug_reproducing_context_follow_up_message_node,
     )
 
     workflow.set_entry_point("issue_bug_reproduction_context_message_node")
@@ -158,9 +150,8 @@ class BugReproductionSubgraph:
     )
     workflow.add_edge(
       "reset_bug_reproducing_execute_messages_node",
-      "bug_reproducing_context_follow_up_message_node",
+      "bug_reproducing_write_message_node",
     )
-    workflow.add_edge("bug_reproducing_context_follow_up_message_node", "context_provider_node")
 
     self.subgraph = workflow.compile(checkpointer=checkpointer)
 

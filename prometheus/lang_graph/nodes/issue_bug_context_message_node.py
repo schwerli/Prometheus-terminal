@@ -10,26 +10,14 @@ class IssueBugContextMessageNode:
   HUMAN_PROMPT = """\
 {issue_info}
 
-OBJECTIVE: Trace execution path and gather all code needed to understand and fix this bug.
+OBJECTIVE: Trace execution path and gather all context needed to understand and fix this bug. The context
+should be comprehensive so that a person without prior knowledge about the codebase can read
+the context, understand and fix this bug.
 
 <analysis>
 To identify the root cause, we need to:
-
-1. Trace execution path:
-   - Find where execution starts
-   - Follow the call chain
-   - Identify state modifications
-
-2. Find definition of involved code:
-   - Find all relevant classes/methods
-   - Find parent classes and interfaces
-   - Find helper functions used
-
-3. Analyze potential causes:
-   - Check initialization logic
-   - Verify calculations
-   - Look for state corruption
-   - Check inheritance behavior
+1. Trace execution path.
+2. Find definition of involved code.
 </analysis>
 
 <example>
@@ -50,24 +38,60 @@ Analysis Steps:
 2. Then check Rectangle initialization and any methods called during it
 3. Finally examine calculate_area implementation and its dependencies
 
-Required Context:
-# File: geometry/base.py
+<steps>
+<step1>
+<thought>I need to find the Rectangle class to understand how it is initialized and understand calculate_area function</thought>
+<action> find Rectangle class
+# File: geometry/rectangle.py, line: 1-22
+from .base import Figure
+from .utils import validate_dimensions
+from .config import ENABLE_CACHING
+
+class Rectangle(Figure):
+    def __init__(self, length, width):
+        super().__init__()
+        validate_dimensions(length, width)
+        self.length = length
+        self.width = width
+    
+    def calculate_area(self):
+        if ENABLE_CACHING and self._cached_area is not None:
+            return self._cached_area
+            
+        area = self.length * self.width * self._scale_factor
+        
+        if ENABLE_CACHING:
+            self._cached_area = area
+            
+        return area
+</action>
+</step1>
+
+<step2>
+<thought>I need to find the Figure parent class because we call super().__init__()</thought>
+<action> find __init__ method in Figure class
+# File: geometry/base.py, line: 1-7
 from abc import ABC, abstractmethod
 
 class Figure(ABC):
     def __init__(self):
         self._cached_area = None
         self._scale_factor = 1.0
-    
-    @abstractmethod
-    def calculate_area(self):
-        pass
-    
-    def set_scale(self, factor):
-        self._scale_factor = factor
-        self._cached_area = None
+</action>
+</step2>
 
-# File: geometry/rectangle.py
+<step3>
+<thought>I need to find ENABLE_CACHING from config.py file because calculate_area function uses this variable that might affect the area calculation</thought>
+<action> find ENABLE_CACHING in config file
+# File: geometry/config.py, line 2-3
+DEFAULT_SCALE = 1.5
+</action>
+</step3>
+
+<step4>
+<thought>Now we have complete context even for a person without any knowledge about the codebase to understand and fix the bug.</thought>
+<action>Return all context we found
+# File: geometry/rectangle.py, line: 1-22
 from .base import Figure
 from .utils import validate_dimensions
 from .config import ENABLE_CACHING
@@ -90,39 +114,19 @@ class Rectangle(Figure):
             
         return area
 
-# File: geometry/utils.py
-def validate_dimensions(*args):
-    for dim in args:
-        if not isinstance(dim, (int, float)):
-            raise TypeError(f"Dimension must be numeric, got {{type(dim)}}")
-        if dim <= 0:
-            raise ValueError(f"Dimension must be positive, got {{dim}}")
+# File: geometry/base.py, line: 1-7
+from abc import ABC, abstractmethod
 
-# File: geometry/config.py
-ENABLE_CACHING = True
-DEFAULT_SCALE = 1.5  # This could be the issue - default scale factor is 1.5
+class Figure(ABC):
+    def __init__(self):
+        self._cached_area = None
+        self._scale_factor = 1.0
 
-Potential Issues:
-1. Parent class Figure initializes _scale_factor = 1.0
-2. config.py sets DEFAULT_SCALE = 1.5
-3. Area caching might retain stale values
-4. Scale factor affects all calculations
-
-Additional Context Needed:
-1. Where is DEFAULT_SCALE being applied?
-2. Are there other places that modify _scale_factor?
-3. Check for dimension validation side effects
-4. Review caching behavior impact
-</example>
-
-CONSTRAINTS:
-- Include complete file paths
-- Show full implementations
-- Preserve all comments
-- Include relevant line numbers
-- Show configuration context
-
-Using this issue description, trace through the code to gather ALL relevant context needed to understand and fix the bug.
+# File: geometry/config.py, line 2-3
+DEFAULT_SCALE = 1.5       
+</action>
+</step4>
+<steps>
 """
 
   def __init__(self):

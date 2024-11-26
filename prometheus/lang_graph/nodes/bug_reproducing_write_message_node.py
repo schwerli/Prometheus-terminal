@@ -20,9 +20,6 @@ Now generate the complete self-contained test case that reproduces the bug.
 Your previous test case failed to reproduce the bug. Here is the failure log:
 {reproduced_bug_failure_log}
 
-I have also retrived additional context from codebase to help you write bug reproducing test case:
-{additional_context}
-
 Now think about what went wrong and generate the complete self-contained test case that reproduces the bug again.
 """
 
@@ -36,7 +33,6 @@ Now think about what went wrong and generate the complete self-contained test ca
       return HumanMessage(
         self.FOLLOWUP_HUMAN_PROMPT.format(
           reproduced_bug_failure_log=state["reproduced_bug_failure_log"],
-          additional_context=state["context_provider_messages"][-1].content,
         )
       )
 

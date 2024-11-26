@@ -43,9 +43,6 @@ Bug Context:
 The edit that you generated following error:
 {edit_error}
 
-I have also retrived additional context from codebase that may help you fix the bug:
-{additional_context}
-
 Now think about what went wrong and try to fix the bug again.
 """
 
@@ -67,7 +64,6 @@ Now think about what went wrong and try to fix the bug again.
       return HumanMessage(
         self.FOLLOWUP_HUMAN_PROMPT.format(
           edit_error=edit_error,
-          additional_context=state["context_provider_messages"][-1].content,
         )
       )
 
