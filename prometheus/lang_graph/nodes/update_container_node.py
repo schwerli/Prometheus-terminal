@@ -7,10 +7,12 @@ between the agent's workspace and the container environment.
 """
 
 import logging
+from pathlib import Path
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueState
+from prometheus.utils.patch_util import get_updated_files
 
 
 class UpdateContainerNode:
@@ -34,10 +36,12 @@ class UpdateContainerNode:
     self.knowledge_graph = knowledge_graph
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.update_container_node")
 
-  def __call__(self, _: IssueState):
+  def __call__(self, state: IssueState):
     """Synchronizes the current project state with the container."""
     if self.container.is_running():
-      self.container.update_files(new_project_path=self.knowledge_graph.get_local_path())
+      self.container.restart_container()
+      added_and_modified_files, removed_files = get_updated_files(state["patch"])
+      self.container.update_files(Path(self.knowledge_graph.get_local_path()), added_and_modified_files, removed_files)
     else:
       self._logger.info(
         "Not updating files in docker container because it is not running, "
