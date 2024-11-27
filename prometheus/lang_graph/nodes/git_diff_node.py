@@ -7,7 +7,7 @@ output.
 """
 
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -22,9 +22,12 @@ class GitDiffNode:
   workflow to capture code modifications made during issue resolution.
   """
 
-  def __init__(self, kg: KnowledgeGraph, exclude_reproduced_bug_file: bool = False):
+  def __init__(
+    self, kg: KnowledgeGraph, state_patch_name: str, state_excluded_files_key: Optional[str] = None
+  ):
     self.kg = kg
-    self.exclude_reproduced_bug_file = exclude_reproduced_bug_file
+    self.state_patch_name = state_patch_name
+    self.state_excluded_files_key = state_excluded_files_key
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.git_diff_node")
 
   def __call__(self, state: Dict):
@@ -42,13 +45,18 @@ class GitDiffNode:
       - patch: String containing the Git diff output showing all changes made to the project.
     """
     git_repo = GitRepository(self.kg.get_local_path(), None, copy_to_working_dir=False)
+    excluded_files = None
     if (
-      self.exclude_reproduced_bug_file
-      and "reproduced_bug_file" in state
-      and state["reproduced_bug_file"]
+      self.state_excluded_files_key
+      and self.state_excluded_files_key in state
+      and state[self.state_excluded_files_key]
     ):
-      patch = git_repo.get_diff([state["reproduced_bug_file"]])
-    else:
-      patch = git_repo.get_diff()
-    self._logger.debug(f"Generated patch:\n{patch}")
-    return {"patch": patch}
+      excluded_files = state[self.state_excluded_files_key]
+      if isinstance(excluded_files, str):
+        excluded_files = [excluded_files]
+      self._logger.debug(
+        f"Excluding the following files when generating the patch: {excluded_files}"
+      )
+    patch = git_repo.get_diff(excluded_files)
+    self._logger.info(f"Generated patch:\n{patch}")
+    return {self.state_patch_name: patch}

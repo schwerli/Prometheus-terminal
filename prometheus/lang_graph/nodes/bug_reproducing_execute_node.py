@@ -11,6 +11,7 @@ from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.tools import container_command
 from prometheus.utils.issue_util import format_test_commands
+from prometheus.utils.patch_util import get_updated_files
 
 
 class BugReproducingExecuteNode:
@@ -30,8 +31,8 @@ Title: {title}
 Description: {body}
 Comments: {comments}
 
-Bug reproducing file message:
-{bug_reproducing_file_message}
+Bug reproducing file:
+{reproduced_bug_file}
 
 User provided test commands:
 {test_commands}
@@ -65,7 +66,19 @@ User provided test commands:
 
     return tools
 
-  def format_human_message(self, state: BugReproductionState) -> HumanMessage:
+  def added_test_filename(self, state: BugReproductionState) -> str:
+    added_files, modified_file, removed_files = get_updated_files(state["bug_reproducing_patch"])
+    if removed_files:
+      raise ValueError("The bug reproducing patch delete files")
+    if modified_file:
+      raise ValueError("The bug reproducing patch modified existing files")
+    if len(added_files) != 1:
+      raise ValueError("The bug reproducing patch added two files")
+    return added_files[0]
+
+  def format_human_message(
+    self, state: BugReproductionState, reproduced_bug_file: str
+  ) -> HumanMessage:
     test_commands_str = ""
     if self.test_commands:
       test_commands_str = format_test_commands(self.test_commands)
@@ -74,16 +87,22 @@ User provided test commands:
         title=state["issue_title"],
         body=state["issue_body"],
         comments=state["issue_comments"],
-        bug_reproducing_file_message=state["bug_reproducing_file_messages"][-1].content,
+        reproduced_bug_file=reproduced_bug_file,
         test_commands=test_commands_str,
       )
     )
 
   def __call__(self, state: BugReproductionState):
-    message_history = [self.system_prompt, self.format_human_message(state)] + state[
-      "bug_reproducing_execute_messages"
-    ]
+    reproduced_bug_file = self.added_test_filename(state)
+
+    message_history = [
+      self.system_prompt,
+      self.format_human_message(state, reproduced_bug_file),
+    ] + state["bug_reproducing_execute_messages"]
 
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"BugReproducingExecuteNode response:\n{response}")
-    return {"bug_reproducing_execute_messages": [response]}
+    return {
+      "bug_reproducing_execute_messages": [response],
+      "reproduced_bug_file": reproduced_bug_file,
+    }

@@ -19,7 +19,7 @@ class IssueBugState(TypedDict):
 
   edit_messages: Annotated[Sequence[BaseMessage], add_messages]
 
-  patch: str
+  edit_patch: str
 
   reproducing_test_fail_log: str
 

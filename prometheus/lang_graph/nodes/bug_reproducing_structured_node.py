@@ -16,9 +16,6 @@ class BugReproducingStructuredOutput(BaseModel):
   reproduced_bug_failure_log: str = Field(
     description="Explanation of why the test didn't properly reproduce the bug (if test passes, has different error, doesn't use issue examples, etc). Empty if bug was reproduced correctly"
   )
-  reproduced_bug_file: str = Field(
-    description="The relative path of the file that reproduces the bug"
-  )
   reproduced_bug_commands: Sequence[str] = Field(
     description="A list of commands run to the single file to reproduce the bug"
   )
@@ -63,7 +60,6 @@ Output:
 {
     "reproduced_bug": true,
     "reproduced_bug_failure_log": "",
-    "reproduced_bug_file": "tests/test_array.py",
     "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 ```
@@ -87,7 +83,6 @@ Output:
 {
     "reproduced_bug": false,
     "reproduced_bug_failure_log": "Test fails with IndexError but issue describes 'Cannot read property length' error. Test needs to verify the specific error message reported in the bug.",
-    "reproduced_bug_file": "tests/test_array.py",
     "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 ```
@@ -111,7 +106,6 @@ Output:
 {
     "reproduced_bug": false,
     "reproduced_bug_failure_log": "Test passes and doesn't use the empty array example from the issue. Test should verify pop() behavior on an empty array as shown in the example.",
-    "reproduced_bug_file": "tests/test_array.py", 
     "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 """.replace("{", "{{").replace("}", "}}")
@@ -121,9 +115,6 @@ ISSUE INFORMATION:
 Title: {title}
 Description: {body}
 Comments: {comments}
-
-Bug reproducing file message:
-{bug_reproducing_file_message}
 
 Bug reproduction code:
 {bug_reproducing_code}
@@ -149,7 +140,6 @@ Log from executing bug reproducing file:
       body=state["issue_body"],
       comments=format_issue_comments(state["issue_comments"]),
       bug_reproducing_code=state["bug_reproducing_write_messages"][-1].content,
-      bug_reproducing_file_message=state["bug_reproducing_file_messages"][-1].content,
       bug_reproducing_log=bug_reproducing_log,
     )
 
@@ -159,6 +149,5 @@ Log from executing bug reproducing file:
     return {
       "reproduced_bug": response.reproduced_bug,
       "reproduced_bug_failure_log": response.reproduced_bug_failure_log,
-      "reproduced_bug_file": response.reproduced_bug_file,
       "reproduced_bug_commands": response.reproduced_bug_commands,
     }

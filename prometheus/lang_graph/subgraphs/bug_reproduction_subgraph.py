@@ -17,6 +17,7 @@ from prometheus.lang_graph.nodes.bug_reproducing_write_message_node import (
 )
 from prometheus.lang_graph.nodes.bug_reproducing_write_node import BugReproducingWriteNode
 from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
+from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.issue_bug_reproduction_context_message_node import (
   IssueBugReproductionContextMessageNode,
 )
@@ -60,6 +61,7 @@ class BugReproductionSubgraph:
       name="bug_reproducing_file_tools",
       messages_key="bug_reproducing_file_messages",
     )
+    git_diff_node = GitDiffNode(kg, "bug_reproducing_patch")
     update_container_node = UpdateContainerNode(container, kg)
     bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, kg, test_commands)
     bug_reproducing_execute_tools = ToolNode(
@@ -86,6 +88,7 @@ class BugReproductionSubgraph:
     workflow.add_node("bug_reproducing_write_tools", bug_reproducing_write_tools)
     workflow.add_node("bug_reproducing_file_node", bug_reproducing_file_node)
     workflow.add_node("bug_reproducing_file_tools", bug_reproducing_file_tools)
+    workflow.add_node("git_diff_node", git_diff_node)
     workflow.add_node("update_container_node", update_container_node)
     workflow.add_node("bug_reproducing_execute_node", bug_reproducing_execute_node)
     workflow.add_node("bug_reproducing_execute_tools", bug_reproducing_execute_tools)
@@ -125,10 +128,11 @@ class BugReproductionSubgraph:
       functools.partial(tools_condition, messages_key="bug_reproducing_file_messages"),
       {
         "tools": "bug_reproducing_file_tools",
-        END: "update_container_node",
+        END: "git_diff_node",
       },
     )
     workflow.add_edge("bug_reproducing_file_tools", "bug_reproducing_file_node")
+    workflow.add_edge("git_diff_node", "update_container_node")
     workflow.add_edge("update_container_node", "bug_reproducing_execute_node")
     workflow.add_conditional_edges(
       "bug_reproducing_execute_node",

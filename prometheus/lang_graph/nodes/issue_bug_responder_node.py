@@ -38,7 +38,7 @@ Format your response as a properly structured comment.
 {issue_info}
 
 Generated patch:
-{patch}
+{edit_patch}
 
 Edit agent response:
 {edit_agent_response}
@@ -73,7 +73,7 @@ Verification:
         state["issue_title"], state["issue_body"], state["issue_comments"]
       ),
       edit_agent_response=state["edit_messages"][-1].content,
-      patch=state["patch"],
+      edit_patch=state["edit_patch"],
       verification=verification_summary,
     )
 

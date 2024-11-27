@@ -15,6 +15,8 @@ class BugReproductionState(TypedDict):
   bug_reproducing_file_messages: Annotated[Sequence[BaseMessage], add_messages]
   bug_reproducing_execute_messages: Annotated[Sequence[BaseMessage], add_messages]
 
+  bug_reproducing_patch: str
+
   reproduced_bug: bool
   reproduced_bug_failure_log: str
   reproduced_bug_file: str

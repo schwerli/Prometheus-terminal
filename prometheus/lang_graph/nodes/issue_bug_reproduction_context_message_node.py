@@ -11,7 +11,7 @@ class IssueBugReproductionContextMessageNode:
 {issue_info}
 
 OBJECTIVE: Find three relevant existing test cases that demonstrates similar functionality to the reported bug,
-including the test setup, mocking, and assertions.
+including the test setup, mocking, assertions, and any test method used in the test case.
 
 <reasoning>
 1. Analyze bug characteristics:
@@ -34,7 +34,7 @@ including the test setup, mocking, and assertions.
 </reasoning>
 
 REQUIREMENTS:
-- Return ONE complete, self-contained test case most similar to bug scenario
+- Return THREE complete, self-contained test case most similar to bug scenario
 - Must include full test method implementation
 - Must include ALL mock/fixture setup
 - Must include helper functions used by test

@@ -13,14 +13,14 @@ class BugReproducingWriteMessageNode:
 Bug reproducing context:
 {bug_reproducing_context}
 
-Now generate the complete self-contained test case that reproduces the bug.
+Now generate the complete self-contained test case that reproduces the bug with the same error/exception.
 """
 
   FOLLOWUP_HUMAN_PROMPT = """\
 Your previous test case failed to reproduce the bug. Here is the failure log:
 {reproduced_bug_failure_log}
 
-Now think about what went wrong and generate the complete self-contained test case that reproduces the bug again.
+Now think about what went wrong and generate the complete self-contained test case that reproduces the bug with the same error/exception again.
 """
 
   def __init__(self):

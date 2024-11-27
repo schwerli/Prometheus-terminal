@@ -75,13 +75,16 @@ class BaseContainer(ABC):
       tty=True,
       platform="linux/amd64",
       network_mode="host",
+      environment={"PYTHONPATH": f"{self.workdir}:$PYTHONPATH"},
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
     )
 
   def is_running(self) -> bool:
     return bool(self.container)
 
-  def update_files(self, project_root_path: Path, updated_files: Sequence[Path], removed_files: Sequence[Path]):
+  def update_files(
+    self, project_root_path: Path, updated_files: Sequence[Path], removed_files: Sequence[Path]
+  ):
     """Update files in the running container with files from a local directory.
 
     Creates a tar archive of the new files and copies them into the workdir of the container.
@@ -145,7 +148,7 @@ class BaseContainer(ABC):
     exec_result_str = exec_result.output.decode("utf-8")
     self.logger.debug(f"Command output:\n{exec_result_str}")
     return exec_result_str
-  
+
   def restart_container(self):
     self.logger.info("Restarting the container")
     if self.container:

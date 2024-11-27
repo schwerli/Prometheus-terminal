@@ -68,7 +68,7 @@ class IssueBugSubgraph:
       name="edit_tools",
       messages_key="edit_messages",
     )
-    git_diff_node = GitDiffNode(kg, exclude_reproduced_bug_file=True)
+    git_diff_node = GitDiffNode(kg, "edit_patch", "reproduced_bug_file")
     update_container_node = UpdateContainerNode(self.container, kg)
 
     bug_fix_verification_branch_node = NoopNode()
@@ -173,13 +173,13 @@ class IssueBugSubgraph:
       output_state = self.subgraph.invoke(input_state, config)
       return {
         "issue_response": output_state["issue_response"],
-        "patch": output_state["patch"],
+        "edit_patch": output_state["edit_patch"],
         "reproduced_bug_file": output_state.get("reproduced_bug_file", ""),
       }
     except GraphRecursionError:
       return {
         "issue_response": "",
-        "patch": "",
+        "edit_patch": "",
         "reproduced_bug_file": "",
       }
     finally:
