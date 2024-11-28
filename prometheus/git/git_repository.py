@@ -108,8 +108,8 @@ class GitRepository:
     self.repo.git.reset()
     return diff
 
-  def get_working_directory(self) -> str:
-    return self.repo.working_dir
+  def get_working_directory(self) -> Path:
+    return Path(self.repo.working_dir).absolute()
 
   def reset_repository(self):
     self.repo.git.reset("--hard")

@@ -7,7 +7,6 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from prometheus.docker.base_container import BaseContainer
-from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.tools import container_command
 from prometheus.utils.issue_util import format_test_commands
@@ -42,10 +41,8 @@ User provided test commands:
     self,
     model: BaseChatModel,
     container: BaseContainer,
-    kg: KnowledgeGraph,
     test_commands: Optional[Sequence[str]] = None,
   ):
-    self.kg = kg
     self.test_commands = test_commands
     self.tools = self._init_tools(container)
     self.model_with_tools = model.bind_tools(self.tools)
@@ -73,7 +70,7 @@ User provided test commands:
     if modified_file:
       raise ValueError("The bug reproducing patch modified existing files")
     if len(added_files) != 1:
-      raise ValueError("The bug reproducing patch added two files")
+      raise ValueError("The bug reproducing patch added not one files")
     return added_files[0]
 
   def format_human_message(

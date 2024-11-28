@@ -112,7 +112,7 @@ case following the thought process above. Pay special attention to maintaining c
 '''
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
-    self.tools = self._init_tools(kg.get_local_path())
+    self.tools = self._init_tools(str(kg.get_local_path()))
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.model_with_tools = model.bind_tools(self.tools)
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_write_node")

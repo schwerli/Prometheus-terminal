@@ -6,6 +6,7 @@ repository management. It provides a unified interface for codebase analysis,
 issue handling, and conversation management.
 """
 
+import logging
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
@@ -37,7 +38,7 @@ class ServiceCoordinator:
     repository_service: RepositoryService,
     max_token_per_neo4j_result: int,
     github_token: str,
-    working_directory: str,
+    working_directory: Path,
   ):
     """Initializes the service coordinator with required services.
 
@@ -60,9 +61,16 @@ class ServiceCoordinator:
     self.repository_service = repository_service
     self.max_token_per_neo4j_result = max_token_per_neo4j_result
     self.github_token = github_token
-    self.working_directory = Path(working_directory).absolute()
+    self.working_directory = working_directory
     self.answer_and_fix_issue_log_dir = self.working_directory / "answer_and_fix_issue_logs"
     self.answer_and_fix_issue_log_dir.mkdir(parents=True, exist_ok=True)
+    self._logger = logging.getLogger("prometheus.app.services.service_coordinator")
+
+    if self.knowledge_graph_service.get_local_path() != self.repository_service.get_working_dir():
+      self._logger.critical(
+        f"Knowledge graph and repository working directories do not match: {self.knowledge_graph_service.get_local_path()} vs {self.repository_service.get_working_dir()}. Resetting all services."
+      )
+      self.clear()
 
   def answer_issue(
     self,
@@ -110,7 +118,7 @@ class ServiceCoordinator:
     Args:
       path: Path to the local repository directory.
     """
-    self.knowledge_graph_service.clear()
+    self.clear()
     self.knowledge_graph_service.build_and_save_knowledge_graph(path)
 
   def upload_github_repository(self, https_url: str, commit_id: Optional[str] = None):
@@ -120,7 +128,7 @@ class ServiceCoordinator:
         https_url: HTTPS URL of the GitHub repository.
         commit_id: Optional specific commit to analyze.
     """
-    self.knowledge_graph_service.clear()
+    self.clear()
     saved_path = self.repository_service.clone_github_repo(self.github_token, https_url, commit_id)
     self.knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
 
@@ -150,7 +158,7 @@ class ServiceCoordinator:
     and reinitializes subgraph services.
     """
     self.knowledge_graph_service.clear()
-    self.repository_service.clean_working_directory()
+    self.repository_service.clean()
 
   def close(self):
     """Closes all database connections and releases resources.

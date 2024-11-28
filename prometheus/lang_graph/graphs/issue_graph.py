@@ -6,6 +6,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueState, IssueType
 from prometheus.lang_graph.nodes.issue_bug_subgraph_node import IssueBugSubgraphNode
@@ -20,6 +21,7 @@ class IssueGraph:
     self,
     model: BaseChatModel,
     kg: KnowledgeGraph,
+    git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     container: BaseContainer,
@@ -38,6 +40,7 @@ class IssueGraph:
       model,
       container,
       kg,
+      git_repo,
       neo4j_driver,
       max_token_per_neo4j_result,
       build_commands,

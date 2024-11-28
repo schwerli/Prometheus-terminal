@@ -7,6 +7,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_subgraph import BugReproductionSubgraph
 from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
@@ -18,6 +19,7 @@ class BugReproductionSubgraphNode:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]],
@@ -29,6 +31,7 @@ class BugReproductionSubgraphNode:
       model,
       container,
       kg,
+      git_repo,
       neo4j_driver,
       max_token_per_neo4j_result,
       test_commands,

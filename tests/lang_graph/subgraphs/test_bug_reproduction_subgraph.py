@@ -1,8 +1,10 @@
 from unittest.mock import Mock
 
+import neo4j
 import pytest
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_subgraph import BugReproductionSubgraph
 from tests.test_utils.util import FakeListChatWithToolsModel
@@ -16,17 +18,31 @@ def mock_container():
 @pytest.fixture
 def mock_kg():
   kg = Mock(spec=KnowledgeGraph)
-  kg.get_local_path.return_value = "/foo/bar"
+  kg.get_all_ast_node_types.return_value = ["FunctionDef", "ClassDef", "Module", "Import", "Call"]
   return kg
 
 
-def test_bug_reproduction_subgraph_basic_initialization(mock_container, mock_kg):
+@pytest.fixture
+def mock_git_repo():
+  return Mock(spec=GitRepository)
+
+
+@pytest.fixture
+def mock_neo4j_driver():
+  return Mock(spec=neo4j.Driver)
+
+
+def test_bug_reproduction_subgraph_basic_initialization(
+  mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
+):
   """Test that BugReproductionSubgraph initializes correctly with basic components."""
   # Initialize fake model with empty responses
   fake_model = FakeListChatWithToolsModel(responses=[])
 
   # Initialize the subgraph
-  subgraph = BugReproductionSubgraph(fake_model, mock_container, mock_kg)
+  subgraph = BugReproductionSubgraph(
+    fake_model, mock_container, mock_kg, mock_git_repo, mock_neo4j_driver, 0
+  )
 
   # Verify the subgraph was created
   assert subgraph.subgraph is not None

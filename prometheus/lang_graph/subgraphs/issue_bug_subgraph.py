@@ -9,6 +9,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node import (
   BugFixVerificationSubgraphNode,
@@ -32,6 +33,7 @@ class IssueBugSubgraph:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     build_commands: Optional[Sequence[str]] = None,
@@ -46,6 +48,7 @@ class IssueBugSubgraph:
       model,
       container,
       kg,
+      git_repo,
       neo4j_driver,
       max_token_per_neo4j_result,
       test_commands,
@@ -68,8 +71,8 @@ class IssueBugSubgraph:
       name="edit_tools",
       messages_key="edit_messages",
     )
-    git_diff_node = GitDiffNode(kg, "edit_patch", "reproduced_bug_file")
-    update_container_node = UpdateContainerNode(self.container, kg)
+    git_diff_node = GitDiffNode(git_repo, "edit_patch", "reproduced_bug_file")
+    update_container_node = UpdateContainerNode(self.container, git_repo)
 
     bug_fix_verification_branch_node = NoopNode()
     bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(

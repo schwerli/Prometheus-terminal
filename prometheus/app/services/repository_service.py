@@ -33,6 +33,17 @@ class RepositoryService:
     self.kg_service = kg_service
     self.target_directory = Path(working_dir) / "repositories"
     self.target_directory.mkdir(parents=True, exist_ok=True)
+    self.git_repo = self._load_existing_git_repo()
+
+  def _load_existing_git_repo(self):
+    if self.kg_service.get_local_path():
+      return GitRepository(str(self.kg_service.get_local_path()), None, copy_to_working_dir=False)
+    return None
+
+  def get_working_dir(self):
+    if self.git_repo:
+      return self.git_repo.get_working_directory()
+    return None
 
   def clone_github_repo(
     self, github_token: str, https_url: str, commit_id: Optional[str] = None
@@ -51,37 +62,13 @@ class RepositoryService:
     Returns:
         Path to the local repository directory.
     """
-    if self._should_skip_upload(https_url, commit_id):
-      return self.kg_service.local_path
-
-    git_repo = GitRepository(https_url, self.target_directory, github_access_token=github_token)
-    if commit_id:
-      git_repo.checkout_commit(commit_id)
-    local_path = Path(git_repo.get_working_directory())
-    return local_path
-
-  def _should_skip_upload(self, https_url: str, commit_id: Optional[str]) -> bool:
-    """Determines if repository clone operation can be skipped.
-
-    Checks if the current repository state matches the requested state
-    based on the knowledge graph's information.
-
-    Args:
-      https_url: HTTPS URL of the GitHub repository.
-      commit_id: Optional specific commit ID.
-
-    Returns:
-      True if the clone operation can be skipped, False otherwise.
-    """
-    kg = self.kg_service.kg
-    return (
-      self.kg_service.local_path is not None
-      and kg is not None
-      and kg.is_built_from_github()
-      and commit_id
-      and kg.get_codebase_https_url() == https_url
-      and kg.get_codebase_commit_id() == commit_id
+    self.git_repo = GitRepository(
+      https_url, self.target_directory, github_access_token=github_token
     )
+    if commit_id:
+      self.git_repo.checkout_commit(commit_id)
+    local_path = self.git_repo.get_working_directory()
+    return local_path
 
   def push_change_to_remote(
     self, commit_message: str, excluded_files: Optional[Sequence[str]] = None
@@ -98,11 +85,11 @@ class RepositoryService:
     Returns:
       Name of the created branch.
     """
-    git_repo = GitRepository(str(self.kg_service.local_path.absolute()), None, False)
     branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
-    git_repo.create_and_push_branch(branch_name, commit_message, excluded_files)
+    self.git_repo.create_and_push_branch(branch_name, commit_message, excluded_files)
     return branch_name
 
-  def clean_working_directory(self):
+  def clean(self):
+    self.git_repo = None
     shutil.rmtree(self.target_directory)
     self.target_directory.mkdir(parents=True)

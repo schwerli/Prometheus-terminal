@@ -8,6 +8,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.bug_reproducing_execute_node import BugReproducingExecuteNode
 from prometheus.lang_graph.nodes.bug_reproducing_file_node import BugReproducingFileNode
@@ -32,6 +33,7 @@ class BugReproductionSubgraph:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]] = None,
@@ -61,9 +63,9 @@ class BugReproductionSubgraph:
       name="bug_reproducing_file_tools",
       messages_key="bug_reproducing_file_messages",
     )
-    git_diff_node = GitDiffNode(kg, "bug_reproducing_patch")
-    update_container_node = UpdateContainerNode(container, kg)
-    bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, kg, test_commands)
+    git_diff_node = GitDiffNode(git_repo, "bug_reproducing_patch")
+    update_container_node = UpdateContainerNode(container, git_repo)
+    bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, test_commands)
     bug_reproducing_execute_tools = ToolNode(
       tools=bug_reproducing_execute_node.tools,
       name="bug_reproducing_execute_tools",

@@ -332,8 +332,8 @@ class KnowledgeGraph:
   def is_built_from_github(self) -> bool:
     return self._metadata_node.codebase_source == CodeBaseSourceEnum.github
 
-  def get_local_path(self) -> str:
-    return self._metadata_node.local_path
+  def get_local_path(self) -> Path:
+    return Path(self._metadata_node.local_path).absolute()
 
   def get_codebase_https_url(self) -> str:
     return self._metadata_node.https_url

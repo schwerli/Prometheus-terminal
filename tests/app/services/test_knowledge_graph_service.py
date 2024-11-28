@@ -138,4 +138,3 @@ def test_clear_calls_handler_and_resets_kg(
   # Verify
   mock_kg_handler.clear_knowledge_graph.assert_called_once()
   assert service.kg is None
-  assert service.local_path is None

@@ -41,10 +41,6 @@ class KnowledgeGraphService:
     self.chunk_overlap = chunk_overlap
     self.kg = self._load_existing_knowledge_graph()
 
-    self.local_path = None
-    if self.kg is not None:
-      self.local_path = Path(self.kg.get_local_path())
-
   def _load_existing_knowledge_graph(self) -> Optional[KnowledgeGraph]:
     """Attempts to load an existing Knowledge Graph from Neo4j.
 
@@ -53,6 +49,11 @@ class KnowledgeGraphService:
     """
     if self.kg_handler.knowledge_graph_exists():
       return self.kg_handler.read_knowledge_graph()
+    return None
+
+  def get_local_path(self) -> Path:
+    if self.kg:
+      return self.kg.get_local_path()
     return None
 
   def build_and_save_knowledge_graph(
@@ -76,7 +77,6 @@ class KnowledgeGraphService:
     kg.build_graph(path, https_url, commit_id)
     self.kg = kg
     self.kg_handler.write_knowledge_graph(kg)
-    self.local_path = Path(kg.get_local_path())
 
   def exists(self) -> bool:
     return self.kg_handler.knowledge_graph_exists()
@@ -84,4 +84,3 @@ class KnowledgeGraphService:
   def clear(self):
     self.kg_handler.clear_knowledge_graph()
     self.kg = None
-    self.local_path = None

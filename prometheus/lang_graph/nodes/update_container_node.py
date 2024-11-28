@@ -7,12 +7,10 @@ between the agent's workspace and the container environment.
 """
 
 import logging
-from pathlib import Path
 from typing import Dict
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
-from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.utils.patch_util import get_updated_files
 
 
@@ -25,29 +23,26 @@ class UpdateContainerNode:
   in the container where builds, tests, or other operations may occur.
   """
 
-  def __init__(self, container: BaseContainer, knowledge_graph: KnowledgeGraph):
+  def __init__(self, container: BaseContainer, git_repo: GitRepository):
     """Initializes the UpdateContainerNode with a target container.
 
     Args:
       container: Container instance that will receive file updates. Must
         be a subclass of BaseContainer implementing the update_files method.
-      knowledge_graph: The knolwedge graph build upon the codebase.
+      git_repo: The local git repository used to retrieve the project's files.
     """
     self.container = container
-    self.knowledge_graph = knowledge_graph
+    self.git_repo = git_repo
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.update_container_node")
 
   def __call__(self, _: Dict):
     """Synchronizes the current project state with the container."""
     if self.container.is_running():
-      git_repo = GitRepository(
-        self.knowledge_graph.get_local_path(), None, copy_to_working_dir=False
-      )
-      all_files_patch = git_repo.get_diff()
+      all_files_patch = self.git_repo.get_diff()
       self.container.restart_container()
       added_files, modified_file, removed_files = get_updated_files(all_files_patch)
       self.container.update_files(
-        Path(self.knowledge_graph.get_local_path()), added_files + modified_file, removed_files
+        self.git_repo.get_working_directory(), added_files + modified_file, removed_files
       )
     else:
       self._logger.info(

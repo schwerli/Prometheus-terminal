@@ -65,7 +65,7 @@ Bug reproducing file:
     kg: KnowledgeGraph,
   ):
     self.kg = kg
-    self.tools = self._init_tools(kg.get_local_path())
+    self.tools = self._init_tools(str(kg.get_local_path()))
     self.model_with_tools = model.bind_tools(self.tools)
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_file_node")
