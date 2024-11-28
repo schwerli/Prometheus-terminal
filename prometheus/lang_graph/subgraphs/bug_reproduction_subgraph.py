@@ -19,6 +19,7 @@ from prometheus.lang_graph.nodes.bug_reproducing_write_message_node import (
 from prometheus.lang_graph.nodes.bug_reproducing_write_node import BugReproducingWriteNode
 from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
+from prometheus.lang_graph.nodes.git_reset_node import GitResetNode
 from prometheus.lang_graph.nodes.issue_bug_reproduction_context_message_node import (
   IssueBugReproductionContextMessageNode,
 )
@@ -76,6 +77,7 @@ class BugReproductionSubgraph:
     reset_bug_reproducing_execute_messages_node = ResetMessagesNode(
       "bug_reproducing_execute_messages"
     )
+    git_reset_node = GitResetNode(git_repo)
 
     workflow = StateGraph(BugReproductionState)
 
@@ -102,6 +104,7 @@ class BugReproductionSubgraph:
     workflow.add_node(
       "reset_bug_reproducing_execute_messages_node", reset_bug_reproducing_execute_messages_node
     )
+    workflow.add_node("git_reset_node", git_reset_node)
 
     workflow.set_entry_point("issue_bug_reproduction_context_message_node")
     workflow.add_edge("issue_bug_reproduction_context_message_node", "context_provider_node")
@@ -156,6 +159,10 @@ class BugReproductionSubgraph:
     )
     workflow.add_edge(
       "reset_bug_reproducing_execute_messages_node",
+      "git_reset_node",
+    )
+    workflow.add_edge(
+      "git_reset_node",
       "bug_reproducing_write_message_node",
     )
 

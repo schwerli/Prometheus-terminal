@@ -59,6 +59,7 @@ class IssueService:
     issue_graph = IssueGraph(
       self.llm_service.model,
       self.kg_service.kg,
+      self.repository_service.git_repo,
       self.neo4j_service.neo4j_driver,
       self.max_token_per_neo4j_result,
       container,

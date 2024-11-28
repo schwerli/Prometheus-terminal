@@ -58,11 +58,15 @@ class IssueClassificationSubgraph:
     self.subgraph = workflow.compile(checkpointer=checkpointer)
 
   def invoke(
-    self, issue_title: str, issue_body: str, issue_comments: Sequence[Mapping[str, str]]
+    self,
+    issue_title: str,
+    issue_body: str,
+    issue_comments: Sequence[Mapping[str, str]],
+    recursion_limit: int = 50,
   ) -> str:
-    config = None
+    config = {"recursion_limit": recursion_limit}
     if self.thread_id:
-      config = {"configurable": {"thread_id": self.thread_id}}
+      config["configurable"] = {"thread_id": self.thread_id}
 
     output_state = self.subgraph.invoke(
       {"issue_title": issue_title, "issue_body": issue_body, "issue_comments": issue_comments},
