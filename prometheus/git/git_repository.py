@@ -54,7 +54,9 @@ class GitRepository:
       if github_access_token is None:
         raise ValueError("github_access_token is required for https repository")
       self.repo = self._clone_repository(address, github_access_token, working_directory)
-      self.default_branch = self.repo.active_branch
+      self.default_branch = (
+        self.repo.remote().refs["HEAD"].reference.name.replace("refs/heads/", "")
+      )
     else:
       local_path = address
       if copy_to_working_dir:
@@ -62,10 +64,14 @@ class GitRepository:
         shutil.copytree(address, local_path)
       try:
         self.repo = Repo(local_path)
-        self.default_branch = self.repo.active_branch
+        self.default_branch = (
+          self.repo.remote().refs["HEAD"].reference.name.replace("refs/heads/", "")
+        )
       except InvalidGitRepositoryError:
         self.repo = Repo.init(local_path)
-        self.default_branch = self.repo.active_branch
+        self.default_branch = (
+          self.repo.remote().refs["HEAD"].reference.name.replace("refs/heads/", "")
+        )
 
   def _clone_repository(
     self, https_url: str, github_access_token: str, target_directory: Path
@@ -114,7 +120,6 @@ class GitRepository:
   def reset_repository(self):
     self.repo.git.reset("--hard")
     self.repo.git.clean("-fd")
-    self.switch_branch(self.default_branch.name)
 
   def remove_repository(self):
     if self.repo is not None:
@@ -142,3 +147,4 @@ class GitRepository:
     self.repo.index.commit(commit_message)
     self.repo.git.push("--set-upstream", "origin", branch_name)
     self.reset_repository()
+    self.switch_branch(self.default_branch)

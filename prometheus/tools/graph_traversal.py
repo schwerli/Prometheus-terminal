@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from prometheus.parser import tree_sitter_parser
 from prometheus.utils import neo4j_util
 
-MAX_RESULT = 50
+MAX_RESULT = 30
 
 ###############################################################################
 #                          FileNode retrieval                                 #
