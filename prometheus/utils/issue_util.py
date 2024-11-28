@@ -22,6 +22,20 @@ def format_issue_comments(issue_comments: Sequence[Mapping[str, str]]):
   return "\n\n".join(formatted_issue_comments)
 
 
+def format_issue_info(
+  issue_title: str, issue_body: str, issue_comments: Sequence[Mapping[str, str]]
+) -> str:
+  return f"""\
+Issue title:
+{issue_title}
+
+Issue description: 
+{issue_body}
+
+Issue comments:
+{format_issue_comments(issue_comments)}"""
+
+
 def format_agent_tool_message_history(messages: Sequence[BaseMessage]) -> str:
   formatted_messages = []
   for message in messages:

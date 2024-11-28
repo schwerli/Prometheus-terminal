@@ -20,10 +20,11 @@ def mock_services():
   issue_service = Mock(sepc=IssueService)
   knowledge_graph_service = Mock(spec=KnowledgeGraphService)
   knowledge_graph_service.kg = None
-  knowledge_graph_service.local_path = None
+  knowledge_graph_service.get_local_path.return_value = None
   neo4j_service = Mock(spec=Neo4jService)
   postgres_service = Mock(spec=PostgresService)
   repository_service = Mock(spec=RepositoryService)
+  repository_service.get_working_dir.return_value = None
 
   return {
     "issue_service": issue_service,
@@ -34,7 +35,7 @@ def mock_services():
     "postgres_service": postgres_service,
     "repository_service": repository_service,
     "github_token": "test_token",
-    "working_directory": "test_directory",
+    "working_directory": Path("test_directory"),
   }
 
 
@@ -70,7 +71,6 @@ def test_upload_local_repository(service_coordinator, mock_services):
   service_coordinator.upload_local_repository(test_path)
 
   # Verify the sequence of operations
-  mock_services["knowledge_graph_service"].clear.assert_called_once()
   mock_services["knowledge_graph_service"].build_and_save_knowledge_graph.assert_called_once_with(
     test_path
   )
@@ -86,7 +86,6 @@ def test_upload_github_repository(service_coordinator, mock_services):
   service_coordinator.upload_github_repository(test_url, test_commit)
 
   # Verify the sequence of operations
-  mock_services["knowledge_graph_service"].clear.assert_called_once()
   mock_services["repository_service"].clone_github_repo.assert_called_once_with(
     mock_services["github_token"], test_url, test_commit
   )
@@ -122,7 +121,7 @@ def test_clear(service_coordinator, mock_services):
   service_coordinator.clear()
 
   mock_services["knowledge_graph_service"].clear.assert_called_once()
-  mock_services["repository_service"].clean_working_directory.assert_called_once()
+  mock_services["repository_service"].clean.assert_called_once()
 
 
 def test_close(service_coordinator, mock_services):

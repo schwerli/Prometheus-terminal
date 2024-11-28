@@ -11,17 +11,16 @@ class IssueBugState(TypedDict):
   run_build: bool
   run_existing_test: bool
 
-  bug_context: str
-
   reproduced_bug: bool
   reproduced_bug_file: str
   reproduced_bug_commands: Sequence[str]
 
-  bug_fixing_messages: Annotated[Sequence[BaseMessage], add_messages]
+  context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
 
-  patch: str
+  edit_messages: Annotated[Sequence[BaseMessage], add_messages]
 
-  reproducing_test_passed: bool
+  edit_patch: str
+
   reproducing_test_fail_log: str
 
   exist_build: bool

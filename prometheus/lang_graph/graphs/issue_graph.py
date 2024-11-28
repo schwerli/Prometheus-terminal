@@ -6,13 +6,13 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueState, IssueType
 from prometheus.lang_graph.nodes.issue_bug_subgraph_node import IssueBugSubgraphNode
 from prometheus.lang_graph.nodes.issue_classification_subgraph_node import (
   IssueClassificationSubgraphNode,
 )
-from prometheus.lang_graph.nodes.issue_question_subgraph_node import IssueQuestionSubgraphNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 
 
@@ -21,6 +21,7 @@ class IssueGraph:
     self,
     model: BaseChatModel,
     kg: KnowledgeGraph,
+    git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     container: BaseContainer,
@@ -39,6 +40,7 @@ class IssueGraph:
       model,
       container,
       kg,
+      git_repo,
       neo4j_driver,
       max_token_per_neo4j_result,
       build_commands,
@@ -46,16 +48,12 @@ class IssueGraph:
       thread_id,
       checkpointer,
     )
-    issue_question_subgraph_node = IssueQuestionSubgraphNode(
-      model, kg, neo4j_driver, max_token_per_neo4j_result, thread_id, checkpointer
-    )
 
     workflow = StateGraph(IssueState)
 
     workflow.add_node("issue_type_branch_node", issue_type_branch_node)
     workflow.add_node("issue_classification_subgraph_node", issue_classification_subgraph_node)
     workflow.add_node("issue_bug_subgraph_node", issue_bug_subgraph_node)
-    workflow.add_node("issue_question_subgraph_node", issue_question_subgraph_node)
 
     workflow.set_entry_point("issue_type_branch_node")
     workflow.add_conditional_edges(
@@ -66,7 +64,7 @@ class IssueGraph:
         IssueType.BUG: "issue_bug_subgraph_node",
         IssueType.FEATURE: END,
         IssueType.DOCUMENTATION: END,
-        IssueType.QUESTION: "issue_question_subgraph_node",
+        IssueType.QUESTION: END,
       },
     )
     workflow.add_conditional_edges(
@@ -76,11 +74,10 @@ class IssueGraph:
         IssueType.BUG: "issue_bug_subgraph_node",
         IssueType.FEATURE: END,
         IssueType.DOCUMENTATION: END,
-        IssueType.QUESTION: "issue_question_subgraph_node",
+        IssueType.QUESTION: END,
       },
     )
     workflow.add_edge("issue_bug_subgraph_node", END)
-    workflow.add_edge("issue_question_subgraph_node", END)
 
     self.graph = workflow.compile(checkpointer=checkpointer)
 

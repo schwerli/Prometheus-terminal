@@ -5,6 +5,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueState
 from prometheus.lang_graph.subgraphs.issue_bug_subgraph import IssueBugSubgraph
@@ -16,6 +17,7 @@ class IssueBugSubgraphNode:
     model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
+    git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     build_commands: Optional[Sequence[str]] = None,
@@ -27,6 +29,7 @@ class IssueBugSubgraphNode:
       model,
       container,
       kg,
+      git_repo,
       neo4j_driver,
       max_token_per_neo4j_result,
       build_commands,
@@ -45,6 +48,6 @@ class IssueBugSubgraphNode:
     )
     return {
       "issue_response": output_state["issue_response"],
-      "patch": output_state["patch"],
+      "patch": output_state["edit_patch"],
       "reproduced_bug_file": output_state["reproduced_bug_file"],
     }

@@ -7,14 +7,14 @@ with structured tools to systematically search and analyze the codebase Knowledg
 
 import functools
 import logging
+from typing import Dict
 
 import neo4j
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 from prometheus.tools import graph_traversal
 
 
@@ -343,7 +343,7 @@ All ASTNode types: {ast_node_types}
 
     return tools
 
-  def __call__(self, state: ContextProviderState):
+  def __call__(self, state: Dict):
     """Processes the current state and traverse the knowledge graph to retrieve context.
 
     Args:
@@ -352,11 +352,7 @@ All ASTNode types: {ast_node_types}
     Returns:
       Dictionary that will update the state with the model's response messages.
     """
-    if "refined_query" in state and state["refined_query"]:
-      human_message = HumanMessage(state["refined_query"])
-    else:
-      human_message = HumanMessage(state["original_query"])
-    message_history = [self.system_prompt, human_message] + state["context_provider_messages"]
+    message_history = [self.system_prompt] + state["context_provider_messages"]
     response = self.model_with_tools.invoke(message_history)
     self._logger.debug(f"ContextProviderNode response:\n{response}")
     return {"context_provider_messages": [response]}

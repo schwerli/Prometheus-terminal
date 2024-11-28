@@ -2,7 +2,6 @@ import pytest
 from langchain_core.messages import AIMessage, ToolMessage
 
 from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
-from prometheus.lang_graph.subgraphs.context_provider_state import ContextProviderState
 from tests.test_utils.fixtures import neo4j_container_with_kg_fixture  # noqa: F401
 from tests.test_utils.util import FakeListChatWithToolsModel
 
@@ -21,12 +20,10 @@ def test_context_provider_node_basic_query(neo4j_container_with_kg_fixture):  # 
     AIMessage(content="This code handles file processing"),
     ToolMessage(content="Found implementation in utils.py", tool_call_id="test_tool_call_1"),
   ]
-  test_state = ContextProviderState(
-    {
-      "original_query": "How does the error handling work?",
-      "context_provider_messages": test_messages,
-    }
-  )
+  test_state = {
+    "original_query": "How does the error handling work?",
+    "context_provider_messages": test_messages,
+  }
 
   result = node(test_state)
 
@@ -48,13 +45,11 @@ def test_context_provider_node_refined_query(neo4j_container_with_kg_fixture):  
   test_messages = [
     AIMessage(content="Previous context about error handling"),
   ]
-  test_state = ContextProviderState(
-    {
-      "original_query": "How does the error handling work?",
-      "refined_query": "Show me the error handling implementation in the file processor",
-      "context_provider_messages": test_messages,
-    }
-  )
+  test_state = {
+    "original_query": "How does the error handling work?",
+    "refined_query": "Show me the error handling implementation in the file processor",
+    "context_provider_messages": test_messages,
+  }
 
   result = node(test_state)
 

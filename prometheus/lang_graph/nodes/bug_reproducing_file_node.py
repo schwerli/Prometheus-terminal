@@ -12,51 +12,24 @@ from prometheus.tools import file_operation
 
 class BugReproducingFileNode:
   SYS_PROMPT = """\
-You are a test file manager responsible for extracting and managing bug reproduction test code. Your primary responsibilities are:
+You are a test file manager. Your task is to save the provided bug reproducing code in the project. You should:
 
-1. Extract complete test code from the provided bug reproducing code
-2. Handle file operations to save the test code appropriately
-
-Follow these steps for each task:
-
-1. Code Extraction:
-- Analyze the bug_reproducing_code to identify the complete test code
-- Ensure all necessary imports and dependencies are included
-- Maintain the original code structure and formatting
-- Extract only the relevant test code, excluding any explanatory text or comments not part of the code
-
-2. File Management:
-If a reproduced_bug_file path exists:
-- Use the delete tool to remove the existing file
-- Use the create_file tool to recreate the file with the extracted test code
-- Maintain the original file extension and location
-
-If no reproduced_bug_file path exists:
-- Determine appropriate file name based on the test content (e.g., test_[feature].py for Python tests)
-- Choose a suitable location in the project structure for the test file
-- Use the create_file tool to create the new file with the extracted test code
-- Return the created file path in your response
-
-Requirements:
-- Always confirm file operations were successful
-- Maintain proper file extensions based on the programming language
-- Ensure the file path is within the project structure
-- Handle any file operation errors gracefully
+1. Examine the project structure to identify existing test file naming patterns and test folder organization
+2. Use the create_file tool to save the bug reproducing code in a SINGLE new test file following the project's existing test filename conventions
+3. After creating the file, return its relative path
 
 Tools available:
-- read_file: Read contents of a file
 - create_file: Create a new file with specified content
-- delete: Delete an existing file
 
-Only respond with the path of the file where the test code was saved
+You must first call the create_file tool with the appropriate path and content, then respond with the created file's relative path.
 """
 
   HUMAN_PROMPT = """\
-Bug reproducing code:
+Save this bug reproducing code in the project:
 {bug_reproducing_code}
 
-Bug reproducing file:
-{reproduced_bug_file}
+Current project structure:
+{project_structure}
 """
 
   def __init__(
@@ -65,7 +38,7 @@ Bug reproducing file:
     kg: KnowledgeGraph,
   ):
     self.kg = kg
-    self.tools = self._init_tools(kg.get_local_path())
+    self.tools = self._init_tools(str(kg.get_local_path()))
     self.model_with_tools = model.bind_tools(self.tools)
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_file_node")
@@ -99,25 +72,12 @@ Bug reproducing file:
     )
     tools.append(create_file_tool)
 
-    delete_fn = functools.partial(file_operation.delete, root_path=root_path)
-    delete_tool = StructuredTool.from_function(
-      func=delete_fn,
-      name=file_operation.delete.__name__,
-      description=file_operation.DELETE_DESCRIPTION,
-      args_schema=file_operation.DeleteInput,
-    )
-    tools.append(delete_tool)
-
     return tools
 
   def format_human_message(self, state: BugReproductionState) -> HumanMessage:
-    reproduced_bug_file = ""
-    if "reproduced_bug_file" in state and state["reproduced_bug_file"]:
-      reproduced_bug_file = state["reproduced_bug_file"]
     return HumanMessage(
       self.HUMAN_PROMPT.format(
         bug_reproducing_code=state["bug_reproducing_write_messages"][-1].content,
-        reproduced_bug_file=reproduced_bug_file,
         project_structure=self.kg.get_file_tree(),
       )
     )

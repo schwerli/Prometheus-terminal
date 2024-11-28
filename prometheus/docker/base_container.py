@@ -4,6 +4,7 @@ import tarfile
 import tempfile
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Sequence
 
 import docker
 
@@ -72,31 +73,43 @@ class BaseContainer(ABC):
       self.tag_name,
       detach=True,
       tty=True,
+      platform="linux/amd64",
       network_mode="host",
+      environment={"PYTHONPATH": f"{self.workdir}:$PYTHONPATH"},
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},
     )
 
   def is_running(self) -> bool:
     return bool(self.container)
 
-  def update_files(self, new_project_path: str):
+  def update_files(
+    self, project_root_path: Path, updated_files: Sequence[Path], removed_files: Sequence[Path]
+  ):
     """Update files in the running container with files from a local directory.
 
     Creates a tar archive of the new files and copies them into the workdir of the container.
 
     Args:
-        new_project_path: Path to the directory containing new files.
+      new_project_path: Path to the directory containing new files.
     """
-    self.logger.info(f"Updating files in running container with files from {new_project_path}")
+    if not project_root_path.is_absolute():
+      raise ValueError("project_root_path {project_root_path} must be a absolute path")
 
-    self.execute_command("rm -rf ./*")
+    self.logger.info("Updating files in the container after edits.")
+    for file in removed_files:
+      self.logger.info(f"Removing file {file} in the container")
+      self.execute_command(f"rm {file}")
+
+    parent_dirs = {str(file.parent) for file in updated_files}
+    for dir_path in sorted(parent_dirs):
+      self.logger.info(f"Creating directory {dir_path} in the container")
+      self.execute_command(f"mkdir -p {dir_path}")
 
     with tempfile.NamedTemporaryFile() as temp_tar:
       with tarfile.open(fileobj=temp_tar, mode="w") as tar:
-        abs_project_path = Path(new_project_path).absolute()
-        for path in abs_project_path.rglob("*"):
-          rel_path = path.relative_to(abs_project_path)
-          tar.add(str(path), arcname=str(rel_path))
+        for file in updated_files:
+          local_absolute_file = project_root_path / file
+          tar.add(local_absolute_file, arcname=str(file))
 
       temp_tar.seek(0)
 
@@ -135,6 +148,14 @@ class BaseContainer(ABC):
     exec_result_str = exec_result.output.decode("utf-8")
     self.logger.debug(f"Command output:\n{exec_result_str}")
     return exec_result_str
+
+  def restart_container(self):
+    self.logger.info("Restarting the container")
+    if self.container:
+      self.container.stop(timeout=10)
+      self.container.remove(force=True)
+
+    self.start_container()
 
   def cleanup(self):
     """Clean up container resources and temporary files.

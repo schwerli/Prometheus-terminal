@@ -30,46 +30,6 @@ def test_state():
   )
 
 
-def test_format_human_message_with_previous_data(mock_kg, test_state):
-  """Test message formatting with previous reproduction data."""
-  fake_llm = FakeListChatWithToolsModel(responses=["test"])
-  node = BugReproducingWriteNode(fake_llm, mock_kg)
-
-  message = node.format_human_message(test_state)
-
-  assert isinstance(message, str)
-  assert "Test Bug" in message
-  assert "Bug description" in message
-  assert "Comment 1" in message
-  assert "Comment 2" in message
-  assert "test/file.py" in message
-  assert "Test failure log" in message
-
-
-def test_format_human_message_without_previous_data(mock_kg):
-  """Test message formatting without previous reproduction data."""
-  fake_llm = FakeListChatWithToolsModel(responses=["test"])
-  node = BugReproducingWriteNode(fake_llm, mock_kg)
-
-  state = BugReproductionState(
-    {
-      "issue_title": "Test Bug",
-      "issue_body": "Bug description",
-      "issue_comments": ["Comment"],
-      "bug_context": "Context of the bug",
-      "bug_reproducing_write_messages": [],
-    }
-  )
-
-  message = node.format_human_message(state)
-
-  assert isinstance(message, str)
-  assert "Test Bug" in message
-  assert "Bug description" in message
-  assert "Previous bug reproducing file\n" in message
-  assert "Previous bug reproducing fail log\n" in message
-
-
 def test_call_method(mock_kg, test_state):
   """Test the __call__ method execution."""
   fake_response = "Created test file"

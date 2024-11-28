@@ -1,34 +1,35 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
-from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.git.git_repository import GitRepository
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 
 
 @pytest.fixture
-def mock_kg():
-  kg = Mock(spec=KnowledgeGraph)
-  kg.get_local_path.return_value = "/foo/bar"
-  return kg
+def mock_git_repo():
+  git_repo = Mock(spec=GitRepository)
+  git_repo.get_diff.return_value = "sample diff content"
+  return git_repo
 
 
-def test_git_diff_node(mock_kg):
-  # Setup
-  expected_diff = "sample diff content"
+def test_git_diff_node(mock_git_repo):
+  node = GitDiffNode(mock_git_repo, "patch")
 
-  with patch("prometheus.lang_graph.nodes.git_diff_node.GitRepository") as mock_git_repo_class:
-    # Configure the mock GitRepository instance
-    mock_git_repo_instance = Mock()
-    mock_git_repo_instance.get_diff.return_value = expected_diff
-    mock_git_repo_class.return_value = mock_git_repo_instance
+  # Execute
+  result = node({})
 
-    node = GitDiffNode(mock_kg)
+  # Assert
+  assert result == {"patch": "sample diff content"}
+  mock_git_repo.get_diff.assert_called_with(None)
 
-    # Execute
-    result = node({})
 
-    # Assert
-    assert result == {"patch": expected_diff}
-    mock_git_repo_class.assert_called_once_with("/foo/bar", None, copy_to_working_dir=False)
-    mock_git_repo_instance.get_diff.assert_called_once()
+def test_git_diff_node_with_excluded_files(mock_git_repo):
+  node = GitDiffNode(mock_git_repo, "patch", "excluded_file")
+
+  # Execute
+  result = node({"excluded_file": "/foo/bar.py"})
+
+  # Assert
+  assert result == {"patch": "sample diff content"}
+  mock_git_repo.get_diff.assert_called_with(["/foo/bar.py"])

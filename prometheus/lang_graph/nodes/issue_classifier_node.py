@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.graphs.issue_state import IssueType
 from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClassificationState
-from prometheus.utils.issue_util import format_issue_comments
+from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueClassifierOutput(BaseModel):
@@ -121,20 +121,15 @@ Analyze the provided issue and respond with a JSON object containing only the is
 
   def format_context_info(self, state: IssueClassificationState) -> str:
     context_info = f"""\
-      ISSUE INFORMATION:
-      Title: {state['issue_title']}
-      Body: {state['issue_body']}
-      Comments:
-      {format_issue_comments(state['issue_comments'])}
+      {format_issue_info(state['issue_title'], state['issue_body'], state['issue_comments'])}
 
-      CODEBASE CONTEXT:
-      {state['classification_context']}
+      Codebase context:
+      {state['context_provider_messages'][-1].content}
     """
     return context_info
 
   def __call__(self, state: IssueClassificationState):
     context_info = self.format_context_info(state)
     response = self.model.invoke({"context_info": context_info})
-    self._logger.debug(f"IssueClassifierNode response:\n{response}")
     self._logger.info(f"IssueClassifierNode classified the issue as: {response.issue_type}")
     return {"issue_type": response.issue_type}

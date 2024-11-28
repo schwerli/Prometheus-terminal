@@ -11,13 +11,10 @@ from prometheus.utils.issue_util import format_agent_tool_message_history, forma
 
 class BugReproducingStructuredOutput(BaseModel):
   reproduced_bug: bool = Field(
-    description="True if test fails in a way that demonstrates the underlying bug"
+    description="True ONLY if test fails as described in the issue and uses provided examples if any exist"
   )
   reproduced_bug_failure_log: str = Field(
-    description="If test passes or fails in a way unrelated to the bug, explain why. Empty if failure demonstrates the bug"
-  )
-  reproduced_bug_file: str = Field(
-    description="The relative path of the file that reproduces the bug"
+    description="Explanation of why the test didn't properly reproduce the bug (if test passes, has different error, doesn't use issue examples, etc). Empty if bug was reproduced correctly"
   )
   reproduced_bug_commands: Sequence[str] = Field(
     description="A list of commands run to the single file to reproduce the bug"
@@ -26,123 +23,91 @@ class BugReproducingStructuredOutput(BaseModel):
 
 class BugReproducingStructuredNode:
   SYS_PROMPT = """\
-You are an agent that analyzes test results during the initial bug verification phase, before any fixes are attempted.
-You'll receive:
-1. The GitHub issue describing the bug (title, description, comments)
-2. The bug reproducing code written by another agent
-3. The location where the test file was written
-4. The execution results of the test
+You are an agent that verifies if a test properly reproduces a reported bug. You analyze:
+1. Issue description and any provided examples
+2. The test code written to reproduce the bug
+3. The test execution results
 
-Your task is to verify if the test properly demonstrates the underlying bug:
-- Test MUST FAIL at this stage (we haven't fixed the bug yet)
-- The failure must match the error message/behavior described in the issue
-- The failure must demonstrate the same underlying issue described in the bug report
-- Test passing means it's not properly detecting the bug
+For reproduced_bug to be True, the test MUST:
+1. Fail (since bug isn't fixed yet)
+2. Fail in exactly the same way described in the issue
+3. Use the exact examples from the issue if any were provided
+4. Demonstrate the same underlying problem
 
-Provide the following information:
-1. reproduced_bug (boolean): True if test fails in a way that demonstrates the underlying bug, False if it passes or fails unrelated to the bug
-2. reproduced_bug_failure_log (string): Empty if failure demonstrates the bug. Otherwise explain why the test isn't properly exposing the reported issue
-3. reproduced_bug_file (string): The exact relative path to the test file
-4. reproduced_bug_commands (list of strings): Commands needed to run the test
+Set reproduced_bug_failure_log when the test:
+- Passes (explain that passing means bug isn't detected)
+- Fails differently than described (explain how error differs)
+- Doesn't use provided examples (explain what example should be used)
+- Tests wrong behavior (explain what behavior should be tested)
+- Has any other issues (explain the problem)
 
-Example of Correct Test (Shows Bug):
+Example 1 - Correct Reproduction:
 ```
-ISSUE INFORMATION:
-Title: JSON parser fails with empty arrays
-Description: The JsonParser class crashes when trying to parse an empty array "[]". This should be valid JSON!
-Comments: ["Also fails with nested empty arrays like [[], []]"]
+Issue:
+Title: Array.pop() crashes on empty array
+Description: Calling pop() on empty array throws "Cannot read property 'length' of undefined" but should throw "Array is empty"
+Example: let arr = []; arr.pop(); // Shows wrong error
 
-Bug reproduction code:
-def test_empty_array_parsing():
-    parser = JsonParser()
-    assert parser.parse_array(['[', ']']) == []
+Test:
+def test_empty_array_pop():
+    arr = []
+    with pytest.raises(ValueError, match="Cannot read property 'length' of undefined"):
+        arr.pop()
 
-Test file message:
-Test has been written to: tests/test_json_parser.py
-
-Test Execute Messages:
-Tool Calls:
-run_command: pytest tests/test_json_parser.py
+Result: Test failed with "Cannot read property 'length' of undefined"
 
 Output:
-============================= test session starts ==============================
-platform linux -- Python 3.9.20, pytest-7.4.4, pluggy-1.0.0
-collected 1 item
-
-tests/test_json_parser.py F                                              [100%]
-
-================================= FAILURES ==================================
-_________________________ test_empty_array_parsing _________________________
-    def test_empty_array_parsing():
->       assert parser.parse_array(['[', ']']) == []
-E       AssertionError: assert None == []
-
-tests/test_json_parser.py:7: AssertionError
-============================== 1 failed in 0.16s =============================
-```
-
-Example Output for Correct Test:
-```python
 {
-    "reproduced_bug": True,  # True because test shows empty arrays aren't handled properly
-    "reproduced_bug_failure_log": "",  # Empty because failure demonstrates the bug (empty arrays not working)
-    "reproduced_bug_file": "tests/test_json_parser.py",
-    "reproduced_bug_commands": ["pytest tests/test_json_parser.py"]
+    "reproduced_bug": true,
+    "reproduced_bug_failure_log": "",
+    "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 ```
 
-Example of Issue With Test:
+Example 2 - Wrong Error:
 ```
-ISSUE INFORMATION:
-Title: JSON parser fails with empty arrays
-Description: The JsonParser class crashes when trying to parse an empty array "[]". This should be valid JSON!
-Comments: ["Also fails with nested empty arrays like [[], []]"]
+Issue:
+Title: Array.pop() crashes on empty array
+Description: Calling pop() on empty array throws "Cannot read property 'length' of undefined" but should throw "Array is empty"
+Example: let arr = []; arr.pop(); // Shows wrong error
 
-Bug reproduction code:
-def test_array_parsing():
-    parser = JsonParser()
-    assert parser.parse_array(['[', '1', ']']) == [1]
+Test:
+def test_empty_array_pop():
+    arr = []
+    with pytest.raises(IndexError):
+        arr.pop()
 
-Test file message:
-Test has been written to: tests/test_json_parser.py
-
-Test Execute Messages:
-Tool Calls:
-run_command: pytest tests/test_json_parser.py
+Result: Test failed with "IndexError: pop from empty list"
 
 Output:
-============================= test session starts ==============================
-platform linux -- Python 3.9.20, pytest-7.4.4, pluggy-1.0.0
-collected 1 item
-
-tests/test_json_parser.py F                                              [100%]
-
-================================= FAILURES ==================================
-_________________________ test_array_parsing _________________________
-    def test_array_parsing():
->       assert parser.parse_array(['[', '1', ']']) == [1]
-E       TypeError: Expected string but got int
-
-tests/test_json_parser.py:7: TypeError
-============================== 1 failed in 0.16s =============================
-```
-
-Example Output for Issue With Test:
-```python
 {
-    "reproduced_bug": False,  # False because test is checking non-empty array parsing instead of empty array handling
-    "reproduced_bug_failure_log": "Test is failing due to type conversion with non-empty arrays, not the reported empty array handling issue. The test needs to check empty array parsing to verify the reported bug.",
-    "reproduced_bug_file": "tests/test_json_parser.py",
-    "reproduced_bug_commands": ["pytest tests/test_json_parser.py"]
+    "reproduced_bug": false,
+    "reproduced_bug_failure_log": "Test fails with IndexError but issue describes 'Cannot read property length' error. Test needs to verify the specific error message reported in the bug.",
+    "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 ```
 
-Remember:
-- Test MUST fail at this stage since we haven't fixed the bug
-- The test failure should match the error/behavior described in the issue.
-- Focus on whether the failure demonstrates the core issue from the bug report
-- A passing test means the bug isn't being checked
-- Commands should be properly formatted and executable
+Example 3 - Wrong Example:
+```
+Issue:
+Title: Array.pop() crashes on empty array
+Description: Calling pop() on empty array throws "Cannot read property 'length' of undefined" but should throw "Array is empty"
+Example: let arr = []; arr.pop(); // Shows wrong error
+
+Test:
+def test_array_pop():
+    arr = [1, 2, 3]
+    arr.pop()
+    assert len(arr) == 2
+
+Result: Test passed
+
+Output:
+{
+    "reproduced_bug": false,
+    "reproduced_bug_failure_log": "Test passes and doesn't use the empty array example from the issue. Test should verify pop() behavior on an empty array as shown in the example.",
+    "reproduced_bug_commands": ["pytest tests/test_array.py"]
+}
 """.replace("{", "{{").replace("}", "}}")
 
   HUMAN_PROMPT = """\
@@ -150,9 +115,6 @@ ISSUE INFORMATION:
 Title: {title}
 Description: {body}
 Comments: {comments}
-
-Bug reproducing file message:
-{bug_reproducing_file_message}
 
 Bug reproduction code:
 {bug_reproducing_code}
@@ -178,7 +140,6 @@ Log from executing bug reproducing file:
       body=state["issue_body"],
       comments=format_issue_comments(state["issue_comments"]),
       bug_reproducing_code=state["bug_reproducing_write_messages"][-1].content,
-      bug_reproducing_file_message=state["bug_reproducing_file_messages"][-1].content,
       bug_reproducing_log=bug_reproducing_log,
     )
 
@@ -188,6 +149,5 @@ Log from executing bug reproducing file:
     return {
       "reproduced_bug": response.reproduced_bug,
       "reproduced_bug_failure_log": response.reproduced_bug_failure_log,
-      "reproduced_bug_file": response.reproduced_bug_file,
       "reproduced_bug_commands": response.reproduced_bug_commands,
     }

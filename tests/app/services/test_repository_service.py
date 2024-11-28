@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import Mock, create_autospec, patch
+from unittest.mock import create_autospec, patch
 
 import pytest
 
@@ -12,14 +12,14 @@ from prometheus.graph.knowledge_graph import KnowledgeGraph
 @pytest.fixture
 def mock_kg_service():
   service = create_autospec(KnowledgeGraphService, instance=True)
-  service.kg = None
+  service.get_local_path.return_value = None
   return service
 
 
 @pytest.fixture
 def mock_git_repository():
   repo = create_autospec(GitRepository, instance=True)
-  repo.get_working_directory.return_value = "/test/working/dir/repositories/repo"
+  repo.get_working_directory.return_value = Path("/test/working/dir/repositories/repo")
   return repo
 
 
@@ -69,41 +69,11 @@ def test_clone_new_github_repo(service, mock_kg_service, mock_git_repository):
     assert result_path == expected_path
 
 
-def test_skip_clone_when_already_loaded(service, mock_kg_service, mock_git_repository):
-  # Setup
-  test_url = "https://github.com/test/repo"
-  test_commit = "abc123"
-  test_github_token = "test_token"
-
-  mock_knowledge_graph = Mock()
-  mock_knowledge_graph.is_built_from_github.return_value = True
-  mock_knowledge_graph.get_codebase_https_url.return_value = test_url
-  mock_knowledge_graph.get_codebase_commit_id.return_value = test_commit
-
-  mock_kg_service.kg = mock_knowledge_graph
-  fake_path = Path("/fake/path")
-  mock_kg_service.local_path = fake_path
-
-  # Exercise
-  with patch(
-    "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
-  ) as mock_git_class:
-    result_path = service.clone_github_repo(test_github_token, test_url, test_commit)
-
-    # Verify
-    assert result_path == fake_path
-    # GitRepository should not be instantiated
-    mock_git_class.assert_not_called()
-    # These methods should not be called on the mock repository
-    mock_git_repository.checkout_commit.assert_not_called()
-    mock_git_repository.get_working_directory.assert_not_called()
-
-
 def test_clean_working_directory(service):
   # Setup
   with patch("shutil.rmtree") as mock_rmtree, patch("pathlib.Path.mkdir") as mock_mkdir:
     # Exercise
-    service.clean_working_directory()
+    service.clean()
 
     # Verify
     mock_rmtree.assert_called_once_with(service.target_directory)

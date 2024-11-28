@@ -3,7 +3,7 @@ import logging
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
@@ -12,23 +12,14 @@ from prometheus.tools import file_operation
 
 class BugReproducingWriteNode:
   SYS_PROMPT = '''\
-You are a QA automation expert specializing in writing test cases that reproduce software bugs.
-Your goal is to take bug reports and create minimal, self-contained test cases that reliably
-demonstrate the reported issues.
+You are a QA automation expert who writes focused test cases to reproduce software bugs.
+Given an issue description, create a minimal test that demonstrates the problem.
 
-Key Requirements:
+Requirements:
 - Include all necessary imports
-- Use existing implementation (don't modify buggy code)
-- Add proper assertions that currently fail but will pass when fixed
-- If bug report has examples, preserve their exact conditions
-- Handle external dependencies (files, network calls) appropriately
-- Add clear docstrings explaining expected vs actual behavior
-
-Writing Process:
-1. Identify core issue and reproduce conditions
-2. Extract relevant code and dependencies from context
-3. Create minimal test case with proper assertions
-4. Ensure test is complete and self-contained
+- Must use the example from the issue if provided
+- Write minimal number of assertions that fail now but will pass when fixed
+- Keep tests minimal and focused
 
 <example>
 <bug_report>
@@ -42,108 +33,51 @@ result = parser.parse_array(['[', ']'])  # Raises ValueError!
 Comments: Also fails with nested empty arrays like [[], []]. This is blocking our ability to parse valid JSON containing empty arrays.
 </bug_report>
 
-<context>
-### JSON Parser Implementation
-**File**: json/parser.py
+<similar_test_cases>
+### Existing Array Parser Tests
 ```python
-class JsonParser:
-    def parse_array(self, tokens: list) -> list:
-        """Parse a JSON array from a list of tokens.
-        
-        Args:
-            tokens: List of JSON tokens
-            
-        Returns:
-            Parsed array as Python list
-            
-        Raises:
-            ValueError: If array format is invalid
-        """
-        if len(tokens) < 2:  # Need at least [ and ]
-            raise ValueError("Invalid array")
-        
-        if tokens[0] != '[' or tokens[-1] != ']':
-            raise ValueError("Array must start with [ and end with ]")
-            
-        # Extract contents between brackets
-        contents = tokens[1:-1]
-        
-        # Parse contents (bug: doesn't handle empty array case)
-        if not contents:
-            raise ValueError("Empty array not supported")
-            
-        return self._parse_array_contents(contents)
-    
-    def _parse_array_contents(self, contents: list) -> list:
-        """Parse the contents of a JSON array.
-        
-        Args:
-            contents: Tokens between [ and ]
-            
-        Returns:
-            List of parsed values
-        """
-        result = []
-        current_item = []
-        
-        for token in contents:
-            if token == ',':
-                if current_item:
-                    result.append(self._parse_value(current_item))
-                    current_item = []
-            else:
-                current_item.append(token)
-                
-        if current_item:
-            result.append(self._parse_value(current_item))
-            
-        return result
+def test_parse_single_element_array(self):
+    """Test parsing array with single element.
+    Validates basic array parsing functionality.
+    """
+    tokens = ['[', '42', ']']
+    result = self.parser.parse_array(tokens)
+    self.assertEqual(result, [42])
 
-### Existing Tests
-**File**: tests/test_json_parser.py
-```python
-import unittest
-from json.parser import JsonParser
-
-class TestJsonParser(unittest.TestCase):
-    def setUp(self):
-        self.parser = JsonParser()
-    
-    def test_simple_array(self):
-        tokens = ['[', '1', ',', '2', ',', '3', ']']
-        result = self.parser.parse_array(tokens)
-        self.assertEqual(result, [1, 2, 3])
-    
-    def test_nested_array(self):
-        tokens = ['[', '[', '1', ']', ',', '[', '2', ']', ']']
-        result = self.parser.parse_array(tokens)
-        self.assertEqual(result, [[1], [2]])
+def test_parse_nested_arrays(self):
+    """Test parsing nested array structures.
+    Ensures proper handling of array nesting.
+    """
+    tokens = ['[', '[', '1', ']', ',', '[', '2', ',', '3', ']', ']']
+    result = self.parser.parse_array(tokens)
+    self.assertEqual(result, [[1], [2, 3]])
 ```
-</context>
+</similar_test_cases>
 
 <thought_process>
-1. Core Issue:
+1. Similar Test Analysis:
+   - Tests follow AAA pattern (Arrange-Act-Assert)
+   - Each test has descriptive docstring
+   - Parser instance created per test
+   - Uses assertEqual for validation
+   - Tests both simple and complex cases
+
+2. Core Issue:
    - Bug: ValueError raised for empty arrays
    - Expected: Return empty list for '[]'
    - Examples: '[]' and '[[], []]'
    - Current code explicitly rejects empty arrays
 
-2. Context Analysis:
-   - Bug location identified in parse_array method
-   - Existing test structure uses unittest
-   - Other array cases already tested
-   - Empty array check is explicit blocker
-
 3. Test Strategy:
+   - Follow existing test structure and style
    - Test both empty and nested empty arrays
-   - Follow existing test class structure
-   - Assert expected list structures
-   - Use examples from bug report
+   - Match docstring format
+   - Use same assertion pattern
 
 4. Implementation Check:
-   - Matches existing test style
-   - Uses unittest assertions
-   - Clear test documentation
+   - Maintains test suite consistency
+   - Clear documentation
+   - Proper setup and teardown
    - Tests both reported cases
 </thought_process>
 
@@ -153,8 +87,8 @@ from json.parser import JsonParser
 
 class TestJsonParser(unittest.TestCase):
     def test_empty_array_parsing(self):
-        """Test that empty arrays are parsed correctly.
-        Bug: Currently raises ValueError instead of returning []
+        """Test parsing of empty array.
+        Validates that empty arrays are handled correctly without raising errors.
         """
         parser = JsonParser()
         result = parser.parse_array(['[', ']'])
@@ -162,7 +96,7 @@ class TestJsonParser(unittest.TestCase):
         
     def test_nested_empty_arrays(self):
         """Test parsing nested empty arrays.
-        Bug: Currently raises ValueError instead of returning [[], []]
+        Ensures proper handling of multiple nested empty arrays.
         """
         parser = JsonParser()
         result = parser.parse_array(['[', '[', ']', ',', '[', ']', ']'])
@@ -173,27 +107,12 @@ if __name__ == '__main__':
 </test_code>
 </example>
 
-Study the bug report, context, and any previous test attempts. Then write a minimal, self-contained test case following the thought process above.
-'''.replace("{", "{{").replace("}", "}}")
-
-  HUMAN_PROMPT = """\
-ISSUE INFORMATION:
-Title: {title}
-Description: {body}
-Comments: {comments}
-
-Bug context summary:
-{bug_context}
-
-Previous bug reproducing file
-{previous_bug_reproducing_file}
-
-Previous bug reproducing fail log
-{previous_bug_reproducing_fail_log}
-"""
+Study the bug report, similar test cases, and any previous test attempts. Then write a minimal, self-contained test
+case following the thought process above. Pay special attention to maintaining consistency with the testing patterns shown in the similar test cases.
+'''
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
-    self.tools = self._init_tools(kg.get_local_path())
+    self.tools = self._init_tools(str(kg.get_local_path()))
     self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.model_with_tools = model.bind_tools(self.tools)
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_write_node")
@@ -220,25 +139,8 @@ Previous bug reproducing fail log
 
     return tools
 
-  def format_human_message(self, state: BugReproductionState):
-    previous_bug_reproducing_file = ""
-    if "reproduced_bug_file" in state and state["reproduced_bug_file"]:
-      previous_bug_reproducing_file = state["reproduced_bug_file"]
-    previous_bug_reproducing_fail_log = ""
-    if "reproduced_bug_failure_log" in state and state["reproduced_bug_failure_log"]:
-      previous_bug_reproducing_fail_log = state["reproduced_bug_failure_log"]
-    return self.HUMAN_PROMPT.format(
-      title=state["issue_title"],
-      body=state["issue_body"],
-      comments=state["issue_comments"],
-      bug_context=state["bug_context"],
-      previous_bug_reproducing_file=previous_bug_reproducing_file,
-      previous_bug_reproducing_fail_log=previous_bug_reproducing_fail_log,
-    )
-
   def __call__(self, state: BugReproductionState):
-    human_message = HumanMessage(self.format_human_message(state))
-    message_history = [self.system_prompt, human_message] + state["bug_reproducing_write_messages"]
+    message_history = [self.system_prompt] + state["bug_reproducing_write_messages"]
     response = self.model_with_tools.invoke(message_history)
 
     self._logger.debug(f"BugReproducingWriteNode response:\n{response}")

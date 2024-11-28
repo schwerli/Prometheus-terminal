@@ -28,7 +28,6 @@ def basic_state():
     {
       "bug_reproducing_write_messages": [AIMessage(content="def test_bug():\n    assert 1 == 2")],
       "bug_reproducing_file_messages": [],
-      "reproduced_bug_file": "test_bug.py",
     }
   )
 
@@ -38,7 +37,7 @@ def test_initialization(mock_kg, fake_llm):
   node = BugReproducingFileNode(fake_llm, mock_kg)
 
   assert isinstance(node.system_prompt, SystemMessage)
-  assert len(node.tools) == 3  # read_file, create_file, delete
+  assert len(node.tools) == 2  # read_file, create_file
   assert mock_kg.get_local_path.called
 
 
@@ -49,7 +48,6 @@ def test_format_human_message(mock_kg, fake_llm, basic_state):
 
   assert isinstance(message, HumanMessage)
   assert "def test_bug():" in message.content
-  assert "test_bug.py" in message.content
 
 
 def test_call_method(mock_kg, fake_llm, basic_state):

@@ -1,4 +1,5 @@
 import pytest
+from langchain_core.messages import AIMessage
 
 from prometheus.lang_graph.nodes.issue_bug_responder_node import IssueBugResponderNode
 from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
@@ -22,8 +23,8 @@ def basic_state():
         {"username": "user1", "comment": "This affects my workflow"},
         {"username": "user2", "comment": "Same issue here"},
       ],
-      "bug_context": "Identified off-by-one error in array indexing",
-      "patch": "Fixed array index calculation",
+      "edit_messages": [AIMessage("I have fixed the bug")],
+      "edit_patch": "Fixed array index calculation",
       "reproduced_bug": True,
       "run_build": True,
       "exist_build": True,
@@ -42,7 +43,6 @@ def test_format_human_message_basic(fake_llm, basic_state):
   assert "Found a bug in the code" in message.content
   assert "user1" in message.content
   assert "user2" in message.content
-  assert "off-by-one error" in message.content
   assert "Fixed array index" in message.content
 
 
@@ -63,8 +63,8 @@ def test_format_human_message_no_verification(fake_llm):
       "issue_title": "Test Bug",
       "issue_body": "Bug description",
       "issue_comments": [],
-      "bug_context": "Bug context",
-      "patch": "Fix patch",
+      "edit_messages": [AIMessage("I have fixed the bug")],
+      "edit_patch": "Fixed array index calculation",
       "reproduced_bug": False,
       "run_build": False,
       "exist_build": False,
@@ -88,8 +88,8 @@ def test_format_human_message_partial_verification(fake_llm):
       "issue_title": "Test Bug",
       "issue_body": "Bug description",
       "issue_comments": [],
-      "bug_context": "Bug context",
-      "patch": "Fix patch",
+      "edit_messages": [AIMessage("I have fixed the bug")],
+      "edit_patch": "Fixed array index calculation",
       "reproduced_bug": True,
       "run_build": True,
       "exist_build": False,

@@ -4,6 +4,7 @@ import neo4j
 import pytest
 
 from prometheus.docker.base_container import BaseContainer
+from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.issue_bug_subgraph import IssueBugSubgraph
 from tests.test_utils.util import FakeListChatWithToolsModel
@@ -23,11 +24,18 @@ def mock_kg():
 
 
 @pytest.fixture
+def mock_git_repo():
+  return Mock(spec=GitRepository)
+
+
+@pytest.fixture
 def mock_neo4j_driver():
   return Mock(spec=neo4j.Driver)
 
 
-def test_issue_bug_subgraph_basic_initialization(mock_container, mock_kg, mock_neo4j_driver):
+def test_issue_bug_subgraph_basic_initialization(
+  mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
+):
   """Test that IssueBugSubgraph initializes correctly with basic components."""
   # Initialize fake model with empty responses
   fake_model = FakeListChatWithToolsModel(responses=[])
@@ -37,6 +45,7 @@ def test_issue_bug_subgraph_basic_initialization(mock_container, mock_kg, mock_n
     model=fake_model,
     container=mock_container,
     kg=mock_kg,
+    git_repo=mock_git_repo,
     neo4j_driver=mock_neo4j_driver,
     max_token_per_neo4j_result=1000,
   )
@@ -47,7 +56,9 @@ def test_issue_bug_subgraph_basic_initialization(mock_container, mock_kg, mock_n
   assert subgraph.container == mock_container
 
 
-def test_issue_bug_subgraph_with_commands(mock_container, mock_kg, mock_neo4j_driver):
+def test_issue_bug_subgraph_with_commands(
+  mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
+):
   """Test that IssueBugSubgraph initializes correctly with build and test commands."""
   fake_model = FakeListChatWithToolsModel(responses=[])
   build_commands = ["make build"]
@@ -57,6 +68,7 @@ def test_issue_bug_subgraph_with_commands(mock_container, mock_kg, mock_neo4j_dr
     model=fake_model,
     container=mock_container,
     kg=mock_kg,
+    git_repo=mock_git_repo,
     neo4j_driver=mock_neo4j_driver,
     max_token_per_neo4j_result=1000,
     build_commands=build_commands,

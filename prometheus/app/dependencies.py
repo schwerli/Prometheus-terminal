@@ -1,5 +1,7 @@
 """Initializes and configures all prometheus services."""
 
+from pathlib import Path
+
 from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
@@ -49,6 +51,7 @@ def initialize_services() -> ServiceCoordinator:
   resposistory_service = RepositoryService(knowledge_graph_service, settings.WORKING_DIRECTORY)
   issue_service = IssueService(
     knowledge_graph_service,
+    resposistory_service,
     neo4j_service,
     postgres_service,
     llm_service,
@@ -64,7 +67,7 @@ def initialize_services() -> ServiceCoordinator:
     resposistory_service,
     settings.MAX_TOKEN_PER_NEO4J_RESULT,
     settings.GITHUB_ACCESS_TOKEN,
-    settings.WORKING_DIRECTORY,
+    Path(settings.WORKING_DIRECTORY).absolute(),
   )
 
   return service_coordinator
