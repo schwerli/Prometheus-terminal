@@ -8,18 +8,20 @@ from langchain_core.messages import SystemMessage
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.tools import file_operation
+from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class BugReproducingWriteNode:
   SYS_PROMPT = '''\
-You are a QA automation expert who writes focused test cases to reproduce software bugs.
-Given an issue description, create a minimal test that demonstrates the problem.
+You are a QA automation expert who writes focused a single test case to reproduce software bugs.
+Given an issue description, create a single minimal test that demonstrates the problem.
 
 Requirements:
 - Include all necessary imports and setup code shown in similar tests
 - Must use the example from the issue if provided
+- Focus on the core problem of the bug issue
 - Write minimal number of assertions that fail now but will pass when fixed
-- Keep tests minimal and focused
+- Keep tests minimal and focused, do not write duplicate tests that test the same bug
 - Follow the style and patterns used in the similar test cases
 
 <example>
@@ -31,7 +33,6 @@ Example:
 parser = JsonParser()
 result = parser.parse_array(['[', ']'])  # Raises ValueError!
 ```
-Comments: Also fails with nested empty arrays like [[], []]. This is blocking our ability to parse valid JSON containing empty arrays.
 </bug_report>
 
 <similar_test_cases>
@@ -106,14 +107,6 @@ def test_empty_array_parsing(parser):
     tokens = ['[', ']']
     result = parser.parse_array(tokens)
     assert result == []
-        
-def test_nested_empty_arrays(parser):
-    """Test parsing nested empty arrays.
-    Ensures proper handling of multiple nested empty arrays.
-    """
-    tokens = ['[', '[', ']', ',', '[', ']', ']']
-    result = parser.parse_array(tokens)
-    assert result == [[], []]
 </test_code>
 </example>
 
@@ -151,7 +144,8 @@ as the similar tests to demonstrate the reported bug.
 
   def __call__(self, state: BugReproductionState):
     message_history = [self.system_prompt] + state["bug_reproducing_write_messages"]
-    response = self.model_with_tools.invoke(message_history)
+    truncated_message_history = truncate_messages(message_history)
+    response = self.model_with_tools.invoke(truncated_message_history)
 
     self._logger.debug(f"BugReproducingWriteNode response:\n{response}")
     return {"bug_reproducing_write_messages": [response]}

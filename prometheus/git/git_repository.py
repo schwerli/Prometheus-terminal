@@ -108,7 +108,7 @@ class GitRepository:
     self.repo.git.add("-A")
     if excluded_files:
       self.repo.git.reset(excluded_files)
-    diff = self.repo.git.diff("--cached", "--no-prefix")
+    diff = self.repo.git.diff("--no-prefix")
     if diff and not diff.endswith("\n"):
       diff += "\n"
     self.repo.git.reset()

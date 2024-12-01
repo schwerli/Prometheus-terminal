@@ -152,13 +152,13 @@ class KnowledgeGraph:
       # The file is a file that file_graph_builder supports, it means that we can
       # build a knowledge graph over it.
       if self._file_graph_builder.supports_file(file):
-        self._logger.info(f"Processing file {file.name}")
+        self._logger.info(f"Processing file {file}")
         try:
           next_node_id, kg_nodes, kg_edges = self._file_graph_builder.build_file_graph(
             kg_file_path_node, file, self._next_node_id
           )
         except UnicodeDecodeError:
-          self._logger.warning(f"UnicodeDecodeError when processing {file.name}")
+          self._logger.warning(f"UnicodeDecodeError when processing {file}")
           continue
         self._next_node_id = next_node_id
         self._knowledge_graph_nodes.extend(kg_nodes)

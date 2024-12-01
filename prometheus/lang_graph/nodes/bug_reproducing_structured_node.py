@@ -14,7 +14,7 @@ class BugReproducingStructuredOutput(BaseModel):
     description="True ONLY if test fails as described in the issue and uses provided examples if any exist"
   )
   reproduced_bug_failure_log: str = Field(
-    description="Explanation of why the test didn't properly reproduce the bug (if test passes, has different error, doesn't use issue examples, etc). Empty if bug was reproduced correctly"
+    description="Complete test execution log. If test passes, include explanation that test should fail to demonstrate the bug"
   )
   reproduced_bug_commands: Sequence[str] = Field(
     description="A list of commands run to the single file to reproduce the bug"
@@ -34,12 +34,13 @@ For reproduced_bug to be True, the test MUST:
 3. Use the exact examples from the issue if any were provided
 4. Demonstrate the same underlying problem
 
-Set reproduced_bug_failure_log when the test:
-- Passes (explain that passing means bug isn't detected)
-- Fails differently than described (explain how error differs)
-- Doesn't use provided examples (explain what example should be used)
-- Tests wrong behavior (explain what behavior should be tested)
-- Has any other issues (explain the problem)
+Set reproduced_bug_failure_log to contain:
+- The complete test execution output/log
+- For passing tests: Explanation that test passed but should fail to demonstrate the unfixed bug
+- For wrong failures: Full error log and explanation of how the error differs from what's described
+- For wrong examples: Full error log and explanation of which example from the issue should be used
+- For wrong behavior: Full error log and explanation of what behavior should be tested instead
+- For any other issues: Full error log and detailed explanation of the problem
 
 Example 1 - Correct Reproduction:
 ```
@@ -59,7 +60,7 @@ Result: Test failed with "Cannot read property 'length' of undefined"
 Output:
 {
     "reproduced_bug": true,
-    "reproduced_bug_failure_log": "",
+    "reproduced_bug_failure_log": "FAILED tests/test_array.py::test_empty_array_pop - Cannot read property 'length' of undefined",
     "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 ```
@@ -82,7 +83,7 @@ Result: Test failed with "IndexError: pop from empty list"
 Output:
 {
     "reproduced_bug": false,
-    "reproduced_bug_failure_log": "Test fails with IndexError but issue describes 'Cannot read property length' error. Test needs to verify the specific error message reported in the bug.",
+    "reproduced_bug_failure_log": "FAILED tests/test_array.py::test_empty_array_pop - IndexError: pop from empty list\\n\\nTest fails with IndexError but issue describes 'Cannot read property length' error. Test needs to verify the specific error message reported in the bug.",
     "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 ```
@@ -105,7 +106,7 @@ Result: Test passed
 Output:
 {
     "reproduced_bug": false,
-    "reproduced_bug_failure_log": "Test passes and doesn't use the empty array example from the issue. Test should verify pop() behavior on an empty array as shown in the example.",
+    "reproduced_bug_failure_log": "PASSED tests/test_array.py::test_array_pop\\n\\nTest passes but should fail since the bug is not fixed. Test should verify pop() behavior on an empty array as shown in the issue example. Current test uses [1,2,3] array which doesn't demonstrate the reported bug.",
     "reproduced_bug_commands": ["pytest tests/test_array.py"]
 }
 """.replace("{", "{{").replace("}", "}}")

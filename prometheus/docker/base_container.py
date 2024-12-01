@@ -23,7 +23,7 @@ class BaseContainer(ABC):
   workdir: str = "/app"
   container: docker.models.containers.Container
   project_path: Path
-  timeout: int = 60
+  timeout: int = 120
   logger: logging.Logger
 
   def __init__(self, project_path: Path):
@@ -143,12 +143,20 @@ class BaseContainer(ABC):
     Returns:
         str: Output of the command as a string.
     """
-    timeout_msg = f"{command} timeout after {self.timeout} seconds"
+    timeout_msg = f"""
+*******************************************************************************
+{command} timeout after {self.timeout} seconds
+*******************************************************************************
+"""
     timeout_command = f"timeout -k 5 {self.timeout}s {command}"
-    command = f'/bin/bash -l -c "{timeout_command} || echo "{timeout_msg}""'
+    command = f'/bin/bash -l -c "{timeout_command}"'
     self.logger.debug(f"Running command in container: {command}")
     exec_result = self.container.exec_run(command, workdir=self.workdir)
     exec_result_str = exec_result.output.decode("utf-8")
+
+    if exec_result.exit_code in (124, 137):
+      exec_result_str += timeout_msg
+
     self.logger.debug(f"Command output:\n{exec_result_str}")
     return exec_result_str
 

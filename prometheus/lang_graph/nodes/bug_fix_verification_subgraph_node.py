@@ -31,7 +31,10 @@ class BugFixVerificationSubgraphNode:
       state["reproduced_bug_file"], state["reproduced_bug_commands"]
     )
 
-    self._logger.info(f"reproducing_test_fail_log: {output_state['reproducing_test_fail_log']}")
+    self._logger.info(
+      f"Passing bug reproducing test: {not bool(output_state['reproducing_test_fail_log'])}"
+    )
+    self._logger.debug(f"reproducing_test_fail_log: {output_state['reproducing_test_fail_log']}")
 
     return {
       "reproducing_test_fail_log": output_state["reproducing_test_fail_log"],

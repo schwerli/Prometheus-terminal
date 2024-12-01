@@ -7,6 +7,7 @@ issue handling, and conversation management.
 """
 
 import logging
+import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
@@ -119,7 +120,7 @@ class ServiceCoordinator:
         )
       return issue_response, patch, remote_branch_name
     except Exception as e:
-      logger.error(f"Error in answer_issue: {str(e)}")
+      logger.error(f"Error in answer_issue: {str(e)}\n{traceback.format_exc()}")
     finally:
       logger.removeHandler(file_handler)
       file_handler.close()
