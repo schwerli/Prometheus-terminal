@@ -24,7 +24,7 @@ from prometheus.lang_graph.nodes.issue_bug_context_message_node import IssueBugC
 from prometheus.lang_graph.nodes.issue_bug_context_refine_node import IssueBugContextRefineNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNode
-from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
+from prometheus.lang_graph.subgraphs.issue_reproduced_bug_state import IssueReproducedBugState
 
 
 class IssueReproducedBugSubgraph:
@@ -74,7 +74,7 @@ class IssueReproducedBugSubgraph:
 
     issue_bug_context_refine_node = IssueBugContextRefineNode(model)
 
-    workflow = StateGraph(IssueBugState)
+    workflow = StateGraph(IssueReproducedBugState)
 
     workflow.add_node("issue_bug_context_message_node", issue_bug_context_message_node)
     workflow.add_node("context_provider_node", context_provider_node)
@@ -169,7 +169,8 @@ class IssueReproducedBugSubgraph:
     output_state = self.subgraph.invoke(input_state, config)
     return {
       "edit_patch": output_state["edit_patch"],
-      "passed_reproducing_test": True,
-      "passed_build": True,
-      "passed_existing_test": True,
+      "exist_build": output_state["exist_build"],
+      "build_fail_log": output_state["build_fail_log"],
+      "exist_test": output_state["exist_test"],
+      "existing_test_fail_log": output_state["existing_test_fail_log"],
     }

@@ -1,6 +1,7 @@
 import logging
 
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import SystemMessage
 
 from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 from prometheus.utils.lang_graph_util import truncate_messages
@@ -33,6 +34,7 @@ Communicate in a professional, direct manner focused on technical accuracy and p
 """
 
   def __init__(self, model: BaseChatModel):
+    self.system_prompt = SystemMessage(self.SYS_PROMPT)
     self.model = model
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_analyzer_node")
 

@@ -43,7 +43,7 @@ class IssueReproducedBugSubgraphNode:
     )
 
   def __call__(self, state: Dict):
-    self._logger.info("Enter issue_bug_reproduction_subgraph_node")
+    self._logger.info("Enter issue_reproduced_bug_subgraph_node")
     try:
       output_state = self.issue_reproduced_bug_subgraph.invoke(
         state["issue_title"],
@@ -58,14 +58,16 @@ class IssueReproducedBugSubgraphNode:
       self._logger.info("Recursion limit reached")
       return {
         "edit_patch": "",
-        "passed_reproducing_test": False,
-        "passed_build": False,
-        "passed_existing_test": False,
+        "exist_build": False,
+        "build_fail_log": "",
+        "exist_test": False,
+        "existing_test_fail_log": "",
       }
 
     return {
       "edit_patch": output_state["edit_patch"],
-      "passed_reproducing_test": output_state["passed_reproducing_test"],
-      "passed_build": output_state["passed_build"],
-      "passed_existing_test": output_state["passed_existing_test"],
+      "exist_build": output_state["exist_build"],
+      "build_fail_log": output_state["build_fail_log"],
+      "exist_test": output_state["exist_test"],
+      "existing_test_fail_log": output_state["existing_test_fail_log"],
     }

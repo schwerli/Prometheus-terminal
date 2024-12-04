@@ -79,8 +79,10 @@ class IssueBugSubgraph:
     workflow.add_conditional_edges(
       "bug_reproduction_subgraph_node",
       lambda state: state["reproduced_bug"],
-      {True: issue_reproduced_bug_subgraph_node, False: issue_not_reproduced_bug_subgraph_node},
+      {True: "issue_reproduced_bug_subgraph_node", False: "issue_not_reproduced_bug_subgraph_node"},
     )
+    workflow.add_edge("issue_reproduced_bug_subgraph_node", "issue_bug_responder_node")
+    workflow.add_edge("issue_not_reproduced_bug_subgraph_node", "issue_bug_responder_node")
     workflow.add_edge("issue_bug_responder_node", END)
 
     self.subgraph = workflow.compile(checkpointer=checkpointer)

@@ -20,9 +20,9 @@ You are a test file manager. Your task is to save the provided bug reproducing c
 3. After creating the file, return its relative path
 
 Tools available:
-- create_file: Create a new file with specified content
+- create_file: Create a new SINGLE file with specified content
 
-You must first call the create_file tool with the appropriate path and content, then respond with the created file's relative path.
+You can only call the create_file tool ONCE with the appropriate path and content, then respond with the created file's relative path.
 """
 
   HUMAN_PROMPT = """\
