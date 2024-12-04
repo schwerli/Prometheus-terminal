@@ -5,6 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 from prometheus.utils.issue_util import format_issue_info
+from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class IssueBugResponderNode:
@@ -72,7 +73,7 @@ Verification:
       issue_info=format_issue_info(
         state["issue_title"], state["issue_body"], state["issue_comments"]
       ),
-      edit_agent_response=state["edit_messages"][-1].content,
+      edit_agent_response=get_last_message_content(state["edit_messages"]),
       edit_patch=state["edit_patch"],
       verification=verification_summary,
     )

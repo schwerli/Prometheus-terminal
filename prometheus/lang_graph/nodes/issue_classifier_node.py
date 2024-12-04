@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from prometheus.lang_graph.graphs.issue_state import IssueType
 from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClassificationState
 from prometheus.utils.issue_util import format_issue_info
+from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class IssueClassifierOutput(BaseModel):
@@ -124,7 +125,7 @@ Analyze the provided issue and respond with a JSON object containing only the is
       {format_issue_info(state['issue_title'], state['issue_body'], state['issue_comments'])}
 
       Codebase context:
-      {state['context_provider_messages'][-1].content}
+      {get_last_message_content(state['context_provider_messages'])}
     """
     return context_info
 

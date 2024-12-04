@@ -4,46 +4,33 @@ from langchain_core.messages import HumanMessage
 
 from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 from prometheus.utils.issue_util import format_issue_info
+from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class EditMessageNode:
   FIRST_HUMAN_PROMPT = """\
-You are a specialized bug fixing agent focused on analyzing bug reports and implementing precise fixes while preserving intended functionality. You inherit precise code editing capabilities from your parent class.
-
-CRITICAL BUG FIXING PRINCIPLES:
-1. DO NOT modify test files - they define expected behavior
-2. Each bug fix should target exactly one issue
-3. Preserve all existing correct functionality
-4. Changes must not introduce new bugs
-
-BUG FIXING PROCESS:
-1. UNDERSTAND THE BUG
-   - Read the bug reproducing file if it is provided
-   - Identify expected vs actual behavior
-   - Consider edge cases that might be affected
-
-2. ROOT CAUSE ANALYSIS
-   - Trace through the code execution path
-   - Identify where behavior diverges from expected
-   - Look for related code that might be affected
-
-3. FIX DESIGN
-   - Consider multiple potential solutions
-   - Choose the most robust and minimal fix
-   - Ensure fix handles all edge cases
-   - Verify fix preserves existing behavior
-
 {issue_info}
 
 Bug Context:
 {bug_context}
+
+Bug analyzer agent has analyzed the issue and provided instruction on how to fix it:
+{bug_analyzer_message}
+
+Please implement these changes precisely, following the exact specifications from the analyzer.
 """
 
   FOLLOWUP_HUMAN_PROMPT = """\
 The edit that you generated following error:
 {edit_error}
 
-Now think about what went wrong and try to fix the bug again.
+{additional_context}
+
+Bug analyzer agent has analyzed the issue and provided instruction on how to fix it:
+{bug_analyzer_message}
+
+Please implement these revised changes carefully, ensuring you address the
+specific issues that caused the previous error.
 """
 
   def __init__(self):
@@ -60,10 +47,18 @@ Now think about what went wrong and try to fix the bug again.
     elif "existing_test_fail_log" in state and state["existing_test_fail_log"]:
       edit_error = f"Your failed to existing test cases:\n{state['existing_test_fail_log']}"
 
+    additional_context = ""
+    if "refined_query" in state and state["refined_query"]:
+      additional_context = "Additional context that might be useful:\n" + get_last_message_content(
+        state["context_provider_messages"]
+      )
+
     if edit_error:
       return HumanMessage(
         self.FOLLOWUP_HUMAN_PROMPT.format(
           edit_error=edit_error,
+          additional_context=additional_context,
+          bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
         )
       )
 
@@ -72,7 +67,8 @@ Now think about what went wrong and try to fix the bug again.
         issue_info=format_issue_info(
           state["issue_title"], state["issue_body"], state["issue_comments"]
         ),
-        bug_context=state["context_provider_messages"][-1].content,
+        bug_context=get_last_message_content(state["context_provider_messages"]),
+        bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
       )
     )
 

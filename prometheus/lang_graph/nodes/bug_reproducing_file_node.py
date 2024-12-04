@@ -8,6 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.tools import file_operation
+from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class BugReproducingFileNode:
@@ -77,7 +78,7 @@ Current project structure:
   def format_human_message(self, state: BugReproductionState) -> HumanMessage:
     return HumanMessage(
       self.HUMAN_PROMPT.format(
-        bug_reproducing_code=state["bug_reproducing_write_messages"][-1].content,
+        bug_reproducing_code=get_last_message_content(state["bug_reproducing_write_messages"]),
         project_structure=self.kg.get_file_tree(),
       )
     )

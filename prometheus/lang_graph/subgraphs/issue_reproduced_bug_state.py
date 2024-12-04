@@ -4,14 +4,13 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 
-class IssueBugState(TypedDict):
+class IssueReproducedBugState(TypedDict):
   issue_title: str
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
   run_build: bool
   run_existing_test: bool
 
-  reproduced_bug: bool
   reproduced_bug_file: str
   reproduced_bug_commands: Sequence[str]
 
@@ -32,5 +31,3 @@ class IssueBugState(TypedDict):
   existing_test_fail_log: str
 
   refined_query: str
-
-  issue_response: str
