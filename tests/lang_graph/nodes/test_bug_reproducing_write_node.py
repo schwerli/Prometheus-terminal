@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
+from langchain_core.messages import HumanMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.bug_reproducing_write_node import BugReproducingWriteNode
@@ -25,7 +26,7 @@ def test_state():
       "bug_context": "Context of the bug",
       "reproduced_bug_file": "test/file.py",
       "reproduced_bug_failure_log": "Test failure log",
-      "bug_reproducing_write_messages": [],
+      "bug_reproducing_write_messages": [HumanMessage("assert x == 10")],
     }
   )
 
