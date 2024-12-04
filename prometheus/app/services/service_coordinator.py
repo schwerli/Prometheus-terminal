@@ -7,6 +7,8 @@ issue handling, and conversation management.
 """
 
 import logging
+import traceback
+from datetime import datetime
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
@@ -62,8 +64,8 @@ class ServiceCoordinator:
     self.max_token_per_neo4j_result = max_token_per_neo4j_result
     self.github_token = github_token
     self.working_directory = working_directory
-    self.answer_and_fix_issue_log_dir = self.working_directory / "answer_and_fix_issue_logs"
-    self.answer_and_fix_issue_log_dir.mkdir(parents=True, exist_ok=True)
+    self.answer_issue_log_dir = self.working_directory / "answer_issue_logs"
+    self.answer_issue_log_dir.mkdir(parents=True, exist_ok=True)
     self._logger = logging.getLogger("prometheus.app.services.service_coordinator")
 
     if self.knowledge_graph_service.get_local_path() != self.repository_service.get_working_dir():
@@ -88,26 +90,40 @@ class ServiceCoordinator:
     test_commands: Optional[Sequence[str]] = None,
     push_to_remote: Optional[bool] = None,
   ):
-    issue_response, patch, reproduced_bug_file = self.issue_service.answer_issue(
-      issue_title,
-      issue_body,
-      issue_comments,
-      issue_type,
-      run_build,
-      run_existing_test,
-      dockerfile_content,
-      image_name,
-      workdir,
-      build_commands,
-      test_commands,
-    )
+    logger = logging.getLogger("prometheus")
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = self.answer_issue_log_dir / f"{timestamp}.log"
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
-    remote_branch_name = None
-    if patch and push_to_remote:
-      remote_branch_name = self.repository_service.push_change_to_remote(
-        f"Fixes #{issue_number}", [reproduced_bug_file]
+    try:
+      issue_response, patch, reproduced_bug_file = self.issue_service.answer_issue(
+        issue_title,
+        issue_body,
+        issue_comments,
+        issue_type,
+        run_build,
+        run_existing_test,
+        dockerfile_content,
+        image_name,
+        workdir,
+        build_commands,
+        test_commands,
       )
-    return issue_response, patch, remote_branch_name
+
+      remote_branch_name = None
+      if patch and push_to_remote:
+        remote_branch_name = self.repository_service.push_change_to_remote(
+          f"Fixes #{issue_number}", [reproduced_bug_file]
+        )
+      return issue_response, patch, remote_branch_name
+    except Exception as e:
+      logger.error(f"Error in answer_issue: {str(e)}\n{traceback.format_exc()}")
+    finally:
+      logger.removeHandler(file_handler)
+      file_handler.close()
 
   def exists_knowledge_graph(self) -> bool:
     return self.knowledge_graph_service.exists()

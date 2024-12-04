@@ -4,6 +4,7 @@ from typing import Mapping, Optional, Sequence
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -41,6 +42,7 @@ class BugReproductionSubgraph:
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
+    self.git_repo = git_repo
     self.thread_id = thread_id
 
     issue_bug_reproduction_context_message_node = IssueBugReproductionContextMessageNode()
@@ -185,10 +187,17 @@ class BugReproductionSubgraph:
       "issue_comments": issue_comments,
     }
 
-    output_state = self.subgraph.invoke(input_state, config)
-
-    return {
-      "reproduced_bug": output_state["reproduced_bug"],
-      "reproduced_bug_file": output_state["reproduced_bug_file"],
-      "reproduced_bug_commands": output_state["reproduced_bug_commands"],
-    }
+    try:
+      output_state = self.subgraph.invoke(input_state, config)
+      return {
+        "reproduced_bug": output_state["reproduced_bug"],
+        "reproduced_bug_file": output_state["reproduced_bug_file"],
+        "reproduced_bug_commands": output_state["reproduced_bug_commands"],
+      }
+    except GraphRecursionError:
+      self.git_repo.reset_repository()
+      return {
+        "reproduced_bug": False,
+        "reproduced_bug_file": "",
+        "reproduced_bug_commands": "",
+      }

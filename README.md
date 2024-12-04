@@ -25,7 +25,7 @@ Now, simply run `docker compose up`, and you can access Promtheus at `http://loc
 
 
 ```
-docker run \
+docker run -d \
   -p 5432:5432 \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=password \
@@ -34,7 +34,7 @@ docker run \
 ```
 
 ```
-docker run \
+docker run -d \
   -p 7474:7474 \
   -p 7687:7687 \
   -e NEO4J_AUTH=neo4j/password \

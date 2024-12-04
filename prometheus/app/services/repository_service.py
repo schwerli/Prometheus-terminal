@@ -36,7 +36,7 @@ class RepositoryService:
     self.git_repo = self._load_existing_git_repo()
 
   def _load_existing_git_repo(self):
-    if self.kg_service.get_local_path():
+    if self.kg_service.get_local_path() and self.kg_service.get_local_path().exists():
       return GitRepository(str(self.kg_service.get_local_path()), None, copy_to_working_dir=False)
     return None
 

@@ -90,8 +90,8 @@ class KnowledgeGraph:
     """
     root_dir = root_dir.absolute()
     gitignore_parser = igittigitt.IgnoreParser()
-    gitignore_parser.add_rule(".git", base_path=root_dir)
-    gitignore_parser.parse_rule_files(base_dir=root_dir)
+    gitignore_parser.parse_rule_files(root_dir)
+    gitignore_parser.add_rule(".git", root_dir)
 
     if https_url is not None:
       metadata_node = MetadataNode(
@@ -125,15 +125,15 @@ class KnowledgeGraph:
 
       # The file is a directory, we create FileNode for all children files.
       if file.is_dir():
-        self._logger.info(f"Processing directory {file.name}")
+        self._logger.info(f"Processing directory {file}")
         for child_file in sorted(file.iterdir()):
           if gitignore_parser.match(child_file):
-            self._logger.info(f"Skipping {file.name} because it is ignored")
+            self._logger.info(f"Skipping {child_file} because it is ignored")
             continue
 
           child_file_node = FileNode(
             basename=child_file.name,
-            relative_path=str(child_file.relative_to(root_dir).as_posix()),
+            relative_path=child_file.relative_to(root_dir).as_posix(),
           )
           kg_child_file_node = KnowledgeGraphNode(self._next_node_id, child_file_node)
           self._next_node_id += 1
@@ -152,13 +152,13 @@ class KnowledgeGraph:
       # The file is a file that file_graph_builder supports, it means that we can
       # build a knowledge graph over it.
       if self._file_graph_builder.supports_file(file):
-        self._logger.info(f"Processing file {file.name}")
+        self._logger.info(f"Processing file {file}")
         try:
           next_node_id, kg_nodes, kg_edges = self._file_graph_builder.build_file_graph(
             kg_file_path_node, file, self._next_node_id
           )
         except UnicodeDecodeError:
-          self._logger.warning(f"UnicodeDecodeError when processing {file.name}")
+          self._logger.warning(f"UnicodeDecodeError when processing {file}")
           continue
         self._next_node_id = next_node_id
         self._knowledge_graph_nodes.extend(kg_nodes)

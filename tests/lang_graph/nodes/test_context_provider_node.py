@@ -43,7 +43,8 @@ def test_context_provider_node_refined_query(neo4j_container_with_kg_fixture):  
   )
 
   test_messages = [
-    AIMessage(content="Previous context about error handling"),
+    AIMessage(content="This code handles file processing"),
+    ToolMessage(content="Found implementation in utils.py", tool_call_id="test_tool_call_1"),
   ]
   test_state = {
     "original_query": "How does the error handling work?",

@@ -16,6 +16,7 @@ from langchain_core.messages import SystemMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.tools import graph_traversal
+from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class ContextProviderNode:
@@ -353,6 +354,7 @@ All ASTNode types: {ast_node_types}
       Dictionary that will update the state with the model's response messages.
     """
     message_history = [self.system_prompt] + state["context_provider_messages"]
-    response = self.model_with_tools.invoke(message_history)
+    truncated_message_history = truncate_messages(message_history)
+    response = self.model_with_tools.invoke(truncated_message_history)
     self._logger.debug(f"ContextProviderNode response:\n{response}")
     return {"context_provider_messages": [response]}
