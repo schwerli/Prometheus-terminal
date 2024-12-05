@@ -1,8 +1,8 @@
 import logging
+from typing import Dict
 
 from langchain_core.messages import HumanMessage
 
-from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 from prometheus.utils.issue_util import format_issue_info
 from prometheus.utils.lang_graph_util import get_last_message_content
 
@@ -36,7 +36,7 @@ specific issues that caused the previous error.
   def __init__(self):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.edit_message_node")
 
-  def format_human_message(self, state: IssueBugState):
+  def format_human_message(self, state: Dict):
     edit_error = ""
     if "reproducing_test_fail_log" in state and state["reproducing_test_fail_log"]:
       edit_error = (
@@ -72,7 +72,7 @@ specific issues that caused the previous error.
       )
     )
 
-  def __call__(self, state: IssueBugState):
+  def __call__(self, state: Dict):
     human_message = self.format_human_message(state)
     self._logger.debug(f"Sending message to EditNode:\n{human_message}")
     return {"edit_messages": [human_message]}

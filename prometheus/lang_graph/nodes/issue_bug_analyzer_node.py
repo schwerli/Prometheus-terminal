@@ -1,9 +1,9 @@
 import logging
+from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import SystemMessage
 
-from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 from prometheus.utils.lang_graph_util import truncate_messages
 
 
@@ -38,7 +38,7 @@ Communicate in a professional, direct manner focused on technical accuracy and p
     self.model = model
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_analyzer_node")
 
-  def __call__(self, state: IssueBugState):
+  def __call__(self, state: Dict):
     message_history = [self.system_prompt] + state["issue_bug_analyzer_messages"]
     truncated_message_history = truncate_messages(message_history)
     response = self.model.invoke(truncated_message_history)

@@ -91,7 +91,7 @@ Important Guidelines:
    - The error is a logic/implementation issue
 4. Focus queries on related code that would help understand/fix the error
 5. Be specific about what code you need and why it would help resolve the error
-"""
+""".replace("{", "{{").replace("}", "}}")
 
   HUMAN_PROMPT = """\
 {issue_info}
