@@ -7,6 +7,7 @@ class IssueBugState(TypedDict):
   issue_comments: Sequence[Mapping[str, str]]
   run_build: bool
   run_existing_test: bool
+  number_of_candidate_patch: int
 
   reproduced_bug: bool
   reproduced_bug_file: str
@@ -14,12 +15,8 @@ class IssueBugState(TypedDict):
 
   edit_patch: str
 
-  reproducing_test_fail_log: str
-
-  exist_build: bool
-  build_fail_log: str
-
-  exist_test: bool
-  existing_test_fail_log: str
+  passed_reproducing_test: bool
+  passed_build: bool
+  passed_existing_test: bool
 
   issue_response: str

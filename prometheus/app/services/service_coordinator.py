@@ -83,6 +83,7 @@ class ServiceCoordinator:
     issue_type: IssueType,
     run_build: bool,
     run_existing_test: bool,
+    number_of_candidate_patch: int,
     dockerfile_content: Optional[str] = None,
     image_name: Optional[str] = None,
     workdir: Optional[str] = None,
@@ -99,28 +100,39 @@ class ServiceCoordinator:
     logger.addHandler(file_handler)
 
     try:
-      issue_response, patch, reproduced_bug_file = self.issue_service.answer_issue(
-        issue_title,
-        issue_body,
-        issue_comments,
-        issue_type,
-        run_build,
-        run_existing_test,
-        dockerfile_content,
-        image_name,
-        workdir,
-        build_commands,
-        test_commands,
+      patch, passed_reproducing_test, passed_build, passed_existing_test, issue_response = (
+        self.issue_service.answer_issue(
+          issue_title,
+          issue_body,
+          issue_comments,
+          issue_type,
+          run_build,
+          run_existing_test,
+          number_of_candidate_patch,
+          dockerfile_content,
+          image_name,
+          workdir,
+          build_commands,
+          test_commands,
+        )
       )
 
       remote_branch_name = None
       if patch and push_to_remote:
         remote_branch_name = self.repository_service.push_change_to_remote(
-          f"Fixes #{issue_number}", [reproduced_bug_file]
+          f"Fixes #{issue_number}", patch
         )
-      return issue_response, patch, remote_branch_name
+      return (
+        remote_branch_name,
+        patch,
+        passed_reproducing_test,
+        passed_build,
+        passed_existing_test,
+        issue_response,
+      )
     except Exception as e:
       logger.error(f"Error in answer_issue: {str(e)}\n{traceback.format_exc()}")
+      return None, None, False, False, False, None
     finally:
       logger.removeHandler(file_handler)
       file_handler.close()

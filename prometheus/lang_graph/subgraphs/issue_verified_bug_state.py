@@ -4,7 +4,7 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 
-class IssueReproducedBugState(TypedDict):
+class IssueVerifiedBugState(TypedDict):
   issue_title: str
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]

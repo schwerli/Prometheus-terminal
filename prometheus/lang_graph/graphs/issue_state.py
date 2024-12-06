@@ -18,9 +18,12 @@ class IssueState(TypedDict):
   issue_type: IssueType
   run_build: bool
   run_existing_test: bool
+  number_of_candidate_patch: int
 
-  reproduced_bug_file: str
+  edit_patch: str
 
-  patch: str
+  passed_reproducing_test: bool
+  passed_build: bool
+  passed_existing_test: bool
 
   issue_response: str

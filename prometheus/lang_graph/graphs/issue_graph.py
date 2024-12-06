@@ -30,6 +30,7 @@ class IssueGraph:
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
+    self.git_repo = git_repo
     self.thread_id = thread_id
 
     issue_type_branch_node = NoopNode()
@@ -89,6 +90,7 @@ class IssueGraph:
     issue_type: IssueType,
     run_build: bool,
     run_existing_test: bool,
+    number_of_candidate_patch: int,
   ):
     config = None
     if self.thread_id:
@@ -101,8 +103,11 @@ class IssueGraph:
       "issue_type": issue_type,
       "run_build": run_build,
       "run_existing_test": run_existing_test,
+      "number_of_candidate_patch": number_of_candidate_patch,
     }
 
     output_state = self.graph.invoke(input_state, config)
+
+    self.git_repo.reset_repository()
 
     return output_state

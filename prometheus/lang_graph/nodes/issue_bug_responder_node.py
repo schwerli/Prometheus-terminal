@@ -54,13 +54,13 @@ Verification:
     verification_messages = []
 
     # We only report successful verifications that were performed
-    if state["reproduced_bug"]:
-      verification_messages.append("✓ The bug reproducing test is now passing")
+    if state["passed_reproducing_test"]:
+      verification_messages.append("✓ The bug reproducing test passed")
 
-    if state["run_build"] and state["exist_build"]:
+    if state["passed_build"]:
       verification_messages.append("✓ Build passes successfully")
 
-    if state["run_existing_test"] and state["exist_test"]:
+    if state["passed_existing_test"]:
       verification_messages.append("✓ All existing tests pass successfully")
 
     verification_summary = "\n".join(verification_messages)

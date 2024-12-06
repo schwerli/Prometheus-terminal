@@ -9,10 +9,10 @@ from langgraph.errors import GraphRecursionError
 from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.subgraphs.issue_reproduced_bug_subgraph import IssueReproducedBugSubgraph
+from prometheus.lang_graph.subgraphs.issue_verified_bug_subgraph import IssueVerifiedBugSubgraph
 
 
-class IssueReproducedBugSubgraphNode:
+class IssueVerifiedBugSubgraphNode:
   def __init__(
     self,
     model: BaseChatModel,
@@ -27,9 +27,9 @@ class IssueReproducedBugSubgraphNode:
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger(
-      "prometheus.lang_graph.nodes.issue_reproduced_bug_subgraph_node"
+      "prometheus.lang_graph.nodes.issue_not_verified_bug_subgraph_node"
     )
-    self.issue_reproduced_bug_subgraph = IssueReproducedBugSubgraph(
+    self.issue_reproduced_bug_subgraph = IssueVerifiedBugSubgraph(
       model=model,
       container=container,
       kg=kg,
@@ -43,7 +43,7 @@ class IssueReproducedBugSubgraphNode:
     )
 
   def __call__(self, state: Dict):
-    self._logger.info("Enter issue_reproduced_bug_subgraph_node")
+    self._logger.info("Enter issue_verified_bug_subgraph_node")
     try:
       output_state = self.issue_reproduced_bug_subgraph.invoke(
         state["issue_title"],
@@ -58,16 +58,15 @@ class IssueReproducedBugSubgraphNode:
       self._logger.info("Recursion limit reached")
       return {
         "edit_patch": "",
-        "exist_build": False,
-        "build_fail_log": "",
-        "exist_test": False,
-        "existing_test_fail_log": "",
+        "passed_reproducing_test": False,
+        "passed_build": False,
+        "passed_existing_test": False,
       }
 
     return {
       "edit_patch": output_state["edit_patch"],
-      "exist_build": output_state["exist_build"],
-      "build_fail_log": output_state["build_fail_log"],
-      "exist_test": output_state["exist_test"],
-      "existing_test_fail_log": output_state["existing_test_fail_log"],
+      "passed_reproducing_test": not bool(output_state["reproducing_test_fail_log"]),
+      "passed_build": state["run_build"] and not output_state["build_fail_log"],
+      "passed_existing_test": state["run_existing_test"]
+      and not output_state["existing_test_fail_log"],
     }

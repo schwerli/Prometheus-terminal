@@ -7,37 +7,28 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node import (
-  BugFixVerificationSubgraphNode,
-)
-from prometheus.lang_graph.nodes.build_and_test_subgraph_node import BuildAndTestSubgraphNode
 from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
 from prometheus.lang_graph.nodes.edit_message_node import EditMessageNode
 from prometheus.lang_graph.nodes.edit_node import EditNode
+from prometheus.lang_graph.nodes.final_patch_selection_node import FinalPatchSelectionNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
+from prometheus.lang_graph.nodes.git_reset_node import GitResetNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_message_node import IssueBugAnalyzerMessageNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_node import IssueBugAnalyzerNode
 from prometheus.lang_graph.nodes.issue_bug_context_message_node import IssueBugContextMessageNode
-from prometheus.lang_graph.nodes.issue_bug_context_refine_node import IssueBugContextRefineNode
-from prometheus.lang_graph.nodes.noop_node import NoopNode
-from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNode
-from prometheus.lang_graph.subgraphs.issue_reproduced_bug_state import IssueReproducedBugState
+from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
 
 
-class IssueReproducedBugSubgraph:
+class IssueNotVerifiedBugSubgraph:
   def __init__(
     self,
     model: BaseChatModel,
-    container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
-    build_commands: Optional[Sequence[str]] = None,
-    test_commands: Optional[Sequence[str]] = None,
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
@@ -61,20 +52,16 @@ class IssueReproducedBugSubgraph:
       name="edit_tools",
       messages_key="edit_messages",
     )
-    git_diff_node = GitDiffNode(git_repo, "edit_patch", "reproduced_bug_file")
-    update_container_node = UpdateContainerNode(container, git_repo)
+    git_diff_node = GitDiffNode(git_repo, "edit_patches")
 
-    bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(
-      model, container, thread_id, checkpointer
-    )
-    build_or_test_branch_node = NoopNode()
-    build_and_test_subgraph_node = BuildAndTestSubgraphNode(
-      container, model, kg, build_commands, test_commands, thread_id, checkpointer
-    )
+    git_reset_node = GitResetNode(git_repo)
+    reset_context_provider_messages_node = ResetMessagesNode("context_provider_messages")
+    reset_issue_bug_analyzer_messages_node = ResetMessagesNode("issue_bug_analyzer_messages")
+    reset_edit_messages_node = ResetMessagesNode("edit_messages")
 
-    issue_bug_context_refine_node = IssueBugContextRefineNode(model)
+    final_patch_selection_node = FinalPatchSelectionNode(model)
 
-    workflow = StateGraph(IssueReproducedBugState)
+    workflow = StateGraph(IssueNotVerifiedBugSubgraph)
 
     workflow.add_node("issue_bug_context_message_node", issue_bug_context_message_node)
     workflow.add_node("context_provider_node", context_provider_node)
@@ -87,13 +74,15 @@ class IssueReproducedBugSubgraph:
     workflow.add_node("edit_node", edit_node)
     workflow.add_node("edit_tools", edit_tools)
     workflow.add_node("git_diff_node", git_diff_node)
-    workflow.add_node("update_container_node", update_container_node)
 
-    workflow.add_node("bug_fix_verification_subgraph_node", bug_fix_verification_subgraph_node)
-    workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
-    workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
+    workflow.add_node("git_reset_node", git_reset_node)
+    workflow.add_node("reset_context_provider_messages_node", reset_context_provider_messages_node)
+    workflow.add_node(
+      "reset_issue_bug_analyzer_messages_node", reset_issue_bug_analyzer_messages_node
+    )
+    workflow.add_node("reset_edit_messages_node", reset_edit_messages_node)
 
-    workflow.add_node("issue_bug_context_refine_node", issue_bug_context_refine_node)
+    workflow.add_node("final_patch_selection_node", final_patch_selection_node)
 
     workflow.set_entry_point("issue_bug_context_message_node")
     workflow.add_edge("issue_bug_context_message_node", "context_provider_node")
@@ -114,30 +103,21 @@ class IssueReproducedBugSubgraph:
       {"tools": "edit_tools", END: "git_diff_node"},
     )
     workflow.add_edge("edit_tools", "edit_node")
-    workflow.add_edge("git_diff_node", "update_container_node")
-    workflow.add_edge("update_container_node", "bug_fix_verification_subgraph_node")
 
     workflow.add_conditional_edges(
-      "bug_fix_verification_subgraph_node",
-      lambda state: bool(state["reproducing_test_fail_log"]),
-      {True: "issue_bug_context_refine_node", False: "build_or_test_branch_node"},
-    )
-    workflow.add_conditional_edges(
-      "build_or_test_branch_node",
-      lambda state: state["run_build"] or state["run_existing_test"],
-      {True: "build_and_test_subgraph_node", False: END},
-    )
-    workflow.add_conditional_edges(
-      "build_and_test_subgraph_node",
-      lambda state: bool(state["build_fail_log"]) or bool(state["existing_test_fail_log"]),
-      {True: "issue_bug_context_refine_node", False: END},
+      "git_diff_node",
+      lambda state: len(state["edit_patches"]) < state["number_of_candidate_patch"],
+      {True: "git_reset_node", False: "final_patch_selection_node"},
     )
 
-    workflow.add_conditional_edges(
-      "issue_bug_context_refine_node",
-      lambda state: bool(state["refined_query"]),
-      {True: "context_provider_node", False: "issue_bug_analyzer_message_node"},
+    workflow.add_edge("git_reset_node", "reset_context_provider_messages_node")
+    workflow.add_edge(
+      "reset_context_provider_messages_node", "reset_issue_bug_analyzer_messages_node"
     )
+    workflow.add_edge("reset_issue_bug_analyzer_messages_node", "reset_edit_messages_node")
+    workflow.add_edge("reset_edit_messages_node", "issue_bug_context_message_node")
+
+    workflow.add_edge("final_patch_selection_node", END)
 
     self.subgraph = workflow.compile(checkpointer=checkpointer)
 
@@ -146,11 +126,8 @@ class IssueReproducedBugSubgraph:
     issue_title: str,
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
-    run_build: bool,
-    run_existing_test: bool,
-    reproduced_bug_file: str,
-    reproduced_bug_commands: Sequence[str],
-    recursion_limit: int = 150,
+    number_of_candidate_patch: int,
+    recursion_limit: int = 999,
   ):
     config = {"recursion_limit": recursion_limit}
     if self.thread_id:
@@ -160,17 +137,10 @@ class IssueReproducedBugSubgraph:
       "issue_title": issue_title,
       "issue_body": issue_body,
       "issue_comments": issue_comments,
-      "run_build": run_build,
-      "run_existing_test": run_existing_test,
-      "reproduced_bug_file": reproduced_bug_file,
-      "reproduced_bug_commands": reproduced_bug_commands,
+      "number_of_candidate_patch": number_of_candidate_patch,
     }
 
     output_state = self.subgraph.invoke(input_state, config)
     return {
-      "edit_patch": output_state["edit_patch"],
-      "exist_build": output_state["exist_build"],
-      "build_fail_log": output_state["build_fail_log"],
-      "exist_test": output_state["exist_test"],
-      "existing_test_fail_log": output_state["existing_test_fail_log"],
+      "final_patch": output_state["final_patch"],
     }

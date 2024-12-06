@@ -14,13 +14,14 @@ from prometheus.utils.lang_graph_util import truncate_messages
 class BugReproducingWriteNode:
   SYS_PROMPT = '''\
 You are a QA automation expert who writes focused a single test case to reproduce software bugs.
-Given an issue description, create a single minimal test that demonstrates the problem.
+Given an issue description, create a single minimal test with MINIMAL number of assertions
+that demonstrates the problem.
 
 Requirements:
 - Include all necessary imports and setup code shown in similar tests
 - Must use the example from the issue if provided
 - Focus on the core problem of the bug issue
-- Write minimal number of assertions that fail now but will pass when fixed
+- Write MINIMAL number of assertions that fail now but will pass when fixed
 - Keep tests minimal and focused, do not write duplicate tests that test the same bug
 - Follow the style and patterns used in the similar test cases
 
@@ -109,9 +110,6 @@ def test_empty_array_parsing(parser):
     assert result == []
 </test_code>
 </example>
-
-Study the bug report and similar test cases. Then write a minimal test case that follows the same patterns and style 
-as the similar tests to demonstrate the reported bug.
 '''
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
