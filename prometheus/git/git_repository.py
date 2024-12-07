@@ -111,7 +111,7 @@ class GitRepository:
     self.repo.git.add("-A")
     if excluded_files:
       self.repo.git.reset(excluded_files)
-    diff = self.repo.git.diff("--no-prefix", "--staged")
+    diff = self.repo.git.diff("--staged")
     if diff and not diff.endswith("\n"):
       diff += "\n"
     self.repo.git.reset()
@@ -147,7 +147,7 @@ class GitRepository:
       new_branch = self.repo.create_head(branch_name)
       new_branch.checkout()
 
-      self.repo.git.apply("-p0", tmp_file.name)
+      self.repo.git.apply(tmp_file.name)
       self.repo.git.add(A=True)
       self.repo.index.commit(commit_message)
       self.repo.git.push("--set-upstream", "origin", branch_name)
