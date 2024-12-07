@@ -123,7 +123,6 @@ class GitRepository:
   def reset_repository(self):
     self.repo.git.reset("--hard")
     self.repo.git.clean("-fd")
-    self.switch_branch(self.default_branch)
 
   def remove_repository(self):
     if self.repo is not None:
@@ -153,3 +152,4 @@ class GitRepository:
       self.repo.index.commit(commit_message)
       self.repo.git.push("--set-upstream", "origin", branch_name)
       self.reset_repository()
+      self.switch_branch(self.default_branch)

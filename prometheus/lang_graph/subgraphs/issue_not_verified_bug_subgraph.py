@@ -19,6 +19,7 @@ from prometheus.lang_graph.nodes.issue_bug_analyzer_message_node import IssueBug
 from prometheus.lang_graph.nodes.issue_bug_analyzer_node import IssueBugAnalyzerNode
 from prometheus.lang_graph.nodes.issue_bug_context_message_node import IssueBugContextMessageNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
+from prometheus.lang_graph.subgraphs.issue_not_verified_bug_state import IssueNotVerifiedBugState
 
 
 class IssueNotVerifiedBugSubgraph:
@@ -52,7 +53,7 @@ class IssueNotVerifiedBugSubgraph:
       name="edit_tools",
       messages_key="edit_messages",
     )
-    git_diff_node = GitDiffNode(git_repo, "edit_patches")
+    git_diff_node = GitDiffNode(git_repo, "edit_patches", return_list=True)
 
     git_reset_node = GitResetNode(git_repo)
     reset_context_provider_messages_node = ResetMessagesNode("context_provider_messages")
@@ -61,7 +62,7 @@ class IssueNotVerifiedBugSubgraph:
 
     final_patch_selection_node = FinalPatchSelectionNode(model)
 
-    workflow = StateGraph(IssueNotVerifiedBugSubgraph)
+    workflow = StateGraph(IssueNotVerifiedBugState)
 
     workflow.add_node("issue_bug_context_message_node", issue_bug_context_message_node)
     workflow.add_node("context_provider_node", context_provider_node)

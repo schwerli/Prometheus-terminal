@@ -121,6 +121,7 @@ I have generated the following patches, now please select the best patch among t
 """
 
   def __init__(self, model: BaseChatModel, max_retries: int = 2):
+    self.max_retries = max_retries
     prompt = ChatPromptTemplate.from_messages(
       [("system", self.SYS_PROMPT), ("human", "{human_prompt}")]
     )
@@ -133,7 +134,7 @@ I have generated the following patches, now please select the best patch among t
     for index, patch in enumerate(state["edit_patches"]):
       patches += f"Patch at index {index}:\n"
       patches += f"{patch}\n\n"
-    patches += f"You must select a patch with index from 0 to {len(state['edit_patches']-1)}, and provide your reasoning."
+    patches += f"You must select a patch with index from 0 to {len(state['edit_patches'])-1}, and provide your reasoning."
 
     return self.HUMAN_PROMPT.format(
       issue_info=format_issue_info(

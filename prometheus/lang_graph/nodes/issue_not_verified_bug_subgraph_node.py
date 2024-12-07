@@ -24,9 +24,9 @@ class IssueNotVerifiedBugSubgraphNode:
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger(
-      "prometheus.lang_graph.nodes.issue_reproduced_bug_subgraph_node"
+      "prometheus.lang_graph.nodes.issue_not_verified_bug_subgraph_node"
     )
-    self.issue_reproduced_bug_subgraph = IssueNotVerifiedBugSubgraph(
+    self.issue_not_verified_bug_subgraph = IssueNotVerifiedBugSubgraph(
       model=model,
       kg=kg,
       git_repo=git_repo,
@@ -37,9 +37,9 @@ class IssueNotVerifiedBugSubgraphNode:
     )
 
   def __call__(self, state: Dict):
-    self._logger.info("Enter issue_not_verified_bug_subgraph_node")
+    self._logger.info("Enter IssueNotVerifiedBugSubgraphNode")
 
-    output_state = self.issue_reproduced_bug_subgraph.invoke(
+    output_state = self.issue_not_verified_bug_subgraph.invoke(
       state["issue_title"],
       state["issue_body"],
       state["issue_comments"],

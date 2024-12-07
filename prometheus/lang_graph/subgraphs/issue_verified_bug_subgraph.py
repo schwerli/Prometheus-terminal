@@ -170,8 +170,8 @@ class IssueVerifiedBugSubgraph:
     return {
       "edit_patch": output_state["edit_patch"],
       "reproducing_test_fail_log": output_state["reproducing_test_fail_log"],
-      "exist_build": output_state["exist_build"],
-      "build_fail_log": output_state["build_fail_log"],
-      "exist_test": output_state["exist_test"],
-      "existing_test_fail_log": output_state["existing_test_fail_log"],
+      "exist_build": output_state.get("exist_build", False),
+      "build_fail_log": output_state.get("build_fail_log", ""),
+      "exist_test": output_state.get("exist_test", False),
+      "existing_test_fail_log": output_state.get("existing_test_fail_log", ""),
     }

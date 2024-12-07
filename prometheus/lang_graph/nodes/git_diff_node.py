@@ -26,10 +26,12 @@ class GitDiffNode:
     git_repo: GitRepository,
     state_patch_name: str,
     state_excluded_files_key: Optional[str] = None,
+    return_list: bool = False,
   ):
     self.git_repo = git_repo
     self.state_patch_name = state_patch_name
     self.state_excluded_files_key = state_excluded_files_key
+    self.return_list = return_list
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.git_diff_node")
 
   def __call__(self, state: Dict):
@@ -60,4 +62,7 @@ class GitDiffNode:
       )
     patch = self.git_repo.get_diff(excluded_files)
     self._logger.info(f"Generated patch:\n{patch}")
+
+    if self.return_list:
+      patch = [patch]
     return {self.state_patch_name: patch}

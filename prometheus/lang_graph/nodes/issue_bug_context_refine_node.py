@@ -149,8 +149,6 @@ Now analyze if the error was caused by not having enough context.
 
     state_update = {"refined_query": response.refined_query}
     if response.refined_query:
-      return state_update[
-        "context_provider_messages" : [HumanMessage(content=response.refined_query)]
-      ]
+      state_update["context_provider_messages"] = [HumanMessage(content=response.refined_query)]
 
     return state_update
