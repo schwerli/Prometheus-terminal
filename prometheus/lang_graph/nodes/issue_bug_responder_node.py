@@ -1,9 +1,9 @@
 import logging
+from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 from prometheus.utils.issue_util import format_issue_info
 
 
@@ -40,9 +40,6 @@ Format your response as a properly structured comment.
 Generated patch:
 {edit_patch}
 
-Edit agent response:
-{edit_agent_response}
-
 Verification:
 {verification}
 """
@@ -53,17 +50,17 @@ Verification:
 
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_responder_node")
 
-  def format_human_message(self, state: IssueBugState) -> HumanMessage:
+  def format_human_message(self, state: Dict) -> HumanMessage:
     verification_messages = []
 
     # We only report successful verifications that were performed
-    if state["reproduced_bug"]:
-      verification_messages.append("✓ The bug reproducing test is now passing")
+    if state["passed_reproducing_test"]:
+      verification_messages.append("✓ The bug reproducing test passed")
 
-    if state["run_build"] and state["exist_build"]:
+    if state["passed_build"]:
       verification_messages.append("✓ Build passes successfully")
 
-    if state["run_existing_test"] and state["exist_test"]:
+    if state["passed_existing_test"]:
       verification_messages.append("✓ All existing tests pass successfully")
 
     verification_summary = "\n".join(verification_messages)
@@ -72,14 +69,13 @@ Verification:
       issue_info=format_issue_info(
         state["issue_title"], state["issue_body"], state["issue_comments"]
       ),
-      edit_agent_response=state["edit_messages"][-1].content,
       edit_patch=state["edit_patch"],
       verification=verification_summary,
     )
 
     return HumanMessage(content=formatted_message)
 
-  def __call__(self, state: IssueBugState):
+  def __call__(self, state: Dict):
     messages = [
       self.system_prompt,
       self.format_human_message(state),

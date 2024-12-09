@@ -1,8 +1,8 @@
 import logging
+from typing import Dict
 
 from langchain_core.messages import HumanMessage
 
-from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.utils.issue_util import format_issue_info
 
 
@@ -10,9 +10,9 @@ class IssueBugContextMessageNode:
   HUMAN_PROMPT = """\
 {issue_info}
 
-OBJECTIVE: Trace execution path and gather all context needed to understand and fix this bug. The context
-should be comprehensive so that a person without prior knowledge about the codebase can read
-the context, understand and fix this bug.
+OBJECTIVE: Trace execution path and gather COMPLETE context needed to understand and fix this bug. The context
+must be comprehensive so that a person with zero knowledge of the codebase can fully understand and fix this bug
+without needing to look up any additional information.
 
 <analysis>
 To identify the root cause, we need to:
@@ -127,12 +127,17 @@ DEFAULT_SCALE = 1.5
 </action>
 </step4>
 <steps>
+
+IMPORTANT REQUIREMENTS:
+1. Do NOT stop until you have found ALL relevant code and context
+2. Do NOT skip ANY potential execution paths
+3. Do NOT assume ANYTHING about the codebase - find explicit evidence for everything
 """
 
   def __init__(self):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_context_message_node")
 
-  def __call__(self, state: BugReproductionState):
+  def __call__(self, state: Dict):
     human_message = HumanMessage(
       self.HUMAN_PROMPT.format(
         issue_info=format_issue_info(

@@ -37,6 +37,7 @@ class IssueService:
     issue_type: IssueType,
     run_build: bool,
     run_existing_test: bool,
+    number_of_candidate_patch: int,
     dockerfile_content: Optional[str] = None,
     image_name: Optional[str] = None,
     workdir: Optional[str] = None,
@@ -70,14 +71,22 @@ class IssueService:
     )
 
     output_state = issue_graph.invoke(
-      issue_title, issue_body, issue_comments, issue_type, run_build, run_existing_test
+      issue_title,
+      issue_body,
+      issue_comments,
+      issue_type,
+      run_build,
+      run_existing_test,
+      number_of_candidate_patch,
     )
 
     if output_state["issue_type"] == IssueType.BUG:
       return (
+        output_state["edit_patch"],
+        output_state["passed_reproducing_test"],
+        output_state["passed_build"],
+        output_state["passed_existing_test"],
         output_state["issue_response"],
-        output_state["patch"],
-        output_state["reproduced_bug_file"],
       )
     elif output_state["issue_type"] == IssueType.QUESTION:
       return (

@@ -9,6 +9,7 @@ from langchain_core.messages import (
   ToolMessage,
   trim_messages,
 )
+from langchain_core.output_parsers import StrOutputParser
 
 
 def check_remaining_steps(
@@ -34,6 +35,7 @@ def tiktoken_counter(messages: Sequence[BaseMessage]) -> int:
 
   For simplicity only supports str Message.contents.
   """
+  output_parser = StrOutputParser()
   num_tokens = 3  # every reply is primed with <|start|>assistant<|message|>
   tokens_per_message = 3
   tokens_per_name = 1
@@ -48,7 +50,7 @@ def tiktoken_counter(messages: Sequence[BaseMessage]) -> int:
       role = "system"
     else:
       raise ValueError(f"Unsupported messages type {msg.__class__}")
-    msg_content = msg.content if isinstance(msg.content, str) else str(msg.content)
+    msg_content = output_parser.invoke(msg)
     num_tokens += tokens_per_message + str_token_counter(role) + str_token_counter(msg_content)
     if msg.name:
       num_tokens += tokens_per_name + str_token_counter(msg.name)
@@ -67,3 +69,19 @@ def truncate_messages(
     end_on=("human", "tool"),
     include_system=True,
   )
+
+
+def extract_ai_responses(messages: Sequence[BaseMessage]) -> Sequence[str]:
+  ai_responses = []
+  output_parser = StrOutputParser()
+  for index, message in enumerate(messages):
+    if isinstance(message, AIMessage) and (
+      index == len(messages) - 1 or isinstance(messages[index + 1], HumanMessage)
+    ):
+      ai_responses.append(output_parser.invoke(message))
+  return ai_responses
+
+
+def get_last_message_content(messages: Sequence[BaseMessage]) -> Sequence[str]:
+  output_parser = StrOutputParser()
+  return output_parser.invoke(messages[-1])

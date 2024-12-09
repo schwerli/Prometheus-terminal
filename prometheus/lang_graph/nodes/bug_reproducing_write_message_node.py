@@ -4,6 +4,7 @@ from langchain_core.messages import HumanMessage
 
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.utils.issue_util import format_issue_info
+from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class BugReproducingWriteMessageNode:
@@ -41,7 +42,7 @@ Now think about what went wrong and generate the complete self-contained test ca
         issue_info=format_issue_info(
           state["issue_title"], state["issue_body"], state["issue_comments"]
         ),
-        bug_reproducing_context=state["context_provider_messages"][-1].content,
+        bug_reproducing_context=get_last_message_content(state["context_provider_messages"]),
       )
     )
 

@@ -1,8 +1,10 @@
+import logging
 from typing import Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.errors import GraphRecursionError
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
@@ -25,6 +27,8 @@ class IssueBugSubgraphNode:
     thread_id: Optional[str] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
+    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_subgraph_node")
+    self.container = container
     self.issue_bug_subgraph = IssueBugSubgraph(
       model,
       container,
@@ -39,15 +43,33 @@ class IssueBugSubgraphNode:
     )
 
   def __call__(self, state: IssueState):
-    output_state = self.issue_bug_subgraph.invoke(
-      state["issue_title"],
-      state["issue_body"],
-      state["issue_comments"],
-      state["run_build"],
-      state["run_existing_test"],
-    )
-    return {
-      "issue_response": output_state["issue_response"],
-      "patch": output_state["edit_patch"],
-      "reproduced_bug_file": output_state["reproduced_bug_file"],
-    }
+    self.container.build_docker_image()
+    self.container.start_container()
+
+    try:
+      output_state = self.issue_bug_subgraph.invoke(
+        state["issue_title"],
+        state["issue_body"],
+        state["issue_comments"],
+        state["run_build"],
+        state["run_existing_test"],
+        state["number_of_candidate_patch"],
+      )
+      return {
+        "edit_patch": output_state["edit_patch"],
+        "passed_reproducing_test": output_state["passed_reproducing_test"],
+        "passed_build": output_state["passed_build"],
+        "passed_existing_test": output_state["passed_existing_test"],
+        "issue_response": output_state["issue_response"],
+      }
+    except GraphRecursionError:
+      self._logger.critical("Please increase the recursion limit of IssueBugSubgraph")
+      return {
+        "edit_patch": "",
+        "passed_reproducing_test": False,
+        "passed_build": False,
+        "passed_existing_test": False,
+        "issue_response": "",
+      }
+    finally:
+      self.container.cleanup()

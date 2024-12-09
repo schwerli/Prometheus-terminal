@@ -8,18 +8,6 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 
 router = APIRouter()
 
-# {
-#  "issue_number": 42,
-#  "issue_title": "Wrong behavior of calculator",
-#  "issue_body": "When I am using your calculate application, 6 divided with 2 is equal to 12, which is not right!",
-#  "issue_type": "bug",
-#  "run_build": false,
-#  "run_existing_test": true,
-#  "dockerfile_content": "FROM python:3.11\nWORKDIR /app\nCOPY . /app\nRUN pip install .",
-#  "test_commands": ["pytest ."],
-#  "workdir": "/app"
-# }
-
 
 class IssueAnswerRequest(BaseModel):
   issue_number: int = Field(description="The number of the issue", examples=[42])
@@ -53,6 +41,11 @@ class IssueAnswerRequest(BaseModel):
     default=False,
     description="When editing the code, whenver we should run the existing test to verify the fix",
     examples=[False],
+  )
+  number_of_candidate_patch: Optional[int] = Field(
+    default=3,
+    description="When the patch is not verfied (through build or test), number of candidate patches we generate to select the best one",
+    examples=[3],
   )
   dockerfile_content: Optional[str] = Field(
     default=None,
@@ -115,7 +108,14 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
         detail="test_commands must be provided for user defined environment when run_test is True",
       )
 
-  issue_response, patch, remote_branch_name = request.app.state.service_coordinator.answer_issue(
+  (
+    remote_branch_name,
+    patch,
+    passed_reproducing_test,
+    passed_build,
+    passed_existing_test,
+    issue_response,
+  ) = request.app.state.service_coordinator.answer_issue(
     issue_number=issue.issue_number,
     issue_title=issue.issue_title,
     issue_body=issue.issue_body,
@@ -123,6 +123,7 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
     issue_type=issue.issue_type,
     run_build=issue.run_build,
     run_existing_test=issue.run_existing_test,
+    number_of_candidate_patch=issue.number_of_candidate_patch,
     dockerfile_content=issue.dockerfile_content,
     image_name=issue.image_name,
     workdir=issue.workdir,
@@ -131,7 +132,10 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
     push_to_remote=issue.push_to_remote,
   )
   return {
-    "issue_response": issue_response,
     "patch": patch,
+    "passed_reproducing_test": passed_reproducing_test,
+    "passed_build": passed_build,
+    "passed_existing_test": passed_existing_test,
+    "issue_response": issue_response,
     "remote_branch_name": remote_branch_name,
   }

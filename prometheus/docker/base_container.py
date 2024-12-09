@@ -74,7 +74,6 @@ class BaseContainer(ABC):
       self.tag_name,
       detach=True,
       tty=True,
-      platform="linux/amd64",
       network_mode="host",
       environment={"PYTHONPATH": f"{self.workdir}:$PYTHONPATH"},
       volumes={"/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"}},

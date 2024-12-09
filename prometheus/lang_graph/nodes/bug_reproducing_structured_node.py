@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.utils.issue_util import format_agent_tool_message_history, format_issue_comments
+from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class BugReproducingStructuredOutput(BaseModel):
@@ -140,7 +141,7 @@ Log from executing bug reproducing file:
       title=state["issue_title"],
       body=state["issue_body"],
       comments=format_issue_comments(state["issue_comments"]),
-      bug_reproducing_code=state["bug_reproducing_write_messages"][-1].content,
+      bug_reproducing_code=get_last_message_content(state["bug_reproducing_write_messages"]),
       bug_reproducing_log=bug_reproducing_log,
     )
 

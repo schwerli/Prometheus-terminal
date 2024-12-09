@@ -1,7 +1,4 @@
-from typing import Annotated, Mapping, Sequence, TypedDict
-
-from langchain_core.messages import BaseMessage
-from langgraph.graph.message import add_messages
+from typing import Mapping, Sequence, TypedDict
 
 
 class IssueBugState(TypedDict):
@@ -10,25 +7,16 @@ class IssueBugState(TypedDict):
   issue_comments: Sequence[Mapping[str, str]]
   run_build: bool
   run_existing_test: bool
+  number_of_candidate_patch: int
 
   reproduced_bug: bool
   reproduced_bug_file: str
   reproduced_bug_commands: Sequence[str]
 
-  context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
-
-  edit_messages: Annotated[Sequence[BaseMessage], add_messages]
-
   edit_patch: str
 
-  reproducing_test_fail_log: str
-
-  exist_build: bool
-  build_command_summary: str
-  build_fail_log: str
-
-  exist_test: bool
-  test_command_summary: str
-  existing_test_fail_log: str
+  passed_reproducing_test: bool
+  passed_build: bool
+  passed_existing_test: bool
 
   issue_response: str
