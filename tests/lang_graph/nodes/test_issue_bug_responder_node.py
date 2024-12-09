@@ -25,11 +25,9 @@ def basic_state():
       ],
       "edit_messages": [AIMessage("I have fixed the bug")],
       "edit_patch": "Fixed array index calculation",
-      "reproduced_bug": True,
-      "run_build": True,
-      "exist_build": True,
-      "run_existing_test": True,
-      "exist_test": True,
+      "passed_reproducing_test": True,
+      "passed_build": True,
+      "passed_existing_test": True,
     }
   )
 
@@ -51,7 +49,7 @@ def test_format_human_message_verification(fake_llm, basic_state):
   node = IssueBugResponderNode(fake_llm)
   message = node.format_human_message(basic_state)
 
-  assert "✓ The bug reproducing test is now passing" in message.content
+  assert "✓ The bug reproducing test passed" in message.content
   assert "✓ Build passes successfully" in message.content
   assert "✓ All existing tests pass successfully" in message.content
 
@@ -65,18 +63,16 @@ def test_format_human_message_no_verification(fake_llm):
       "issue_comments": [],
       "edit_messages": [AIMessage("I have fixed the bug")],
       "edit_patch": "Fixed array index calculation",
-      "reproduced_bug": False,
-      "run_build": False,
-      "exist_build": False,
-      "run_existing_test": False,
-      "exist_test": False,
+      "passed_reproducing_test": False,
+      "passed_build": False,
+      "passed_existing_test": False,
     }
   )
 
   node = IssueBugResponderNode(fake_llm)
   message = node.format_human_message(state)
 
-  assert "✓ The bug reproducing test is now passing" not in message.content
+  assert "✓ The bug reproducing test passed" not in message.content
   assert "✓ Build passes successfully" not in message.content
   assert "✓ All existing tests pass successfully" not in message.content
 
@@ -90,18 +86,16 @@ def test_format_human_message_partial_verification(fake_llm):
       "issue_comments": [],
       "edit_messages": [AIMessage("I have fixed the bug")],
       "edit_patch": "Fixed array index calculation",
-      "reproduced_bug": True,
-      "run_build": True,
-      "exist_build": False,
-      "run_existing_test": True,
-      "exist_test": True,
+      "passed_reproducing_test": True,
+      "passed_build": False,
+      "passed_existing_test": True,
     }
   )
 
   node = IssueBugResponderNode(fake_llm)
   message = node.format_human_message(state)
 
-  assert "✓ The bug reproducing test is now passing" in message.content
+  assert "✓ The bug reproducing test passed" in message.content
   assert "✓ Build passes successfully" not in message.content
   assert "✓ All existing tests pass successfully" in message.content
 
