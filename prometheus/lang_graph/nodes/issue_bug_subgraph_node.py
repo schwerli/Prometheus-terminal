@@ -30,31 +30,39 @@ class IssueBugSubgraphNode:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_subgraph_node")
     self.container = container
     self.issue_bug_subgraph = IssueBugSubgraph(
-      model,
-      container,
-      kg,
-      git_repo,
-      neo4j_driver,
-      max_token_per_neo4j_result,
-      build_commands,
-      test_commands,
-      thread_id,
-      checkpointer,
+      model=model,
+      container=container,
+      kg=kg,
+      git_repo=git_repo,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
+      build_commands=build_commands,
+      test_commands=test_commands,
+      thread_id=thread_id,
+      checkpointer=checkpointer,
     )
 
   def __call__(self, state: IssueState):
     self.container.build_docker_image()
     self.container.start_container()
 
+    self._logger.info("Enter IssueBugSubgraphNode")
+
     try:
       output_state = self.issue_bug_subgraph.invoke(
-        state["issue_title"],
-        state["issue_body"],
-        state["issue_comments"],
-        state["run_build"],
-        state["run_existing_test"],
-        state["number_of_candidate_patch"],
+        issue_title=state["issue_title"],
+        issue_body=state["issue_body"],
+        issue_comments=state["issue_comments"],
+        run_build=state["run_build"],
+        run_existing_test=state["run_existing_test"],
+        number_of_candidate_patch=state["number_of_candidate_patch"],
       )
+
+      self._logger.info(f"Generated patch:\n{output_state['edit_patch']}")
+      self._logger.info(f"passed_reproducing_test: {output_state['passed_reproducing_test']}")
+      self._logger.info(f"passed_build: {output_state['passed_build']}")
+      self._logger.info(f"passed_existing_test: {output_state['passed_existing_test']}")
+      self._logger.info(f"issue_response:\n{output_state['issue_response']}")
       return {
         "edit_patch": output_state["edit_patch"],
         "passed_reproducing_test": output_state["passed_reproducing_test"],

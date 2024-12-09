@@ -34,6 +34,6 @@ class NoopNode:
       None always, as this node performs no operations.
     """
     for key, value in state.items():
-      if isinstance(value, bool):
+      if isinstance(value, bool) or isinstance(value, int):
         self._logger.debug(f"State {key}: {value}")
     return

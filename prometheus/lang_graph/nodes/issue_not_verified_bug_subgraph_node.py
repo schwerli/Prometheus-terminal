@@ -40,11 +40,13 @@ class IssueNotVerifiedBugSubgraphNode:
     self._logger.info("Enter IssueNotVerifiedBugSubgraphNode")
 
     output_state = self.issue_not_verified_bug_subgraph.invoke(
-      state["issue_title"],
-      state["issue_body"],
-      state["issue_comments"],
-      state["number_of_candidate_patch"],
+      issue_title=state["issue_title"],
+      issue_body=state["issue_body"],
+      issue_comments=state["issue_comments"],
+      number_of_candidate_patch=state["number_of_candidate_patch"],
     )
+
+    self._logger.info(f"final_patch:\n{output_state['final_patch']}")
 
     return {
       "edit_patch": output_state["final_patch"],

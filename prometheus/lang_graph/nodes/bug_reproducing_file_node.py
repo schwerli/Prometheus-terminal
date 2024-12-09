@@ -89,5 +89,5 @@ Current project structure:
     ]
 
     response = self.model_with_tools.invoke(message_history)
-    self._logger.debug(f"BugReproducingFileNode response:\n{response}")
+    self._logger.debug(response)
     return {"bug_reproducing_file_messages": [response]}

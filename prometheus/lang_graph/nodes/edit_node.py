@@ -179,5 +179,5 @@ IMPORTANT REMINDERS:
     truncated_message_history = truncate_messages(message_history)
     response = self.model_with_tools.invoke(truncated_message_history)
 
-    self._logger.debug(f"EditNode response:\n{response}")
+    self._logger.debug(response)
     return {"edit_messages": [response]}

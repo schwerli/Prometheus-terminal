@@ -72,7 +72,6 @@ Edges:
    - DO NOT add your own comments or explanations
 
 Example ASTNode response:
-```
 File: src/auth/password_manager.py
 Lines 15-45:
 ```python
@@ -94,7 +93,6 @@ class BaseManager:
     def __init__(self, config):
         self.config = config
 ```
-```
 
 3. For documentation (TextNodes):
    - MUST include file path
@@ -104,7 +102,6 @@ class BaseManager:
    - DO NOT add your own summaries or explanations
 
 Example TextNode response:
-```
 File: docs/auth/password_handling.md
 ```markdown
 # Password Management
@@ -119,7 +116,6 @@ auth:
   hash_algorithm: argon2
   salt_length: 16
   memory_cost: 65536
-```
 ```
 
 The file tree of the codebase:
@@ -356,5 +352,5 @@ All ASTNode types: {ast_node_types}
     message_history = [self.system_prompt] + state["context_provider_messages"]
     truncated_message_history = truncate_messages(message_history)
     response = self.model_with_tools.invoke(truncated_message_history)
-    self._logger.debug(f"ContextProviderNode response:\n{response}")
+    self._logger.debug(response)
     return {"context_provider_messages": [response]}

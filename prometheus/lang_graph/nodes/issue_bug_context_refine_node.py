@@ -145,7 +145,7 @@ Now analyze if the error was caused by not having enough context.
   def __call__(self, state: Dict):
     edit_context = self.format_human_message(state)
     response = self.model.invoke({"edit_context": edit_context})
-    self._logger.debug(f"IssueBugContextRefineNode response:\n{response}")
+    self._logger.debug(response)
 
     state_update = {"refined_query": response.refined_query}
     if response.refined_query:

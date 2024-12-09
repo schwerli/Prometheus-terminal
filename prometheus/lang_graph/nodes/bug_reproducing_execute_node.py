@@ -98,7 +98,7 @@ User provided test commands:
     ] + state["bug_reproducing_execute_messages"]
 
     response = self.model_with_tools.invoke(message_history)
-    self._logger.debug(f"BugReproducingExecuteNode response:\n{response}")
+    self._logger.debug(response)
     return {
       "bug_reproducing_execute_messages": [response],
       "reproduced_bug_file": reproduced_bug_file,

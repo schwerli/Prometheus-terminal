@@ -28,22 +28,19 @@ class BugReproductionSubgraphNode:
   ):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
     self.bug_reproduction_subgraph = BugReproductionSubgraph(
-      model,
-      container,
-      kg,
-      git_repo,
-      neo4j_driver,
-      max_token_per_neo4j_result,
-      test_commands,
-      thread_id,
-      checkpointer,
+      model=model,
+      container=container,
+      kg=kg,
+      git_repo=git_repo,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
+      test_commands=test_commands,
+      thread_id=thread_id,
+      checkpointer=checkpointer,
     )
 
   def __call__(self, state: IssueBugState):
     self._logger.info("Enter bug_reproduction_subgraph")
-    self._logger.debug(f"issue_title: {state['issue_title']}")
-    self._logger.debug(f"issue_body: {state['issue_body']}")
-    self._logger.debug(f"issue_comments: {state['issue_comments']}")
 
     try:
       output_state = self.bug_reproduction_subgraph.invoke(

@@ -20,7 +20,9 @@ class BugFixVerificationSubgraphNode:
     self._logger = logging.getLogger(
       "prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node"
     )
-    self.subgraph = BugFixVerificationSubgraph(model, container, thread_id, checkpointer)
+    self.subgraph = BugFixVerificationSubgraph(
+      model=model, container=container, thread_id=thread_id, checkpointer=checkpointer
+    )
 
   def __call__(self, state: IssueBugState):
     self._logger.info("Enter bug_fix_verification_subgraph_node")
@@ -28,7 +30,8 @@ class BugFixVerificationSubgraphNode:
     self._logger.debug(f"reproduced_bug_commands: {state['reproduced_bug_commands']}")
 
     output_state = self.subgraph.invoke(
-      state["reproduced_bug_file"], state["reproduced_bug_commands"]
+      reproduced_bug_file=state["reproduced_bug_file"],
+      reproduced_bug_commands=state["reproduced_bug_commands"],
     )
 
     self._logger.info(

@@ -9,7 +9,7 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 router = APIRouter()
 
 
-class IssueAnswerRequest(BaseModel):
+class IssueRequest(BaseModel):
   issue_number: int = Field(description="The number of the issue", examples=[42])
   issue_title: str = Field(
     description="The title of the issue", examples=["There is a memory leak"]
@@ -80,7 +80,7 @@ class IssueAnswerRequest(BaseModel):
 
 
 @router.post("/answer/")
-def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
+def answer_issue(issue: IssueRequest, request: Request):
   if not request.app.state.service_coordinator.exists_knowledge_graph():
     raise HTTPException(
       status_code=404,

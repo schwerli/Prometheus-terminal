@@ -79,5 +79,5 @@ Remember:
       "build_messages"
     ]
     response = self.model_with_tools.invoke(message_history)
-    self._logger.debug(f"GeneralBuildNode response:\n{response}")
+    self._logger.debug(response)
     return {"build_messages": [response]}

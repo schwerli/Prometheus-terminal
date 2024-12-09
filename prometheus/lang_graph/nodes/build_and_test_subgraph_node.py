@@ -22,7 +22,13 @@ class BuildAndTestSubgraphNode:
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self.build_and_test_subgraph = BuildAndTestSubgraph(
-      container, model, kg, build_commands, test_commands, thread_id, checkpointer
+      container=container,
+      model=model,
+      kg=kg,
+      build_commands=build_commands,
+      test_commands=test_commands,
+      thread_id=thread_id,
+      checkpointer=checkpointer,
     )
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.build_and_test_subgraph_node")
 
@@ -47,23 +53,22 @@ class BuildAndTestSubgraphNode:
     self._logger.info("Enters BuildAndTestSubgraphNode")
 
     output_state = self.build_and_test_subgraph.invoke(
-      state["run_build"],
-      state["run_existing_test"],
-      exist_build,
-      build_command_summary,
-      build_fail_log,
-      exist_test,
-      test_command_summary,
-      existing_test_fail_log,
+      run_build=state["run_build"],
+      run_existing_test=state["run_existing_test"],
+      exist_build=exist_build,
+      build_command_summary=build_command_summary,
+      build_fail_log=build_fail_log,
+      exist_test=exist_test,
+      test_command_summary=test_command_summary,
+      existing_test_fail_log=existing_test_fail_log,
     )
 
-    self._logger.info("Exits BuildAndTestSubgraphNode")
-    self._logger.debug(f"exist_build: {output_state['exist_build']}")
-    self._logger.debug(f"build_command_summary: {output_state['build_command_summary']}")
-    self._logger.debug(f"build_fail_log: {output_state['build_fail_log']}")
-    self._logger.debug(f"exist_test: {output_state['exist_test']}")
-    self._logger.debug(f"test_command_summary: {output_state['test_command_summary']}")
-    self._logger.debug(f"existing_test_fail_log: {output_state['existing_test_fail_log']}")
+    self._logger.info(f"exist_build: {output_state['exist_build']}")
+    self._logger.info(f"build_command_summary:\n{output_state['build_command_summary']}")
+    self._logger.info(f"build_fail_log:\n{output_state['build_fail_log']}")
+    self._logger.info(f"exist_test: {output_state['exist_test']}")
+    self._logger.info(f"test_command_summary:\n{output_state['test_command_summary']}")
+    self._logger.info(f"existing_test_fail_log:\n{output_state['existing_test_fail_log']}")
 
     return {
       "exist_build": output_state["exist_build"],

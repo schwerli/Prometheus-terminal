@@ -43,5 +43,5 @@ Communicate in a professional, direct manner focused on technical accuracy and p
     truncated_message_history = truncate_messages(message_history)
     response = self.model.invoke(truncated_message_history)
 
-    self._logger.debug(f"IssueBugAnalyzerNode response:\n{response}")
+    self._logger.debug(response)
     return {"issue_bug_analyzer_messages": [response]}
