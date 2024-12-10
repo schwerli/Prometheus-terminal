@@ -1,3 +1,4 @@
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -26,7 +27,7 @@ def mock_services():
   repository_service = Mock(spec=RepositoryService)
   repository_service.get_working_dir.return_value = None
 
-  return {
+  yield {
     "issue_service": issue_service,
     "knowledge_graph_service": knowledge_graph_service,
     "llm_service": llm_service,
@@ -35,7 +36,7 @@ def mock_services():
     "postgres_service": postgres_service,
     "repository_service": repository_service,
     "github_token": "test_token",
-    "working_directory": Path("test_directory"),
+    "working_directory": Path(tempfile.TemporaryDirectory().name),
   }
 
 
