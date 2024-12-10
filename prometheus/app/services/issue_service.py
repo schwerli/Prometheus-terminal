@@ -47,14 +47,14 @@ class IssueService:
     if dockerfile_content or image_name:
       container = UserDefinedContainer(
         self.kg_service.kg.get_local_path(),
+        workdir,
         build_commands,
         test_commands,
-        workdir,
         dockerfile_content,
         image_name,
       )
     else:
-      container = GeneralContainer(self.kg_service.kg.get_local_path())
+      container = GeneralContainer(self.kg_service.kg.get_local_path(), workdir)
 
     thread_id = str(uuid.uuid4())
     issue_graph = IssueGraph(

@@ -25,9 +25,9 @@ def temp_project_dir():
 def container(temp_project_dir):
   return UserDefinedContainer(
     temp_project_dir,
+    "/app",
     ["pip install -r requirements.txt", "python setup.py build"],
     ["pytest tests/"],
-    "/app",
     "FROM python:3.9\nWORKDIR /app\nCOPY . /app/",
     None,
   )
