@@ -15,13 +15,13 @@ from prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node import (
 )
 from prometheus.lang_graph.nodes.build_and_test_subgraph_node import BuildAndTestSubgraphNode
 from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
+from prometheus.lang_graph.nodes.context_refine_node import ContextRefineNode
 from prometheus.lang_graph.nodes.edit_message_node import EditMessageNode
 from prometheus.lang_graph.nodes.edit_node import EditNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_message_node import IssueBugAnalyzerMessageNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_node import IssueBugAnalyzerNode
 from prometheus.lang_graph.nodes.issue_bug_context_message_node import IssueBugContextMessageNode
-from prometheus.lang_graph.nodes.issue_bug_context_refine_node import IssueBugContextRefineNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNode
 from prometheus.lang_graph.subgraphs.issue_verified_bug_state import IssueVerifiedBugState
@@ -72,7 +72,7 @@ class IssueVerifiedBugSubgraph:
       container, model, kg, build_commands, test_commands, thread_id, checkpointer
     )
 
-    issue_bug_context_refine_node = IssueBugContextRefineNode(model)
+    context_refine_node = ContextRefineNode(model, has_edit_and_error=True)
 
     workflow = StateGraph(IssueVerifiedBugState)
 
@@ -93,7 +93,7 @@ class IssueVerifiedBugSubgraph:
     workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
     workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
 
-    workflow.add_node("issue_bug_context_refine_node", issue_bug_context_refine_node)
+    workflow.add_node("context_refine_node", context_refine_node)
 
     workflow.set_entry_point("issue_bug_context_message_node")
     workflow.add_edge("issue_bug_context_message_node", "context_provider_node")
@@ -120,7 +120,7 @@ class IssueVerifiedBugSubgraph:
     workflow.add_conditional_edges(
       "bug_fix_verification_subgraph_node",
       lambda state: bool(state["reproducing_test_fail_log"]),
-      {True: "issue_bug_context_refine_node", False: "build_or_test_branch_node"},
+      {True: "context_refine_node", False: "build_or_test_branch_node"},
     )
     workflow.add_conditional_edges(
       "build_or_test_branch_node",
@@ -130,11 +130,11 @@ class IssueVerifiedBugSubgraph:
     workflow.add_conditional_edges(
       "build_and_test_subgraph_node",
       lambda state: bool(state["build_fail_log"]) or bool(state["existing_test_fail_log"]),
-      {True: "issue_bug_context_refine_node", False: END},
+      {True: "context_refine_node", False: END},
     )
 
     workflow.add_conditional_edges(
-      "issue_bug_context_refine_node",
+      "context_refine_node",
       lambda state: bool(state["refined_query"]),
       {True: "context_provider_node", False: "issue_bug_analyzer_message_node"},
     )
