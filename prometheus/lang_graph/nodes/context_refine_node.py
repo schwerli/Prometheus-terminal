@@ -63,7 +63,7 @@ Important Guidelines:
    - Needed information isn't in source/config files
 """.replace("{", "{{").replace("}", "}}")
 
-  REFINE_PROMPT = """\
+  REFINE_PROMPT = ("""\
 Your task is to analyze if the current context contains enough source code and documentation
 for a developer WITHOUT prior knowledge of the codebase to fix the issue. You can request
 additional source files, configuration files, or documentation files from the codebase.
@@ -156,9 +156,12 @@ Output:
 </examples>
 
 Analyze if more source code or documentation files are needed. Remember to only request files that exist in the codebase.
-"""
+""".replace("{", "{{").replace("}", "}}")
+   .replace("{{issue_info}}", "{issue_info}")
+   .replace("{{bug_context}}", "{bug_context}")
+)
 
-  EDIT_AND_ERROR_PROMPT = """\
+  EDIT_AND_ERROR_PROMPT = ("""\
 Your task is to analyze if a build/test failure occurred because the edit agent lacked
 necessary source code or documentation files. You can request additional files from the codebase to help fix the error.
 
@@ -296,7 +299,12 @@ Output:
 </examples>
 
 Analyze if the build/test failure is due to missing source code or documentation files. Remember to only request files that exist in the codebase.
-"""
+""".replace("{", "{{").replace("}", "}}")
+   .replace("{{issue_info}}", "{issue_info}")
+   .replace("{{bug_context}}", "{bug_context}")
+   .replace("{{edit_patch}}", "{edit_patch}")
+   .replace("{{edit_error}}", "{edit_error}")
+)
 
   def __init__(self, model: BaseChatModel, has_edit_and_error: bool = False):
     self.has_edit_and_error = has_edit_and_error

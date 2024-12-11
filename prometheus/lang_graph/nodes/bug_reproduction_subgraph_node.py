@@ -27,6 +27,7 @@ class BugReproductionSubgraphNode:
     checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
+    self.git_repo = git_repo
     self.bug_reproduction_subgraph = BugReproductionSubgraph(
       model=model,
       container=container,
@@ -50,6 +51,7 @@ class BugReproductionSubgraphNode:
       )
     except GraphRecursionError:
       self._logger.info("Recursion limit reached, returning reproduced_bug=False")
+      self.git_repo.reset_repository()
       return {"reproduced_bug": False}
 
     self._logger.info(f"reproduced_bug: {output_state['reproduced_bug']}")
