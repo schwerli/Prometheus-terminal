@@ -291,6 +291,14 @@ class KnowledgeGraphHandler:
       result = session.run(query)
       record = result.single()
       return record["graph_exists"] if record else False
+    
+  def verify_empty(self, tx: ManagedTransaction):
+    query = """
+      MATCH (n)
+      RETURN count(n) as count
+    """
+    result = tx.run(query)
+    return result.single()["count"] == 0
 
   def clear_knowledge_graph(self):
     """Clear the knowledge graph from neo4j."""
@@ -301,3 +309,11 @@ class KnowledgeGraphHandler:
     self._logger.info("Deleting knowledge graph from neo4j")
     with self.driver.session() as session:
       session.run(query)
+
+      max_retries = 3
+      for attempt in range(max_retries):
+        if session.execute_read(self.verify_empty):
+          break
+
+        self._logger.warning(f"Database not empty after attempt {attempt + 1}, retrying...")
+        session.run(query)
