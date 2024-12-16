@@ -91,6 +91,7 @@ class IssueGraph:
     run_build: bool,
     run_existing_test: bool,
     number_of_candidate_patch: int,
+    max_refined_query_loop: int,
   ):
     config = None
     if self.thread_id:
@@ -104,6 +105,7 @@ class IssueGraph:
       "run_build": run_build,
       "run_existing_test": run_existing_test,
       "number_of_candidate_patch": number_of_candidate_patch,
+      "max_refined_query_loop": max_refined_query_loop,
     }
 
     output_state = self.graph.invoke(input_state, config)

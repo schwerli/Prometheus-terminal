@@ -84,6 +84,7 @@ class ServiceCoordinator:
     run_build: bool,
     run_existing_test: bool,
     number_of_candidate_patch: int,
+    max_refined_query_loop: int,
     dockerfile_content: Optional[str] = None,
     image_name: Optional[str] = None,
     workdir: Optional[str] = None,
@@ -102,18 +103,19 @@ class ServiceCoordinator:
     try:
       patch, passed_reproducing_test, passed_build, passed_existing_test, issue_response = (
         self.issue_service.answer_issue(
-          issue_title,
-          issue_body,
-          issue_comments,
-          issue_type,
-          run_build,
-          run_existing_test,
-          number_of_candidate_patch,
-          dockerfile_content,
-          image_name,
-          workdir,
-          build_commands,
-          test_commands,
+          issue_title=issue_title,
+          issue_body=issue_body,
+          issue_comments=issue_comments,
+          issue_type=issue_type,
+          run_build=run_build,
+          run_existing_test=run_existing_test,
+          number_of_candidate_patch=number_of_candidate_patch,
+          max_refined_query_loop=max_refined_query_loop,
+          dockerfile_content=dockerfile_content,
+          image_name=image_name,
+          workdir=workdir,
+          build_commands=build_commands,
+          test_commands=test_commands,
         )
       )
 

@@ -20,53 +20,60 @@ class ContextRefineStructuredOutput(BaseModel):
 class ContextRefineNode:
   SYS_PROMPT = """\
 You are a software engineering assistant specialized in analyzing code context to determine if
-additional source code or documentation from the codebase is needed. You can only request source code files,
-configuration files, or documentation files that may exist in a codebase.
+additional source code or documentation from the codebase is absolutely necessary. You should be conservative 
+in requesting additional context and only do so when the current context is clearly insufficient.
 
 Step-by-Step Analysis Process:
-1. Examine the current context and issue details
-2. Identify what source files are involved
-3. Check if you have all relevant code including:
-   - Complete class/function implementations
-   - Referenced classes and interfaces
-   - Import statements and dependencies
-   - Configuration files
-   - Documentation files
-4. Determine if accessing more files would help understand/resolve the issue
-5. If needed, formulate specific queries for additional files
+1. Examine the current context and issue details carefully
+2. Identify what source files are currently provided
+3. Determine if the current context is sufficient by checking:
+   - Can the issue be understood with current context?
+   - Is the problem area clearly visible?
+   - Are all directly referenced dependencies available?
+   - Can a fix be implemented with this context?
+4. Only request additional files if:
+   - Critical referenced code is missing
+   - Essential configuration is absent
+   - Required interfaces are not visible
+   - Documentation is needed for compliance/requirements
 
 Your output must strictly follow this Pydantic model:
 ```python
 class ContextRefineStructuredOutput(BaseModel):
-    reasoning: str     # Your step by step reasoning about the context needs
-    refined_query: str # Query for additional source/config/doc files, empty if context is sufficient
+    reasoning: str     # Your step by step reasoning about why current context is or isn't sufficient
+    refined_query: str # Detailed query including issue context and specific files needed, empty if sufficient
 
 Important Guidelines:
-1. Only request files that exist in the codebase
-2. You can request:
+1. Default to working with current context unless clearly insufficient
+2. Only request files when you can explain why they are CRITICAL for fixing the issue
+3. Acceptable file types (request ONLY if essential):
    - Source code files (.java, .py, etc.)
    - Configuration files (.xml, .yaml, etc.)
    - Documentation files (.md, .txt, etc.)
-3. Do NOT request:
+4. Do NOT request:
    - Git history or commit information
    - Test execution logs
    - Runtime information
    - System logs
    - Database contents
-4. Make specific file queries like:
-   - "Find the implementation of BaseAuth.java"
-   - "Get the configuration file referenced in Config.load()"
-   - "Find the interface that CustomService implements"
-5. Return empty refined_query if:
-   - Current context is sufficient
-   - The issue is a logic/implementation error
-   - Needed information isn't in source/config files
+   - Files that would be "nice to have" but aren't essential
+5. Make specific, detailed queries that include:
+   - Description of the issue being fixed
+   - Why the files are needed
+   - Specific file names or patterns to search for
+   Examples:
+   - "To fix the OAuth token validation issue where users are being rejected, I need the TokenValidator implementation to understand the validation logic that changed after the provider update. Please find TokenValidator.java and related OAuth configuration files."
+   - "To resolve the security permission error in AdminController, I need to see the SecurityExpressions class that defines available security methods. The issue is causing access denied errors for admin users. Please find SecurityExpressions.java."
+6. Return empty refined_query if:
+   - Current context allows understanding the issue
+   - The issue is primarily a logic/implementation error
+   - Additional context wouldn't significantly help fix the issue
+   - You're unsure if more context would help
 """.replace("{", "{{").replace("}", "}}")
 
   REFINE_PROMPT = ("""\
-Your task is to analyze if the current context contains enough source code and documentation
-for a developer WITHOUT prior knowledge of the codebase to fix the issue. You can request
-additional source files, configuration files, or documentation files from the codebase.
+Your task is to analyze if the current context is sufficient for a developer to understand and fix the issue.
+Be conservative in requesting additional files - only request them if they are absolutely necessary to fix the issue.
 
 {issue_info}
 
@@ -99,21 +106,20 @@ public class AuthenticationManager {
 ```
 
 Thought process:
-1. Issue involves OAuth token validation
-2. Current context shows AuthenticationManager using TokenValidator
-3. Missing TokenValidator implementation
-4. Missing OAuth configuration
-5. Need both to understand validation requirements
+1. Issue involves token validation failures
+2. Current context shows only the delegation to TokenValidator
+3. TokenValidator implementation is directly referenced and is critical
+4. Cannot determine validation logic without TokenValidator
+5. OAuth configuration is essential as it defines validation rules
 
 Output:
 {
-  "reasoning": "The current context only shows AuthenticationManager using TokenValidator but we're missing:\n1. TokenValidator interface/class implementation which contains the actual validation logic\n2. OAuth configuration files that specify the validation rules\nBoth are necessary to understand and fix the token validation issue.",
-  "refined_query": "Find TokenValidator implementation and OAuth configuration files referenced in the authentication system"
+  "reasoning": "The current context is insufficient because:\n1. We only see AuthenticationManager delegating to TokenValidator\n2. The TokenValidator implementation is directly referenced and contains the actual validation logic\n3. OAuth configuration is critical as it defines the validation rules that recently changed\nBoth files are essential to understand and fix the token validation issue.",
+  "refined_query": "To fix the OAuth token validation issue where users are being rejected after a provider update, particularly for refresh tokens, I need to examine:\n1. The TokenValidator implementation to understand the validation logic\n2. OAuth configuration files that define the validation rules\nPlease find the TokenValidator class and OAuth configuration files referenced in the authentication system."
 }
 </example>
 
 <example>
-Input:
 Issue Title: "Fix incorrect calculation in PricingService"
 Issue Body: "The total price calculation is wrong when applying multiple discounts"
 Issue Comments:
@@ -142,28 +148,29 @@ public class PricingService {
 
 Thought process:
 1. Issue is about discount calculation logic
-2. Have complete implementation of calculation method
-3. Logic error in handling multiple discounts
-4. All relevant code is visible
-5. No external dependencies needed
+2. The bug involves the order of applying different discount types
+3. Complete calculation implementation is visible
+4. All discount handling logic is in this method
+5. Referenced classes (Order, Discount) are used in simple ways
 
 Output:
 {
-  "reasoning": "The context shows the complete discount calculation logic in PricingService. The issue is with the mathematical logic of applying multiple discounts sequentially. This is an implementation error in the code we can already see.",
+  "reasoning": "The current context is sufficient because:\n1. The complete discount calculation logic is visible\n2. We can see how different discount types are handled\n3. The issue is clearly in the mathematical logic of applying discounts sequentially\n4. The Order and Discount classes are used in straightforward ways (getBasePrice, getDiscounts, isPercentage, getValue)\n5. Additional context wouldn't help fix this logical error",
   "refined_query": ""
 }
 </example>
 </examples>
 
-Analyze if more source code or documentation files are needed. Remember to only request files that exist in the codebase.
+Analyze if the current context is truly sufficient or if additional files are ABSOLUTELY NECESSARY to fix the issue. 
+Be conservative - only request additional files if you can clearly explain why they are critical.
 """.replace("{", "{{").replace("}", "}}")
    .replace("{{issue_info}}", "{issue_info}")
    .replace("{{bug_context}}", "{bug_context}")
 )
 
   EDIT_AND_ERROR_PROMPT = ("""\
-Your task is to analyze if a build/test failure occurred because the edit agent lacked
-necessary source code or documentation files. You can request additional files from the codebase to help fix the error.
+Your task is to analyze if a build/test failure occurred because critical source code or documentation files
+were missing. Only request additional files if they are absolutely necessary to fix the error.
 
 {issue_info}
 
@@ -201,7 +208,7 @@ public class AdminController {
 Patch:
 ```diff
 diff --git a/src/main/java/com/example/admin/AdminController.java b/src/main/java/com/example/admin/AdminController.java
-index 1234567..9876543 100644
+index 1234567..9876543 100000
 --- a/src/main/java/com/example/admin/AdminController.java
 +++ b/src/main/java/com/example/admin/AdminController.java
 @@ -8,7 +8,7 @@ public class AdminController {
@@ -222,15 +229,15 @@ Error:
 ```
 
 Thought process:
-1. Build error shows missing SecurityExpressions class
-2. Current context only shows the controller
-3. Need security configuration and expression handling
-4. SecurityExpressions class defines available methods
+1. Build error shows undefined hasAuthority method
+2. SecurityExpressions class is directly referenced but missing
+3. Error indicates a compilation issue, not logic
+4. Cannot fix without SecurityExpressions definition
 
 Output:
 {
-  "reasoning": "The build error indicates the patch uses 'hasAuthority' method from SecurityExpressions, but we don't have:\n1. SecurityExpressions class that defines the available security methods\n2. Security configuration that sets up the expression handling\nBoth are needed to implement the correct permission check.",
-  "refined_query": "Find SecurityExpressions class implementation and Spring security configuration files"
+  "reasoning": "Additional context is necessary because:\n1. The build error explicitly shows SecurityExpressions.hasAuthority is undefined\n2. We need the SecurityExpressions class to see available security methods\n3. This is a compilation error, not a logic issue\n4. Cannot fix the error without knowing valid security expression methods",
+  "refined_query": "To fix the access denied issue affecting admin users, where the build is failing due to an undefined hasAuthority method, I need to examine the SecurityExpressions class. The error occurs when trying to modify the permission check from hasRole to hasAuthority. Please find the SecurityExpressions class implementation to understand available security methods and fix the compilation error."
 }
 </example>
 
@@ -285,20 +292,22 @@ Error:
 ```
 
 Thought process:
-1. Have complete LogProcessor implementation
+1. Have full LogProcessor implementation
 2. Test failure shows date parsing logic error
-3. All date handling code is visible
-4. This is a logic error in the code we can see
+3. All relevant code is visible
+4. Issue is with date string manipulation
+5. Additional context wouldn't help
 
 Output:
 {
-  "reasoning": "The test failure is due to incorrect date parsing logic in the existing code. We have the complete LogProcessor implementation and can see that the string replacement is causing incorrect parsing. This is a logic error, not a missing context issue.",
+  "reasoning": "The current context is sufficient because:\n1. We can see the complete date parsing logic\n2. The test failure points to incorrect string manipulation\n3. The error is in the replace() call affecting date format\n4. All relevant code is in the LogProcessor class\n5. Additional files wouldn't help fix this logic error",
   "refined_query": ""
 }
 </example>
 </examples>
 
-Analyze if the build/test failure is due to missing source code or documentation files. Remember to only request files that exist in the codebase.
+Analyze if the build/test failure is due to missing critical source code or documentation files.
+Be conservative - only request additional files if they are absolutely necessary to fix the error.
 """.replace("{", "{{").replace("}", "}}")
    .replace("{{issue_info}}", "{issue_info}")
    .replace("{{bug_context}}", "{bug_context}")
@@ -349,6 +358,10 @@ Analyze if the build/test failure is due to missing source code or documentation
     )
 
   def __call__(self, state: Dict):
+    if "max_refined_query_loop" in state and state["max_refined_query_loop"] == 0:
+      self._logger.info("Reached max_refined_query_loop, not asking for more context")
+      return {"refined_query": ""}
+
     if self.has_edit_and_error:
       human_prompt = self.format_edit_and_error_message(state)
     else:
@@ -357,6 +370,10 @@ Analyze if the build/test failure is due to missing source code or documentation
     self._logger.debug(response)
 
     state_update = {"refined_query": response.refined_query}
+
+    if "max_refined_query_loop" in state:
+      state_update["max_refined_query_loop"] = state["max_refined_query_loop"]-1
+
     if response.refined_query:
       state_update["context_provider_messages"] = [HumanMessage(content=response.refined_query)]
 

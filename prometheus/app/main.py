@@ -20,6 +20,7 @@ logger.propagate = False
 
 logger.info(f"LOGGING_LEVEL={settings.LOGGING_LEVEL}")
 logger.info(f"MODEL={settings.MODEL}")
+logger.info(f"NEO4J_BATCH_SIZE={settings.NEO4J_BATCH_SIZE}")
 logger.info(f"WORKING_DIRECTORY={settings.WORKING_DIRECTORY}")
 logger.info(f"KNOWLEDGE_GRAPH_MAX_AST_DEPTH={settings.KNOWLEDGE_GRAPH_MAX_AST_DEPTH}")
 logger.info(f"KNOWLEDGE_GRAPH_CHUNK_SIZE={settings.KNOWLEDGE_GRAPH_CHUNK_SIZE}")

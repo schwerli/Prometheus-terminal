@@ -47,6 +47,11 @@ class IssueRequest(BaseModel):
     description="When the patch is not verfied (through build or test), number of candidate patches we generate to select the best one",
     examples=[4],
   )
+  max_refined_query_loop: Optional[int] = Field(
+    default=3,
+    description="Number of times to ask for more context",
+    examples=[3],
+  )
   dockerfile_content: Optional[str] = Field(
     default=None,
     description="Specify the containerized enviroment with dockerfile content",
@@ -124,6 +129,7 @@ def answer_issue(issue: IssueRequest, request: Request):
     run_build=issue.run_build,
     run_existing_test=issue.run_existing_test,
     number_of_candidate_patch=issue.number_of_candidate_patch,
+    max_refined_query_loop=issue.max_refined_query_loop,
     dockerfile_content=issue.dockerfile_content,
     image_name=issue.image_name,
     workdir=issue.workdir,

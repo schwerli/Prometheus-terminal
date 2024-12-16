@@ -30,4 +30,5 @@ class IssueVerifiedBugState(TypedDict):
   test_command_summary: str
   existing_test_fail_log: str
 
+  max_refined_query_loop: int
   refined_query: str

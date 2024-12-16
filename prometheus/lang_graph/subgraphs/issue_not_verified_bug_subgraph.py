@@ -58,7 +58,6 @@ class IssueNotVerifiedBugSubgraph:
     git_diff_node = GitDiffNode(git_repo, "edit_patches", return_list=True)
 
     git_reset_node = GitResetNode(git_repo)
-    reset_context_provider_messages_node = ResetMessagesNode("context_provider_messages")
     reset_issue_bug_analyzer_messages_node = ResetMessagesNode("issue_bug_analyzer_messages")
     reset_edit_messages_node = ResetMessagesNode("edit_messages")
 
@@ -80,7 +79,6 @@ class IssueNotVerifiedBugSubgraph:
     workflow.add_node("git_diff_node", git_diff_node)
 
     workflow.add_node("git_reset_node", git_reset_node)
-    workflow.add_node("reset_context_provider_messages_node", reset_context_provider_messages_node)
     workflow.add_node(
       "reset_issue_bug_analyzer_messages_node", reset_issue_bug_analyzer_messages_node
     )
@@ -119,12 +117,9 @@ class IssueNotVerifiedBugSubgraph:
       {True: "git_reset_node", False: "final_patch_selection_node"},
     )
 
-    workflow.add_edge("git_reset_node", "reset_context_provider_messages_node")
-    workflow.add_edge(
-      "reset_context_provider_messages_node", "reset_issue_bug_analyzer_messages_node"
-    )
+    workflow.add_edge("git_reset_node", "reset_issue_bug_analyzer_messages_node")
     workflow.add_edge("reset_issue_bug_analyzer_messages_node", "reset_edit_messages_node")
-    workflow.add_edge("reset_edit_messages_node", "issue_bug_context_message_node")
+    workflow.add_edge("reset_edit_messages_node", "issue_bug_analyzer_message_node")
 
     workflow.add_edge("final_patch_selection_node", END)
 
@@ -136,6 +131,7 @@ class IssueNotVerifiedBugSubgraph:
     issue_body: str,
     issue_comments: Sequence[Mapping[str, str]],
     number_of_candidate_patch: int,
+    max_refined_query_loop: int,
     recursion_limit: int = 999,
   ):
     config = {"recursion_limit": recursion_limit}
@@ -147,6 +143,7 @@ class IssueNotVerifiedBugSubgraph:
       "issue_body": issue_body,
       "issue_comments": issue_comments,
       "number_of_candidate_patch": number_of_candidate_patch,
+      "max_refined_query_loop": max_refined_query_loop,
     }
 
     output_state = self.subgraph.invoke(input_state, config)

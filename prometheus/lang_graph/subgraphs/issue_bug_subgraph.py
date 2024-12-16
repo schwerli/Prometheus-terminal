@@ -36,15 +36,15 @@ class IssueBugSubgraph:
     self.thread_id = thread_id
 
     bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
-      model,
-      container,
-      kg,
-      git_repo,
-      neo4j_driver,
-      max_token_per_neo4j_result,
-      test_commands,
-      thread_id,
-      checkpointer,
+      model=model,
+      container=container,
+      kg=kg,
+      git_repo=git_repo,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
+      test_commands=test_commands,
+      thread_id=thread_id,
+      checkpointer=checkpointer,
     )
 
     issue_verified_bug_subgraph_node = IssueVerifiedBugSubgraphNode(
@@ -105,6 +105,7 @@ class IssueBugSubgraph:
     run_build: bool,
     run_existing_test: bool,
     number_of_candidate_patch: int,
+    max_refined_query_loop: int,
     recursion_limit: int = 30,
   ):
     config = {"recursion_limit": recursion_limit}
@@ -118,6 +119,7 @@ class IssueBugSubgraph:
       "run_build": run_build,
       "run_existing_test": run_existing_test,
       "number_of_candidate_patch": number_of_candidate_patch,
+      "max_refined_query_loop": max_refined_query_loop,
     }
 
     output_state = self.subgraph.invoke(input_state, config)
