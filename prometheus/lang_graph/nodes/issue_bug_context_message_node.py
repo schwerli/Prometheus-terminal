@@ -10,128 +10,101 @@ class IssueBugContextMessageNode:
   HUMAN_PROMPT = """\
 {issue_info}
 
-OBJECTIVE: Trace execution path and gather COMPLETE context needed to understand and fix this bug. The context
-must be comprehensive so that a person with zero knowledge of the codebase can fully understand and fix this bug
-without needing to look up any additional information.
+OBJECTIVE: Retrieve COMPLETE source code context needed to understand and fix this bug, focusing on actual implementation files while excluding test files. The retrieved context must be comprehensive enough for someone with zero knowledge of the codebase to fully understand and fix this bug.
 
-<analysis>
-To identify the root cause, we need to:
-1. Trace execution path.
-2. Find definition of involved code.
-</analysis>
+<retrieval_priority>
+1. HIGH PRIORITY:
+   - Files explicitly mentioned in the issue description or comments
+   - Classes/functions directly referenced in any code examples
+   - Files in the same directory as mentioned files
+
+2. SECONDARY PRIORITY:
+   - Dependencies of high-priority files
+   - Related configuration files
+   - Utility functions used by high-priority code
+</retrieval_priority>
+
+<retrieval_rules>
+1. INCLUDE:
+   - Complete class definitions with ALL methods
+   - Parent/super classes and their complete implementations
+   - Imported dependencies and their implementations
+   - Configuration files affecting behavior
+   - Utility functions used by any relevant code
+
+2. EXCLUDE:
+   - Test files (ending in _test.py, test_.py, or within test/ directories)
+   - Example code files
+   - Documentation files
+   - Backup files
+</retrieval_rules>
+
+<retrieval_strategy>
+1. Start with files/classes/functions explicitly mentioned in the issue
+2. Trace UPWARD: Find parent classes, interfaces, abstractions
+3. Trace DOWNWARD: Find child classes, implementations
+4. Trace SIDEWAYS: Find imported dependencies, utility functions
+5. Trace CONFIGURATION: Find all config values affecting behavior
+</retrieval_strategy>
 
 <example>
-A user has reported the following issue to the codebase:
+Given bug report:
 Issue title: calculate_area returns wrong result
-
 Issue description:
-When calculating the area of a rectangle, it returns the wrong result. Below is a minimal reproducing example:
-
+The bug seems to be in geometry/shapes.py. Here's the reproduction:
 ```python
 rectangle = Rectangle(10, 5)
 result = rectangle.calculate_area()
 assert result == 50  # AssertionError: actual value is 75
 ```
 
-Analysis Steps:
-1. First, we need Rectangle class definition and its parent class
-2. Then check Rectangle initialization and any methods called during it
-3. Finally examine calculate_area implementation and its dependencies
-
-<steps>
+Retrieval Process:
 <step1>
-<thought>I need to find the Rectangle class to understand how it is initialized and understand calculate_area function</thought>
-<action> find Rectangle class
-# File: geometry/rectangle.py, line: 1-22
-from .base import Figure
-from .utils import validate_dimensions
-from .config import ENABLE_CACHING
+<thought>First check the explicitly mentioned file geometry/shapes.py, then find the complete Rectangle class implementation</thought>
+<action>find geometry/shapes.py and Rectangle class implementation NOT in test files
+# File: geometry/shapes.py
+[Complete file contents...]
 
-class Rectangle(Figure):
-    def __init__(self, length, width):
-        super().__init__()
-        validate_dimensions(length, width)
-        self.length = length
-        self.width = width
-    
-    def calculate_area(self):
-        if ENABLE_CACHING and self._cached_area is not None:
-            return self._cached_area
-            
-        area = self.length * self.width * self._scale_factor
-        
-        if ENABLE_CACHING:
-            self._cached_area = area
-            
-        return area
+# File: geometry/rectangle.py
+[Complete Rectangle class implementation...]
 </action>
 </step1>
 
 <step2>
-<thought>I need to find the Figure parent class because we call super().__init__()</thought>
-<action> find __init__ method in Figure class
-# File: geometry/base.py, line: 1-7
-from abc import ABC, abstractmethod
-
-class Figure(ABC):
-    def __init__(self):
-        self._cached_area = None
-        self._scale_factor = 1.0
+<thought>Find complete parent class implementation</thought>
+<action>find Figure class implementation NOT in test files
+# File: geometry/base.py
+[Complete Figure class implementation...]
 </action>
 </step2>
 
 <step3>
-<thought>I need to find ENABLE_CACHING from config.py file because calculate_area function uses this variable that might affect the area calculation</thought>
-<action> find ENABLE_CACHING in config file
-# File: geometry/config.py, line 2-3
-DEFAULT_SCALE = 1.5
+<thought>Find all imported dependencies and their implementations</thought>
+<action>find implementations of validate_dimensions and config values NOT in test files
+# File: geometry/utils.py
+[validate_dimensions implementation...]
+
+# File: geometry/config.py
+[Configuration values...]
 </action>
 </step3>
 
 <step4>
-<thought>Now we have complete context even for a person without any knowledge about the codebase to understand and fix the bug.</thought>
-<action>Return all context we found
-# File: geometry/rectangle.py, line: 1-22
-from .base import Figure
-from .utils import validate_dimensions
-from .config import ENABLE_CACHING
-
-class Rectangle(Figure):
-    def __init__(self, length, width):
-        super().__init__()
-        validate_dimensions(length, width)
-        self.length = length
-        self.width = width
-    
-    def calculate_area(self):
-        if ENABLE_CACHING and self._cached_area is not None:
-            return self._cached_area
-            
-        area = self.length * self.width * self._scale_factor
-        
-        if ENABLE_CACHING:
-            self._cached_area = area
-            
-        return area
-
-# File: geometry/base.py, line: 1-7
-from abc import ABC, abstractmethod
-
-class Figure(ABC):
-    def __init__(self):
-        self._cached_area = None
-        self._scale_factor = 1.0
-
-# File: geometry/config.py, line 2-3
-DEFAULT_SCALE = 1.5       
+<thought>Verify we have complete context by checking all code paths</thought>
+<action>Return consolidated context from all found files NOT including tests
+[Combined complete context...]
 </action>
 </step4>
-<steps>
+</example>
 
-IMPORTANT REQUIREMENTS:
-1. Do NOT stop until you have found ALL relevant code and context
-2. Do NOT skip ANY potential execution paths
-3. Do NOT assume ANYTHING about the codebase - find explicit evidence for everything
+CRITICAL REQUIREMENTS:
+1. ALWAYS start with files explicitly mentioned in the issue
+2. Retrieve COMPLETE class/function implementations, not just relevant methods
+3. NEVER include test files or test-related code
+4. Follow ALL possible execution paths
+5. Find explicit source code evidence for everything - make no assumptions
+6. Continue until ALL relevant implementation code is found
+7. Include ALL configuration values that could affect behavior
 """
 
   def __init__(self):

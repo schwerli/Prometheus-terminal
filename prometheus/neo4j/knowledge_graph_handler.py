@@ -291,7 +291,7 @@ class KnowledgeGraphHandler:
       result = session.run(query)
       record = result.single()
       return record["graph_exists"] if record else False
-    
+
   def verify_empty(self, tx: ManagedTransaction):
     query = """
       MATCH (n)

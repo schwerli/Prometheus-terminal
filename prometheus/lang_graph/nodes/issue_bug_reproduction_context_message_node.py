@@ -11,7 +11,7 @@ class IssueBugReproductionContextMessageNode:
 {issue_info}
 
 OBJECTIVE: Find three relevant existing test cases that demonstrates similar functionality to the reported bug,
-including the test setup, mocking, assertions, and any test method used in the test case.
+including the imports, test setup, mocking, assertions, and any test method used in the test case.
 
 <reasoning>
 1. Analyze bug characteristics:
@@ -27,6 +27,7 @@ including the test setup, mocking, assertions, and any test method used in the t
    - Error handling tests
 
 3. Focus areas:
+   - Imports
    - Test setup and teardown
    - Mock object configuration
    - Network/external service simulation
@@ -49,6 +50,8 @@ raises ConnectionTimeout when load is high
 
 <ideal_test_match>
 # File: tests/test_database.py
+from unittest.mock import Mock
+
 class TestDatabaseTimeout:
     @pytest.fixture
     def mock_db_connection(self):
@@ -74,6 +77,8 @@ fails with PermissionError
 
 <ideal_test_match>
 # File: tests/test_file_processor.py
+from unittest.mock import patch
+
 class TestFilePermissions:
     @patch('os.access')
     @patch('builtins.open')

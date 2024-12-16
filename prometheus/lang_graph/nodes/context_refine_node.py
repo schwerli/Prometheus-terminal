@@ -71,7 +71,8 @@ Important Guidelines:
    - You're unsure if more context would help
 """.replace("{", "{{").replace("}", "}}")
 
-  REFINE_PROMPT = ("""\
+  REFINE_PROMPT = (
+    """\
 Your task is to analyze if the current context is sufficient for a developer to understand and fix the issue.
 Be conservative in requesting additional files - only request them if they are absolutely necessary to fix the issue.
 
@@ -163,12 +164,14 @@ Output:
 
 Analyze if the current context is truly sufficient or if additional files are ABSOLUTELY NECESSARY to fix the issue. 
 Be conservative - only request additional files if you can clearly explain why they are critical.
-""".replace("{", "{{").replace("}", "}}")
-   .replace("{{issue_info}}", "{issue_info}")
-   .replace("{{bug_context}}", "{bug_context}")
-)
+""".replace("{", "{{")
+    .replace("}", "}}")
+    .replace("{{issue_info}}", "{issue_info}")
+    .replace("{{bug_context}}", "{bug_context}")
+  )
 
-  EDIT_AND_ERROR_PROMPT = ("""\
+  EDIT_AND_ERROR_PROMPT = (
+    """\
 Your task is to analyze if a build/test failure occurred because critical source code or documentation files
 were missing. Only request additional files if they are absolutely necessary to fix the error.
 
@@ -308,12 +311,13 @@ Output:
 
 Analyze if the build/test failure is due to missing critical source code or documentation files.
 Be conservative - only request additional files if they are absolutely necessary to fix the error.
-""".replace("{", "{{").replace("}", "}}")
-   .replace("{{issue_info}}", "{issue_info}")
-   .replace("{{bug_context}}", "{bug_context}")
-   .replace("{{edit_patch}}", "{edit_patch}")
-   .replace("{{edit_error}}", "{edit_error}")
-)
+""".replace("{", "{{")
+    .replace("}", "}}")
+    .replace("{{issue_info}}", "{issue_info}")
+    .replace("{{bug_context}}", "{bug_context}")
+    .replace("{{edit_patch}}", "{edit_patch}")
+    .replace("{{edit_error}}", "{edit_error}")
+  )
 
   def __init__(self, model: BaseChatModel, has_edit_and_error: bool = False):
     self.has_edit_and_error = has_edit_and_error
@@ -372,7 +376,7 @@ Be conservative - only request additional files if they are absolutely necessary
     state_update = {"refined_query": response.refined_query}
 
     if "max_refined_query_loop" in state:
-      state_update["max_refined_query_loop"] = state["max_refined_query_loop"]-1
+      state_update["max_refined_query_loop"] = state["max_refined_query_loop"] - 1
 
     if response.refined_query:
       state_update["context_provider_messages"] = [HumanMessage(content=response.refined_query)]
