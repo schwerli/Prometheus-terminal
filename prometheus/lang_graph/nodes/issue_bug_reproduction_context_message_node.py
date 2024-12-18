@@ -11,7 +11,7 @@ class IssueBugReproductionContextMessageNode:
 {issue_info}
 
 OBJECTIVE: Find three relevant existing test cases that demonstrates similar functionality to the reported bug,
-including the imports, test setup, mocking, assertions, and any test method used in the test case.
+including ALL necessary imports, test setup, mocking, assertions, and any test method used in the test case.
 
 <reasoning>
 1. Analyze bug characteristics:
@@ -21,13 +21,15 @@ including the imports, test setup, mocking, assertions, and any test method used
    - Environmental dependencies
 
 2. Search requirements:
+   - Required imports and dependencies
    - Test files exercising similar functionality
    - Mock/fixture setup patterns
    - Assertion styles
    - Error handling tests
 
 3. Focus areas:
-   - Imports
+   - All necessary imports (standard library, testing frameworks, mocking utilities)
+   - Dependencies and third-party packages
    - Test setup and teardown
    - Mock object configuration
    - Network/external service simulation
@@ -35,7 +37,8 @@ including the imports, test setup, mocking, assertions, and any test method used
 </reasoning>
 
 REQUIREMENTS:
-- Return THREE complete, self-contained test case most similar to bug scenario
+- Return THREE complete, self-contained test cases most similar to bug scenario
+- Must include ALL necessary imports at the start of each test file
 - Must include full test method implementation
 - Must include ALL mock/fixture setup
 - Must include helper functions used by test
@@ -50,7 +53,11 @@ raises ConnectionTimeout when load is high
 
 <ideal_test_match>
 # File: tests/test_database.py
-from unittest.mock import Mock
+import pytest
+from unittest.mock import Mock, patch
+from database.exceptions import ConnectionTimeout
+from database.models import QueryResult
+from database.client import DatabaseClient
 
 class TestDatabaseTimeout:
     @pytest.fixture
@@ -77,7 +84,11 @@ fails with PermissionError
 
 <ideal_test_match>
 # File: tests/test_file_processor.py
-from unittest.mock import patch
+import os
+import pytest
+from unittest.mock import patch, mock_open
+from file_processor import FileProcessor
+from file_processor.exceptions import ProcessingError
 
 class TestFilePermissions:
     @patch('os.access')
@@ -90,12 +101,12 @@ class TestFilePermissions:
 </example>
 
 Search priority:
-1. Tests of exact same functionality
+1. Tests of exact same functionality (including import patterns)
 2. Tests with similar error conditions
 3. Tests with comparable mocking patterns
 4. Tests demonstrating similar assertions
 
-Return the THREE most relevant test cases with complete context.
+Return the THREE most relevant test cases with complete context, ensuring ALL necessary imports are included at the start of each test file.
 """
 
   def __init__(self):

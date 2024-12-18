@@ -28,7 +28,6 @@ def test_build_and_test_subgraph_basic_initialization(mock_container, mock_kg):
 
   # Verify the subgraph was created
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None
 
 
 def test_build_and_test_subgraph_with_commands(mock_container, mock_kg):
@@ -46,4 +45,3 @@ def test_build_and_test_subgraph_with_commands(mock_container, mock_kg):
   )
 
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None

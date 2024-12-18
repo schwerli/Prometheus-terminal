@@ -3,7 +3,6 @@ from typing import Mapping, Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -39,11 +38,8 @@ class BugReproductionSubgraph:
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]] = None,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self.git_repo = git_repo
-    self.thread_id = thread_id
 
     issue_bug_reproduction_context_message_node = IssueBugReproductionContextMessageNode()
     context_provider_node = ContextProviderNode(model, kg, neo4j_driver, max_token_per_neo4j_result)
@@ -168,7 +164,7 @@ class BugReproductionSubgraph:
       "bug_reproducing_write_message_node",
     )
 
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(
     self,
@@ -178,8 +174,6 @@ class BugReproductionSubgraph:
     recursion_limit: int = 50,
   ):
     config = {"recursion_limit": recursion_limit}
-    if self.thread_id:
-      config["configurable"] = {"thread_id": self.thread_id}
 
     input_state = {
       "issue_title": issue_title,

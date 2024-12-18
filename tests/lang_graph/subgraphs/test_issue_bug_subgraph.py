@@ -52,7 +52,6 @@ def test_issue_bug_subgraph_basic_initialization(
 
   # Verify the subgraph was created
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None
 
 
 def test_issue_bug_subgraph_with_commands(
@@ -75,4 +74,3 @@ def test_issue_bug_subgraph_with_commands(
   )
 
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None

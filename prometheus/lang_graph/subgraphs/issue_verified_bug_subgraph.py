@@ -3,7 +3,6 @@ from typing import Mapping, Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -38,11 +37,7 @@ class IssueVerifiedBugSubgraph:
     max_token_per_neo4j_result: int,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    self.thread_id = thread_id
-
     issue_bug_context_message_node = IssueBugContextMessageNode()
     context_provider_node = ContextProviderNode(model, kg, neo4j_driver, max_token_per_neo4j_result)
     context_provider_tools = ToolNode(
@@ -65,11 +60,16 @@ class IssueVerifiedBugSubgraph:
     update_container_node = UpdateContainerNode(container, git_repo)
 
     bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(
-      model, container, thread_id, checkpointer
+      model,
+      container,
     )
     build_or_test_branch_node = NoopNode()
     build_and_test_subgraph_node = BuildAndTestSubgraphNode(
-      container, model, kg, build_commands, test_commands, thread_id, checkpointer
+      container,
+      model,
+      kg,
+      build_commands,
+      test_commands,
     )
 
     context_refine_node = ContextRefineNode(model, has_edit_and_error=True)
@@ -139,7 +139,7 @@ class IssueVerifiedBugSubgraph:
       {True: "context_provider_node", False: "issue_bug_analyzer_message_node"},
     )
 
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(
     self,
@@ -154,8 +154,6 @@ class IssueVerifiedBugSubgraph:
     recursion_limit: int = 150,
   ):
     config = {"recursion_limit": recursion_limit}
-    if self.thread_id:
-      config["configurable"] = {"thread_id": self.thread_id}
 
     input_state = {
       "issue_title": issue_title,

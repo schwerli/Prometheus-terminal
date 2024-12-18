@@ -2,7 +2,6 @@ import logging
 from typing import Optional, Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -18,8 +17,6 @@ class BuildAndTestSubgraphNode:
     kg: KnowledgeGraph,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self.build_and_test_subgraph = BuildAndTestSubgraph(
       container=container,
@@ -27,8 +24,6 @@ class BuildAndTestSubgraphNode:
       kg=kg,
       build_commands=build_commands,
       test_commands=test_commands,
-      thread_id=thread_id,
-      checkpointer=checkpointer,
     )
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.build_and_test_subgraph_node")
 

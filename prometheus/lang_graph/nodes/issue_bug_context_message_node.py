@@ -10,7 +10,9 @@ class IssueBugContextMessageNode:
   HUMAN_PROMPT = """\
 {issue_info}
 
-OBJECTIVE: Retrieve COMPLETE source code context needed to understand and fix this bug, focusing on actual implementation files while excluding test files. The retrieved context must be comprehensive enough for someone with zero knowledge of the codebase to fully understand and fix this bug.
+OBJECTIVE: Retrieve COMPLETE source code context needed to understand and fix this bug, focusing on actual
+implementation files while excluding test files. The retrieved context must be comprehensive enough for
+someone with zero knowledge of the codebase to fully understand and fix this bug.
 
 <retrieval_priority>
 1. HIGH PRIORITY:

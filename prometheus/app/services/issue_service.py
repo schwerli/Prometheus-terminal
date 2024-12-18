@@ -1,4 +1,3 @@
-import uuid
 from typing import Mapping, Optional, Sequence
 
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
@@ -57,18 +56,15 @@ class IssueService:
     else:
       container = GeneralContainer(self.kg_service.kg.get_local_path(), workdir)
 
-    thread_id = str(uuid.uuid4())
     issue_graph = IssueGraph(
-      self.llm_service.model,
-      self.kg_service.kg,
-      self.repository_service.git_repo,
-      self.neo4j_service.neo4j_driver,
-      self.max_token_per_neo4j_result,
-      container,
-      build_commands,
-      test_commands,
-      thread_id,
-      self.postgres_service.checkpointer,
+      model=self.llm_service.model,
+      kg=self.kg_service.kg,
+      git_repo=self.repository_service.git_repo,
+      neo4j_driver=self.neo4j_service.neo4j_driver,
+      max_token_per_neo4j_result=self.max_token_per_neo4j_result,
+      container=container,
+      build_commands=build_commands,
+      test_commands=test_commands,
     )
 
     output_state = issue_graph.invoke(

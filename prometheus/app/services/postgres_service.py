@@ -3,9 +3,6 @@
 from datetime import datetime
 
 from langchain_core.messages import AIMessage, HumanMessage
-from langgraph.checkpoint.postgres import PostgresSaver
-from psycopg import Connection
-from psycopg.rows import dict_row
 
 
 class PostgresService:
@@ -17,14 +14,15 @@ class PostgresService:
   """
 
   def __init__(self, postgres_uri: str):
-    self.postgres_conn = Connection.connect(
-      postgres_uri,
-      autocommit=True,
-      prepare_threshold=0,
-      row_factory=dict_row,
-    )
-    self.checkpointer = PostgresSaver(self.postgres_conn)
-    self.checkpointer.setup()
+    pass
+    # self.postgres_conn = Connection.connect(
+    #  postgres_uri,
+    #  autocommit=True,
+    #  prepare_threshold=0,
+    #  row_factory=dict_row,
+    # )
+    # self.checkpointer = PostgresSaver(self.postgres_conn)
+    # self.checkpointer.setup()
 
   def close(self):
     self.postgres_conn.close()

@@ -1,9 +1,7 @@
 import logging
-from typing import Optional
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueState
@@ -19,8 +17,6 @@ class IssueClassificationSubgraphNode:
     kg: KnowledgeGraph,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger(
       "prometheus.lang_graph.nodes.issue_classification_subgraph_node"
@@ -30,8 +26,6 @@ class IssueClassificationSubgraphNode:
       kg=kg,
       neo4j_driver=neo4j_driver,
       max_token_per_neo4j_result=max_token_per_neo4j_result,
-      thread_id=thread_id,
-      checkpointer=checkpointer,
     )
 
   def __call__(self, state: IssueState):

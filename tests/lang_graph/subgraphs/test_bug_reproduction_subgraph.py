@@ -46,4 +46,3 @@ def test_bug_reproduction_subgraph_basic_initialization(
 
   # Verify the subgraph was created
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None

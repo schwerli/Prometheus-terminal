@@ -1,9 +1,8 @@
 import functools
-from typing import Mapping, Optional, Sequence
+from typing import Mapping, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -31,11 +30,7 @@ class IssueNotVerifiedBugSubgraph:
     git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    self.thread_id = thread_id
-
     issue_bug_context_message_node = IssueBugContextMessageNode()
     context_provider_node = ContextProviderNode(model, kg, neo4j_driver, max_token_per_neo4j_result)
     context_provider_tools = ToolNode(
@@ -123,7 +118,7 @@ class IssueNotVerifiedBugSubgraph:
 
     workflow.add_edge("final_patch_selection_node", END)
 
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(
     self,
@@ -135,8 +130,6 @@ class IssueNotVerifiedBugSubgraph:
     recursion_limit: int = 999,
   ):
     config = {"recursion_limit": recursion_limit}
-    if self.thread_id:
-      config["configurable"] = {"thread_id": self.thread_id}
 
     input_state = {
       "issue_title": issue_title,

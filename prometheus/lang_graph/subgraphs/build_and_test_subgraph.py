@@ -2,7 +2,6 @@ import functools
 from typing import Mapping, Optional, Sequence, Union
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -28,11 +27,7 @@ class BuildAndTestSubgraph:
     kg: KnowledgeGraph,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    self.thread_id = thread_id
-
     build_branch_node = NoopNode()
     if build_commands:
       build_node = UserDefinedBuildNode(container)
@@ -109,7 +104,7 @@ class BuildAndTestSubgraph:
       workflow.add_edge("test_tools", "test_node")
     workflow.add_edge("general_test_structured_node", END)
 
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(
     self,
@@ -123,8 +118,6 @@ class BuildAndTestSubgraph:
     existing_test_fail_log: Optional[str] = None,
   ) -> Mapping[str, Union[bool, str]]:
     config = None
-    if self.thread_id:
-      config = {"configurable": {"thread_id": self.thread_id}}
 
     input_state = {
       "run_build": run_build,

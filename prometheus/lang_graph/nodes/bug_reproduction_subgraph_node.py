@@ -3,7 +3,6 @@ from typing import Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
 
 from prometheus.docker.base_container import BaseContainer
@@ -23,8 +22,6 @@ class BugReproductionSubgraphNode:
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]],
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
     self.git_repo = git_repo
@@ -36,8 +33,6 @@ class BugReproductionSubgraphNode:
       neo4j_driver=neo4j_driver,
       max_token_per_neo4j_result=max_token_per_neo4j_result,
       test_commands=test_commands,
-      thread_id=thread_id,
-      checkpointer=checkpointer,
     )
 
   def __call__(self, state: IssueBugState):
