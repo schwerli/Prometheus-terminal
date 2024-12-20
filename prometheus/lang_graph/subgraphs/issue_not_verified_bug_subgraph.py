@@ -38,7 +38,7 @@ class IssueNotVerifiedBugSubgraph:
       name="context_provider_tools",
       messages_key="context_provider_messages",
     )
-    context_refine_node = ContextRefineNode(model, has_edit_and_error=False)
+    context_refine_node = ContextRefineNode(model, kg)
 
     issue_bug_analyzer_message_node = IssueBugAnalyzerMessageNode()
     issue_bug_analyzer_node = IssueBugAnalyzerNode(model)

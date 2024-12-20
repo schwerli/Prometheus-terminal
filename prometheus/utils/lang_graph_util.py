@@ -82,6 +82,15 @@ def extract_ai_responses(messages: Sequence[BaseMessage]) -> Sequence[str]:
   return ai_responses
 
 
+def extract_human_queries(messages: Sequence[BaseMessage]) -> Sequence[str]:
+  human_queries = []
+  output_parser = StrOutputParser()
+  for message in messages:
+    if isinstance(message, HumanMessage):
+      human_queries.append(output_parser.invoke(message))
+  return human_queries
+
+
 def get_last_message_content(messages: Sequence[BaseMessage]) -> Sequence[str]:
   output_parser = StrOutputParser()
   return output_parser.invoke(messages[-1])

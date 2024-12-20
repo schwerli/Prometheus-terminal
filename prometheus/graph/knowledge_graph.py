@@ -254,7 +254,7 @@ class KnowledgeGraph:
       knowledge_graph_edges=knowledge_graph_edges,
     )
 
-  def get_file_tree(self, max_depth: int = 4, max_lines: int = 1000) -> str:
+  def get_file_tree(self, max_depth: int = 5, max_lines: int = 5000) -> str:
     """Generate a tree-like string representation of the file structure.
 
     Creates an ASCII tree visualization of the file hierarchy, similar to the Unix 'tree'
@@ -274,9 +274,9 @@ class KnowledgeGraph:
 
     Args:
       max_depth: Maximum depth of the tree to display. Nodes beyond this depth will
-        be omitted. Defaults to 4.
+        be omitted. Defaults to 5.
       max_lines: Maximum number of lines in the output string. Useful for truncating
-        very large trees. Defaults to 1000.
+        very large trees. Defaults to 5000.
 
     Returns:
       str: A string representation of the file tree, where each line represents a file

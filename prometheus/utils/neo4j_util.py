@@ -18,9 +18,9 @@ def format_neo4j_result(result: neo4j.Result, max_token_per_result: int) -> str:
   for index, row_result in enumerate(data):
     output += f"Result {index+1}:\n"
     for key in sorted(row_result.keys()):
-      output += f"{key}: {truncate_text(str(row_result[key]), max_token_per_result)}\n"
+      output += f"{key}: {str(row_result[key])}\n"
     output += "\n\n"
-  return output.strip()
+  return truncate_text(output.strip(), max_token_per_result)
 
 
 def run_neo4j_query(

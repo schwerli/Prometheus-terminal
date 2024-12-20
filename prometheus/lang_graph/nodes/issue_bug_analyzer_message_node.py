@@ -4,7 +4,7 @@ from typing import Dict
 from langchain_core.messages import HumanMessage
 
 from prometheus.utils.issue_util import format_issue_info
-from prometheus.utils.lang_graph_util import extract_ai_responses, get_last_message_content
+from prometheus.utils.lang_graph_util import extract_ai_responses
 
 
 class IssueBugAnalyzerMessageNode:
@@ -45,8 +45,6 @@ Given your suggestion, the edit agent generated the following patch:
 The patch generated following error:
 {edit_error}
 
-{additional_context}
-
 Please:
 1. Analyze why the patch failed
 2. Identify any issues with the original patch (syntax errors, incorrect file paths, context mismatches, etc.)
@@ -77,17 +75,10 @@ Please provide your revised solution following the same detailed format as befor
         )
       )
 
-    additional_context = ""
-    if "refined_query" in state and state["refined_query"]:
-      additional_context = "Additional context that might be useful:\n" + get_last_message_content(
-        state["context_provider_messages"]
-      )
-
     return HumanMessage(
       self.FOLLOWUP_HUMAN_PROMPT.format(
         edit_patch=state["edit_patch"],
         edit_error=edit_error,
-        additional_context=additional_context,
       )
     )
 

@@ -45,6 +45,7 @@ class IssueVerifiedBugSubgraph:
       name="context_provider_tools",
       messages_key="context_provider_messages",
     )
+    context_refine_node = ContextRefineNode(model, kg)
 
     issue_bug_analyzer_message_node = IssueBugAnalyzerMessageNode()
     issue_bug_analyzer_node = IssueBugAnalyzerNode(model)
@@ -72,13 +73,12 @@ class IssueVerifiedBugSubgraph:
       test_commands,
     )
 
-    context_refine_node = ContextRefineNode(model, has_edit_and_error=True)
-
     workflow = StateGraph(IssueVerifiedBugState)
 
     workflow.add_node("issue_bug_context_message_node", issue_bug_context_message_node)
     workflow.add_node("context_provider_node", context_provider_node)
     workflow.add_node("context_provider_tools", context_provider_tools)
+    workflow.add_node("context_refine_node", context_refine_node)
 
     workflow.add_node("issue_bug_analyzer_message_node", issue_bug_analyzer_message_node)
     workflow.add_node("issue_bug_analyzer_node", issue_bug_analyzer_node)
@@ -93,16 +93,20 @@ class IssueVerifiedBugSubgraph:
     workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
     workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
 
-    workflow.add_node("context_refine_node", context_refine_node)
-
     workflow.set_entry_point("issue_bug_context_message_node")
     workflow.add_edge("issue_bug_context_message_node", "context_provider_node")
     workflow.add_conditional_edges(
       "context_provider_node",
       functools.partial(tools_condition, messages_key="context_provider_messages"),
-      {"tools": "context_provider_tools", END: "issue_bug_analyzer_message_node"},
+      {"tools": "context_provider_tools", END: "context_refine_node"},
     )
     workflow.add_edge("context_provider_tools", "context_provider_node")
+
+    workflow.add_conditional_edges(
+      "context_refine_node",
+      lambda state: bool(state["refined_query"]),
+      {True: "context_provider_node", False: "issue_bug_analyzer_message_node"},
+    )
 
     workflow.add_edge("issue_bug_analyzer_message_node", "issue_bug_analyzer_node")
     workflow.add_edge("issue_bug_analyzer_node", "edit_message_node")
@@ -120,7 +124,7 @@ class IssueVerifiedBugSubgraph:
     workflow.add_conditional_edges(
       "bug_fix_verification_subgraph_node",
       lambda state: bool(state["reproducing_test_fail_log"]),
-      {True: "context_refine_node", False: "build_or_test_branch_node"},
+      {True: "issue_bug_analyzer_message_node", False: "build_or_test_branch_node"},
     )
     workflow.add_conditional_edges(
       "build_or_test_branch_node",
@@ -130,13 +134,7 @@ class IssueVerifiedBugSubgraph:
     workflow.add_conditional_edges(
       "build_and_test_subgraph_node",
       lambda state: bool(state["build_fail_log"]) or bool(state["existing_test_fail_log"]),
-      {True: "context_refine_node", False: END},
-    )
-
-    workflow.add_conditional_edges(
-      "context_refine_node",
-      lambda state: bool(state["refined_query"]),
-      {True: "context_provider_node", False: "issue_bug_analyzer_message_node"},
+      {True: "issue_bug_analyzer_message_node", False: END},
     )
 
     self.subgraph = workflow.compile()

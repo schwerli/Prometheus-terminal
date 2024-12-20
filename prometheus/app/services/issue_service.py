@@ -3,7 +3,6 @@ from typing import Mapping, Optional, Sequence
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
-from prometheus.app.services.postgres_service import PostgresService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.docker.user_defined_container import UserDefinedContainer
@@ -17,14 +16,12 @@ class IssueService:
     kg_service: KnowledgeGraphService,
     repository_service: RepositoryService,
     neo4j_service: Neo4jService,
-    postgres_service: PostgresService,
     llm_service: LLMService,
     max_token_per_neo4j_result: int,
   ):
     self.kg_service = kg_service
     self.repository_service = repository_service
     self.neo4j_service = neo4j_service
-    self.postgres_service = postgres_service
     self.llm_service = llm_service
     self.max_token_per_neo4j_result = max_token_per_neo4j_result
 
