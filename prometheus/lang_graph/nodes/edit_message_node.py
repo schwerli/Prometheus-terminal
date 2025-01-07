@@ -3,8 +3,8 @@ from typing import Dict
 
 from langchain_core.messages import HumanMessage
 
-from prometheus.utils.issue_util import format_issue_info
-from prometheus.utils.lang_graph_util import extract_ai_responses, get_last_message_content
+from prometheus.utils.issue_util import format_agent_tool_message_history, format_issue_info
+from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class EditMessageNode:
@@ -23,8 +23,6 @@ Please implement these changes precisely, following the exact specifications fro
   FOLLOWUP_HUMAN_PROMPT = """\
 The edit that you generated following error:
 {edit_error}
-
-{additional_context}
 
 Bug analyzer agent has analyzed the issue and provided instruction on how to fix it:
 {bug_analyzer_message}
@@ -47,17 +45,10 @@ specific issues that caused the previous error.
     elif "existing_test_fail_log" in state and state["existing_test_fail_log"]:
       edit_error = f"Your failed to existing test cases:\n{state['existing_test_fail_log']}"
 
-    additional_context = ""
-    if "refined_query" in state and state["refined_query"]:
-      additional_context = "Additional context that might be useful:\n" + get_last_message_content(
-        state["context_provider_messages"]
-      )
-
     if edit_error:
       return HumanMessage(
         self.FOLLOWUP_HUMAN_PROMPT.format(
           edit_error=edit_error,
-          additional_context=additional_context,
           bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
         )
       )
@@ -67,7 +58,7 @@ specific issues that caused the previous error.
         issue_info=format_issue_info(
           state["issue_title"], state["issue_body"], state["issue_comments"]
         ),
-        bug_context="\n".join(extract_ai_responses(state["context_provider_messages"])),
+        bug_context=format_agent_tool_message_history(state["context_provider_messages"]),
         bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
       )
     )

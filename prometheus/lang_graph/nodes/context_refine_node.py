@@ -7,8 +7,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.utils.issue_util import format_issue_info
-from prometheus.utils.lang_graph_util import extract_ai_responses, extract_human_queries
+from prometheus.utils.issue_util import format_agent_tool_message_history, format_issue_info
+from prometheus.utils.lang_graph_util import extract_human_queries
 
 
 class ContextRefineStructuredOutput(BaseModel):
@@ -22,6 +22,15 @@ class ContextRefineNode:
   SYS_PROMPT = """\
 You are a software engineering assistant specialized in analyzing code context to determine if
 additional source code or documentation from the codebase is necessary.
+
+Your goal is to request additional context ONLY when necessary:
+1. When critical implementation details are missing to understand the root cause
+2. When key dependencies or related code are not visible in the current context
+3. When documentation is needed to understand complex business logic or requirements
+
+DO NOT request additional context if:
+1. The current context already contains enough information to implement a fix
+2. The additional context would only provide nice-to-have but non-essential details
 
 Output format:
 ```python
@@ -44,12 +53,16 @@ Here is the queries I have asked:
 All aggregated context for the queries:
 {bug_context}
 
-Analyze if the current context is sufficient to fix the issue. The context is sufficient if a persion
-without prior knowledge about the codebase can understand the issue and fix it. Do not ask the same
-query as before.
+Analyze if the current context is sufficient to implement a fix by considering:
+1. Can you identify the root cause of the issue from the current context?
+2. Do you have access to all relevant code that needs to be modified?
+3. Are all critical dependencies and their interfaces visible?
 
-For example you can ask for additional files in the codebase to be looked at, search method/class
-implementations, or ask more for context in the same file.
+Only request additional context if essential information is missing. Ensure you're not requesting:
+- Information already provided in previous queries
+- Nice-to-have but non-essential details
+
+If additional context is needed, be specific about what you're looking for.
 """
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
@@ -64,7 +77,7 @@ implementations, or ask more for context in the same file.
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_refine_node")
 
   def format_refine_message(self, state: Dict):
-    bug_context = "\n\n".join(extract_ai_responses(state["context_provider_messages"]))
+    bug_context = format_agent_tool_message_history(state["context_provider_messages"])
     queries = "\n\n".join(extract_human_queries(state["context_provider_messages"])[1:])
     return self.REFINE_PROMPT.format(
       issue_info=format_issue_info(

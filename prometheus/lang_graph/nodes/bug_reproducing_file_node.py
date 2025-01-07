@@ -16,13 +16,15 @@ class BugReproducingFileNode:
 You are a test file manager. Your task is to save the provided bug reproducing code in the project. You should:
 
 1. Examine the project structure to identify existing test file naming patterns and test folder organization
-2. Use the create_file tool to save the bug reproducing code in a SINGLE new test file following the project's existing test filename conventions
+2. Use the create_file tool to save the bug reproducing code in a SINGLE new test file that do not yet exists,
+   the name should follow the project's existing test filename conventions
 3. After creating the file, return its relative path
 
 Tools available:
 - create_file: Create a new SINGLE file with specified content
 
-You can only call the create_file tool ONCE with the appropriate path and content, then respond with the created file's relative path.
+If create_file fails because there is already a file with that names, use another name.
+Respond with the created file's relative path.
 """
 
   HUMAN_PROMPT = """\

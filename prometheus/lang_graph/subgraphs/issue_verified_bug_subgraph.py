@@ -149,7 +149,7 @@ class IssueVerifiedBugSubgraph:
     reproduced_bug_file: str,
     reproduced_bug_commands: Sequence[str],
     max_refined_query_loop: int,
-    recursion_limit: int = 150,
+    recursion_limit: int = 80,
   ):
     config = {"recursion_limit": recursion_limit}
 

@@ -78,10 +78,7 @@ Find all ASTNode in the graph that exactly contains this text in any source file
 a file/directory with this basename. The contains is same as python's check `'foo' in text`, 
 ie. it is case sensitive and is looking for exact matches. Therefore the search text should 
 be exact as well. The basename can be either a file (like 'bar.py', 'baz.java') or a 
-directory (like 'src' or 'test').
-
-When searching under a directory, always choose the most specific directory possible to narrow 
-down the search scope."""
+directory (like 'src' or 'test')."""
 
 
 def find_ast_node_with_text_in_file_with_basename(
@@ -107,10 +104,7 @@ Find all ASTNode in the graph that exactly contains this text in any source file
 a file/directory with this relative path. The contains is same as python's check `'foo' in text`, 
 ie. it is case sensitive and is looking for exact matches. Therefore the search text should 
 be exact as well. The relative path should be the path from the root of codebase 
-(like 'src/core/parser.py' or 'test/unit').
-
-When searching under a directory, always choose the most specific directory possible to narrow 
-down the search scope."""
+(like 'src/core/parser.py' or 'test/unit')."""
 
 
 def find_ast_node_with_text_in_file_with_relative_path(
@@ -134,10 +128,7 @@ class FindASTNodeWithTypeInFileWithBasenameInput(BaseModel):
 FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_BASENAME_DESCRIPTION = """\
 Find all ASTNode in the graph that has this tree-sitter node type in any source file under
 a file/directory with this basename. The basename can be either a file (like 'bar.py', 
-'baz.java') or a directory (like 'core' or 'test').
-
-When searching under a directory, always choose the most specific directory possible to narrow 
-down the search scope."""
+'baz.java') or a directory (like 'core' or 'test')."""
 
 
 def find_ast_node_with_type_in_file_with_basename(
@@ -161,10 +152,7 @@ class FindASTNodeWithTypeInFileWithRelativePathInput(BaseModel):
 FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION = """\
 Find all ASTNode in the graph that has this tree-sitter node type in any source file under
 a file/directory with this relative path. The relative path should be the path from the root 
-of codebase (like 'src/core/parser.py' or 'test/unit').
-
-When searching under a directory, always choose the most specific directory possible to narrow 
-down the search scope."""
+of codebase (like 'src/core/parser.py' or 'test/unit')."""
 
 
 def find_ast_node_with_type_in_file_with_relative_path(

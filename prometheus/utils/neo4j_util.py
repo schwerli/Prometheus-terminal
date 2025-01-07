@@ -14,6 +14,9 @@ def format_neo4j_result(result: neo4j.Result, max_token_per_result: int) -> str:
     A string representation of the result.
   """
   data = result.data()
+  if not data:
+    return "Your query returned empty result, please try a different query."
+
   output = ""
   for index, row_result in enumerate(data):
     output += f"Result {index+1}:\n"

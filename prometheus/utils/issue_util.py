@@ -51,7 +51,7 @@ def format_agent_tool_message_history(messages: Sequence[BaseMessage]) -> str:
           formatted_messages.append(f"Assistant executed tool: {tool_call['function']}")
     elif isinstance(message, ToolMessage):
       formatted_messages.append(f"Tool output: {message.content}")
-  return "\n".join(formatted_messages)
+  return "\n\n".join(formatted_messages)
 
 
 def format_test_commands(test_commands: Sequence[str]) -> str:

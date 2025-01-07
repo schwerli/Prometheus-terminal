@@ -20,12 +20,7 @@ Follow these steps:
 3. Include related code from the same module that affects the behavior
 4. Follow imports to find dependent code that directly impacts the issue
 
-Important:
-- Include complete class implementations, not partial code, no truncation
-- Do not only truncate the file, class, function to just the first 20 or 100 lines. Get the full context.
-- Return the full context, even if they are few thousands lines of text
-- Include all imports and class-level code
-- Exclude test files and examples
+You should ignore test files
 """.replace("{", "{{")
     .replace("}", "}}")
     .replace("{{issue_info}}", "{issue_info}")

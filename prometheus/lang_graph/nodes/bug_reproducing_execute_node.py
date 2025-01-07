@@ -4,7 +4,7 @@ from typing import Optional, Sequence
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
@@ -16,7 +16,7 @@ from prometheus.utils.patch_util import get_updated_files
 class BugReproducingExecuteNode:
   SYS_PROMPT = """\
 You are a testing expert focused solely on executing a single bug reproduction test file.
-Your only goal is to run the test file created by the previous agent and report its output.
+Your only goal is to run the test file created by the previous agent and return its output as it is.
 
 Adapt the user provided test command to execute the single bug reproduction test file, otherwise
 figure out what test framework it uses.
@@ -90,7 +90,15 @@ User provided test commands:
     )
 
   def __call__(self, state: BugReproductionState):
-    reproduced_bug_file = self.added_test_filename(state)
+    try:
+      reproduced_bug_file = self.added_test_filename(state)
+    except ValueError as e:
+      self._logger.error(f"Error in bug reproducing execute node: {e}")
+      return {
+        "bug_reproducing_execute_messages": [
+          AIMessage(f"THE TEST WAS NOT EXECUTED BECAUSE OF AN ERROR: {str(e)}")
+        ],
+      }
 
     message_history = [
       self.system_prompt,

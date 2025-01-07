@@ -106,7 +106,7 @@ Search priority:
 3. Tests with comparable mocking patterns
 4. Tests demonstrating similar assertions
 
-Return the THREE most relevant test cases with complete context, ensuring ALL necessary imports are included at the start of each test file.
+Find the THREE most relevant test cases with complete context, ensuring ALL necessary imports are included at the start of each test file.
 """
 
   def __init__(self):
