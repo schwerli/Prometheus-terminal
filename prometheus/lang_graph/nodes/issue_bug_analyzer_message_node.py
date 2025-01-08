@@ -3,7 +3,7 @@ from typing import Dict
 
 from langchain_core.messages import HumanMessage
 
-from prometheus.utils.issue_util import format_agent_tool_message_history, format_issue_info
+from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueBugAnalyzerMessageNode:
@@ -37,7 +37,7 @@ Here are the details for analysis:
 {issue_info}
 
 Bug Context:
-{bug_context}
+{bug_fix_context}
 """
 
   FOLLOWUP_HUMAN_PROMPT = """\
@@ -81,7 +81,7 @@ Do NOT provide actual code snippets or diffs. Focus on describing what needs to 
           issue_info=format_issue_info(
             state["issue_title"], state["issue_body"], state["issue_comments"]
           ),
-          bug_context=format_agent_tool_message_history(state["context_provider_messages"]),
+          bug_fix_context="\n\n".join(state["bug_fix_context"]),
         )
       )
 

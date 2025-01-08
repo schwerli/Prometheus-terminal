@@ -15,7 +15,8 @@ from prometheus.lang_graph.subgraphs.issue_bug_subgraph import IssueBugSubgraph
 class IssueBugSubgraphNode:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
@@ -27,7 +28,8 @@ class IssueBugSubgraphNode:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_subgraph_node")
     self.container = container
     self.issue_bug_subgraph = IssueBugSubgraph(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       container=container,
       kg=kg,
       git_repo=git_repo,

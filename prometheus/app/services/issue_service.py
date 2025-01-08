@@ -54,7 +54,8 @@ class IssueService:
       container = GeneralContainer(self.kg_service.kg.get_local_path(), workdir)
 
     issue_graph = IssueGraph(
-      model=self.llm_service.model,
+      advanced_model=self.llm_service.advanced_model,
+      base_model=self.llm_service.base_model,
       kg=self.kg_service.kg,
       git_repo=self.repository_service.git_repo,
       neo4j_driver=self.neo4j_service.neo4j_driver,

@@ -33,7 +33,7 @@ def test_no_truncation_needed():
 def test_truncation():
   # Generate text that will definitely need truncation
   long_text = "Hello world! " * 50
-  max_tokens = 20
+  max_tokens = 50
   result = truncate_text(long_text, max_tokens)
 
   # Verify length

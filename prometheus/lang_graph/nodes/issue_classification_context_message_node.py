@@ -1,13 +1,11 @@
 import logging
 
-from langchain_core.messages import HumanMessage
-
 from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClassificationState
 from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueClassificationContextMessageNode:
-  HUMAN_PROMPT = """\
+  ISSUE_CLASSIFICATION_QUERY = """\
 {issue_info}
 
 OBJECTIVE: Find ALL self-contained context needed to accurately classify this issue as a bug, feature request, documentation update, or question.
@@ -79,12 +77,10 @@ Search priority:
     )
 
   def __call__(self, state: IssueClassificationState):
-    human_message = HumanMessage(
-      self.HUMAN_PROMPT.format(
-        issue_info=format_issue_info(
-          state["issue_title"], state["issue_body"], state["issue_comments"]
-        ),
-      )
+    issue_classification_query = self.ISSUE_CLASSIFICATION_QUERY.format(
+      issue_info=format_issue_info(
+        state["issue_title"], state["issue_body"], state["issue_comments"]
+      ),
     )
-    self._logger.debug(f"Sending query to context provider:\n{human_message}")
-    return {"context_provider_messages": [human_message]}
+    self._logger.debug(f"Sending query to context provider:\n{issue_classification_query}")
+    return {"issue_classification_query": issue_classification_query}

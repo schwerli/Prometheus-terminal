@@ -37,11 +37,18 @@ def test_bug_reproduction_subgraph_basic_initialization(
 ):
   """Test that BugReproductionSubgraph initializes correctly with basic components."""
   # Initialize fake model with empty responses
-  fake_model = FakeListChatWithToolsModel(responses=[])
+  fake_advanced_model = FakeListChatWithToolsModel(responses=[])
+  fake_base_model = FakeListChatWithToolsModel(responses=[])
 
   # Initialize the subgraph
   subgraph = BugReproductionSubgraph(
-    fake_model, mock_container, mock_kg, mock_git_repo, mock_neo4j_driver, 0
+    fake_advanced_model,
+    fake_base_model,
+    mock_container,
+    mock_kg,
+    mock_git_repo,
+    mock_neo4j_driver,
+    0,
   )
 
   # Verify the subgraph was created

@@ -1,13 +1,11 @@
 import logging
 
-from langchain_core.messages import HumanMessage
-
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueBugReproductionContextMessageNode:
-  HUMAN_PROMPT = """\
+  BUG_REPRODUCING_QUERY = """\
 {issue_info}
 
 OBJECTIVE: Find three relevant existing test cases that demonstrates similar functionality to the reported bug,
@@ -115,12 +113,10 @@ Find the THREE most relevant test cases with complete context, ensuring ALL nece
     )
 
   def __call__(self, state: BugReproductionState):
-    human_message = HumanMessage(
-      self.HUMAN_PROMPT.format(
-        issue_info=format_issue_info(
-          state["issue_title"], state["issue_body"], state["issue_comments"]
-        ),
-      )
+    bug_reproducing_query = self.BUG_REPRODUCING_QUERY.format(
+      issue_info=format_issue_info(
+        state["issue_title"], state["issue_body"], state["issue_comments"]
+      ),
     )
-    self._logger.debug(f"Sending query to context provider:\n{human_message}")
-    return {"context_provider_messages": [human_message]}
+    self._logger.debug(f"Sending query to context provider subgraph:\n{bug_reproducing_query}")
+    return {"bug_reproducing_query": bug_reproducing_query}

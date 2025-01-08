@@ -18,7 +18,8 @@ from prometheus.lang_graph.nodes.noop_node import NoopNode
 class IssueGraph:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
@@ -31,20 +32,21 @@ class IssueGraph:
 
     issue_type_branch_node = NoopNode()
     issue_classification_subgraph_node = IssueClassificationSubgraphNode(
-      model,
-      kg,
-      neo4j_driver,
-      max_token_per_neo4j_result,
+      model=base_model,
+      kg=kg,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
     )
     issue_bug_subgraph_node = IssueBugSubgraphNode(
-      model,
-      container,
-      kg,
-      git_repo,
-      neo4j_driver,
-      max_token_per_neo4j_result,
-      build_commands,
-      test_commands,
+      advanced_model=advanced_model,
+      base_model=base_model,
+      container=container,
+      kg=kg,
+      git_repo=git_repo,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
+      build_commands=build_commands,
+      test_commands=test_commands,
     )
 
     workflow = StateGraph(IssueState)

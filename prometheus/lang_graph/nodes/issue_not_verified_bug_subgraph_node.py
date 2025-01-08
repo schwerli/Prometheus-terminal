@@ -14,7 +14,8 @@ from prometheus.lang_graph.subgraphs.issue_not_verified_bug_subgraph import (
 class IssueNotVerifiedBugSubgraphNode:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
@@ -24,7 +25,8 @@ class IssueNotVerifiedBugSubgraphNode:
       "prometheus.lang_graph.nodes.issue_not_verified_bug_subgraph_node"
     )
     self.issue_not_verified_bug_subgraph = IssueNotVerifiedBugSubgraph(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       kg=kg,
       git_repo=git_repo,
       neo4j_driver=neo4j_driver,
@@ -39,7 +41,6 @@ class IssueNotVerifiedBugSubgraphNode:
       issue_body=state["issue_body"],
       issue_comments=state["issue_comments"],
       number_of_candidate_patch=state["number_of_candidate_patch"],
-      max_refined_query_loop=state["max_refined_query_loop"],
     )
 
     self._logger.info(f"final_patch:\n{output_state['final_patch']}")

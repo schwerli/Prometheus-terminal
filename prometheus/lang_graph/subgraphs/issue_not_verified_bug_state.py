@@ -10,10 +10,10 @@ class IssueNotVerifiedBugState(TypedDict):
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
   number_of_candidate_patch: int
-  max_refined_query_loop: int
 
-  refined_query: str
-  context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
+  bug_fix_query: str
+  bug_fix_context: Sequence[str]
+
   issue_bug_analyzer_messages: Annotated[Sequence[BaseMessage], add_messages]
   edit_messages: Annotated[Sequence[BaseMessage], add_messages]
 

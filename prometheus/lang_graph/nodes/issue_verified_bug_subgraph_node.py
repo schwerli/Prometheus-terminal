@@ -14,7 +14,8 @@ from prometheus.lang_graph.subgraphs.issue_verified_bug_subgraph import IssueVer
 class IssueVerifiedBugSubgraphNode:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
@@ -26,7 +27,8 @@ class IssueVerifiedBugSubgraphNode:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_verified_bug_subgraph_node")
     self.git_repo = git_repo
     self.issue_reproduced_bug_subgraph = IssueVerifiedBugSubgraph(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       container=container,
       kg=kg,
       git_repo=git_repo,
@@ -47,7 +49,6 @@ class IssueVerifiedBugSubgraphNode:
         run_existing_test=state["run_existing_test"],
         reproduced_bug_file=state["reproduced_bug_file"],
         reproduced_bug_commands=state["reproduced_bug_commands"],
-        max_refined_query_loop=state["max_refined_query_loop"],
       )
     except GraphRecursionError:
       self._logger.info("Recursion limit reached")

@@ -91,6 +91,23 @@ def extract_human_queries(messages: Sequence[BaseMessage]) -> Sequence[str]:
   return human_queries
 
 
-def get_last_message_content(messages: Sequence[BaseMessage]) -> Sequence[str]:
+def extract_last_tool_messages(messages: Sequence[BaseMessage]) -> Sequence[ToolMessage]:
+  tool_messages = []
+  last_human_index = -1
+  for i in range(len(messages) - 1, -1, -1):
+    if isinstance(messages[i], HumanMessage):
+      last_human_index = i
+      break
+
+  if last_human_index == -1:
+    return []
+
+  for message in messages[last_human_index + 1 :]:
+    if isinstance(message, ToolMessage):
+      tool_messages.append(message)
+  return tool_messages
+
+
+def get_last_message_content(messages: Sequence[BaseMessage]) -> str:
   output_parser = StrOutputParser()
   return output_parser.invoke(messages[-1])

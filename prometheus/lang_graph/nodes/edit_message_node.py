@@ -3,7 +3,7 @@ from typing import Dict
 
 from langchain_core.messages import HumanMessage
 
-from prometheus.utils.issue_util import format_agent_tool_message_history, format_issue_info
+from prometheus.utils.issue_util import format_issue_info
 from prometheus.utils.lang_graph_util import get_last_message_content
 
 
@@ -12,7 +12,7 @@ class EditMessageNode:
 {issue_info}
 
 Bug Context:
-{bug_context}
+{bug_fix_context}
 
 Bug analyzer agent has analyzed the issue and provided instruction on how to fix it:
 {bug_analyzer_message}
@@ -58,7 +58,7 @@ specific issues that caused the previous error.
         issue_info=format_issue_info(
           state["issue_title"], state["issue_body"], state["issue_comments"]
         ),
-        bug_context=format_agent_tool_message_history(state["context_provider_messages"]),
+        bug_fix_context="\n\n".join(state["bug_fix_context"]),
         bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
       )
     )

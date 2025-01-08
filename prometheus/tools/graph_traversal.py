@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from prometheus.parser import tree_sitter_parser
 from prometheus.utils import neo4j_util
 
-MAX_RESULT = 80
+MAX_RESULT = 50
 
 ###############################################################################
 #                          FileNode retrieval                                 #
@@ -240,8 +240,8 @@ def get_next_text_node_with_node_id(
   node_id: int, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
   query = f"""\
-    MATCH (a:TextNode {{ node_id: {node_id} }}) -[:NEXT_CHUNK]-> (b:TextNode)
-    RETURN b as TextNode
+    MATCH (f:FileNode) -[:HAS_TEXT]-> (a:TextNode {{ node_id: {node_id} }}) -[:NEXT_CHUNK]-> (b:TextNode)
+    RETURN f as FileNode, b AS TextNode
   """
   return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
@@ -261,7 +261,7 @@ the extension, like 'bar.py', 'baz.java' or 'foo' (in this case foo is a
 directory or a file without extension).
 
 You can use this tool to preview the content of a specific file to see what it contains
-in the first 500 lines or the first section. If the file is interesting, use other tools
+in the first 1000 lines or the first section. If the file is interesting, use other tools
 to look at the file."""
 
 
@@ -271,7 +271,7 @@ def preview_file_content_with_basename(
   source_code_query = f"""\
     MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
     WITH f, apoc.text.split(a.text, '\\R') AS lines
-    RETURN f as FileNode, apoc.text.join(lines[0..500], '\\n') AS preview
+    RETURN f as FileNode, apoc.text.join(lines[0..1000], '\\n') AS preview
     ORDER BY f.node_id
   """
 
@@ -297,7 +297,7 @@ The relative path must include the extension and full path from root, like 'src/
 'test/unit/test_parser.java' or 'docs/README.md'.
 
 You can use this tool to preview the content of a specific file to see what it contains
-in the first 500 lines or the first section. If the file is interesting, use other tools
+in the first 1000 lines or the first section. If the file is interesting, use other tools
 to look at the file."""
 
 
@@ -307,7 +307,7 @@ def preview_file_content_with_relative_path(
   source_code_query = f"""\
       MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_AST]-> (a:ASTNode)
       WITH f, apoc.text.split(a.text, '\\R') AS lines
-      RETURN f as FileNode, apoc.text.join(lines[0..500], '\\n') AS preview
+      RETURN f as FileNode, apoc.text.join(lines[0..1000], '\\n') AS preview
       ORDER BY f.node_id
   """
 
@@ -358,7 +358,7 @@ def read_code_with_basename(
   source_code_query = f"""\
     MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
     WITH f, apoc.text.split(a.text, '\\R') AS lines
-    RETURN f as FileNode, apoc.text.join(lines[{start_line}..{end_line}], '\\n') AS preview
+    RETURN f as FileNode, apoc.text.join(lines[{start_line}..{end_line}], '\\n') AS SelectedLines
     ORDER BY f.node_id
   """
 
@@ -401,7 +401,7 @@ def read_code_with_relative_path(
   source_code_query = f"""\
         MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_AST]-> (a:ASTNode)
         WITH f, apoc.text.split(a.text, '\\R') AS lines
-        RETURN f as FileNode, apoc.text.join(lines[{start_line}..{end_line}], '\\n') AS preview
+        RETURN f as FileNode, apoc.text.join(lines[{start_line}..{end_line}], '\\n') AS SelectedLines
         ORDER BY f.node_id
     """
 

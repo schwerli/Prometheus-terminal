@@ -138,6 +138,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_file_node_with_basename.__name__,
       description=graph_traversal.FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.FindFileNodeWithBasenameInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_file_node_with_basename_tool)
 
@@ -151,6 +152,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_file_node_with_relative_path.__name__,
       description=graph_traversal.FIND_FILE_NODE_WITH_RELATIVE_PATH_DESCRIPTION,
       args_schema=graph_traversal.FindFileNodeWithRelativePathInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_file_node_with_relative_path_tool)
 
@@ -164,6 +166,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_ast_node_with_text_in_file_with_basename.__name__,
       description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTextInFileWithBasenameInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_ast_node_with_text_in_file_with_basename_tool)
 
@@ -177,6 +180,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_ast_node_with_text_in_file_with_relative_path.__name__,
       description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTextInFileWithRelativePathInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_ast_node_with_text_in_file_with_relative_path_tool)
 
@@ -190,6 +194,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_ast_node_with_type_in_file_with_basename.__name__,
       description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTypeInFileWithBasenameInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_ast_node_with_type_in_file_with_basename_tool)
 
@@ -203,6 +208,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_ast_node_with_type_in_file_with_relative_path.__name__,
       description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
       args_schema=graph_traversal.FindASTNodeWithTypeInFileWithRelativePathInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_ast_node_with_type_in_file_with_relative_path_tool)
 
@@ -216,6 +222,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_text_node_with_text.__name__,
       description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_DESCRIPTION,
       args_schema=graph_traversal.FindTextNodeWithTextInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_text_node_with_text_tool)
 
@@ -229,6 +236,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.find_text_node_with_text_in_file.__name__,
       description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_IN_FILE_DESCRIPTION,
       args_schema=graph_traversal.FindTextNodeWithTextInFileInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_text_node_with_text_in_file_tool)
 
@@ -242,6 +250,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.get_next_text_node_with_node_id.__name__,
       description=graph_traversal.GET_NEXT_TEXT_NODE_WITH_NODE_ID_DESCRIPTION,
       args_schema=graph_traversal.GetNextTextNodeWithNodeIdInput,
+      response_format="content_and_artifact",
     )
     tools.append(get_next_text_node_with_node_id_tool)
 
@@ -255,6 +264,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.preview_file_content_with_basename.__name__,
       description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.PreviewFileContentWithBasenameInput,
+      response_format="content_and_artifact",
     )
     tools.append(preview_file_content_with_basename_tool)
 
@@ -268,6 +278,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.preview_file_content_with_relative_path.__name__,
       description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_RELATIVE_PATH_DESCRIPTION,
       args_schema=graph_traversal.PreviewFileContentWithRelativePathInput,
+      response_format="content_and_artifact",
     )
     tools.append(preview_file_content_with_relative_path_tool)
 
@@ -281,6 +292,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.read_code_with_basename.__name__,
       description=graph_traversal.READ_CODE_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.ReadCodeWithBasenameInput,
+      response_format="content_and_artifact",
     )
     tools.append(read_code_with_basename_tool)
 
@@ -294,6 +306,7 @@ Available AST node types for code structure search: {ast_node_types}
       name=graph_traversal.read_code_with_relative_path.__name__,
       description=graph_traversal.READ_CODE_WITH_RELATIVE_PATH_DESCRIPTION,
       args_schema=graph_traversal.ReadCodeWithRelativePathInput,
+      response_format="content_and_artifact",
     )
     tools.append(read_code_with_relative_path_tool)
 

@@ -14,7 +14,9 @@ class IssueVerifiedBugState(TypedDict):
   reproduced_bug_file: str
   reproduced_bug_commands: Sequence[str]
 
-  context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
+  bug_fix_query: str
+  bug_fix_context: Sequence[str]
+
   issue_bug_analyzer_messages: Annotated[Sequence[BaseMessage], add_messages]
   edit_messages: Annotated[Sequence[BaseMessage], add_messages]
 

@@ -21,7 +21,8 @@ from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 class IssueBugSubgraph:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
@@ -31,7 +32,8 @@ class IssueBugSubgraph:
     test_commands: Optional[Sequence[str]] = None,
   ):
     bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       container=container,
       kg=kg,
       git_repo=git_repo,
@@ -41,7 +43,8 @@ class IssueBugSubgraph:
     )
 
     issue_verified_bug_subgraph_node = IssueVerifiedBugSubgraphNode(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       container=container,
       kg=kg,
       git_repo=git_repo,
@@ -51,14 +54,15 @@ class IssueBugSubgraph:
       test_commands=test_commands,
     )
     issue_not_verified_bug_subgraph_node = IssueNotVerifiedBugSubgraphNode(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       kg=kg,
       git_repo=git_repo,
       neo4j_driver=neo4j_driver,
       max_token_per_neo4j_result=max_token_per_neo4j_result,
     )
 
-    issue_bug_responder_node = IssueBugResponderNode(model)
+    issue_bug_responder_node = IssueBugResponderNode(base_model)
 
     workflow = StateGraph(IssueBugState)
 
@@ -94,7 +98,6 @@ class IssueBugSubgraph:
     run_build: bool,
     run_existing_test: bool,
     number_of_candidate_patch: int,
-    max_refined_query_loop: int,
     recursion_limit: int = 30,
   ):
     config = {"recursion_limit": recursion_limit}
@@ -106,7 +109,6 @@ class IssueBugSubgraph:
       "run_build": run_build,
       "run_existing_test": run_existing_test,
       "number_of_candidate_patch": number_of_candidate_patch,
-      "max_refined_query_loop": max_refined_query_loop,
     }
 
     output_state = self.subgraph.invoke(input_state, config)

@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage
@@ -7,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.utils.issue_util import format_agent_tool_message_history, format_issue_info
+from prometheus.lang_graph.subgraphs.context_retrieval_state import ContextRetrievalState
 from prometheus.utils.lang_graph_util import extract_human_queries
 
 
@@ -20,17 +19,20 @@ class ContextRefineStructuredOutput(BaseModel):
 
 class ContextRefineNode:
   SYS_PROMPT = """\
-You are a software engineering assistant specialized in analyzing code context to determine if
-additional source code or documentation from the codebase is necessary.
+You are an intelligent assistant specialized in analyzing code context to determine if
+additional source code or documentation from the codebase is necessary to fulfill the user's query.
 
 Your goal is to request additional context ONLY when necessary:
-1. When critical implementation details are missing to understand the root cause
+1. When critical implementation details are missing to understand the current code
 2. When key dependencies or related code are not visible in the current context
-3. When documentation is needed to understand complex business logic or requirements
+3. When documentation is needed to understand complex business logic, architecture, or requirements
+4. When referenced files, classes, or functions are not included in the current context
+5. When understanding the broader system context is essential for the task
 
 DO NOT request additional context if:
-1. The current context already contains enough information to implement a fix
+1. The current context already contains sufficient information to complete the task
 2. The additional context would only provide nice-to-have but non-essential details
+3. The information is redundant with what's already available
 
 Output format:
 ```python
@@ -44,25 +46,30 @@ The codebase structure:
 """
 
   REFINE_PROMPT = """\
-I have the following issue:
-{issue_info}
+This is the original user query:
+{original_query}
 
-Here is the queries I have asked:
-{queries}
+Here are the additional queries you've have asked so far:
+{additional_queries}
 
 All aggregated context for the queries:
-{bug_context}
+{context}
 
-Analyze if the current context is sufficient to implement a fix by considering:
-1. Can you identify the root cause of the issue from the current context?
-2. Do you have access to all relevant code that needs to be modified?
+Analyze if the current context is sufficient to complete the user query by considering:
+1. Do you understand the full scope and requirements of the user query?
+2. Do you have access to all relevant code that needs to be examined or modified?
 3. Are all critical dependencies and their interfaces visible?
+4. Is there enough context about the system architecture and design patterns?
+5. Do you have access to relevant documentation or tests if needed?
 
 Only request additional context if essential information is missing. Ensure you're not requesting:
 - Information already provided in previous queries
 - Nice-to-have but non-essential details
+- Implementation details that aren't relevant to the current task
 
-If additional context is needed, be specific about what you're looking for.
+If additional context is needed:
+- Be specific about what you're looking for
+- Consider both code and documentation that might be relevant
 """
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
@@ -76,18 +83,18 @@ If additional context is needed, be specific about what you're looking for.
     self.model = prompt | structured_llm
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_refine_node")
 
-  def format_refine_message(self, state: Dict):
-    bug_context = format_agent_tool_message_history(state["context_provider_messages"])
-    queries = "\n\n".join(extract_human_queries(state["context_provider_messages"])[1:])
+  def format_refine_message(self, state: ContextRetrievalState):
+    human_queries = extract_human_queries(state["context_provider_messages"])
+    original_query = human_queries[0]
+    additional_queries = "\n\n".join(human_queries[1:])
+    context = "\n\n".join(state["context"])
     return self.REFINE_PROMPT.format(
-      issue_info=format_issue_info(
-        state["issue_title"], state["issue_body"], state["issue_comments"]
-      ),
-      queries=queries,
-      bug_context=bug_context,
+      original_query=original_query,
+      additional_queries=additional_queries,
+      context=context,
     )
 
-  def __call__(self, state: Dict):
+  def __call__(self, state: ContextRetrievalState):
     if "max_refined_query_loop" in state and state["max_refined_query_loop"] == 0:
       self._logger.info("Reached max_refined_query_loop, not asking for more context")
       return {"refined_query": ""}
