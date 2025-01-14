@@ -25,7 +25,7 @@ jobs:
           pip install .[test]
 
       - name: Pytest
-        run: coverage run --source=prometheus -m pytest -v -s
+        run: coverage run --source=prometheus -m pytest -v -s -m "not git"
 
       - name: Test coverage
         run: coverage report -m

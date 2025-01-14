@@ -378,8 +378,8 @@ def read_code_with_basename(
       f as FileNode,
       {{
         text: apoc.text.join(lines[{start_line}..{end_line}], '\\n'),
-        start_line: {start_line+1},
-        end_line: {end_line+1}
+        start_line: {start_line + 1},
+        end_line: {end_line + 1}
       }} AS SelectedLines
     ORDER BY f.node_id
   """
@@ -427,8 +427,8 @@ def read_code_with_relative_path(
           f as FileNode,
           {{
             text: apoc.text.join(lines[{start_line}..{end_line}], '\\n'),
-            start_line: {start_line+1},
-            end_line: {end_line+1}
+            start_line: {start_line + 1},
+            end_line: {end_line + 1}
           }} AS SelectedLines
         ORDER BY f.node_id
     """

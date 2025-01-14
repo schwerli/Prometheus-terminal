@@ -56,4 +56,4 @@ def git_repo_fixture():
     repo = Repo(temp_project_dir)
     yield repo
   finally:
-    shutil.rmtree(temp_dir)
+    shutil.rmtree(temp_project_dir)

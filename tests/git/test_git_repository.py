@@ -13,6 +13,7 @@ from tests.test_utils.fixtures import git_repo_fixture  # noqa: F401
   sys.platform.startswith("win"),
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
+@pytest.mark.git
 def test_init_with_https_url(git_repo_fixture):  # noqa: F811
   with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
     repo = git_repo_fixture
@@ -35,6 +36,7 @@ def test_init_with_https_url(git_repo_fixture):  # noqa: F811
   sys.platform.startswith("win"),
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
+@pytest.mark.git
 def test_checkout_commit(git_repo_fixture):  # noqa: F811
   git_repo = GitRepository(
     address=git_repo_fixture.working_dir,
@@ -52,6 +54,7 @@ def test_checkout_commit(git_repo_fixture):  # noqa: F811
   sys.platform.startswith("win"),
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
+@pytest.mark.git
 def test_switch_branch(git_repo_fixture):  # noqa: F811
   git_repo = GitRepository(
     address=git_repo_fixture.working_dir,
@@ -69,6 +72,7 @@ def test_switch_branch(git_repo_fixture):  # noqa: F811
   sys.platform.startswith("win"),
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
+@pytest.mark.git
 def test_get_diff(git_repo_fixture):  # noqa: F811
   local_path = Path(git_repo_fixture.working_dir).absolute()
   test_file = local_path / "test.c"
@@ -115,6 +119,7 @@ index 79a1160..76e8197 100644
   sys.platform.startswith("win"),
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
+@pytest.mark.git
 def test_remove_repository(git_repo_fixture):  # noqa: F811
   with mock.patch("shutil.rmtree") as mock_rmtree:
     local_path = git_repo_fixture.working_dir

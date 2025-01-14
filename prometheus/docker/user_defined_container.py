@@ -17,9 +17,9 @@ class UserDefinedContainer(BaseContainer):
   ):
     super().__init__(project_path, workdir)
 
-    assert bool(dockerfile_content) != bool(
-      image_name
-    ), "Exactly one of dockerfile_content or image_name must be provided"
+    assert bool(dockerfile_content) != bool(image_name), (
+      "Exactly one of dockerfile_content or image_name must be provided"
+    )
 
     self.tag_name = f"prometheus_user_defined_container_{uuid.uuid4().hex[:10]}"
     self.build_commands = build_commands

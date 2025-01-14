@@ -22,7 +22,7 @@ def format_neo4j_data(data: Sequence[Mapping[str, Any]], max_token_per_result: i
 
   output = ""
   for index, row_result in enumerate(data):
-    output += f"Result {index+1}:\n"
+    output += f"Result {index + 1}:\n"
     for key in sorted(row_result.keys()):
       output += f"{key}: {str(row_result[key])}\n"
     output += "\n\n"
