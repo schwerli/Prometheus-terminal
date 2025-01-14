@@ -1,5 +1,7 @@
 import shutil
+import tempfile
 import uuid
+from pathlib import Path
 
 import pytest
 from git import Repo
@@ -43,15 +45,17 @@ def empty_neo4j_container_fixture():
 
 @pytest.fixture(scope="function")
 def git_repo_fixture():
-  git_backup_dir = test_project_paths.TEST_PROJECT_PATH / ".git_backup"
-  if git_backup_dir.exists():
-    shutil.rmtree(git_backup_dir)
-  shutil.copytree(test_project_paths.GIT_DIR, git_backup_dir)
-  shutil.move(test_project_paths.GIT_DIR, test_project_paths.TEST_PROJECT_PATH / ".git")
+  temp_dir = Path(tempfile.mkdtemp())
+  temp_project_dir = temp_dir / "test_project"
+  original_project_path = test_project_paths.TEST_PROJECT_PATH
 
-  repo = Repo(test_project_paths.TEST_PROJECT_PATH)
-  yield repo
-  repo.git.checkout("master")
+  try:
+    shutil.copytree(original_project_path, temp_project_dir)
+    shutil.move(test_project_paths.GIT_DIR, test_project_paths.TEST_PROJECT_PATH / ".git")
 
-  shutil.rmtree(test_project_paths.TEST_PROJECT_PATH / ".git")
-  shutil.move(git_backup_dir, test_project_paths.GIT_DIR)
+    repo = Repo(test_project_paths.TEST_PROJECT_PATH)
+    yield repo
+  finally:
+    if temp_project_dir.exists() and list(temp_project_dir.iterdir()):
+      shutil.rmtree(original_project_path)
+      shutil.move(temp_project_dir, original_project_path)

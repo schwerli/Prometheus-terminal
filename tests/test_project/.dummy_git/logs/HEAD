@@ -31,3 +31,6 @@ cd8302e24646b66ef047258fc144d1d52bfa79e3 293551b7bd9572b63018c9ed2bccea0f3772680
 cd8302e24646b66ef047258fc144d1d52bfa79e3 293551b7bd9572b63018c9ed2bccea0f37726805 Zimin <chen.zimin@hotmail.com> 1729709580 +0200	checkout: moving from master to dev
 293551b7bd9572b63018c9ed2bccea0f37726805 cd8302e24646b66ef047258fc144d1d52bfa79e3 Zimin <chen.zimin@hotmail.com> 1729709580 +0200	checkout: moving from dev to master
 cd8302e24646b66ef047258fc144d1d52bfa79e3 cd8302e24646b66ef047258fc144d1d52bfa79e3 Zimin <chen.zimin@hotmail.com> 1729709767 +0200	checkout: moving from master to master
+cd8302e24646b66ef047258fc144d1d52bfa79e3 cd8302e24646b66ef047258fc144d1d52bfa79e3 Zimin <chen.zimin@hotmail.com> 1736856510 +0100	reset: moving to HEAD
+cd8302e24646b66ef047258fc144d1d52bfa79e3 fff3c3ddd1c000ffde608d59a747723a9828108f Zimin <chen.zimin@hotmail.com> 1736856947 +0100	commit: Add gitignore
+fff3c3ddd1c000ffde608d59a747723a9828108f fff3c3ddd1c000ffde608d59a747723a9828108f Zimin <chen.zimin@hotmail.com> 1736857009 +0100	reset: moving to HEAD

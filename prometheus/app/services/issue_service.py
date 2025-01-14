@@ -34,7 +34,6 @@ class IssueService:
     run_build: bool,
     run_existing_test: bool,
     number_of_candidate_patch: int,
-    max_refined_query_loop: int,
     dockerfile_content: Optional[str] = None,
     image_name: Optional[str] = None,
     workdir: Optional[str] = None,
@@ -51,7 +50,7 @@ class IssueService:
         image_name,
       )
     else:
-      container = GeneralContainer(self.kg_service.kg.get_local_path(), workdir)
+      container = GeneralContainer(self.kg_service.kg.get_local_path())
 
     issue_graph = IssueGraph(
       advanced_model=self.llm_service.advanced_model,
@@ -73,7 +72,6 @@ class IssueService:
       run_build,
       run_existing_test,
       number_of_candidate_patch,
-      max_refined_query_loop,
     )
 
     if output_state["issue_type"] == IssueType.BUG:
@@ -86,9 +84,11 @@ class IssueService:
       )
     elif output_state["issue_type"] == IssueType.QUESTION:
       return (
+        "",
+        False,
+        False,
+        False,
         output_state["issue_response"],
-        "",
-        "",
       )
 
-    return "", "", ""
+    return "", False, False, False, ""

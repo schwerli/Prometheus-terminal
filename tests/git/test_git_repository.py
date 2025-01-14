@@ -69,6 +69,52 @@ def test_switch_branch(git_repo_fixture):  # noqa: F811
   sys.platform.startswith("win"),
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
+def test_get_diff(git_repo_fixture):  # noqa: F811
+  local_path = str(test_project_paths.TEST_PROJECT_PATH)
+  test_file = test_project_paths.TEST_PROJECT_PATH / "test.c"
+
+  # Initialize repository
+  git_repo = GitRepository(
+    address=local_path, working_directory=Path("/foo/bar"), copy_to_working_dir=False
+  )
+
+  # Create a change by modifying test.c
+  original_content = test_file.read_text()
+  new_content = "int main() { return 0; }\n"
+  test_file.write_text(new_content)
+
+  # Get diff without exclusions
+  diff = git_repo.get_diff()
+  assert diff is not None
+  expected_diff = """\
+diff --git a/test.c b/test.c
+index 79a1160..76e8197 100644
+--- a/test.c
++++ b/test.c
+@@ -1,6 +1 @@
+-#include <stdio.h>
+-
+-int main() {
+-    printf("Hello world!");
+-    return 0;
+-}
+\ No newline at end of file
++int main() { return 0; }
+"""
+  assert diff == expected_diff
+
+  # Test with excluded files
+  diff_with_exclusion = git_repo.get_diff(excluded_files=["test.c"])
+  assert diff_with_exclusion == ""
+
+  # Cleanup - restore original content
+  test_file.write_text(original_content)
+
+
+@pytest.mark.skipif(
+  sys.platform.startswith("win"),
+  reason="Test fails on Windows because of cptree in git_repo_fixture",
+)
 def test_remove_repository(git_repo_fixture):  # noqa: F811
   with mock.patch("shutil.rmtree") as mock_rmtree:
     local_path = str(test_project_paths.TEST_PROJECT_PATH)

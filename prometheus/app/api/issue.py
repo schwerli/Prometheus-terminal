@@ -47,11 +47,6 @@ class IssueRequest(BaseModel):
     description="When the patch is not verfied (through build or test), number of candidate patches we generate to select the best one",
     examples=[4],
   )
-  max_refined_query_loop: Optional[int] = Field(
-    default=3,
-    description="Number of times to ask for more context",
-    examples=[3],
-  )
   dockerfile_content: Optional[str] = Field(
     default=None,
     description="Specify the containerized enviroment with dockerfile content",
@@ -84,7 +79,12 @@ class IssueRequest(BaseModel):
   )
 
 
-@router.post("/answer/")
+@router.post(
+  "/answer/",
+  summary="Process and generate a response for an issue",
+  description="Analyzes an issue, generates patches if needed, runs optional builds and tests, and can push changes to a remote branch.",
+  response_description="Returns the patch, test results, and issue response",
+)
 def answer_issue(issue: IssueRequest, request: Request):
   if not request.app.state.service_coordinator.exists_knowledge_graph():
     raise HTTPException(
@@ -97,20 +97,6 @@ def answer_issue(issue: IssueRequest, request: Request):
       raise HTTPException(
         status_code=400,
         detail="workdir must be provided for user defined environment",
-      )
-
-    # Validate build commands
-    if issue.run_build and issue.build_commands is None:
-      raise HTTPException(
-        status_code=400,
-        detail="build_commands must be provided for user defined environment when run_build is True",
-      )
-
-    # Validate test commands
-    if issue.run_existing_test and issue.test_commands is None:
-      raise HTTPException(
-        status_code=400,
-        detail="test_commands must be provided for user defined environment when run_test is True",
       )
 
   (
@@ -129,7 +115,6 @@ def answer_issue(issue: IssueRequest, request: Request):
     run_build=issue.run_build,
     run_existing_test=issue.run_existing_test,
     number_of_candidate_patch=issue.number_of_candidate_patch,
-    max_refined_query_loop=issue.max_refined_query_loop,
     dockerfile_content=issue.dockerfile_content,
     image_name=issue.image_name,
     workdir=issue.workdir,

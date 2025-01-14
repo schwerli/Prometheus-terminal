@@ -19,7 +19,6 @@ class IssueState(TypedDict):
   run_build: bool
   run_existing_test: bool
   number_of_candidate_patch: int
-  max_refined_query_loop: int
 
   edit_patch: str
 
