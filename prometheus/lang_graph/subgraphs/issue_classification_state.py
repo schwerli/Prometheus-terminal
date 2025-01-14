@@ -7,6 +7,8 @@ class IssueClassificationState(TypedDict):
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
 
+  max_refined_query_loop: int
+
   # Attributes generated and by the subgraph
   issue_classification_query: str
   issue_classification_context: Sequence[str]

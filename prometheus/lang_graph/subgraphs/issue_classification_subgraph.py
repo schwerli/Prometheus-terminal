@@ -55,8 +55,16 @@ class IssueClassificationSubgraph:
     issue_comments: Sequence[Mapping[str, str]],
   ) -> str:
     config = None
+
+    input_state = {
+      "issue_title": issue_title,
+      "issue_body": issue_body,
+      "issue_comments": issue_comments,
+      "max_refined_query_loop": 1,
+    }
+
     output_state = self.subgraph.invoke(
-      {"issue_title": issue_title, "issue_body": issue_body, "issue_comments": issue_comments},
+      input_state,
       config,
     )
     return output_state["issue_type"]

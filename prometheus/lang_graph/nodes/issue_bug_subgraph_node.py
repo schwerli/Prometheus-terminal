@@ -53,7 +53,6 @@ class IssueBugSubgraphNode:
         run_build=state["run_build"],
         run_existing_test=state["run_existing_test"],
         number_of_candidate_patch=state["number_of_candidate_patch"],
-        max_refined_query_loop=state["max_refined_query_loop"],
       )
 
       self._logger.info(f"Generated patch:\n{output_state['edit_patch']}")

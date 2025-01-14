@@ -56,7 +56,7 @@ Search Strategy Guidelines:
    - Prioritize relative_path tools when exact file location is known
    - Fall back to basename tools for filename-only searches
    - Use AST node searches to find specific code structures
-   - Look for method/class definitions in likely related files
+   - Use preview_* or read_* tools with more than hundrend lines to get more context than class/function
    - If a search returns no results, try alternative approaches with broader scope
 
 2. Documentation/Text Search:
@@ -68,7 +68,7 @@ Search Strategy Guidelines:
 3. Exploratory Search:
    - Start with find_file_node_* to verify paths
    - Use preview_file_content_* for quick content scanning
-   - When preview reveals relevant content, use read_code_* tools
+   - Use read_code_* tools to read more content beyond previews
    - Always have fallback strategies ready if primary search fails
 
 4. Critical Rules:

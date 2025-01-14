@@ -40,6 +40,13 @@ def neo4j_data_for_context_generator(data: Sequence[Mapping[str, Any]]) -> Itera
       if key == "FileNode":
         continue
 
+      if "start_line" in search_result[key] and "end_line" in search_result[key]:
+        search_result_components.append(
+          f"Line number range: {search_result[key]['start_line']} - {search_result[key]['end_line']}"
+        )
+        search_result[key].pop("start_line")
+        search_result[key].pop("end_line")
+
       search_result_components.append(f"{key}: {search_result[key]}")
     yield "\n".join(search_result_components)
 

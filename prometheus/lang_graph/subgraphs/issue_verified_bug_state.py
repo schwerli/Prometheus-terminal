@@ -13,6 +13,7 @@ class IssueVerifiedBugState(TypedDict):
 
   reproduced_bug_file: str
   reproduced_bug_commands: Sequence[str]
+  max_refined_query_loop: int
 
   bug_fix_query: str
   bug_fix_context: Sequence[str]

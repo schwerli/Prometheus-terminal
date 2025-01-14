@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.context_retrieval_state import ContextRetrievalState
-from prometheus.utils.lang_graph_util import extract_human_queries
 
 
 class ContextRefineStructuredOutput(BaseModel):
@@ -49,9 +48,6 @@ The codebase structure:
 This is the original user query:
 {original_query}
 
-Here are the additional queries you've have asked so far:
-{additional_queries}
-
 All aggregated context for the queries:
 {context}
 
@@ -84,13 +80,10 @@ If additional context is needed:
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_refine_node")
 
   def format_refine_message(self, state: ContextRetrievalState):
-    human_queries = extract_human_queries(state["context_provider_messages"])
-    original_query = human_queries[0]
-    additional_queries = "\n\n".join(human_queries[1:])
+    original_query = state["query"]
     context = "\n\n".join(state["context"])
     return self.REFINE_PROMPT.format(
       original_query=original_query,
-      additional_queries=additional_queries,
       context=context,
     )
 

@@ -15,13 +15,17 @@ from prometheus.utils.patch_util import get_updated_files
 
 class BugReproducingExecuteNode:
   SYS_PROMPT = """\
-You are a testing expert focused solely on executing a single bug reproduction test file.
+You are a testing expert focused solely on executing THE SINGLE bug reproduction test file.
 Your only goal is to run the test file created by the previous agent and return its output as it is.
 
 Adapt the user provided test command to execute the single bug reproduction test file, otherwise
 figure out what test framework it uses.
 
-DO NOT EDIT ANY FILES. STOP TRYING IF THE TEST EXECUTES.
+Rules:
+* DO NOT EXECUTE THE WHOLE TEST SUITE. ONLY EXECTUTE THE SINGLE BUG REPRODUCTION TEST FILE.
+* DO NOT EDIT ANY FILES.
+* ASSUME ALL DEPENDECIES ARE INSTALLED.
+* STOP TRYING IF THE TEST EXECUTES.
 """
 
   HUMAN_PROMPT = """\

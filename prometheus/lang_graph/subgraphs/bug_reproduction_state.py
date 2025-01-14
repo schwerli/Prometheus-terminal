@@ -9,6 +9,8 @@ class BugReproductionState(TypedDict):
   issue_body: str
   issue_comments: Sequence[Mapping[str, str]]
 
+  max_refined_query_loop: int
+
   bug_reproducing_query: str
   bug_reproducing_context: Sequence[str]
 

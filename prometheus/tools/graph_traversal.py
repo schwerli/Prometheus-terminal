@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from prometheus.parser import tree_sitter_parser
 from prometheus.utils import neo4j_util
 
-MAX_RESULT = 50
+MAX_RESULT = 30
 
 ###############################################################################
 #                          FileNode retrieval                                 #
@@ -75,10 +75,11 @@ class FindASTNodeWithTextInFileWithBasenameInput(BaseModel):
 
 FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_BASENAME_DESCRIPTION = """\
 Find all ASTNode in the graph that exactly contains this text in any source file under 
-a file/directory with this basename. The contains is same as python's check `'foo' in text`, 
-ie. it is case sensitive and is looking for exact matches. Therefore the search text should 
-be exact as well. The basename can be either a file (like 'bar.py', 'baz.java') or a 
-directory (like 'src' or 'test')."""
+a file/directory with this basename. For reliable results, search for longer, distinct text 
+sequences rather than short common words or fragments. The contains is same as python's check 
+`'foo' in text`, ie. it is case sensitive and is looking for exact matches. For best results, 
+use unique text segments of at least several words. The basename can be either a file (like 
+'bar.py', 'baz.java') or a directory (like 'src' or 'test')."""
 
 
 def find_ast_node_with_text_in_file_with_basename(
@@ -101,7 +102,8 @@ class FindASTNodeWithTextInFileWithRelativePathInput(BaseModel):
 
 FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION = """\
 Find all ASTNode in the graph that exactly contains this text in any source file under 
-a file/directory with this relative path. The contains is same as python's check `'foo' in text`, 
+a file/directory with this relative path. For reliable results, search for longer, distinct text 
+sequences rather than short common words or fragments. The contains is same as python's check `'foo' in text`, 
 ie. it is case sensitive and is looking for exact matches. Therefore the search text should 
 be exact as well. The relative path should be the path from the root of codebase 
 (like 'src/core/parser.py' or 'test/unit')."""
@@ -127,7 +129,8 @@ class FindASTNodeWithTypeInFileWithBasenameInput(BaseModel):
 
 FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_BASENAME_DESCRIPTION = """\
 Find all ASTNode in the graph that has this tree-sitter node type in any source file under
-a file/directory with this basename. The basename can be either a file (like 'bar.py', 
+a file/directory with this basename. This tool is useful for searching class/function/method
+under a file/directory. The basename can be either a file (like 'bar.py', 
 'baz.java') or a directory (like 'core' or 'test')."""
 
 
@@ -151,7 +154,8 @@ class FindASTNodeWithTypeInFileWithRelativePathInput(BaseModel):
 
 FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION = """\
 Find all ASTNode in the graph that has this tree-sitter node type in any source file under
-a file/directory with this relative path. The relative path should be the path from the root 
+a file/directory with this relative path. This tool is useful for searching class/function/method
+under a file/directory. The relative path should be the path from the root 
 of codebase (like 'src/core/parser.py' or 'test/unit')."""
 
 
@@ -271,7 +275,13 @@ def preview_file_content_with_basename(
   source_code_query = f"""\
     MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
     WITH f, apoc.text.split(a.text, '\\R') AS lines
-    RETURN f as FileNode, apoc.text.join(lines[0..1000], '\\n') AS preview
+    RETURN
+      f AS FileNode,
+      {{
+        text: apoc.text.join(lines[0..1000], '\\n'),
+        start_line: 1,
+        end_line: 1000
+      }} AS preview
     ORDER BY f.node_id
   """
 
@@ -307,7 +317,13 @@ def preview_file_content_with_relative_path(
   source_code_query = f"""\
       MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_AST]-> (a:ASTNode)
       WITH f, apoc.text.split(a.text, '\\R') AS lines
-      RETURN f as FileNode, apoc.text.join(lines[0..1000], '\\n') AS preview
+      RETURN 
+        f as FileNode,
+        {{
+          text: apoc.text.join(lines[0..1000], '\\n'),
+          start_line: 1,
+          end_line: 1000
+        }} AS preview
       ORDER BY f.node_id
   """
 
@@ -358,7 +374,13 @@ def read_code_with_basename(
   source_code_query = f"""\
     MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
     WITH f, apoc.text.split(a.text, '\\R') AS lines
-    RETURN f as FileNode, apoc.text.join(lines[{start_line}..{end_line}], '\\n') AS SelectedLines
+    RETURN
+      f as FileNode,
+      {{
+        text: apoc.text.join(lines[{start_line}..{end_line}], '\\n'),
+        start_line: {start_line+1},
+        end_line: {end_line+1}
+      }} AS SelectedLines
     ORDER BY f.node_id
   """
 
@@ -401,50 +423,14 @@ def read_code_with_relative_path(
   source_code_query = f"""\
         MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_AST]-> (a:ASTNode)
         WITH f, apoc.text.split(a.text, '\\R') AS lines
-        RETURN f as FileNode, apoc.text.join(lines[{start_line}..{end_line}], '\\n') AS SelectedLines
+        RETURN
+          f as FileNode,
+          {{
+            text: apoc.text.join(lines[{start_line}..{end_line}], '\\n'),
+            start_line: {start_line+1},
+            end_line: {end_line+1}
+          }} AS SelectedLines
         ORDER BY f.node_id
     """
 
   return neo4j_util.run_neo4j_query(source_code_query, driver, max_token_per_result)
-
-
-class GetParentNodeInput(BaseModel):
-  node_id: int = Field(description="Get parent node of node with this node_id")
-
-
-GET_PARENT_NODE_DESCRIPTION = """\
-Get the parent node in graph of this given node_id.
-
-This tool can be used to traverse the graph. For example to find the parent directory
-of a file, or the parent ASTNode of a ASTnode (eg. 'method_declaration' to 'class_declaration')."""
-
-
-def get_parent_node(node_id: int, driver: GraphDatabase.driver, max_token_per_result: int) -> str:
-  query = f"""\
-    MATCH (p) -[r]-> (c {{ node_id: {node_id} }})
-    WHERE type(r) IN ['HAS_FILE', 'HAS_TEXT', 'HAS_AST', 'PARENT_OF']
-    RETURN p as ParentNode, head(labels(p)) as ParentNodeType
-    ORDER BY p.node_id 
-  """
-  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
-
-
-class GetChildrenNodeInput(BaseModel):
-  node_id: int = Field(description="Get children nodes of node with this node_id")
-
-
-GET_CHILDREN_NODE_DESCRIPTION = """\
-Get the children nodes in graph of this given node_id.
-
-This tool can be used to traverse the graph. For example to find the children files/directories
-of a directory, or the children ASTNode of a ASTnode (eg. all source code components under 'class_declaration')."""
-
-
-def get_children_node(node_id: int, driver: GraphDatabase.driver, max_token_per_result: int) -> str:
-  query = f"""\
-    MATCH (p {{ node_id: {node_id} }}) -[r]-> (c)
-    WHERE type(r) IN ['HAS_FILE', 'HAS_TEXT', 'HAS_AST', 'PARENT_OF']
-    RETURN c as ChildNode, head(labels(c)) as ChildNodeType
-    ORDER BY c.node_id 
-  """
-  return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)

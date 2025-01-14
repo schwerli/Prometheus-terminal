@@ -11,6 +11,8 @@ class IssueNotVerifiedBugState(TypedDict):
   issue_comments: Sequence[Mapping[str, str]]
   number_of_candidate_patch: int
 
+  max_refined_query_loop: int
+
   bug_fix_query: str
   bug_fix_context: Sequence[str]
 
