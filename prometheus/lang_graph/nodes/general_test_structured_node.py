@@ -13,7 +13,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestState
-from prometheus.utils.issue_util import format_agent_tool_message_history
+from prometheus.utils.lang_graph_util import format_agent_tool_message_history
 
 
 class TestStructuredOutput(BaseModel):

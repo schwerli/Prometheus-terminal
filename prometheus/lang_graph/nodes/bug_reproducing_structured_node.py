@@ -6,8 +6,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
-from prometheus.utils.issue_util import format_agent_tool_message_history, format_issue_comments
-from prometheus.utils.lang_graph_util import get_last_message_content
+from prometheus.utils.issue_util import format_issue_comments
+from prometheus.utils.lang_graph_util import (
+  format_agent_tool_message_history,
+  get_last_message_content,
+)
 
 
 class BugReproducingStructuredOutput(BaseModel):
