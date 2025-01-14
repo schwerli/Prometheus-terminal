@@ -36,10 +36,10 @@ def test_init_with_https_url(git_repo_fixture):  # noqa: F811
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 def test_checkout_commit(git_repo_fixture):  # noqa: F811
-  local_path = str(test_project_paths.TEST_PROJECT_PATH)
-
   git_repo = GitRepository(
-    address=local_path, working_directory=Path("/foo/bar"), copy_to_working_dir=False
+    address=git_repo_fixture.working_dir,
+    working_directory=Path("/foo/bar"),
+    copy_to_working_dir=False,
   )
 
   commit_sha = "293551b7bd9572b63018c9ed2bccea0f37726805"
@@ -53,10 +53,10 @@ def test_checkout_commit(git_repo_fixture):  # noqa: F811
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 def test_switch_branch(git_repo_fixture):  # noqa: F811
-  local_path = str(test_project_paths.TEST_PROJECT_PATH)
-
   git_repo = GitRepository(
-    address=local_path, working_directory=Path("/foo/bar"), copy_to_working_dir=False
+    address=git_repo_fixture.working_dir,
+    working_directory=Path("/foo/bar"),
+    copy_to_working_dir=False,
   )
 
   branch_name = "dev"
@@ -70,12 +70,12 @@ def test_switch_branch(git_repo_fixture):  # noqa: F811
   reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 def test_get_diff(git_repo_fixture):  # noqa: F811
-  local_path = str(test_project_paths.TEST_PROJECT_PATH)
-  test_file = test_project_paths.TEST_PROJECT_PATH / "test.c"
+  local_path = Path(git_repo_fixture.working_dir).absolute()
+  test_file = local_path / "test.c"
 
   # Initialize repository
   git_repo = GitRepository(
-    address=local_path, working_directory=Path("/foo/bar"), copy_to_working_dir=False
+    address=str(local_path), working_directory=Path("/foo/bar"), copy_to_working_dir=False
   )
 
   # Create a change by modifying test.c
@@ -117,13 +117,14 @@ index 79a1160..76e8197 100644
 )
 def test_remove_repository(git_repo_fixture):  # noqa: F811
   with mock.patch("shutil.rmtree") as mock_rmtree:
-    local_path = str(test_project_paths.TEST_PROJECT_PATH)
+    local_path = git_repo_fixture.working_dir
 
     git_repo = GitRepository(
       address=local_path, working_directory=Path("/foo/bar"), copy_to_working_dir=False
     )
+    assert git_repo.repo is not None
 
     git_repo.remove_repository()
 
-    mock_rmtree.assert_called_once_with(git_repo_fixture.working_dir)
+    mock_rmtree.assert_called_once_with(local_path)
     assert git_repo.repo is None

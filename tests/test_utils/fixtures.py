@@ -51,11 +51,9 @@ def git_repo_fixture():
 
   try:
     shutil.copytree(original_project_path, temp_project_dir)
-    shutil.move(test_project_paths.GIT_DIR, test_project_paths.TEST_PROJECT_PATH / ".git")
+    shutil.move(temp_project_dir / test_project_paths.GIT_DIR.name, temp_project_dir / ".git")
 
-    repo = Repo(test_project_paths.TEST_PROJECT_PATH)
+    repo = Repo(temp_project_dir)
     yield repo
   finally:
-    if temp_project_dir.exists() and list(temp_project_dir.iterdir()):
-      shutil.rmtree(original_project_path)
-      shutil.move(temp_project_dir, original_project_path)
+    shutil.rmtree(temp_dir)
