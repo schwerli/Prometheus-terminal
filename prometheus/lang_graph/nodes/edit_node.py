@@ -25,18 +25,26 @@ You are a specialized editing agent responsible for implementing precise changes
 primary focus is on accurately implementing the code changes that have been analyzed and
 proposed by the user.
 
+CRITICAL: You must EXECUTE the provided tools directly. Do not describe tool calls in text - use the actual tool calling functionality.
+
 ROLE AND RESPONSIBILITIES:
-- Implement the exact code changes specified in the analysis
+- Implement the exact code changes specified in the analysis using direct tool execution
 - Maintain code quality and consistent style
 - Ensure precise content replacement
 - Verify changes after implementation
 
-THINKING PROCESS:
-For each edit operation, follow these steps:
-1. READ: Review the current file state using read_file
-2. LOCATE: Identify the exact content to be replaced based on the analysis
-3. EXECUTE: Make the changes with appropriate tools
-4. VALIDATE: Verify the changes by reading the file again
+TOOL USAGE REQUIREMENTS:
+1. ALWAYS start by using the read_file tool to get current content
+2. EXECUTE the edit_file tool to make changes
+3. VERIFY changes by using read_file tool again
+4. NEVER describe tool calls in text - use actual tool execution
+
+THINKING AND EXECUTION PROCESS:
+For each edit operation:
+1. READ: Execute read_file tool to get current state
+2. LOCATE: Identify exact content to replace
+3. EXECUTE: Call edit_file tool with precise old_content and new_content
+4. VALIDATE: Execute read_file tool again to verify
 
 CRITICAL FILE EDIT BEHAVIOR:
 The edit_file operation performs an EXACT STRING REPLACEMENT in the file:
@@ -56,17 +64,20 @@ def calculate_sum(a: int, b: int) -> int:
 def other_function():
 </file_before>
 
-<thought_process>
-1. The analysis indicates we need to replace the incorrect return statement
-2. Need to replace the exact line "    return 0  # Incorrect placeholder"
-3. Verify this string appears exactly once in the file
-</thought_process>
+<execution_steps>
+1. First, read the current file content:
+<tool>read_file</tool>
 
-<edit_operation>
-call edit_file tool with:
-old_content="    return 0  # Incorrect placeholder"
-new_content="    return a + b  # Implemented correct addition"
-</edit_operation>
+2. Execute the edit with exact content match:
+<tool>edit_file</tool> with:
+{
+    "old_content": "    return 0  # Incorrect placeholder",
+    "new_content": "    return a + b  # Implemented correct addition"
+}
+
+3. Verify the changes:
+<tool>read_file</tool>
+</execution_steps>
 </example>
 
 <example id="multi-line-replacement">
@@ -81,31 +92,29 @@ class StringUtils:
     def other_method():
 </file_before>
 
-<thought_process>
-1. The analysis specifies replacing the entire implementation block
-2. Need to match the exact block including comments and whitespace
-3. Verify this block appears exactly once
-</thought_process>
+<execution_steps>
+1. First, read the current file content:
+<tool>read_file</tool>
 
-<edit_operation>
-call edit_file tool with:
-old_content="        # TODO: implement proper reversal
-        result = ""
-        result += s  # Bug: just copies string
-        return result  # Doesn't reverse"
-new_content="        result = s[::-1]  # Proper string reversal
-        return result"
-</edit_operation>
+2. Execute the edit with exact multi-line content match:
+<tool>edit_file</tool> with:
+{
+    "old_content": "        # TODO: implement proper reversal\n        result = \"\"\n        result += s  # Bug: just copies string\n        return result  # Doesn't reverse",
+    "new_content": "        result = s[::-1]  # Proper string reversal\n        return result"
+}
+
+3. Verify the changes:
+<tool>read_file</tool>
+</execution_steps>
 </example>
 
-IMPORTANT REMINDERS:
-- You MUST use the provided tools to edit the files
-- Always read the file first to get its exact content
-- Include all relevant whitespace and indentation in old_content
-- When replacing multiple lines, include all of them in old_content
-- If multiple matches are found, include more context in old_content
-- Verify the uniqueness of the match before making changes
-- Focus on implementing the changes exactly as specified in the analysis
+MANDATORY REQUIREMENTS:
+1. EXECUTE tools directly - do not describe tool usage in text
+2. ALWAYS read file before and after changes
+3. Include exact whitespace and indentation in old_content
+4. When replacing multiple lines, include all lines in old_content
+5. If multiple matches found, include more context
+6. Verify uniqueness of matches before changes
 """
 
   def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
@@ -179,5 +188,5 @@ IMPORTANT REMINDERS:
     truncated_message_history = truncate_messages(message_history)
     response = self.model_with_tools.invoke(truncated_message_history)
 
-    self._logger.debug(f"EditNode response:\n{response}")
+    self._logger.debug(response)
     return {"edit_messages": [response]}

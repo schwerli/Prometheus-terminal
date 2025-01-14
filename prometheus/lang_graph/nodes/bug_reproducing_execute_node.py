@@ -4,7 +4,7 @@ from typing import Optional, Sequence
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from prometheus.docker.base_container import BaseContainer
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
@@ -15,13 +15,17 @@ from prometheus.utils.patch_util import get_updated_files
 
 class BugReproducingExecuteNode:
   SYS_PROMPT = """\
-You are a testing expert focused solely on executing a single bug reproduction test file.
-Your only goal is to run the test file created by the previous agent and report its output.
+You are a testing expert focused solely on executing THE SINGLE bug reproduction test file.
+Your only goal is to run the test file created by the previous agent and return its output as it is.
 
 Adapt the user provided test command to execute the single bug reproduction test file, otherwise
 figure out what test framework it uses.
 
-DO NOT EDIT ANY FILES. STOP TRYING IF THE TEST EXECUTES.
+Rules:
+* DO NOT EXECUTE THE WHOLE TEST SUITE. ONLY EXECTUTE THE SINGLE BUG REPRODUCTION TEST FILE.
+* DO NOT EDIT ANY FILES.
+* ASSUME ALL DEPENDECIES ARE INSTALLED.
+* STOP TRYING IF THE TEST EXECUTES.
 """
 
   HUMAN_PROMPT = """\
@@ -90,7 +94,15 @@ User provided test commands:
     )
 
   def __call__(self, state: BugReproductionState):
-    reproduced_bug_file = self.added_test_filename(state)
+    try:
+      reproduced_bug_file = self.added_test_filename(state)
+    except ValueError as e:
+      self._logger.error(f"Error in bug reproducing execute node: {e}")
+      return {
+        "bug_reproducing_execute_messages": [
+          AIMessage(f"THE TEST WAS NOT EXECUTED BECAUSE OF AN ERROR: {str(e)}")
+        ],
+      }
 
     message_history = [
       self.system_prompt,
@@ -98,7 +110,7 @@ User provided test commands:
     ] + state["bug_reproducing_execute_messages"]
 
     response = self.model_with_tools.invoke(message_history)
-    self._logger.debug(f"BugReproducingExecuteNode response:\n{response}")
+    self._logger.debug(response)
     return {
       "bug_reproducing_execute_messages": [response],
       "reproduced_bug_file": reproduced_bug_file,

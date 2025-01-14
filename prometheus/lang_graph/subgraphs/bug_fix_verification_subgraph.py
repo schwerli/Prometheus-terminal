@@ -1,8 +1,7 @@
 import functools
-from typing import Optional, Sequence
+from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -17,11 +16,7 @@ class BugFixVerificationSubgraph:
     self,
     model: BaseChatModel,
     container: BaseContainer,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    self.thread_id = thread_id
-
     bug_fix_verify_node = BugFixVerifyNode(model, container)
     bug_fix_verify_tools = ToolNode(
       tools=bug_fix_verify_node.tools,
@@ -49,12 +44,10 @@ class BugFixVerificationSubgraph:
     workflow.add_edge("bug_fix_verify_tools", "bug_fix_verify_node")
     workflow.add_edge("bug_fix_verify_structured_node", END)
 
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(self, reproduced_bug_file: str, reproduced_bug_commands: Sequence[str]):
     config = None
-    if self.thread_id:
-      config = {"configurable": {"thread_id": self.thread_id}}
 
     input_state = {
       "reproduced_bug_file": reproduced_bug_file,

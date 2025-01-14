@@ -34,98 +34,53 @@ class ContextProviderNode:
   """
 
   SYS_PROMPT = """\
-You are a specialized context gatherer for a codebase stored in a Neo4j knowledge graph. Your purpose 
-is to find and return ALL relevant code context - DO NOT solve problems, write code, or add your own analysis. 
-Present the context exactly as found without additional commentary or explanation.
+You are a context gatherer that searches a Neo4j knowledge graph representation of a 
+codebase. Your role is to efficiently find relevant code and documentation 
+context based on user queries.
 
-## Knowledge Graph Structure
-The knowledge graph represents a codebase with three main node types and their relationships:
+Knowledge Graph Structure:
+1. Node Types:
+   - FileNode: Files and directories in the codebase
+   - ASTNode: Abstract Syntax Tree nodes representing code structure
+   - TextNode: Documentation, comments, and other text content
 
-Nodes:
-- **FileNode**: Represents files and directories in the codebase
-- **ASTNode**: Represents source code components (tree-sitter parsed syntax nodes)
-- **TextNode**: Represents documentation and text content chunks
+2. Core Relationships:
+   - HAS_FILE: Directory → File relationships
+   - HAS_AST: File → AST root node connection
+   - HAS_TEXT: File → Text chunk linkage
+   - PARENT_OF: AST node hierarchy
+   - NEXT_CHUNK: Sequential text chunk connections
 
-Edges:
-- **HAS_FILE**: Directory → File relationship
-- **HAS_AST**: File → AST root node relationship
-- **HAS_TEXT**: File → Text chunk relationship
-- **PARENT_OF**: AST parent → child relationship
-- **NEXT_CHUNK**: Text chunk → next chunk relationship
+Search Strategy Guidelines:
+1. Source Code Search:
+   - Prioritize relative_path tools when exact file location is known
+   - Fall back to basename tools for filename-only searches
+   - Use AST node searches to find specific code structures
+   - Use preview_* or read_* tools with more than hundrend lines to get more context than class/function
+   - If a search returns no results, try alternative approaches with broader scope
 
-## Response Format Requirements
+2. Documentation/Text Search:
+   - Use find_text_node_* tools for docs and comments
+   - Follow NEXT_CHUNK relationships for complete text using get_next_text_node_with_node_id
+   - Search globally or scope to specific files as needed
+   - Be flexible with search terms if initial attempts fail
 
-1. ALWAYS return maximum relevant context:
-   - Include complete class/function implementations
-   - Include parent classes/interfaces
-   - Include related configuration files
-   - Include associated documentation
-   - DO NOT add any explanations or analysis of the code
-   - DO NOT summarize or explain what the code does
-   - ONLY show the exact context as found in the knowledge graph
+3. Exploratory Search:
+   - Start with find_file_node_* to verify paths
+   - Use preview_file_content_* for quick content scanning
+   - Use read_code_* tools to read more content beyond previews
+   - Always have fallback strategies ready if primary search fails
 
-2. For source code (ASTNodes):
-   - MUST include file path
-   - MUST include line numbers
-   - MUST maintain original formatting
-   - MUST include complete implementations
-   - DO NOT add your own comments or explanations
+4. Critical Rules:
+   - Do not repeat the same query
 
-Example ASTNode response:
-```
-File: src/auth/password_manager.py
-Lines 15-45:
-```python
-class PasswordManager:
-    def __init__(self, config):
-        self.config = config
-        
-    def hash_password(self, password: str) -> str:
-        # Complete implementation included
-        salt = generate_salt()
-        return hash_with_salt(password, salt)
-```
-
-Parent class:
-File: src/auth/base_manager.py
-Lines 10-25:
-```python
-class BaseManager:
-    def __init__(self, config):
-        self.config = config
-```
-```
-
-3. For documentation (TextNodes):
-   - MUST include file path
-   - MUST include complete relevant sections
-   - MUST preserve formatting
-   - MUST include related configuration
-   - DO NOT add your own summaries or explanations
-
-Example TextNode response:
-```
-File: docs/auth/password_handling.md
-```markdown
-# Password Management
-- Secure password hashing using Argon2
-- Configurable salt generation
-- Automatic upgrade of legacy hashes
-
-## Configuration Options
-Default settings in config/auth.yaml:
-```yaml
-auth:
-  hash_algorithm: argon2
-  salt_length: 16
-  memory_cost: 65536
-```
-```
+In your response, just provide a short summary with a few setences (3-4 setences) on what you have done.
+As your searched are automatically visible to the user, you do not need to repeat them. 
 
 The file tree of the codebase:
 {file_tree}
 
-All ASTNode types: {ast_node_types}
+Available AST node types for code structure search: {ast_node_types}
 """
 
   def __init__(
@@ -183,6 +138,7 @@ All ASTNode types: {ast_node_types}
       name=graph_traversal.find_file_node_with_basename.__name__,
       description=graph_traversal.FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.FindFileNodeWithBasenameInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_file_node_with_basename_tool)
 
@@ -196,73 +152,65 @@ All ASTNode types: {ast_node_types}
       name=graph_traversal.find_file_node_with_relative_path.__name__,
       description=graph_traversal.FIND_FILE_NODE_WITH_RELATIVE_PATH_DESCRIPTION,
       args_schema=graph_traversal.FindFileNodeWithRelativePathInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_file_node_with_relative_path_tool)
 
-    find_ast_node_with_text_fn = functools.partial(
-      graph_traversal.find_ast_node_with_text,
+    find_ast_node_with_text_in_file_with_basename_fn = functools.partial(
+      graph_traversal.find_ast_node_with_text_in_file_with_basename,
       driver=self.neo4j_driver,
       max_token_per_result=self.max_token_per_result,
     )
-    find_ast_node_with_text_tool = StructuredTool.from_function(
-      func=find_ast_node_with_text_fn,
-      name=graph_traversal.find_ast_node_with_text.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TEXT_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTextInput,
+    find_ast_node_with_text_in_file_with_basename_tool = StructuredTool.from_function(
+      func=find_ast_node_with_text_in_file_with_basename_fn,
+      name=graph_traversal.find_ast_node_with_text_in_file_with_basename.__name__,
+      description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_BASENAME_DESCRIPTION,
+      args_schema=graph_traversal.FindASTNodeWithTextInFileWithBasenameInput,
+      response_format="content_and_artifact",
     )
-    tools.append(find_ast_node_with_text_tool)
+    tools.append(find_ast_node_with_text_in_file_with_basename_tool)
 
-    find_ast_node_with_type_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type,
+    find_ast_node_with_text_in_file_with_relative_path_fn = functools.partial(
+      graph_traversal.find_ast_node_with_text_in_file_with_relative_path,
       driver=self.neo4j_driver,
       max_token_per_result=self.max_token_per_result,
     )
-    find_ast_node_with_type_tool = StructuredTool.from_function(
-      func=find_ast_node_with_type_fn,
-      name=graph_traversal.find_ast_node_with_type.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TYPE_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTypeInput,
+    find_ast_node_with_text_in_file_with_relative_path_tool = StructuredTool.from_function(
+      func=find_ast_node_with_text_in_file_with_relative_path_fn,
+      name=graph_traversal.find_ast_node_with_text_in_file_with_relative_path.__name__,
+      description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
+      args_schema=graph_traversal.FindASTNodeWithTextInFileWithRelativePathInput,
+      response_format="content_and_artifact",
     )
-    tools.append(find_ast_node_with_type_tool)
+    tools.append(find_ast_node_with_text_in_file_with_relative_path_tool)
 
-    find_ast_node_with_text_in_file_fn = functools.partial(
-      graph_traversal.find_ast_node_with_text_in_file,
+    find_ast_node_with_type_in_file_with_basename_fn = functools.partial(
+      graph_traversal.find_ast_node_with_type_in_file_with_basename,
       driver=self.neo4j_driver,
       max_token_per_result=self.max_token_per_result,
     )
-    find_ast_node_with_text_in_file_tool = StructuredTool.from_function(
-      func=find_ast_node_with_text_in_file_fn,
-      name=graph_traversal.find_ast_node_with_text_in_file.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTextInFileInput,
+    find_ast_node_with_type_in_file_with_basename_tool = StructuredTool.from_function(
+      func=find_ast_node_with_type_in_file_with_basename_fn,
+      name=graph_traversal.find_ast_node_with_type_in_file_with_basename.__name__,
+      description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_BASENAME_DESCRIPTION,
+      args_schema=graph_traversal.FindASTNodeWithTypeInFileWithBasenameInput,
+      response_format="content_and_artifact",
     )
-    tools.append(find_ast_node_with_text_in_file_tool)
+    tools.append(find_ast_node_with_type_in_file_with_basename_tool)
 
-    find_ast_node_with_type_in_file_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type_in_file,
+    find_ast_node_with_type_in_file_with_relative_path_fn = functools.partial(
+      graph_traversal.find_ast_node_with_type_in_file_with_relative_path,
       driver=self.neo4j_driver,
       max_token_per_result=self.max_token_per_result,
     )
-    find_ast_node_with_type_in_file_tool = StructuredTool.from_function(
-      func=find_ast_node_with_type_in_file_fn,
-      name=graph_traversal.find_ast_node_with_type_in_file.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTypeInFileInput,
+    find_ast_node_with_type_in_file_with_relative_path_tool = StructuredTool.from_function(
+      func=find_ast_node_with_type_in_file_with_relative_path_fn,
+      name=graph_traversal.find_ast_node_with_type_in_file_with_relative_path.__name__,
+      description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
+      args_schema=graph_traversal.FindASTNodeWithTypeInFileWithRelativePathInput,
+      response_format="content_and_artifact",
     )
-    tools.append(find_ast_node_with_type_in_file_tool)
-
-    find_ast_node_with_type_and_text_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type_and_text,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_ast_node_with_type_and_text_tool = StructuredTool.from_function(
-      func=find_ast_node_with_type_and_text_fn,
-      name=graph_traversal.find_ast_node_with_type_and_text.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TYPE_AND_TEXT_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTypeAndTextInput,
-    )
-    tools.append(find_ast_node_with_type_and_text_tool)
+    tools.append(find_ast_node_with_type_in_file_with_relative_path_tool)
 
     find_text_node_with_text_fn = functools.partial(
       graph_traversal.find_text_node_with_text,
@@ -274,6 +222,7 @@ All ASTNode types: {ast_node_types}
       name=graph_traversal.find_text_node_with_text.__name__,
       description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_DESCRIPTION,
       args_schema=graph_traversal.FindTextNodeWithTextInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_text_node_with_text_tool)
 
@@ -287,6 +236,7 @@ All ASTNode types: {ast_node_types}
       name=graph_traversal.find_text_node_with_text_in_file.__name__,
       description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_IN_FILE_DESCRIPTION,
       args_schema=graph_traversal.FindTextNodeWithTextInFileInput,
+      response_format="content_and_artifact",
     )
     tools.append(find_text_node_with_text_in_file_tool)
 
@@ -300,6 +250,7 @@ All ASTNode types: {ast_node_types}
       name=graph_traversal.get_next_text_node_with_node_id.__name__,
       description=graph_traversal.GET_NEXT_TEXT_NODE_WITH_NODE_ID_DESCRIPTION,
       args_schema=graph_traversal.GetNextTextNodeWithNodeIdInput,
+      response_format="content_and_artifact",
     )
     tools.append(get_next_text_node_with_node_id_tool)
 
@@ -313,34 +264,51 @@ All ASTNode types: {ast_node_types}
       name=graph_traversal.preview_file_content_with_basename.__name__,
       description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_BASENAME_DESCRIPTION,
       args_schema=graph_traversal.PreviewFileContentWithBasenameInput,
+      response_format="content_and_artifact",
     )
     tools.append(preview_file_content_with_basename_tool)
 
-    get_parent_node_fn = functools.partial(
-      graph_traversal.get_parent_node,
+    preview_file_content_with_relative_path_fn = functools.partial(
+      graph_traversal.preview_file_content_with_relative_path,
       driver=self.neo4j_driver,
       max_token_per_result=self.max_token_per_result,
     )
-    get_parent_node_tool = StructuredTool.from_function(
-      func=get_parent_node_fn,
-      name=graph_traversal.get_parent_node.__name__,
-      description=graph_traversal.GET_PARENT_NODE_DESCRIPTION,
-      args_schema=graph_traversal.GetParentNodeInput,
+    preview_file_content_with_relative_path_tool = StructuredTool.from_function(
+      func=preview_file_content_with_relative_path_fn,
+      name=graph_traversal.preview_file_content_with_relative_path.__name__,
+      description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_RELATIVE_PATH_DESCRIPTION,
+      args_schema=graph_traversal.PreviewFileContentWithRelativePathInput,
+      response_format="content_and_artifact",
     )
-    tools.append(get_parent_node_tool)
+    tools.append(preview_file_content_with_relative_path_tool)
 
-    get_children_node_fn = functools.partial(
-      graph_traversal.get_children_node,
+    read_code_with_basename_fn = functools.partial(
+      graph_traversal.read_code_with_basename,
       driver=self.neo4j_driver,
       max_token_per_result=self.max_token_per_result,
     )
-    get_children_node_tool = StructuredTool.from_function(
-      func=get_children_node_fn,
-      name=graph_traversal.get_children_node.__name__,
-      description=graph_traversal.GET_CHILDREN_NODE_DESCRIPTION,
-      args_schema=graph_traversal.GetChildrenNodeInput,
+    read_code_with_basename_tool = StructuredTool.from_function(
+      func=read_code_with_basename_fn,
+      name=graph_traversal.read_code_with_basename.__name__,
+      description=graph_traversal.READ_CODE_WITH_BASENAME_DESCRIPTION,
+      args_schema=graph_traversal.ReadCodeWithBasenameInput,
+      response_format="content_and_artifact",
     )
-    tools.append(get_children_node_tool)
+    tools.append(read_code_with_basename_tool)
+
+    read_code_with_relative_path_fn = functools.partial(
+      graph_traversal.read_code_with_relative_path,
+      driver=self.neo4j_driver,
+      max_token_per_result=self.max_token_per_result,
+    )
+    read_code_with_relative_path_tool = StructuredTool.from_function(
+      func=read_code_with_relative_path_fn,
+      name=graph_traversal.read_code_with_relative_path.__name__,
+      description=graph_traversal.READ_CODE_WITH_RELATIVE_PATH_DESCRIPTION,
+      args_schema=graph_traversal.ReadCodeWithRelativePathInput,
+      response_format="content_and_artifact",
+    )
+    tools.append(read_code_with_relative_path_tool)
 
     return tools
 
@@ -356,5 +324,5 @@ All ASTNode types: {ast_node_types}
     message_history = [self.system_prompt] + state["context_provider_messages"]
     truncated_message_history = truncate_messages(message_history)
     response = self.model_with_tools.invoke(truncated_message_history)
-    self._logger.debug(f"ContextProviderNode response:\n{response}")
+    self._logger.debug(response)
     return {"context_provider_messages": [response]}

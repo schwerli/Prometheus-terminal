@@ -145,5 +145,5 @@ def test_empty_array_parsing(parser):
     truncated_message_history = truncate_messages(message_history)
     response = self.model_with_tools.invoke(truncated_message_history)
 
-    self._logger.debug(f"BugReproducingWriteNode response:\n{response}")
+    self._logger.debug(response)
     return {"bug_reproducing_write_messages": [response]}

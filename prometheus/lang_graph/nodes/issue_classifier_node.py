@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 from prometheus.lang_graph.graphs.issue_state import IssueType
 from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClassificationState
 from prometheus.utils.issue_util import format_issue_info
-from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class IssueClassifierOutput(BaseModel):
@@ -112,6 +111,13 @@ OUTPUT 4:
 Analyze the provided issue and respond with a JSON object containing only the issue_type field with one of the four allowed values: "bug", "feature", "documentation", or "question".
 """.replace("{", "{{").replace("}", "}}")
 
+  ISSUE_CLASSIFICATION_CONTEXT = """\
+{issue_info}
+
+Issue classification context:
+{issue_classification_context}
+"""
+
   def __init__(self, model: BaseChatModel):
     prompt = ChatPromptTemplate.from_messages(
       [("system", self.SYS_PROMPT), ("human", "{context_info}")]
@@ -121,12 +127,12 @@ Analyze the provided issue and respond with a JSON object containing only the is
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_classifier_node")
 
   def format_context_info(self, state: IssueClassificationState) -> str:
-    context_info = f"""\
-      {format_issue_info(state['issue_title'], state['issue_body'], state['issue_comments'])}
-
-      Codebase context:
-      {get_last_message_content(state['context_provider_messages'])}
-    """
+    context_info = self.ISSUE_CLASSIFICATION_CONTEXT.format(
+      issue_info=format_issue_info(
+        state["issue_title"], state["issue_body"], state["issue_comments"]
+      ),
+      issue_classification_context="\n\n".join(state["issue_classification_context"]),
+    )
     return context_info
 
   def __call__(self, state: IssueClassificationState):

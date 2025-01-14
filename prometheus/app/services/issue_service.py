@@ -1,10 +1,8 @@
-import uuid
 from typing import Mapping, Optional, Sequence
 
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
-from prometheus.app.services.postgres_service import PostgresService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.docker.user_defined_container import UserDefinedContainer
@@ -18,14 +16,12 @@ class IssueService:
     kg_service: KnowledgeGraphService,
     repository_service: RepositoryService,
     neo4j_service: Neo4jService,
-    postgres_service: PostgresService,
     llm_service: LLMService,
     max_token_per_neo4j_result: int,
   ):
     self.kg_service = kg_service
     self.repository_service = repository_service
     self.neo4j_service = neo4j_service
-    self.postgres_service = postgres_service
     self.llm_service = llm_service
     self.max_token_per_neo4j_result = max_token_per_neo4j_result
 
@@ -38,6 +34,7 @@ class IssueService:
     run_build: bool,
     run_existing_test: bool,
     number_of_candidate_patch: int,
+    max_refined_query_loop: int,
     dockerfile_content: Optional[str] = None,
     image_name: Optional[str] = None,
     workdir: Optional[str] = None,
@@ -47,27 +44,25 @@ class IssueService:
     if dockerfile_content or image_name:
       container = UserDefinedContainer(
         self.kg_service.kg.get_local_path(),
+        workdir,
         build_commands,
         test_commands,
-        workdir,
         dockerfile_content,
         image_name,
       )
     else:
-      container = GeneralContainer(self.kg_service.kg.get_local_path())
+      container = GeneralContainer(self.kg_service.kg.get_local_path(), workdir)
 
-    thread_id = str(uuid.uuid4())
     issue_graph = IssueGraph(
-      self.llm_service.model,
-      self.kg_service.kg,
-      self.repository_service.git_repo,
-      self.neo4j_service.neo4j_driver,
-      self.max_token_per_neo4j_result,
-      container,
-      build_commands,
-      test_commands,
-      thread_id,
-      self.postgres_service.checkpointer,
+      advanced_model=self.llm_service.advanced_model,
+      base_model=self.llm_service.base_model,
+      kg=self.kg_service.kg,
+      git_repo=self.repository_service.git_repo,
+      neo4j_driver=self.neo4j_service.neo4j_driver,
+      max_token_per_neo4j_result=self.max_token_per_neo4j_result,
+      container=container,
+      build_commands=build_commands,
+      test_commands=test_commands,
     )
 
     output_state = issue_graph.invoke(
@@ -78,6 +73,7 @@ class IssueService:
       run_build,
       run_existing_test,
       number_of_candidate_patch,
+      max_refined_query_loop,
     )
 
     if output_state["issue_type"] == IssueType.BUG:

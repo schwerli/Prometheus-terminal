@@ -1,3 +1,4 @@
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -7,7 +8,6 @@ from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
-from prometheus.app.services.postgres_service import PostgresService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.app.services.service_coordinator import ServiceCoordinator
 
@@ -22,20 +22,18 @@ def mock_services():
   knowledge_graph_service.kg = None
   knowledge_graph_service.get_local_path.return_value = None
   neo4j_service = Mock(spec=Neo4jService)
-  postgres_service = Mock(spec=PostgresService)
   repository_service = Mock(spec=RepositoryService)
   repository_service.get_working_dir.return_value = None
 
-  return {
+  yield {
     "issue_service": issue_service,
     "knowledge_graph_service": knowledge_graph_service,
     "llm_service": llm_service,
     "neo4j_service": neo4j_service,
     "max_token_per_neo4j_result": 1000,
-    "postgres_service": postgres_service,
     "repository_service": repository_service,
     "github_token": "test_token",
-    "working_directory": Path("test_directory"),
+    "working_directory": Path(tempfile.TemporaryDirectory().name),
   }
 
 
@@ -46,7 +44,6 @@ def service_coordinator(mock_services):
     mock_services["knowledge_graph_service"],
     mock_services["llm_service"],
     mock_services["neo4j_service"],
-    mock_services["postgres_service"],
     mock_services["repository_service"],
     mock_services["max_token_per_neo4j_result"],
     mock_services["github_token"],
@@ -60,7 +57,6 @@ def test_initialization(service_coordinator, mock_services):
   assert service_coordinator.knowledge_graph_service == mock_services["knowledge_graph_service"]
   assert service_coordinator.llm_service == mock_services["llm_service"]
   assert service_coordinator.neo4j_service == mock_services["neo4j_service"]
-  assert service_coordinator.postgres_service == mock_services["postgres_service"]
   assert service_coordinator.repository_service == mock_services["repository_service"]
 
 
@@ -94,28 +90,6 @@ def test_upload_github_repository(service_coordinator, mock_services):
   )
 
 
-def test_get_all_conversation_ids(service_coordinator, mock_services):
-  """Test retrieval of conversation IDs"""
-  expected_ids = ["thread1", "thread2"]
-  mock_services["postgres_service"].get_all_thread_ids.return_value = expected_ids
-
-  result = service_coordinator.get_all_conversation_ids()
-
-  mock_services["postgres_service"].get_all_thread_ids.assert_called_once()
-  assert result == expected_ids
-
-
-def test_get_messages(service_coordinator, mock_services):
-  """Test message retrieval for a conversation"""
-  expected_messages = [{"role": "user", "content": "message1"}]
-  mock_services["postgres_service"].get_messages.return_value = expected_messages
-
-  result = service_coordinator.get_messages("thread123")
-
-  mock_services["postgres_service"].get_messages.assert_called_once_with("thread123")
-  assert result == expected_messages
-
-
 def test_clear(service_coordinator, mock_services):
   """Test clearing of services"""
   service_coordinator.clear()
@@ -129,7 +103,6 @@ def test_close(service_coordinator, mock_services):
   service_coordinator.close()
 
   mock_services["neo4j_service"].close.assert_called_once()
-  mock_services["postgres_service"].close.assert_called_once()
 
 
 def test_exists_knowledge_graph(service_coordinator, mock_services):

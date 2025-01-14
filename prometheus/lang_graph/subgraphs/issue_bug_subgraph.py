@@ -2,7 +2,6 @@ from typing import Mapping, Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 
 from prometheus.docker.base_container import BaseContainer
@@ -22,7 +21,8 @@ from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 class IssueBugSubgraph:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
@@ -30,25 +30,21 @@ class IssueBugSubgraph:
     max_token_per_neo4j_result: int,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    self.thread_id = thread_id
-
     bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
-      model,
-      container,
-      kg,
-      git_repo,
-      neo4j_driver,
-      max_token_per_neo4j_result,
-      test_commands,
-      thread_id,
-      checkpointer,
+      advanced_model=advanced_model,
+      base_model=base_model,
+      container=container,
+      kg=kg,
+      git_repo=git_repo,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
+      test_commands=test_commands,
     )
 
     issue_verified_bug_subgraph_node = IssueVerifiedBugSubgraphNode(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       container=container,
       kg=kg,
       git_repo=git_repo,
@@ -56,20 +52,17 @@ class IssueBugSubgraph:
       max_token_per_neo4j_result=max_token_per_neo4j_result,
       build_commands=build_commands,
       test_commands=test_commands,
-      thread_id=thread_id,
-      checkpointer=checkpointer,
     )
     issue_not_verified_bug_subgraph_node = IssueNotVerifiedBugSubgraphNode(
-      model=model,
+      advanced_model=advanced_model,
+      base_model=base_model,
       kg=kg,
       git_repo=git_repo,
       neo4j_driver=neo4j_driver,
       max_token_per_neo4j_result=max_token_per_neo4j_result,
-      thread_id=thread_id,
-      checkpointer=checkpointer,
     )
 
-    issue_bug_responder_node = IssueBugResponderNode(model)
+    issue_bug_responder_node = IssueBugResponderNode(base_model)
 
     workflow = StateGraph(IssueBugState)
 
@@ -95,7 +88,7 @@ class IssueBugSubgraph:
     workflow.add_edge("issue_not_verified_bug_subgraph_node", "issue_bug_responder_node")
     workflow.add_edge("issue_bug_responder_node", END)
 
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(
     self,
@@ -108,8 +101,6 @@ class IssueBugSubgraph:
     recursion_limit: int = 30,
   ):
     config = {"recursion_limit": recursion_limit}
-    if self.thread_id:
-      config["configurable"] = {"thread_id": self.thread_id}
 
     input_state = {
       "issue_title": issue_title,

@@ -146,7 +146,7 @@ Log from executing bug reproducing file:
     )
 
     response = self.model.invoke({"bug_reproducing_info": bug_reproducing_info})
-    self._logger.debug(f"BugReproducingStructuredNode response:\n{response}")
+    self._logger.debug(response)
 
     return {
       "reproduced_bug": response.reproduced_bug,

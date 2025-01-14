@@ -35,4 +35,3 @@ def test_issue_classification_subgraph_basic_initialization(mock_kg, mock_neo4j_
 
   # Verify the subgraph was created
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None

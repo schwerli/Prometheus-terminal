@@ -6,7 +6,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from prometheus.utils.issue_util import format_issue_info
-from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class FinalPatchSelectionStructuredOutput(BaseModel):
@@ -114,7 +113,7 @@ Remember:
 {issue_info}
 
 Bug Context:
-{bug_context}
+{bug_fix_context}
 
 I have generated the following patches, now please select the best patch among them:
 {patches}
@@ -140,7 +139,7 @@ I have generated the following patches, now please select the best patch among t
       issue_info=format_issue_info(
         state["issue_title"], state["issue_body"], state["issue_comments"]
       ),
-      bug_context=get_last_message_content(state["context_provider_messages"]),
+      bug_fix_context="\n\n".join(state["bug_fix_context"]),
       patches=patches,
     )
 
@@ -148,12 +147,12 @@ I have generated the following patches, now please select the best patch among t
     human_prompt = self.format_human_message(state)
     for try_index in range(self.max_retries):
       response = self.model.invoke({"human_prompt": human_prompt})
-      self._logger.debug(f"FinalPatchSelectionNode response at {try_index} try:\n{response}")
+      self._logger.info(f"FinalPatchSelectionNode response at {try_index} try:\n{response}")
 
       if response.patch_index >= 0 and response.patch_index < len(state["edit_patches"]):
         return {"final_patch": state["edit_patches"][response.patch_index]}
 
-    self._logger.debug(
+    self._logger.info(
       "FinalPatchSelectionNode failed to select a patch with correct index, defaulting to 0"
     )
     return {"final_patch": state["edit_patches"][0]}

@@ -3,7 +3,6 @@ from typing import Mapping, Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -18,7 +17,7 @@ from prometheus.lang_graph.nodes.bug_reproducing_write_message_node import (
   BugReproducingWriteMessageNode,
 )
 from prometheus.lang_graph.nodes.bug_reproducing_write_node import BugReproducingWriteNode
-from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
+from prometheus.lang_graph.nodes.context_retrieval_subgraph_node import ContextRetrievalSubgraphNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.git_reset_node import GitResetNode
 from prometheus.lang_graph.nodes.issue_bug_reproduction_context_message_node import (
@@ -32,35 +31,35 @@ from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproducti
 class BugReproductionSubgraph:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]] = None,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self.git_repo = git_repo
-    self.thread_id = thread_id
 
     issue_bug_reproduction_context_message_node = IssueBugReproductionContextMessageNode()
-    context_provider_node = ContextProviderNode(model, kg, neo4j_driver, max_token_per_neo4j_result)
-    context_provider_tools = ToolNode(
-      tools=context_provider_node.tools,
-      name="context_provider_tools",
-      messages_key="context_provider_messages",
+    context_retrieval_subgraph_node = ContextRetrievalSubgraphNode(
+      base_model,
+      kg,
+      neo4j_driver,
+      max_token_per_neo4j_result,
+      "bug_reproducing_query",
+      "bug_reproducing_context",
     )
 
     bug_reproducing_write_message_node = BugReproducingWriteMessageNode()
-    bug_reproducing_write_node = BugReproducingWriteNode(model, kg)
+    bug_reproducing_write_node = BugReproducingWriteNode(advanced_model, kg)
     bug_reproducing_write_tools = ToolNode(
       tools=bug_reproducing_write_node.tools,
       name="bug_reproducing_write_tools",
       messages_key="bug_reproducing_write_messages",
     )
-    bug_reproducing_file_node = BugReproducingFileNode(model, kg)
+    bug_reproducing_file_node = BugReproducingFileNode(base_model, kg)
     bug_reproducing_file_tools = ToolNode(
       tools=bug_reproducing_file_node.tools,
       name="bug_reproducing_file_tools",
@@ -68,13 +67,13 @@ class BugReproductionSubgraph:
     )
     git_diff_node = GitDiffNode(git_repo, "bug_reproducing_patch")
     update_container_node = UpdateContainerNode(container, git_repo)
-    bug_reproducing_execute_node = BugReproducingExecuteNode(model, container, test_commands)
+    bug_reproducing_execute_node = BugReproducingExecuteNode(base_model, container, test_commands)
     bug_reproducing_execute_tools = ToolNode(
       tools=bug_reproducing_execute_node.tools,
       name="bug_reproducing_execute_tools",
       messages_key="bug_reproducing_execute_messages",
     )
-    bug_reproducing_structured_node = BugReproducingStructuredNode(model)
+    bug_reproducing_structured_node = BugReproducingStructuredNode(advanced_model)
     reset_bug_reproducing_file_messages_node = ResetMessagesNode("bug_reproducing_file_messages")
     reset_bug_reproducing_execute_messages_node = ResetMessagesNode(
       "bug_reproducing_execute_messages"
@@ -86,8 +85,7 @@ class BugReproductionSubgraph:
     workflow.add_node(
       "issue_bug_reproduction_context_message_node", issue_bug_reproduction_context_message_node
     )
-    workflow.add_node("context_provider_node", context_provider_node)
-    workflow.add_node("context_provider_tools", context_provider_tools)
+    workflow.add_node("context_retrieval_subgraph_node", context_retrieval_subgraph_node)
 
     workflow.add_node("bug_reproducing_write_message_node", bug_reproducing_write_message_node)
     workflow.add_node("bug_reproducing_write_node", bug_reproducing_write_node)
@@ -109,16 +107,10 @@ class BugReproductionSubgraph:
     workflow.add_node("git_reset_node", git_reset_node)
 
     workflow.set_entry_point("issue_bug_reproduction_context_message_node")
-    workflow.add_edge("issue_bug_reproduction_context_message_node", "context_provider_node")
-    workflow.add_conditional_edges(
-      "context_provider_node",
-      functools.partial(tools_condition, messages_key="context_provider_messages"),
-      {
-        "tools": "context_provider_tools",
-        END: "bug_reproducing_write_message_node",
-      },
+    workflow.add_edge(
+      "issue_bug_reproduction_context_message_node", "context_retrieval_subgraph_node"
     )
-    workflow.add_edge("context_provider_tools", "context_provider_node")
+    workflow.add_edge("context_retrieval_subgraph_node", "bug_reproducing_write_message_node")
 
     workflow.add_edge("bug_reproducing_write_message_node", "bug_reproducing_write_node")
     workflow.add_conditional_edges(
@@ -168,7 +160,7 @@ class BugReproductionSubgraph:
       "bug_reproducing_write_message_node",
     )
 
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(
     self,
@@ -178,13 +170,12 @@ class BugReproductionSubgraph:
     recursion_limit: int = 50,
   ):
     config = {"recursion_limit": recursion_limit}
-    if self.thread_id:
-      config["configurable"] = {"thread_id": self.thread_id}
 
     input_state = {
       "issue_title": issue_title,
       "issue_body": issue_body,
       "issue_comments": issue_comments,
+      "max_refined_query_loop": 1,
     }
 
     try:

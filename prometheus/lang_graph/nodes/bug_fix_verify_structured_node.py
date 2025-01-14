@@ -95,7 +95,8 @@ Important:
   def __call__(self, state: BugFixVerficationState):
     bug_fix_verify_message = get_last_message_content(state["bug_fix_verify_messages"])
     response = self.model.invoke({"bug_reproducing_logs": bug_fix_verify_message})
-    self._logger.debug(f"BugFixVerifyStructuredNode response:\n{response}")
+
+    self._logger.debug(response)
 
     return {
       "reproducing_test_fail_log": response.reproducing_test_fail_log,

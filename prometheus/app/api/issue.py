@@ -9,7 +9,7 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 router = APIRouter()
 
 
-class IssueAnswerRequest(BaseModel):
+class IssueRequest(BaseModel):
   issue_number: int = Field(description="The number of the issue", examples=[42])
   issue_title: str = Field(
     description="The title of the issue", examples=["There is a memory leak"]
@@ -43,8 +43,13 @@ class IssueAnswerRequest(BaseModel):
     examples=[False],
   )
   number_of_candidate_patch: Optional[int] = Field(
-    default=3,
+    default=4,
     description="When the patch is not verfied (through build or test), number of candidate patches we generate to select the best one",
+    examples=[4],
+  )
+  max_refined_query_loop: Optional[int] = Field(
+    default=3,
+    description="Number of times to ask for more context",
     examples=[3],
   )
   dockerfile_content: Optional[str] = Field(
@@ -80,7 +85,7 @@ class IssueAnswerRequest(BaseModel):
 
 
 @router.post("/answer/")
-def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
+def answer_issue(issue: IssueRequest, request: Request):
   if not request.app.state.service_coordinator.exists_knowledge_graph():
     raise HTTPException(
       status_code=404,
@@ -124,6 +129,7 @@ def answer_and_fix_issue(issue: IssueAnswerRequest, request: Request):
     run_build=issue.run_build,
     run_existing_test=issue.run_existing_test,
     number_of_candidate_patch=issue.number_of_candidate_patch,
+    max_refined_query_loop=issue.max_refined_query_loop,
     dockerfile_content=issue.dockerfile_content,
     image_name=issue.image_name,
     workdir=issue.workdir,

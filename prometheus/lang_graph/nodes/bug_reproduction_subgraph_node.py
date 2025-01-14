@@ -3,7 +3,6 @@ from typing import Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.errors import GraphRecursionError
 
 from prometheus.docker.base_container import BaseContainer
@@ -16,34 +15,30 @@ from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 class BugReproductionSubgraphNode:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
     neo4j_driver: neo4j.Driver,
     max_token_per_neo4j_result: int,
     test_commands: Optional[Sequence[str]],
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
     self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproduction_subgraph_node")
+    self.git_repo = git_repo
     self.bug_reproduction_subgraph = BugReproductionSubgraph(
-      model,
-      container,
-      kg,
-      git_repo,
-      neo4j_driver,
-      max_token_per_neo4j_result,
-      test_commands,
-      thread_id,
-      checkpointer,
+      advanced_model=advanced_model,
+      base_model=base_model,
+      container=container,
+      kg=kg,
+      git_repo=git_repo,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
+      test_commands=test_commands,
     )
 
   def __call__(self, state: IssueBugState):
     self._logger.info("Enter bug_reproduction_subgraph")
-    self._logger.debug(f"issue_title: {state['issue_title']}")
-    self._logger.debug(f"issue_body: {state['issue_body']}")
-    self._logger.debug(f"issue_comments: {state['issue_comments']}")
 
     try:
       output_state = self.bug_reproduction_subgraph.invoke(
@@ -53,6 +48,7 @@ class BugReproductionSubgraphNode:
       )
     except GraphRecursionError:
       self._logger.info("Recursion limit reached, returning reproduced_bug=False")
+      self.git_repo.reset_repository()
       return {"reproduced_bug": False}
 
     self._logger.info(f"reproduced_bug: {output_state['reproduced_bug']}")

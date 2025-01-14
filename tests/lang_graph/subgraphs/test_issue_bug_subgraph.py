@@ -38,11 +38,13 @@ def test_issue_bug_subgraph_basic_initialization(
 ):
   """Test that IssueBugSubgraph initializes correctly with basic components."""
   # Initialize fake model with empty responses
-  fake_model = FakeListChatWithToolsModel(responses=[])
+  fake_advanced_model = FakeListChatWithToolsModel(responses=[])
+  fake_base_model = FakeListChatWithToolsModel(responses=[])
 
   # Initialize the subgraph with required parameters
   subgraph = IssueBugSubgraph(
-    model=fake_model,
+    advanced_model=fake_advanced_model,
+    base_model=fake_base_model,
     container=mock_container,
     kg=mock_kg,
     git_repo=mock_git_repo,
@@ -52,19 +54,20 @@ def test_issue_bug_subgraph_basic_initialization(
 
   # Verify the subgraph was created
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None
 
 
 def test_issue_bug_subgraph_with_commands(
   mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
 ):
   """Test that IssueBugSubgraph initializes correctly with build and test commands."""
-  fake_model = FakeListChatWithToolsModel(responses=[])
+  fake_advanced_model = FakeListChatWithToolsModel(responses=[])
+  fake_base_model = FakeListChatWithToolsModel(responses=[])
   build_commands = ["make build"]
   test_commands = ["make test"]
 
   subgraph = IssueBugSubgraph(
-    model=fake_model,
+    advanced_model=fake_advanced_model,
+    base_model=fake_base_model,
     container=mock_container,
     kg=mock_kg,
     git_repo=mock_git_repo,
@@ -75,4 +78,3 @@ def test_issue_bug_subgraph_with_commands(
   )
 
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None

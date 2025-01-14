@@ -98,5 +98,5 @@ Remember:
       "test_messages"
     ]
     response = self.model_with_tools.invoke(message_history)
-    self._logger.debug(f"GeneralTestNode response:\n{response}")
+    self._logger.debug(response)
     return {"test_messages": [response]}

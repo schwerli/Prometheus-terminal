@@ -39,5 +39,8 @@ docker run -d \
   -p 7687:7687 \
   -e NEO4J_AUTH=neo4j/password \
   -e NEO4J_PLUGINS='["apoc"]' \
+  -e NEO4J_dbms_memory_heap_initial__size=4G \
+  -e NEO4J_dbms_memory_heap_max__size=8G \
+  -e NEO4J_dbms_memory_pagecache_size=4G \
   neo4j
 ```

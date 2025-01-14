@@ -25,4 +25,3 @@ def test_bug_fix_verification_subgraph_basic_initialization(mock_container):
   subgraph = BugFixVerificationSubgraph(fake_model, mock_container)
 
   assert subgraph.subgraph is not None
-  assert subgraph.thread_id is None

@@ -304,9 +304,8 @@ Output:
       - existing_test_fail_log: String containing test failure details (empty if all passed)
     """
     test_history = format_agent_tool_message_history(state["test_messages"])
-    self._logger.debug(f"Test history:\n{test_history}")
     response = self.model.invoke({"test_history": test_history})
-    self._logger.debug(f"GeneralTestStructuredNode response:\n{response}")
+    self._logger.debug(response)
     return {
       "exist_test": response.exist_test,
       "test_command_summary": response.command_summary,

@@ -12,7 +12,7 @@ class EditMessageNode:
 {issue_info}
 
 Bug Context:
-{bug_context}
+{bug_fix_context}
 
 Bug analyzer agent has analyzed the issue and provided instruction on how to fix it:
 {bug_analyzer_message}
@@ -23,8 +23,6 @@ Please implement these changes precisely, following the exact specifications fro
   FOLLOWUP_HUMAN_PROMPT = """\
 The edit that you generated following error:
 {edit_error}
-
-{additional_context}
 
 Bug analyzer agent has analyzed the issue and provided instruction on how to fix it:
 {bug_analyzer_message}
@@ -47,17 +45,10 @@ specific issues that caused the previous error.
     elif "existing_test_fail_log" in state and state["existing_test_fail_log"]:
       edit_error = f"Your failed to existing test cases:\n{state['existing_test_fail_log']}"
 
-    additional_context = ""
-    if "refined_query" in state and state["refined_query"]:
-      additional_context = "Additional context that might be useful:\n" + get_last_message_content(
-        state["context_provider_messages"]
-      )
-
     if edit_error:
       return HumanMessage(
         self.FOLLOWUP_HUMAN_PROMPT.format(
           edit_error=edit_error,
-          additional_context=additional_context,
           bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
         )
       )
@@ -67,7 +58,7 @@ specific issues that caused the previous error.
         issue_info=format_issue_info(
           state["issue_title"], state["issue_body"], state["issue_comments"]
         ),
-        bug_context=get_last_message_content(state["context_provider_messages"]),
+        bug_fix_context="\n\n".join(state["bug_fix_context"]),
         bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
       )
     )

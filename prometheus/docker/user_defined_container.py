@@ -9,13 +9,13 @@ class UserDefinedContainer(BaseContainer):
   def __init__(
     self,
     project_path: Path,
-    build_commands: Sequence[str],
-    test_commands: Sequence[str],
-    workdir: str,
+    workdir: Optional[str] = None,
+    build_commands: Optional[Sequence[str]] = None,
+    test_commands: Optional[Sequence[str]] = None,
     dockerfile_content: Optional[str] = None,
     image_name: Optional[str] = None,
   ):
-    super().__init__(project_path)
+    super().__init__(project_path, workdir)
 
     assert bool(dockerfile_content) != bool(
       image_name
@@ -24,7 +24,6 @@ class UserDefinedContainer(BaseContainer):
     self.tag_name = f"prometheus_user_defined_container_{uuid.uuid4().hex[:10]}"
     self.build_commands = build_commands
     self.test_commands = test_commands
-    self.workdir = workdir
     self.dockerfile_content = dockerfile_content
     self.image_name = image_name
 
@@ -35,12 +34,15 @@ class UserDefinedContainer(BaseContainer):
     if self.dockerfile_content:
       super().build_docker_image()
     else:
-      self.logger.info(f"Pulling docker image: {self.image_name}")
+      self._logger.info(f"Pulling docker image: {self.image_name}")
       pulled_image = self.client.images.pull(self.image_name)
-      self.logger.info(f"Tagging pulled image as: {self.tag_name}")
+      self._logger.info(f"Tagging pulled image as: {self.tag_name}")
       pulled_image.tag(repository=self.tag_name)
 
   def run_build(self) -> str:
+    if self.build_commands is None:
+      raise ValueError("build_commands is None. The user did not provide build commands.")
+
     command_output = ""
     for build_command in self.build_commands:
       command_output += f"$ {build_command}\n"
@@ -48,6 +50,9 @@ class UserDefinedContainer(BaseContainer):
     return command_output
 
   def run_test(self) -> str:
+    if self.test_commands is None:
+      raise ValueError("test_commands is None. The user did not provide build commands.")
+
     command_output = ""
     for test_command in self.test_commands:
       command_output += f"$ {test_command}\n"

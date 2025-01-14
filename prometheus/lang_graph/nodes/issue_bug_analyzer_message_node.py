@@ -4,38 +4,40 @@ from typing import Dict
 from langchain_core.messages import HumanMessage
 
 from prometheus.utils.issue_util import format_issue_info
-from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class IssueBugAnalyzerMessageNode:
   FIRST_HUMAN_PROMPT = """\
-I am going to share details about a issue reported to a codebase and its related bug context. Please help analyze this bug by:
+I am going to share details about an issue reported to a codebase and its related bug context.
+Please analyze this bug and provide a high-level description of what needs to be changed:
 
-1. Understanding the Issue:
-- Analyze the issue title, description, and any comments provided
+1. Issue Understanding:
+- Analyze the issue title, description, and comments provided
 - Identify the reported symptoms and unexpected behaviors
 
 2. Code Analysis:
-- Examine the provided source code files and documentation
-- Trace the code execution path that leads to the bug
-- Identify where and why the code deviates from expected behavior
+- Identify which files, functions, or code blocks are involved
+- Explain what the problematic code is currently doing
 
-3. Root Cause Analysis:
-- Determine the fundamental cause of the bug
-- Explain which specific code components or interactions are responsible
-- Highlight any underlying design issues or assumptions that contributed to the bug
+3. Root Cause:
+- Explain why the current behavior is incorrect
+- Identify which specific parts of the code are causing the issue
 
-4. Bug Fix:
-- Suggest specific code changes to fix the bug
-- Explain why the proposed changes would resolve the issue
-- Consider potential side effects on other system components
+4. Fix Suggestion:
+For each needed change, describe in plain English:
+- Which file needs to be modified
+- Which function or code block needs changes
+- What needs to be changed (e.g., "rename variable x to y", "add null check for parameter z")
+- Why this change would fix the issue
+
+Do NOT provide actual code snippets or diffs. Focus on describing what needs to be changed.
 
 Here are the details for analysis:
 
 {issue_info}
 
 Bug Context:
-{bug_context}
+{bug_fix_context}
 """
 
   FOLLOWUP_HUMAN_PROMPT = """\
@@ -45,14 +47,20 @@ Given your suggestion, the edit agent generated the following patch:
 The patch generated following error:
 {edit_error}
 
-{additional_context}
+Please analyze the failure and provide a revised suggestion:
 
-Please:
-1. Analyze why the patch failed
-2. Identify any issues with the original patch (syntax errors, incorrect file paths, context mismatches, etc.)
-3. Provide a revised fix that addresses the error
+1. Error Analysis:
+- Explain why the previous changes failed
+- Identify what specific aspects were problematic
 
-Please provide your revised solution following the same detailed format as before.
+2. Revised Fix Suggestion:
+Describe in plain English:
+- Which file needs to be modified
+- Which function or code block needs changes
+- What needs to be changed (e.g., "rename variable x to y", "add null check for parameter z")
+- Why this change would fix both the original issue and the new error
+
+Do NOT provide actual code snippets or diffs. Focus on describing what needs to be changed.
 """
 
   def __init__(self):
@@ -73,21 +81,14 @@ Please provide your revised solution following the same detailed format as befor
           issue_info=format_issue_info(
             state["issue_title"], state["issue_body"], state["issue_comments"]
           ),
-          bug_context=get_last_message_content(state["context_provider_messages"]),
+          bug_fix_context="\n\n".join(state["bug_fix_context"]),
         )
-      )
-
-    additional_context = ""
-    if "refined_query" in state and state["refined_query"]:
-      additional_context = "Additional context that might be useful:\n" + get_last_message_content(
-        state["context_provider_messages"]
       )
 
     return HumanMessage(
       self.FOLLOWUP_HUMAN_PROMPT.format(
         edit_patch=state["edit_patch"],
         edit_error=edit_error,
-        additional_context=additional_context,
       )
     )
 

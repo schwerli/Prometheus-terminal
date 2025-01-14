@@ -81,5 +81,5 @@ Verification:
       self.format_human_message(state),
     ]
     response = self.model.invoke(messages)
-    self._logger.debug(f"IssueBugResponderNode reponse:\n{response}")
+    self._logger.debug(response)
     return {"issue_response": response.content}

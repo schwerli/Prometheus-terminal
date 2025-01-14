@@ -255,9 +255,8 @@ Output:
       - build_fail_log: String containing error logs (empty if successful)
     """
     build_history = format_agent_tool_message_history(state["build_messages"])
-    self._logger.debug(f"Build history:\n{build_history}")
     response = self.model.invoke({"build_history": build_history})
-    self._logger.debug(f"BuildStructuredOutput response:\n{response}")
+    self._logger.debug(response)
 
     return {
       "exist_build": response.exist_build,

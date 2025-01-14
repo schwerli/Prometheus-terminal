@@ -3,7 +3,6 @@ from typing import Mapping, Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -14,14 +13,13 @@ from prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node import (
   BugFixVerificationSubgraphNode,
 )
 from prometheus.lang_graph.nodes.build_and_test_subgraph_node import BuildAndTestSubgraphNode
-from prometheus.lang_graph.nodes.context_provider_node import ContextProviderNode
+from prometheus.lang_graph.nodes.context_retrieval_subgraph_node import ContextRetrievalSubgraphNode
 from prometheus.lang_graph.nodes.edit_message_node import EditMessageNode
 from prometheus.lang_graph.nodes.edit_node import EditNode
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_message_node import IssueBugAnalyzerMessageNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_node import IssueBugAnalyzerNode
 from prometheus.lang_graph.nodes.issue_bug_context_message_node import IssueBugContextMessageNode
-from prometheus.lang_graph.nodes.issue_bug_context_refine_node import IssueBugContextRefineNode
 from prometheus.lang_graph.nodes.noop_node import NoopNode
 from prometheus.lang_graph.nodes.update_container_node import UpdateContainerNode
 from prometheus.lang_graph.subgraphs.issue_verified_bug_state import IssueVerifiedBugState
@@ -30,7 +28,8 @@ from prometheus.lang_graph.subgraphs.issue_verified_bug_state import IssueVerifi
 class IssueVerifiedBugSubgraph:
   def __init__(
     self,
-    model: BaseChatModel,
+    advanced_model: BaseChatModel,
+    base_model: BaseChatModel,
     container: BaseContainer,
     kg: KnowledgeGraph,
     git_repo: GitRepository,
@@ -38,24 +37,22 @@ class IssueVerifiedBugSubgraph:
     max_token_per_neo4j_result: int,
     build_commands: Optional[Sequence[str]] = None,
     test_commands: Optional[Sequence[str]] = None,
-    thread_id: Optional[str] = None,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
   ):
-    self.thread_id = thread_id
-
     issue_bug_context_message_node = IssueBugContextMessageNode()
-    context_provider_node = ContextProviderNode(model, kg, neo4j_driver, max_token_per_neo4j_result)
-    context_provider_tools = ToolNode(
-      tools=context_provider_node.tools,
-      name="context_provider_tools",
-      messages_key="context_provider_messages",
+    context_retrieval_subgraph_node = ContextRetrievalSubgraphNode(
+      model=base_model,
+      kg=kg,
+      neo4j_driver=neo4j_driver,
+      max_token_per_neo4j_result=max_token_per_neo4j_result,
+      query_key_name="bug_fix_query",
+      context_key_name="bug_fix_context",
     )
 
     issue_bug_analyzer_message_node = IssueBugAnalyzerMessageNode()
-    issue_bug_analyzer_node = IssueBugAnalyzerNode(model)
+    issue_bug_analyzer_node = IssueBugAnalyzerNode(advanced_model)
 
     edit_message_node = EditMessageNode()
-    edit_node = EditNode(model, kg)
+    edit_node = EditNode(advanced_model, kg)
     edit_tools = ToolNode(
       tools=edit_node.tools,
       name="edit_tools",
@@ -65,20 +62,22 @@ class IssueVerifiedBugSubgraph:
     update_container_node = UpdateContainerNode(container, git_repo)
 
     bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(
-      model, container, thread_id, checkpointer
+      base_model,
+      container,
     )
     build_or_test_branch_node = NoopNode()
     build_and_test_subgraph_node = BuildAndTestSubgraphNode(
-      container, model, kg, build_commands, test_commands, thread_id, checkpointer
+      container,
+      advanced_model,
+      kg,
+      build_commands,
+      test_commands,
     )
-
-    issue_bug_context_refine_node = IssueBugContextRefineNode(model)
 
     workflow = StateGraph(IssueVerifiedBugState)
 
     workflow.add_node("issue_bug_context_message_node", issue_bug_context_message_node)
-    workflow.add_node("context_provider_node", context_provider_node)
-    workflow.add_node("context_provider_tools", context_provider_tools)
+    workflow.add_node("context_retrieval_subgraph_node", context_retrieval_subgraph_node)
 
     workflow.add_node("issue_bug_analyzer_message_node", issue_bug_analyzer_message_node)
     workflow.add_node("issue_bug_analyzer_node", issue_bug_analyzer_node)
@@ -93,16 +92,9 @@ class IssueVerifiedBugSubgraph:
     workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
     workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
 
-    workflow.add_node("issue_bug_context_refine_node", issue_bug_context_refine_node)
-
     workflow.set_entry_point("issue_bug_context_message_node")
-    workflow.add_edge("issue_bug_context_message_node", "context_provider_node")
-    workflow.add_conditional_edges(
-      "context_provider_node",
-      functools.partial(tools_condition, messages_key="context_provider_messages"),
-      {"tools": "context_provider_tools", END: "issue_bug_analyzer_message_node"},
-    )
-    workflow.add_edge("context_provider_tools", "context_provider_node")
+    workflow.add_edge("issue_bug_context_message_node", "context_retrieval_subgraph_node")
+    workflow.add_edge("context_retrieval_subgraph_node", "issue_bug_analyzer_message_node")
 
     workflow.add_edge("issue_bug_analyzer_message_node", "issue_bug_analyzer_node")
     workflow.add_edge("issue_bug_analyzer_node", "edit_message_node")
@@ -120,7 +112,7 @@ class IssueVerifiedBugSubgraph:
     workflow.add_conditional_edges(
       "bug_fix_verification_subgraph_node",
       lambda state: bool(state["reproducing_test_fail_log"]),
-      {True: "issue_bug_context_refine_node", False: "build_or_test_branch_node"},
+      {True: "issue_bug_analyzer_message_node", False: "build_or_test_branch_node"},
     )
     workflow.add_conditional_edges(
       "build_or_test_branch_node",
@@ -130,16 +122,10 @@ class IssueVerifiedBugSubgraph:
     workflow.add_conditional_edges(
       "build_and_test_subgraph_node",
       lambda state: bool(state["build_fail_log"]) or bool(state["existing_test_fail_log"]),
-      {True: "issue_bug_context_refine_node", False: END},
+      {True: "issue_bug_analyzer_message_node", False: END},
     )
 
-    workflow.add_conditional_edges(
-      "issue_bug_context_refine_node",
-      lambda state: bool(state["refined_query"]),
-      {True: "context_provider_node", False: "issue_bug_analyzer_message_node"},
-    )
-
-    self.subgraph = workflow.compile(checkpointer=checkpointer)
+    self.subgraph = workflow.compile()
 
   def invoke(
     self,
@@ -150,11 +136,9 @@ class IssueVerifiedBugSubgraph:
     run_existing_test: bool,
     reproduced_bug_file: str,
     reproduced_bug_commands: Sequence[str],
-    recursion_limit: int = 150,
+    recursion_limit: int = 80,
   ):
     config = {"recursion_limit": recursion_limit}
-    if self.thread_id:
-      config["configurable"] = {"thread_id": self.thread_id}
 
     input_state = {
       "issue_title": issue_title,
@@ -164,6 +148,7 @@ class IssueVerifiedBugSubgraph:
       "run_existing_test": run_existing_test,
       "reproduced_bug_file": reproduced_bug_file,
       "reproduced_bug_commands": reproduced_bug_commands,
+      "max_refined_query_loop": 3,
     }
 
     output_state = self.subgraph.invoke(input_state, config)

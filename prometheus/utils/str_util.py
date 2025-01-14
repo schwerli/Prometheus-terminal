@@ -12,7 +12,7 @@ def pre_append_line_numbers(text: str, start_line: int) -> str:
   return "\n".join([f"{start_line + i}. {line}" for i, line in enumerate(text.splitlines())])
 
 
-TRUNCATED_TEXT = "... Output has been truncated becuase it is too long"
+TRUNCATED_TEXT = "... Output has been truncated becuase it is too long, please narrow down your query if you wish to see more"
 TRUNCATED_TEXT_LEN = len(get_tokenizer().encode(TRUNCATED_TEXT))
 
 

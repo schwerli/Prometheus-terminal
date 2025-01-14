@@ -6,7 +6,6 @@ from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
-from prometheus.app.services.postgres_service import PostgresService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.app.services.service_coordinator import ServiceCoordinator
 from prometheus.configuration.config import settings
@@ -23,7 +22,6 @@ def initialize_services() -> ServiceCoordinator:
       This function assumes all required settings are properly configured in
       the settings module using Dynaconf. The following settings are required:
       - NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD
-      - POSTGRES_URI
       - LITELLM_MODEL
       - NEO4J_BATCH_SIZE
       - KNOWLEDGE_GRAPH_MAX_AST_DEPTH
@@ -34,12 +32,13 @@ def initialize_services() -> ServiceCoordinator:
       A fully configured ServiceCoordinator instance managing all services.
   """
   neo4j_service = Neo4jService(settings.NEO4J_URI, settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD)
-  postgres_service = PostgresService(settings.POSTGRES_URI)
   llm_service = LLMService(
-    settings.MODEL,
+    settings.ADVANCED_MODEL,
+    settings.BASE_MODEL,
     getattr(settings, "OPENAI_API_KEY", None),
     getattr(settings, "ANTHROPIC_API_KEY", None),
     getattr(settings, "GEMINI_API_KEY", None),
+    getattr(settings, "OPENROUTER_API_KEY", None),
   )
   knowledge_graph_service = KnowledgeGraphService(
     neo4j_service,
@@ -53,7 +52,6 @@ def initialize_services() -> ServiceCoordinator:
     knowledge_graph_service,
     resposistory_service,
     neo4j_service,
-    postgres_service,
     llm_service,
     settings.MAX_TOKEN_PER_NEO4J_RESULT,
   )
@@ -63,7 +61,6 @@ def initialize_services() -> ServiceCoordinator:
     knowledge_graph_service,
     llm_service,
     neo4j_service,
-    postgres_service,
     resposistory_service,
     settings.MAX_TOKEN_PER_NEO4J_RESULT,
     settings.GITHUB_ACCESS_TOKEN,
