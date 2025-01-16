@@ -86,7 +86,7 @@ def find_ast_node_with_text_in_file_with_basename(
   text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
   query = f"""\
-    MATCH (f:FileNode) -[:HAS_FILE*]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+    MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
     WHERE f.basename = '{basename}' AND a.text CONTAINS '{text}'
     RETURN c as FileNode, a AS ASTNode
     ORDER BY SIZE(a.text)
@@ -113,7 +113,7 @@ def find_ast_node_with_text_in_file_with_relative_path(
   text: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
   query = f"""\
-        MATCH (f:FileNode) -[:HAS_FILE*]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+        MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
         WHERE f.relative_path = '{relative_path}' AND a.text CONTAINS '{text}'
         RETURN c as FileNode, a AS ASTNode
         ORDER BY SIZE(a.text)
@@ -138,7 +138,7 @@ def find_ast_node_with_type_in_file_with_basename(
   type: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
   query = f"""\
-    MATCH (f:FileNode) -[:HAS_FILE*]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+    MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
     WHERE f.basename = '{basename}' AND a.type = '{type}'
     RETURN c as FileNode, a AS ASTNode
     ORDER BY SIZE(a.text)
@@ -163,7 +163,7 @@ def find_ast_node_with_type_in_file_with_relative_path(
   type: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
   query = f"""\
-        MATCH (f:FileNode) -[:HAS_FILE*]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+        MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
         WHERE f.relative_path = '{relative_path}' AND a.type = '{type}'
         RETURN c as FileNode, a AS ASTNode
         ORDER BY SIZE(a.text)
@@ -341,8 +341,8 @@ def preview_file_content_with_relative_path(
 
 class ReadCodeWithBasenameInput(BaseModel):
   basename: str = Field("The basename of FileNode to read.")
-  start_line: int = Field("The starting line number, 0-indexed and inclusive.")
-  end_line: int = Field("The ending line number, 0-indexed and exclusive.")
+  start_line: int = Field("The starting line number, 1-indexed and inclusive.")
+  end_line: int = Field("The ending line number, 1-indexed and exclusive.")
 
 
 READ_CODE_WITH_BASENAME_DESCRIPTION = """\
@@ -353,7 +353,7 @@ This tool ONLY works with source code files (not text files or documentation). I
 to read large sections of code at once - you should request substantial chunks (hundreds of lines) 
 rather than making multiple small requests of 10-20 lines each, which would be inefficient.
 
-Line numbers are 0-indexed, where start_line is inclusive and end_line is exclusive. 
+Line numbers are 1-indexed, where start_line is inclusive and end_line is exclusive. 
 
 This tool is useful for examining specific sections of source code files when you know 
 the exact line range you want to analyze. The function will return an error message if 
@@ -377,9 +377,9 @@ def read_code_with_basename(
     RETURN
       f as FileNode,
       {{
-        text: apoc.text.join(lines[{start_line}..{end_line}], '\\n'),
-        start_line: {start_line + 1},
-        end_line: {end_line + 1}
+        text: apoc.text.join(lines[{start_line - 1}..{end_line - 1}], '\\n'),
+        start_line: {start_line},
+        end_line: {end_line}
       }} AS SelectedLines
     ORDER BY f.node_id
   """
@@ -389,8 +389,8 @@ def read_code_with_basename(
 
 class ReadCodeWithRelativePathInput(BaseModel):
   relative_path: str = Field("The relative path of FileNode to read from root of codebase.")
-  start_line: int = Field("The starting line number, 0-indexed and inclusive.")
-  end_line: int = Field("The ending line number, 0-indexed and exclusive.")
+  start_line: int = Field("The starting line number, 1-indexed and inclusive.")
+  end_line: int = Field("The ending line number, 1-indexed and exclusive.")
 
 
 READ_CODE_WITH_RELATIVE_PATH_DESCRIPTION = """\
@@ -402,7 +402,7 @@ This tool ONLY works with source code files (not text files or documentation). I
 to read large sections of code at once - you should request substantial chunks (hundreds of lines) 
 rather than making multiple small requests of 10-20 lines each, which would be inefficient.
 
-Line numbers are 0-indexed, where start_line is inclusive and end_line is exclusive. 
+Line numbers are 1-indexed, where start_line is inclusive and end_line is exclusive. 
 
 This tool is useful for examining specific sections of source code files when you know 
 the exact line range you want to analyze. The function will return an error message if 
@@ -426,9 +426,9 @@ def read_code_with_relative_path(
         RETURN
           f as FileNode,
           {{
-            text: apoc.text.join(lines[{start_line}..{end_line}], '\\n'),
-            start_line: {start_line + 1},
-            end_line: {end_line + 1}
+            text: apoc.text.join(lines[{start_line - 1}..{end_line - 1}], '\\n'),
+            start_line: {start_line},
+            end_line: {end_line}
           }} AS SelectedLines
         ORDER BY f.node_id
     """
