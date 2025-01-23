@@ -33,5 +33,5 @@ class IssueClassificationSubgraphNode:
     issue_type = self.issue_classification_subgraph.invoke(
       state["issue_title"], state["issue_body"], state["issue_comments"]
     )
-    self._logger.info("issue_type: {issue_type}")
+    self._logger.info(f"issue_type: {issue_type}")
     return {"issue_type": issue_type}
