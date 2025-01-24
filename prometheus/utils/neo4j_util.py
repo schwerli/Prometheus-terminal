@@ -1,4 +1,4 @@
-from typing import Any, Iterator, Mapping, Sequence, Tuple
+from typing import Any, Iterator, Mapping, Optional, Sequence, Tuple
 
 import neo4j
 
@@ -29,7 +29,10 @@ def format_neo4j_data(data: Sequence[Mapping[str, Any]], max_token_per_result: i
   return truncate_text(output.strip(), max_token_per_result)
 
 
-def neo4j_data_for_context_generator(data: Sequence[Mapping[str, Any]]) -> Iterator[str]:
+def neo4j_data_for_context_generator(data: Optional[Sequence[Mapping[str, Any]]]) -> Iterator[str]:
+  if data is None:
+    return
+
   for search_result in data:
     search_result_keys = search_result.keys()
     if len(search_result_keys) == 1:
