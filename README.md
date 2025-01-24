@@ -9,17 +9,7 @@ Prometheus can be connected to other services provided in the `Pantheon-temple` 
 
 # Quick start
 
-In this project we use `docker-compose.yml`(for Linux), or `docker-compose.win_mac.yml` (for Windows or MacOS). It expects you to set the following enviroment variables:
-
-```
-PROMETHEUS_LITELLM_MODEL=...
-PROMETHEUS_LITELLM_ANTHROPIC_API_KEY=...
-PROMETHEUS_GITHUB_ACCESS_TOKEN=...
-```
-
-`PROMETHEUS_LITELLM_MODEL` and `PROMETHEUS_LITELLM_ANTHROPIC_API_KEY` are parameters to [ChatLiteLLM](https://python.langchain.com/api_reference/community/chat_models/langchain_community.chat_models.litellm.ChatLiteLLM.html), and `PROMETHEUS_GITHUB_ACCESS_TOKEN` is the GitHub access token.
-
-You can also create a `.env` file with these varaibles.
+In this project we use `docker-compose.yml`(for Linux), or `docker-compose.win_mac.yml` (for Windows or MacOS). You should update the `example_settings.toml` with the API keys, and then rename the file to `settings.toml`.
 
 Now, simply run `docker compose up`, and you can access Promtheus at `http://localhost:9001` and the OpenAPI docs at `http://localhost:9001/docs`
 
