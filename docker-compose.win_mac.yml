@@ -5,6 +5,7 @@ networks:
 services:
   neo4j:
     image: neo4j
+    platform: linux/amd64
     container_name: neo4j_container
     environment:
       - NEO4J_AUTH=neo4j/password
@@ -18,29 +19,9 @@ services:
       - "7474:7474"
       - "7687:7687"
     volumes:
-      - ./data_neo4j:/data
+      - ./data_neo4j:/data:rw
     healthcheck:
       test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "--non-interactive", "RETURN 1;"]
-      interval: 30s
-      timeout: 60s
-      retries: 3
-
-
-  postgres:
-    image: postgres
-    container_name: postgres_container
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=postgres
-    networks:
-      - prometheus_network
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./data_postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d postgres -U postgres"]
       interval: 30s
       timeout: 60s
       retries: 3
@@ -78,8 +59,6 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       neo4j:
-        condition: service_healthy
-      postgres:
         condition: service_healthy
     develop:
       watch:

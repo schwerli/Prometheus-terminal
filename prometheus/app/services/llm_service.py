@@ -38,7 +38,7 @@ def get_model(
   open_router_api_key: Optional[str] = None,
 ) -> BaseChatModel:
   if "/" in model_name:
-    return ChatOpenAI(
+    return CustomChatOpenAI(
       model=model_name,
       api_key=open_router_api_key,
       base_url="https://openrouter.ai/api/v1",
