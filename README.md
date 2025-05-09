@@ -126,7 +126,7 @@ To contribute to Prometheus, follow these steps:
 
 3. Start the development server:
    ```bash
-   uvicorn prometheus.app.main:app --reload
+   uvicorn prometheus.app.main:app --host 0.0.0.0 --port 9001
    ```
 
 ## License
