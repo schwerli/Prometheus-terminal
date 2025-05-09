@@ -14,23 +14,23 @@ from prometheus.configuration.config import settings
 def initialize_services() -> ServiceCoordinator:
   """Initializes and configures the complete prometheus service stack.
 
-  This function creates and configures all required services for prometheus
-  operation, using settings from the configuration module. It ensures proper
-  initialization order and service dependencies.
+This function creates and configures all required services for prometheus
+operation, using settings from the configuration module. It ensures proper
+initialization order and service dependencies.
 
-  Note:
-      This function assumes all required settings are properly configured in
-      the settings module using Dynaconf. The following settings are required:
-      - NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD
-      - LITELLM_MODEL
-      - NEO4J_BATCH_SIZE
-      - KNOWLEDGE_GRAPH_MAX_AST_DEPTH
-      - WORKING_DIRECTORY
-      - GITHUB_ACCESS_TOKEN
+Note:
+    This function assumes all required settings are properly configured in
+    the settings module using Dynaconf. The following settings are required:
+    - NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD
+    - LITELLM_MODEL
+    - NEO4J_BATCH_SIZE
+    - KNOWLEDGE_GRAPH_MAX_AST_DEPTH
+    - WORKING_DIRECTORY
+    - GITHUB_ACCESS_TOKEN
 
-  Returns:
-      A fully configured ServiceCoordinator instance managing all services.
-  """
+Returns:
+    A fully configured ServiceCoordinator instance managing all services.
+"""
   neo4j_service = Neo4jService(settings.NEO4J_URI, settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD)
   llm_service = LLMService(
     settings.ADVANCED_MODEL,
@@ -47,10 +47,10 @@ def initialize_services() -> ServiceCoordinator:
     settings.KNOWLEDGE_GRAPH_CHUNK_SIZE,
     settings.KNOWLEDGE_GRAPH_CHUNK_OVERLAP,
   )
-  resposistory_service = RepositoryService(knowledge_graph_service, settings.WORKING_DIRECTORY)
+  repository_service = RepositoryService(knowledge_graph_service, settings.WORKING_DIRECTORY)
   issue_service = IssueService(
     knowledge_graph_service,
-    resposistory_service,
+    repository_service,
     neo4j_service,
     llm_service,
     settings.MAX_TOKEN_PER_NEO4J_RESULT,
@@ -61,7 +61,7 @@ def initialize_services() -> ServiceCoordinator:
     knowledge_graph_service,
     llm_service,
     neo4j_service,
-    resposistory_service,
+    repository_service,
     settings.MAX_TOKEN_PER_NEO4J_RESULT,
     settings.GITHUB_ACCESS_TOKEN,
     Path(settings.WORKING_DIRECTORY).absolute(),
