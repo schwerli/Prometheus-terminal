@@ -174,7 +174,7 @@ Set the following variables in your `.env` file:
 
 ## 📄 License
 
-Licensed under the [MIT License](LICENSE).
+Licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
