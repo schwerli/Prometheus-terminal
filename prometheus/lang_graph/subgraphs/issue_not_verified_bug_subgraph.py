@@ -23,13 +23,13 @@ from prometheus.lang_graph.subgraphs.issue_not_verified_bug_state import IssueNo
 
 class IssueNotVerifiedBugSubgraph:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
     ):
         issue_bug_context_message_node = IssueBugContextMessageNode()
         context_retrieval_subgraph_node = ContextRetrievalSubgraphNode(
@@ -109,12 +109,12 @@ class IssueNotVerifiedBugSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            number_of_candidate_patch: int,
-            recursion_limit: int = 999,
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        number_of_candidate_patch: int,
+        recursion_limit: int = 999,
     ):
         config = {"recursion_limit": recursion_limit}
 

@@ -53,7 +53,7 @@ class FileGraphBuilder:
         return False
 
     def build_file_graph(
-            self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
+        self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
     ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
         """Build knowledge graph for a single file.
 
@@ -76,7 +76,7 @@ class FileGraphBuilder:
             return self._text_file_graph(parent_node, file, next_node_id)
 
     def _tree_sitter_file_graph(
-            self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
+        self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
     ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
         """Parse a file to a tree-sitter graph.
 
@@ -144,7 +144,7 @@ class FileGraphBuilder:
         return next_node_id, tree_sitter_nodes, tree_sitter_edges
 
     def _text_file_graph(
-            self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
+        self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
     ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap, length_function=len
@@ -154,10 +154,10 @@ class FileGraphBuilder:
         return self._documents_to_file_graph(documents, parent_node, next_node_id)
 
     def _documents_to_file_graph(
-            self,
-            documents: Sequence[Document],
-            parent_node: KnowledgeGraphNode,
-            next_node_id: int,
+        self,
+        documents: Sequence[Document],
+        parent_node: KnowledgeGraphNode,
+        next_node_id: int,
     ) -> Tuple[int, Sequence[KnowledgeGraphNode], Sequence[KnowledgeGraphEdge]]:
         """Convert the parsed langchain documents to a knowledge graph.
 

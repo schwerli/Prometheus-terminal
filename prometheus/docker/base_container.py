@@ -89,7 +89,7 @@ class BaseContainer(ABC):
         return bool(self.container)
 
     def update_files(
-            self, project_root_path: Path, updated_files: Sequence[Path], removed_files: Sequence[Path]
+        self, project_root_path: Path, updated_files: Sequence[Path], removed_files: Sequence[Path]
     ):
         """Update files in the running container with files from a local directory.
 

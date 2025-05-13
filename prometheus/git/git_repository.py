@@ -20,11 +20,11 @@ class GitRepository:
     """
 
     def __init__(
-            self,
-            address: str,
-            working_directory: Path,
-            copy_to_working_dir: bool = True,
-            github_access_token: Optional[str] = None,
+        self,
+        address: str,
+        working_directory: Path,
+        copy_to_working_dir: bool = True,
+        github_access_token: Optional[str] = None,
     ):
         """Initialize a GitRepository instance.
 
@@ -77,7 +77,7 @@ class GitRepository:
             self.default_branch = self.repo.active_branch.name
 
     def _clone_repository(
-            self, https_url: str, github_access_token: str, target_directory: Path
+        self, https_url: str, github_access_token: str, target_directory: Path
     ) -> Repo:
         """Clone a remote repository using HTTPS authentication.
 

@@ -60,5 +60,5 @@ def test_call_method_with_no_build(mock_container, mock_kg, fake_llm):
     assert "build_messages" in result
     assert len(result["build_messages"]) == 1
     assert (
-            "Previous agent determined there is no build system" in result["build_messages"][0].content
+        "Previous agent determined there is no build system" in result["build_messages"][0].content
     )

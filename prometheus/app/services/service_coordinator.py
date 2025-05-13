@@ -30,15 +30,15 @@ class ServiceCoordinator:
     """
 
     def __init__(
-            self,
-            issue_service: IssueService,
-            knowledge_graph_service: KnowledgeGraphService,
-            llm_service: LLMService,
-            neo4j_service: Neo4jService,
-            repository_service: RepositoryService,
-            max_token_per_neo4j_result: int,
-            github_token: str,
-            working_directory: Path,
+        self,
+        issue_service: IssueService,
+        knowledge_graph_service: KnowledgeGraphService,
+        llm_service: LLMService,
+        neo4j_service: Neo4jService,
+        repository_service: RepositoryService,
+        max_token_per_neo4j_result: int,
+        github_token: str,
+        working_directory: Path,
     ):
         """Initializes the service coordinator with required services.
 
@@ -65,8 +65,8 @@ class ServiceCoordinator:
         self._logger = logging.getLogger("prometheus.app.services.service_coordinator")
 
         if (
-                self.knowledge_graph_service.get_local_path()
-                != self.repository_service.get_working_dir()
+            self.knowledge_graph_service.get_local_path()
+            != self.repository_service.get_working_dir()
         ):
             self._logger.critical(
                 f"Knowledge graph and repository working directories do not match: {self.knowledge_graph_service.get_local_path()} vs {self.repository_service.get_working_dir()}. Resetting all services."
@@ -74,21 +74,21 @@ class ServiceCoordinator:
             self.clear()
 
     def answer_issue(
-            self,
-            issue_number: int,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            issue_type: IssueType,
-            run_build: bool,
-            run_existing_test: bool,
-            number_of_candidate_patch: int,
-            dockerfile_content: Optional[str] = None,
-            image_name: Optional[str] = None,
-            workdir: Optional[str] = None,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
-            push_to_remote: Optional[bool] = None,
+        self,
+        issue_number: int,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        issue_type: IssueType,
+        run_build: bool,
+        run_existing_test: bool,
+        number_of_candidate_patch: int,
+        dockerfile_content: Optional[str] = None,
+        image_name: Optional[str] = None,
+        workdir: Optional[str] = None,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
+        push_to_remote: Optional[bool] = None,
     ):
         logger = logging.getLogger("prometheus")
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")

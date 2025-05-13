@@ -14,16 +14,16 @@ from prometheus.lang_graph.subgraphs.issue_bug_subgraph import IssueBugSubgraph
 
 class IssueBugSubgraphNode:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_subgraph_node")
         self.container = container

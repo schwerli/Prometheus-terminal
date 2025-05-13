@@ -15,11 +15,11 @@ from prometheus.lang_graph.subgraphs.issue_classification_state import IssueClas
 
 class IssueClassificationSubgraph:
     def __init__(
-            self,
-            model: BaseChatModel,
-            kg: KnowledgeGraph,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
+        self,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
     ):
         issue_classification_context_message_node = IssueClassificationContextMessageNode()
         context_retrieval_subgraph_node = ContextRetrievalSubgraphNode(
@@ -49,10 +49,10 @@ class IssueClassificationSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
     ) -> str:
         config = None
 

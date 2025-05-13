@@ -12,12 +12,12 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 
 class IssueService:
     def __init__(
-            self,
-            kg_service: KnowledgeGraphService,
-            repository_service: RepositoryService,
-            neo4j_service: Neo4jService,
-            llm_service: LLMService,
-            max_token_per_neo4j_result: int,
+        self,
+        kg_service: KnowledgeGraphService,
+        repository_service: RepositoryService,
+        neo4j_service: Neo4jService,
+        llm_service: LLMService,
+        max_token_per_neo4j_result: int,
     ):
         self.kg_service = kg_service
         self.repository_service = repository_service
@@ -26,19 +26,19 @@ class IssueService:
         self.max_token_per_neo4j_result = max_token_per_neo4j_result
 
     def answer_issue(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            issue_type: IssueType,
-            run_build: bool,
-            run_existing_test: bool,
-            number_of_candidate_patch: int,
-            dockerfile_content: Optional[str] = None,
-            image_name: Optional[str] = None,
-            workdir: Optional[str] = None,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        issue_type: IssueType,
+        run_build: bool,
+        run_existing_test: bool,
+        number_of_candidate_patch: int,
+        dockerfile_content: Optional[str] = None,
+        image_name: Optional[str] = None,
+        workdir: Optional[str] = None,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         if dockerfile_content or image_name:
             container = UserDefinedContainer(

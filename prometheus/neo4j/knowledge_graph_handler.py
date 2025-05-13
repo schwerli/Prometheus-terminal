@@ -73,7 +73,7 @@ class KnowledgeGraphHandler:
       CREATE (a:FileNode {node_id: file_node.node_id, basename: file_node.basename, relative_path: file_node.relative_path})
     """
         for i in range(0, len(file_nodes), self.batch_size):
-            file_nodes_batch = file_nodes[i: i + self.batch_size]
+            file_nodes_batch = file_nodes[i : i + self.batch_size]
             tx.run(query, file_nodes=file_nodes_batch)
 
     def _write_ast_nodes(self, tx: ManagedTransaction, ast_nodes: Sequence[Neo4jASTNode]):
@@ -84,7 +84,7 @@ class KnowledgeGraphHandler:
       CREATE (a:ASTNode {node_id: ast_node.node_id, start_line: ast_node.start_line, end_line: ast_node.end_line, type: ast_node.type, text: ast_node.text})
     """
         for i in range(0, len(ast_nodes), self.batch_size):
-            ast_nodes_batch = ast_nodes[i: i + self.batch_size]
+            ast_nodes_batch = ast_nodes[i : i + self.batch_size]
             tx.run(query, ast_nodes=ast_nodes_batch)
 
     def _write_text_nodes(self, tx: ManagedTransaction, text_nodes: Sequence[Neo4jTextNode]):
@@ -95,11 +95,11 @@ class KnowledgeGraphHandler:
       CREATE (a:TextNode {node_id: text_node.node_id, text: text_node.text, metadata: text_node.metadata})
     """
         for i in range(0, len(text_nodes), self.batch_size):
-            text_nodes_batch = text_nodes[i: i + self.batch_size]
+            text_nodes_batch = text_nodes[i : i + self.batch_size]
             tx.run(query, text_nodes=text_nodes_batch)
 
     def _write_has_file_edges(
-            self, tx: ManagedTransaction, has_file_edges: Sequence[Neo4jHasFileEdge]
+        self, tx: ManagedTransaction, has_file_edges: Sequence[Neo4jHasFileEdge]
     ):
         """Write Neo4jHasFileEdge to neo4j."""
         self._logger.debug(f"Writing {len(has_file_edges)} HasFileEdge to neo4j")
@@ -110,11 +110,11 @@ class KnowledgeGraphHandler:
       CREATE (source) -[:HAS_FILE]-> (target)
     """
         for i in range(0, len(has_file_edges), self.batch_size):
-            has_file_edges_batch = has_file_edges[i: i + self.batch_size]
+            has_file_edges_batch = has_file_edges[i : i + self.batch_size]
             tx.run(query, edges=has_file_edges_batch)
 
     def _write_has_ast_edges(
-            self, tx: ManagedTransaction, has_ast_edges: Sequence[Neo4jHasASTEdge]
+        self, tx: ManagedTransaction, has_ast_edges: Sequence[Neo4jHasASTEdge]
     ):
         """Write Neo4jHasASTEdge to neo4j."""
         self._logger.debug(f"Writing {len(has_ast_edges)} HasASTEdge to neo4j")
@@ -125,11 +125,11 @@ class KnowledgeGraphHandler:
       CREATE (source) -[:HAS_AST]-> (target)
     """
         for i in range(0, len(has_ast_edges), self.batch_size):
-            has_ast_edges_batch = has_ast_edges[i: i + self.batch_size]
+            has_ast_edges_batch = has_ast_edges[i : i + self.batch_size]
             tx.run(query, edges=has_ast_edges_batch)
 
     def _write_has_text_edges(
-            self, tx: ManagedTransaction, has_text_edges: Sequence[Neo4jHasTextEdge]
+        self, tx: ManagedTransaction, has_text_edges: Sequence[Neo4jHasTextEdge]
     ):
         """Write Neo4jHasTextEdge to neo4j."""
         self._logger.debug(f"Writing {len(has_text_edges)} HasTextEdges to neo4j")
@@ -140,11 +140,11 @@ class KnowledgeGraphHandler:
       CREATE (source) -[:HAS_TEXT]-> (target)
     """
         for i in range(0, len(has_text_edges), self.batch_size):
-            has_text_edges_batch = has_text_edges[i: i + self.batch_size]
+            has_text_edges_batch = has_text_edges[i : i + self.batch_size]
             tx.run(query, edges=has_text_edges_batch)
 
     def _write_parent_of_edges(
-            self, tx: ManagedTransaction, parent_of_edges: Sequence[Neo4jParentOfEdge]
+        self, tx: ManagedTransaction, parent_of_edges: Sequence[Neo4jParentOfEdge]
     ):
         """Write Neo4jParentOfEdge to neo4j."""
         self._logger.debug(f"Writing {len(parent_of_edges)} ParentOfEdge to neo4j")
@@ -155,11 +155,11 @@ class KnowledgeGraphHandler:
       CREATE (source) -[:PARENT_OF]-> (target)
     """
         for i in range(0, len(parent_of_edges), self.batch_size):
-            parent_of_edges_batch = parent_of_edges[i: i + self.batch_size]
+            parent_of_edges_batch = parent_of_edges[i : i + self.batch_size]
             tx.run(query, edges=parent_of_edges_batch)
 
     def _write_next_chunk_edges(
-            self, tx: ManagedTransaction, next_chunk_edges: Sequence[Neo4jNextChunkEdge]
+        self, tx: ManagedTransaction, next_chunk_edges: Sequence[Neo4jNextChunkEdge]
     ):
         """Write Neo4jNextChunkEdge to neo4j."""
         self._logger.debug(f"Writing {len(next_chunk_edges)} NextChunkEdge to neo4j")
@@ -170,7 +170,7 @@ class KnowledgeGraphHandler:
       CREATE (source) -[:NEXT_CHUNK]-> (target)
     """
         for i in range(0, len(next_chunk_edges), self.batch_size):
-            next_chunk_edges_batch = next_chunk_edges[i: i + self.batch_size]
+            next_chunk_edges_batch = next_chunk_edges[i : i + self.batch_size]
             tx.run(query, edges=next_chunk_edges_batch)
 
     def write_knowledge_graph(self, kg: KnowledgeGraph):

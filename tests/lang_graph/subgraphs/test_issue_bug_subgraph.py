@@ -34,7 +34,7 @@ def mock_neo4j_driver():
 
 
 def test_issue_bug_subgraph_basic_initialization(
-        mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
+    mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
 ):
     """Test that IssueBugSubgraph initializes correctly with basic components."""
     # Initialize fake model with empty responses
@@ -57,7 +57,7 @@ def test_issue_bug_subgraph_basic_initialization(
 
 
 def test_issue_bug_subgraph_with_commands(
-        mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
+    mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
 ):
     """Test that IssueBugSubgraph initializes correctly with build and test commands."""
     fake_advanced_model = FakeListChatWithToolsModel(responses=[])

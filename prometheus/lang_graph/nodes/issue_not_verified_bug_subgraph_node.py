@@ -13,13 +13,13 @@ from prometheus.lang_graph.subgraphs.issue_not_verified_bug_subgraph import (
 
 class IssueNotVerifiedBugSubgraphNode:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
     ):
         self._logger = logging.getLogger(
             "prometheus.lang_graph.nodes.issue_not_verified_bug_subgraph_node"

@@ -17,11 +17,11 @@ from prometheus.lang_graph.subgraphs.context_retrieval_state import ContextRetri
 
 class ContextRetrievalSubgraph:
     def __init__(
-            self,
-            model: BaseChatModel,
-            kg: KnowledgeGraph,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
+        self,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
     ):
         context_query_message_node = ContextQueryMessageNode()
         context_provider_node = ContextProviderNode(
@@ -66,7 +66,7 @@ class ContextRetrievalSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-            self, query: str, max_refined_query_loop: int, recursion_limit: int = 999
+        self, query: str, max_refined_query_loop: int, recursion_limit: int = 999
     ) -> Sequence[str]:
         config = {"recursion_limit": recursion_limit}
 

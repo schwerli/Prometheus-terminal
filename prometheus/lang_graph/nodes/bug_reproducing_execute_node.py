@@ -42,10 +42,10 @@ User provided test commands:
 """
 
     def __init__(
-            self,
-            model: BaseChatModel,
-            container: BaseContainer,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        model: BaseChatModel,
+        container: BaseContainer,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         self.test_commands = test_commands
         self.tools = self._init_tools(container)
@@ -80,7 +80,7 @@ User provided test commands:
         return added_files[0]
 
     def format_human_message(
-            self, state: BugReproductionState, reproduced_bug_file: str
+        self, state: BugReproductionState, reproduced_bug_file: str
     ) -> HumanMessage:
         test_commands_str = ""
         if self.test_commands:
@@ -107,9 +107,9 @@ User provided test commands:
             }
 
         message_history = [
-                              self.system_prompt,
-                              self.format_human_message(state, reproduced_bug_file),
-                          ] + state["bug_reproducing_execute_messages"]
+            self.system_prompt,
+            self.format_human_message(state, reproduced_bug_file),
+        ] + state["bug_reproducing_execute_messages"]
 
         response = self.model_with_tools.invoke(message_history)
         self._logger.debug(response)

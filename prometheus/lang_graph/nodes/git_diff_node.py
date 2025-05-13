@@ -22,11 +22,11 @@ class GitDiffNode:
     """
 
     def __init__(
-            self,
-            git_repo: GitRepository,
-            state_patch_name: str,
-            state_excluded_files_key: Optional[str] = None,
-            return_list: bool = False,
+        self,
+        git_repo: GitRepository,
+        state_patch_name: str,
+        state_excluded_files_key: Optional[str] = None,
+        return_list: bool = False,
     ):
         self.git_repo = git_repo
         self.state_patch_name = state_patch_name
@@ -50,9 +50,9 @@ class GitDiffNode:
         """
         excluded_files = None
         if (
-                self.state_excluded_files_key
-                and self.state_excluded_files_key in state
-                and state[self.state_excluded_files_key]
+            self.state_excluded_files_key
+            and self.state_excluded_files_key in state
+            and state[self.state_excluded_files_key]
         ):
             excluded_files = state[self.state_excluded_files_key]
             if isinstance(excluded_files, str):

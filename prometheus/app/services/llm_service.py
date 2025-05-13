@@ -14,13 +14,13 @@ class CustomChatOpenAI(ChatOpenAI):
 
 class LLMService:
     def __init__(
-            self,
-            advanced_model_name: str,
-            base_model_name: str,
-            openai_api_key: Optional[str] = None,
-            anthropic_api_key: Optional[str] = None,
-            gemini_api_key: Optional[str] = None,
-            open_router_api_key: Optional[str] = None,
+        self,
+        advanced_model_name: str,
+        base_model_name: str,
+        openai_api_key: Optional[str] = None,
+        anthropic_api_key: Optional[str] = None,
+        gemini_api_key: Optional[str] = None,
+        open_router_api_key: Optional[str] = None,
     ):
         self.advanced_model = get_model(
             advanced_model_name,
@@ -35,11 +35,11 @@ class LLMService:
 
 
 def get_model(
-        model_name: str,
-        openai_api_key: Optional[str] = None,
-        anthropic_api_key: Optional[str] = None,
-        gemini_api_key: Optional[str] = None,
-        open_router_api_key: Optional[str] = None,
+    model_name: str,
+    openai_api_key: Optional[str] = None,
+    anthropic_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None,
+    open_router_api_key: Optional[str] = None,
 ) -> BaseChatModel:
     if "/" in model_name:
         return CustomChatOpenAI(

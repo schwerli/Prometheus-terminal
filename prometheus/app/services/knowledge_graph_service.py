@@ -17,12 +17,12 @@ class KnowledgeGraphService:
     """
 
     def __init__(
-            self,
-            neo4j_service: Neo4jService,
-            neo4j_batch_size: int,
-            max_ast_depth: int,
-            chunk_size: int,
-            chunk_overlap: int,
+        self,
+        neo4j_service: Neo4jService,
+        neo4j_batch_size: int,
+        max_ast_depth: int,
+        chunk_size: int,
+        chunk_overlap: int,
     ):
         """Initializes the Knowledge Graph service.
 
@@ -57,7 +57,7 @@ class KnowledgeGraphService:
         return None
 
     def build_and_save_knowledge_graph(
-            self, path: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
+        self, path: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
     ):
         """Builds a new Knowledge Graph from source code and saves it to Neo4j.
 

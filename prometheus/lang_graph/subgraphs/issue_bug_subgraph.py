@@ -20,16 +20,16 @@ from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 
 class IssueBugSubgraph:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         bug_reproduction_subgraph_node = BugReproductionSubgraphNode(
             advanced_model=advanced_model,
@@ -80,8 +80,8 @@ class IssueBugSubgraph:
         workflow.add_conditional_edges(
             "bug_reproduction_subgraph_node",
             lambda state: state["reproduced_bug"]
-                          or state["run_build"]
-                          or state["run_existing_test"],
+            or state["run_build"]
+            or state["run_existing_test"],
             {
                 True: "issue_verified_bug_subgraph_node",
                 False: "issue_not_verified_bug_subgraph_node",
@@ -98,14 +98,14 @@ class IssueBugSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            run_build: bool,
-            run_existing_test: bool,
-            number_of_candidate_patch: int,
-            recursion_limit: int = 30,
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        run_build: bool,
+        run_existing_test: bool,
+        number_of_candidate_patch: int,
+        recursion_limit: int = 30,
     ):
         config = {"recursion_limit": recursion_limit}
 

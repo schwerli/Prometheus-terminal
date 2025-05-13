@@ -53,9 +53,9 @@ def test_build_python_file_graph():
     found_edge = False
     for kg_edge in kg_edges:
         if (
-                kg_edge.source.node == argument_list_ast_node
-                and kg_edge.target.node == string_ast_node
-                and kg_edge.type == KnowledgeGraphEdgeType.parent_of
+            kg_edge.source.node == argument_list_ast_node
+            and kg_edge.target.node == string_ast_node
+            and kg_edge.type == KnowledgeGraphEdgeType.parent_of
         ):
             found_edge = True
     assert found_edge
@@ -96,9 +96,9 @@ def test_build_text_file_graph():
     found_edge = False
     for kg_edge in kg_edges:
         if (
-                kg_edge.source.node == text_node_1
-                and kg_edge.target.node == text_node_2
-                and kg_edge.type == KnowledgeGraphEdgeType.next_chunk
+            kg_edge.source.node == text_node_1
+            and kg_edge.target.node == text_node_2
+            and kg_edge.type == KnowledgeGraphEdgeType.next_chunk
         ):
             found_edge = True
     assert found_edge

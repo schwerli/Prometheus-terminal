@@ -103,7 +103,7 @@ def test_build_and_save_new_knowledge_graph(mock_neo4j_service, mock_kg_handler,
 
 
 def test_build_and_save_clear_existing_knowledge_graph(
-        mock_neo4j_service, mock_kg_handler, monkeypatch
+    mock_neo4j_service, mock_kg_handler, monkeypatch
 ):
     # Setup
     mock_kg_handler.knowledge_graph_exists.return_value = True
@@ -139,7 +139,7 @@ def test_build_and_save_clear_existing_knowledge_graph(
 
 
 def test_clear_calls_handler_and_resets_kg(
-        mock_neo4j_service, mock_kg_handler, mock_knowledge_graph
+    mock_neo4j_service, mock_kg_handler, mock_knowledge_graph
 ):
     # Setup
     mock_kg_handler.knowledge_graph_exists.return_value = True

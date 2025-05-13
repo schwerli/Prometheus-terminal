@@ -43,12 +43,12 @@ def mock_container():
 
 
 def test_issue_graph_basic_initialization(
-        mock_advanced_model,
-        mock_base_model,
-        mock_kg,
-        mock_git_repo,
-        mock_neo4j_driver,
-        mock_container,
+    mock_advanced_model,
+    mock_base_model,
+    mock_kg,
+    mock_git_repo,
+    mock_neo4j_driver,
+    mock_container,
 ):
     """Test that IssueGraph initializes correctly with basic components."""
     graph = IssueGraph(

@@ -14,15 +14,15 @@ from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 
 class BugReproductionSubgraphNode:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            test_commands: Optional[Sequence[str]],
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        test_commands: Optional[Sequence[str]],
     ):
         self._logger = logging.getLogger(
             "prometheus.lang_graph.nodes.bug_reproduction_subgraph_node"

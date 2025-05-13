@@ -21,7 +21,7 @@ def format_issue_comments(issue_comments: Sequence[Mapping[str, str]]):
 
 
 def format_issue_info(
-        issue_title: str, issue_body: str, issue_comments: Sequence[Mapping[str, str]]
+    issue_title: str, issue_body: str, issue_comments: Sequence[Mapping[str, str]]
 ) -> str:
     return f"""\
 Issue title:

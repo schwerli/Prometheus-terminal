@@ -100,8 +100,8 @@ def test_edit_file(temp_test_dir):
     # Test case 4: No matches found
     result = edit_file("edit_test.txt", str(temp_test_dir), "nonexistent line", "new content")
     assert (
-            result
-            == "No match found for the specified content in edit_test.txt. Please verify the content to replace."
+        result
+        == "No match found for the specified content in edit_test.txt. Please verify the content to replace."
     )
 
     # Test case 5: Multiple occurrences
@@ -109,8 +109,8 @@ def test_edit_file(temp_test_dir):
     create_file("duplicate_test.txt", str(temp_test_dir), duplicate_content)
     result = edit_file("duplicate_test.txt", str(temp_test_dir), "line 2", "new line 2")
     assert (
-            result
-            == "Found 2 occurrences of the specified content in duplicate_test.txt. Please provide more context to ensure a unique match."
+        result
+        == "Found 2 occurrences of the specified content in duplicate_test.txt. Please provide more context to ensure a unique match."
     )
 
 

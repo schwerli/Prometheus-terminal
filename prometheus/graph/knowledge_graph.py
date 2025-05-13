@@ -49,15 +49,15 @@ from prometheus.graph.graph_types import (
 
 class KnowledgeGraph:
     def __init__(
-            self,
-            max_ast_depth: int,
-            chunk_size: int,
-            chunk_overlap: int,
-            next_node_id: int = 0,
-            root_node: Optional[KnowledgeGraphNode] = None,
-            metadata_node: Optional[MetadataNode] = None,
-            knowledge_graph_nodes: Optional[Sequence[KnowledgeGraphNode]] = None,
-            knowledge_graph_edges: Optional[Sequence[KnowledgeGraphEdge]] = None,
+        self,
+        max_ast_depth: int,
+        chunk_size: int,
+        chunk_overlap: int,
+        next_node_id: int = 0,
+        root_node: Optional[KnowledgeGraphNode] = None,
+        metadata_node: Optional[MetadataNode] = None,
+        knowledge_graph_nodes: Optional[Sequence[KnowledgeGraphNode]] = None,
+        knowledge_graph_edges: Optional[Sequence[KnowledgeGraphEdge]] = None,
     ):
         """Initializes the knowledge graph.
 
@@ -85,7 +85,7 @@ class KnowledgeGraph:
         self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
     def build_graph(
-            self, root_dir: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
+        self, root_dir: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
     ):
         """Builds knowledege graph for a codebase at a location.
 
@@ -174,16 +174,16 @@ class KnowledgeGraph:
 
     @classmethod
     def from_neo4j(
-            cls,
-            metadata_node: MetadataNode,
-            file_nodes: Sequence[KnowledgeGraphNode],
-            ast_nodes: Sequence[KnowledgeGraphNode],
-            text_nodes: Sequence[KnowledgeGraphNode],
-            parent_of_edges_ids: Sequence[Mapping[str, int]],
-            has_file_edges_ids: Sequence[Mapping[str, int]],
-            has_ast_edges_ids: Sequence[Mapping[str, int]],
-            has_text_edges_ids: Sequence[Mapping[str, int]],
-            next_chunk_edges_ids: Sequence[Mapping[str, int]],
+        cls,
+        metadata_node: MetadataNode,
+        file_nodes: Sequence[KnowledgeGraphNode],
+        ast_nodes: Sequence[KnowledgeGraphNode],
+        text_nodes: Sequence[KnowledgeGraphNode],
+        parent_of_edges_ids: Sequence[Mapping[str, int]],
+        has_file_edges_ids: Sequence[Mapping[str, int]],
+        has_ast_edges_ids: Sequence[Mapping[str, int]],
+        has_text_edges_ids: Sequence[Mapping[str, int]],
+        next_chunk_edges_ids: Sequence[Mapping[str, int]],
     ):
         """Creates a knowledge graph from nodes and edges stored in neo4j."""
         # All nodes
@@ -346,7 +346,7 @@ class KnowledgeGraph:
         return self._metadata_node.commit_id
 
     def _get_file_node_adjacency_dict(
-            self,
+        self,
     ) -> Mapping[KnowledgeGraphNode, Sequence[KnowledgeGraphNode]]:
         file_node_adjacency_dict = defaultdict(list)
         for has_file_edge in self.get_has_file_edges():
@@ -444,7 +444,7 @@ class KnowledgeGraph:
         other._knowledge_graph_nodes.sort(key=lambda x: x.node_id)
 
         for self_kg_node, other_kg_node in itertools.zip_longest(
-                self._knowledge_graph_nodes, other._knowledge_graph_nodes, fillvalue=None
+            self._knowledge_graph_nodes, other._knowledge_graph_nodes, fillvalue=None
         ):
             if self_kg_node != other_kg_node:
                 return False
@@ -454,7 +454,7 @@ class KnowledgeGraph:
             key=lambda x: (x.source.node_id, x.target.node_id, x.type)
         )
         for self_kg_edge, other_kg_edge in itertools.zip_longest(
-                self._knowledge_graph_edges, other._knowledge_graph_edges, fillvalue=None
+            self._knowledge_graph_edges, other._knowledge_graph_edges, fillvalue=None
         ):
             if self_kg_edge != other_kg_edge:
                 return False

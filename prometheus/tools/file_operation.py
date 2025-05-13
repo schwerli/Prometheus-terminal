@@ -51,7 +51,7 @@ For best results when analyzing code or text files, consider reading chunks of 5
 
 
 def read_file_with_line_numbers(
-        relative_path: str, root_path: str, start_line: int, end_line: int
+    relative_path: str, root_path: str, start_line: int, end_line: int
 ) -> str:
     if os.path.isabs(relative_path):
         return f"relative_path: {relative_path} is a abolsute path, not relative path."

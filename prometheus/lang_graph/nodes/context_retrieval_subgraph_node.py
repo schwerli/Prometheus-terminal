@@ -10,13 +10,13 @@ from prometheus.lang_graph.subgraphs.context_retrieval_subgraph import ContextRe
 
 class ContextRetrievalSubgraphNode:
     def __init__(
-            self,
-            model: BaseChatModel,
-            kg: KnowledgeGraph,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            query_key_name: str,
-            context_key_name: str,
+        self,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        query_key_name: str,
+        context_key_name: str,
     ):
         self._logger = logging.getLogger(
             "prometheus.lang_graph.nodes.context_retrieval_subgraph_node"

@@ -55,7 +55,7 @@ def neo4j_data_for_context_generator(data: Optional[Sequence[Mapping[str, Any]]]
 
 
 def run_neo4j_query(
-        query: str, driver: neo4j.GraphDatabase.driver, max_token_per_result: int
+    query: str, driver: neo4j.GraphDatabase.driver, max_token_per_result: int
 ) -> Tuple[str, Sequence[Mapping[str, Any]]]:
     """Run a read-only Neo4j query and format the result into a string.
 

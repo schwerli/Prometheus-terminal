@@ -13,9 +13,9 @@ from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVer
 
 class BugFixVerificationSubgraph:
     def __init__(
-            self,
-            model: BaseChatModel,
-            container: BaseContainer,
+        self,
+        model: BaseChatModel,
+        container: BaseContainer,
     ):
         bug_fix_verify_node = BugFixVerifyNode(model, container)
         bug_fix_verify_tools = ToolNode(

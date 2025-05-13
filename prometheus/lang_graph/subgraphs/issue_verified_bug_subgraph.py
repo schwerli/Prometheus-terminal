@@ -27,16 +27,16 @@ from prometheus.lang_graph.subgraphs.issue_verified_bug_state import IssueVerifi
 
 class IssueVerifiedBugSubgraph:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         issue_bug_context_message_node = IssueBugContextMessageNode()
         context_retrieval_subgraph_node = ContextRetrievalSubgraphNode(
@@ -128,15 +128,15 @@ class IssueVerifiedBugSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            run_build: bool,
-            run_existing_test: bool,
-            reproduced_bug_file: str,
-            reproduced_bug_commands: Sequence[str],
-            recursion_limit: int = 80,
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        run_build: bool,
+        run_existing_test: bool,
+        reproduced_bug_file: str,
+        reproduced_bug_commands: Sequence[str],
+        recursion_limit: int = 80,
     ):
         config = {"recursion_limit": recursion_limit}
 

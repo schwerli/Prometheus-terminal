@@ -27,7 +27,7 @@ attributes related to the file/dir."""
 
 
 def find_file_node_with_basename(
-        basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    basename: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""
       MATCH (f:FileNode {{ basename: '{basename}' }})
@@ -52,7 +52,7 @@ attributes related to the file/dir."""
 
 
 def find_file_node_with_relative_path(
-        relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
     MATCH (f:FileNode {{ relative_path: '{relative_path}' }})
@@ -83,7 +83,7 @@ use unique text segments of at least several words. The basename can be either a
 
 
 def find_ast_node_with_text_in_file_with_basename(
-        text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
     MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
@@ -110,7 +110,7 @@ be exact as well. The relative path should be the path from the root of codebase
 
 
 def find_ast_node_with_text_in_file_with_relative_path(
-        text: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
         MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
@@ -135,7 +135,7 @@ under a file/directory. The basename can be either a file (like 'bar.py',
 
 
 def find_ast_node_with_type_in_file_with_basename(
-        type: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    type: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
     MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
@@ -160,7 +160,7 @@ of codebase (like 'src/core/parser.py' or 'test/unit')."""
 
 
 def find_ast_node_with_type_in_file_with_relative_path(
-        type: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    type: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
         MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
@@ -190,7 +190,7 @@ You can use this tool to find all text/documentation in codebase that contains t
 
 
 def find_text_node_with_text(
-        text: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
     MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
@@ -218,7 +218,7 @@ You can use this tool to find text/documentation in a specific file that contain
 
 
 def find_text_node_with_text_in_file(
-        text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
     MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
@@ -241,7 +241,7 @@ You can use this tool to read the next section of text that you are interested i
 
 
 def get_next_text_node_with_node_id(
-        node_id: int, driver: GraphDatabase.driver, max_token_per_result: int
+    node_id: int, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     query = f"""\
     MATCH (f:FileNode) -[:HAS_TEXT]-> (a:TextNode {{ node_id: {node_id} }}) -[:NEXT_CHUNK]-> (b:TextNode)
@@ -270,7 +270,7 @@ to look at the file."""
 
 
 def preview_file_content_with_basename(
-        basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    basename: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     source_code_query = f"""\
     MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
@@ -312,7 +312,7 @@ to look at the file."""
 
 
 def preview_file_content_with_relative_path(
-        relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
 ) -> str:
     source_code_query = f"""\
       MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_AST]-> (a:ASTNode)
@@ -362,11 +362,11 @@ end_line is less than start_line.
 
 
 def read_code_with_basename(
-        basename: str,
-        start_line: int,
-        end_line: int,
-        driver: GraphDatabase.driver,
-        max_token_per_result: int,
+    basename: str,
+    start_line: int,
+    end_line: int,
+    driver: GraphDatabase.driver,
+    max_token_per_result: int,
 ) -> str:
     if end_line < start_line:
         return f"end_line {end_line} must be greater than start_line {start_line}"
@@ -411,11 +411,11 @@ end_line is less than start_line.
 
 
 def read_code_with_relative_path(
-        relative_path: str,
-        start_line: int,
-        end_line: int,
-        driver: GraphDatabase.driver,
-        max_token_per_result: int,
+    relative_path: str,
+    start_line: int,
+    end_line: int,
+    driver: GraphDatabase.driver,
+    max_token_per_result: int,
 ) -> str:
     if end_line < start_line:
         return f"end_line {end_line} must be greater than start_line {start_line}"

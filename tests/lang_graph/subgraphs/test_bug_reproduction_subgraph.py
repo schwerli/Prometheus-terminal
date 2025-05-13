@@ -33,7 +33,7 @@ def mock_neo4j_driver():
 
 
 def test_bug_reproduction_subgraph_basic_initialization(
-        mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
+    mock_container, mock_kg, mock_git_repo, mock_neo4j_driver
 ):
     """Test that BugReproductionSubgraph initializes correctly with basic components."""
     # Initialize fake model with empty responses

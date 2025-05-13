@@ -36,9 +36,9 @@ Current project structure:
 """
 
     def __init__(
-            self,
-            model: BaseChatModel,
-            kg: KnowledgeGraph,
+        self,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
     ):
         self.kg = kg
         self.tools = self._init_tools(str(kg.get_local_path()))

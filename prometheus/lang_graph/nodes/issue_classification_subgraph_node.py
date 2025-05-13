@@ -12,11 +12,11 @@ from prometheus.lang_graph.subgraphs.issue_classification_subgraph import (
 
 class IssueClassificationSubgraphNode:
     def __init__(
-            self,
-            model: BaseChatModel,
-            kg: KnowledgeGraph,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
+        self,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
     ):
         self._logger = logging.getLogger(
             "prometheus.lang_graph.nodes.issue_classification_subgraph_node"

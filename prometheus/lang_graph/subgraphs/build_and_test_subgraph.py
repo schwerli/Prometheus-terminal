@@ -21,12 +21,12 @@ from prometheus.lang_graph.subgraphs.build_and_test_state import BuildAndTestSta
 
 class BuildAndTestSubgraph:
     def __init__(
-            self,
-            container: BaseContainer,
-            model: BaseChatModel,
-            kg: KnowledgeGraph,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        container: BaseContainer,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         build_branch_node = NoopNode()
         if build_commands:
@@ -107,15 +107,15 @@ class BuildAndTestSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-            self,
-            run_build: bool,
-            run_existing_test: bool,
-            exist_build: Optional[bool] = None,
-            build_command_summary: Optional[str] = None,
-            build_fail_log: Optional[str] = None,
-            exist_test: Optional[bool] = None,
-            test_command_summary: Optional[str] = None,
-            existing_test_fail_log: Optional[str] = None,
+        self,
+        run_build: bool,
+        run_existing_test: bool,
+        exist_build: Optional[bool] = None,
+        build_command_summary: Optional[str] = None,
+        build_fail_log: Optional[str] = None,
+        exist_test: Optional[bool] = None,
+        test_command_summary: Optional[str] = None,
+        existing_test_fail_log: Optional[str] = None,
     ) -> Mapping[str, Union[bool, str]]:
         config = None
 

@@ -184,7 +184,7 @@ class KnowledgeGraphEdge:
     type: KnowledgeGraphEdgeType
 
     def to_neo4j_edge(
-            self,
+        self,
     ) -> Union[
         "Neo4jHasFileEdge",
         "Neo4jHasASTEdge",

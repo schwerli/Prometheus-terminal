@@ -9,9 +9,9 @@ from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 
 class BugFixVerificationSubgraphNode:
     def __init__(
-            self,
-            model: BaseChatModel,
-            container: BaseContainer,
+        self,
+        model: BaseChatModel,
+        container: BaseContainer,
     ):
         self._logger = logging.getLogger(
             "prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node"

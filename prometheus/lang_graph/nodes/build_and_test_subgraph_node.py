@@ -11,12 +11,12 @@ from prometheus.lang_graph.subgraphs.issue_bug_state import IssueBugState
 
 class BuildAndTestSubgraphNode:
     def __init__(
-            self,
-            container: BaseContainer,
-            model: BaseChatModel,
-            kg: KnowledgeGraph,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        container: BaseContainer,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         self.build_and_test_subgraph = BuildAndTestSubgraph(
             container=container,

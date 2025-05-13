@@ -13,16 +13,16 @@ from prometheus.lang_graph.subgraphs.issue_verified_bug_subgraph import IssueVer
 
 class IssueVerifiedBugSubgraphNode:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         self._logger = logging.getLogger(
             "prometheus.lang_graph.nodes.issue_verified_bug_subgraph_node"
@@ -65,7 +65,7 @@ class IssueVerifiedBugSubgraphNode:
         passed_reproducing_test = not bool(output_state["reproducing_test_fail_log"])
         passed_build = state["run_build"] and not output_state["build_fail_log"]
         passed_existing_test = (
-                state["run_existing_test"] and not output_state["existing_test_fail_log"]
+            state["run_existing_test"] and not output_state["existing_test_fail_log"]
         )
         self._logger.info(f"edit_patch: {output_state['edit_patch']}")
         self._logger.info(f"passed_reproducing_test: {passed_reproducing_test}")

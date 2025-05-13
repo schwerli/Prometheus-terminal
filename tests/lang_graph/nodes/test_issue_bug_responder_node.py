@@ -107,6 +107,6 @@ def test_call_method(fake_llm, basic_state):
 
     assert "issue_response" in result
     assert (
-            result["issue_response"]
-            == "Thank you for reporting this issue. The fix has been implemented and verified."
+        result["issue_response"]
+        == "Thank you for reporting this issue. The fix has been implemented and verified."
     )

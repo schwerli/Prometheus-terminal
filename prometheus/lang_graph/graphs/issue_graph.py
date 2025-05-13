@@ -17,16 +17,16 @@ from prometheus.lang_graph.nodes.noop_node import NoopNode
 
 class IssueGraph:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            container: BaseContainer,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        container: BaseContainer,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         self.git_repo = git_repo
 
@@ -82,14 +82,14 @@ class IssueGraph:
         self.graph = workflow.compile()
 
     def invoke(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            issue_type: IssueType,
-            run_build: bool,
-            run_existing_test: bool,
-            number_of_candidate_patch: int,
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        issue_type: IssueType,
+        run_build: bool,
+        run_existing_test: bool,
+        number_of_candidate_patch: int,
     ):
         config = None
 

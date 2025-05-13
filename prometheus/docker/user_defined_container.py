@@ -7,13 +7,13 @@ from prometheus.docker.base_container import BaseContainer
 
 class UserDefinedContainer(BaseContainer):
     def __init__(
-            self,
-            project_path: Path,
-            workdir: Optional[str] = None,
-            build_commands: Optional[Sequence[str]] = None,
-            test_commands: Optional[Sequence[str]] = None,
-            dockerfile_content: Optional[str] = None,
-            image_name: Optional[str] = None,
+        self,
+        project_path: Path,
+        workdir: Optional[str] = None,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
+        dockerfile_content: Optional[str] = None,
+        image_name: Optional[str] = None,
     ):
         super().__init__(project_path, workdir)
 

@@ -30,15 +30,15 @@ from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproducti
 
 class BugReproductionSubgraph:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            test_commands: Optional[Sequence[str]] = None,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        test_commands: Optional[Sequence[str]] = None,
     ):
         self.git_repo = git_repo
 
@@ -170,11 +170,11 @@ class BugReproductionSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            recursion_limit: int = 50,
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        recursion_limit: int = 50,
     ):
         config = {"recursion_limit": recursion_limit}
 

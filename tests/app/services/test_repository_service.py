@@ -51,7 +51,7 @@ def test_clone_new_github_repo(service, mock_kg_service, mock_git_repository):
 
     # Mock the GitRepository class creation
     with patch(
-            "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
+        "prometheus.app.services.repository_service.GitRepository", return_value=mock_git_repository
     ) as mock_git_class:
         # Exercise
         result_path = service.clone_github_repo(test_github_token, test_url, test_commit)

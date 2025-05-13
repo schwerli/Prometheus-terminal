@@ -19,9 +19,9 @@ class RepositoryService:
     """
 
     def __init__(
-            self,
-            kg_service: KnowledgeGraphService,
-            working_dir: str,
+        self,
+        kg_service: KnowledgeGraphService,
+        working_dir: str,
     ):
         """Initializes the repository service.
 
@@ -48,7 +48,7 @@ class RepositoryService:
         return None
 
     def clone_github_repo(
-            self, github_token: str, https_url: str, commit_id: Optional[str] = None
+        self, github_token: str, https_url: str, commit_id: Optional[str] = None
     ) -> Path:
         """Clones a GitHub repository to the local workspace.
 
