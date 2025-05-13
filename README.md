@@ -113,6 +113,10 @@ Prometheus requires the following environment variables to be set in the `settin
 
 To contribute to Prometheus, follow these steps:
 
+#### Prerequisites
+* Python >= 3.11
+
+
 1. Install dependencies:
    ```bash
    pip install hatchling
