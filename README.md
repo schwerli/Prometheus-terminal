@@ -91,6 +91,8 @@ docker run -d \
   neo4j
 ```
 
+Verify Neo4J at: http://localhost:7474
+
 ## Configuration
 
 Prometheus requires the following environment variables to be set in the `settings.toml` file:
