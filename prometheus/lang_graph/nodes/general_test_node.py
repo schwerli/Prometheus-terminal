@@ -12,15 +12,15 @@ from prometheus.tools import container_command
 
 
 class GeneralTestNode:
-  """Executes tests for software projects in containerized environments.
+    """Executes tests for software projects in containerized environments.
 
-  This class provides automated test execution capabilities by analyzing project
-  structures, detecting testing frameworks, and running appropriate test commands
-  in an Ubuntu container. It focuses solely on test execution without attempting
-  to analyze or fix any test failures.
-  """
+    This class provides automated test execution capabilities by analyzing project
+    structures, detecting testing frameworks, and running appropriate test commands
+    in an Ubuntu container. It focuses solely on test execution without attempting
+    to analyze or fix any test failures.
+    """
 
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a testing expert responsible for running tests for software projects in an Ubuntu container.
 You are positioned at the root of the codebase where you can run commands. Your goal is to determine the correct
 testing framework and execute the tests.
@@ -58,45 +58,45 @@ Remember:
 - Simply execute the tests and report that they were run
 """
 
-  def __init__(self, model: BaseChatModel, container: BaseContainer, kg: KnowledgeGraph):
-    self.kg = kg
-    self.tools = self._init_tools(container)
-    self.model_with_tools = model.bind_tools(self.tools)
-    self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_node")
+    def __init__(self, model: BaseChatModel, container: BaseContainer, kg: KnowledgeGraph):
+        self.kg = kg
+        self.tools = self._init_tools(container)
+        self.model_with_tools = model.bind_tools(self.tools)
+        self.system_prompt = SystemMessage(self.SYS_PROMPT)
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_node")
 
-  def _init_tools(self, container: BaseContainer):
-    tools = []
+    def _init_tools(self, container: BaseContainer):
+        tools = []
 
-    run_command_fn = functools.partial(container_command.run_command, container=container)
-    run_command_tool = StructuredTool.from_function(
-      func=run_command_fn,
-      name=container_command.run_command.__name__,
-      description=container_command.RUN_COMMAND_DESCRIPTION,
-      args_schema=container_command.RunCommandInput,
-    )
-    tools.append(run_command_tool)
+        run_command_fn = functools.partial(container_command.run_command, container=container)
+        run_command_tool = StructuredTool.from_function(
+            func=run_command_fn,
+            name=container_command.run_command.__name__,
+            description=container_command.RUN_COMMAND_DESCRIPTION,
+            args_schema=container_command.RunCommandInput,
+        )
+        tools.append(run_command_tool)
 
-    return tools
+        return tools
 
-  def format_human_message(self, state: BuildAndTestState) -> HumanMessage:
-    message = f"The (incomplete) project structure is:\n{self.kg.get_file_tree()}"
-    if "test_command_summary" in state and state["test_command_summary"]:
-      message += f"\n\nThe previous test summary is:\n{state['test_command_summary']}"
-    return HumanMessage(message)
+    def format_human_message(self, state: BuildAndTestState) -> HumanMessage:
+        message = f"The (incomplete) project structure is:\n{self.kg.get_file_tree()}"
+        if "test_command_summary" in state and state["test_command_summary"]:
+            message += f"\n\nThe previous test summary is:\n{state['test_command_summary']}"
+        return HumanMessage(message)
 
-  def __call__(self, state: BuildAndTestState):
-    if "exist_test" in state and not state["exist_test"]:
-      self._logger.info("exist_test is false, skipping test.")
-      return {
-        "build_messages": [
-          AIMessage(content="Previous agent determined there is no test framework.")
+    def __call__(self, state: BuildAndTestState):
+        if "exist_test" in state and not state["exist_test"]:
+            self._logger.info("exist_test is false, skipping test.")
+            return {
+                "build_messages": [
+                    AIMessage(content="Previous agent determined there is no test framework.")
+                ]
+            }
+
+        message_history = [self.system_prompt, self.format_human_message(state)] + state[
+            "test_messages"
         ]
-      }
-
-    message_history = [self.system_prompt, self.format_human_message(state)] + state[
-      "test_messages"
-    ]
-    response = self.model_with_tools.invoke(message_history)
-    self._logger.debug(response)
-    return {"test_messages": [response]}
+        response = self.model_with_tools.invoke(message_history)
+        self._logger.debug(response)
+        return {"test_messages": [response]}

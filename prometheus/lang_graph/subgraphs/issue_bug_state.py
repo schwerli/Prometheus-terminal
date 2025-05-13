@@ -2,21 +2,21 @@ from typing import Mapping, Sequence, TypedDict
 
 
 class IssueBugState(TypedDict):
-  issue_title: str
-  issue_body: str
-  issue_comments: Sequence[Mapping[str, str]]
-  run_build: bool
-  run_existing_test: bool
-  number_of_candidate_patch: int
+    issue_title: str
+    issue_body: str
+    issue_comments: Sequence[Mapping[str, str]]
+    run_build: bool
+    run_existing_test: bool
+    number_of_candidate_patch: int
 
-  reproduced_bug: bool
-  reproduced_bug_file: str
-  reproduced_bug_commands: Sequence[str]
+    reproduced_bug: bool
+    reproduced_bug_file: str
+    reproduced_bug_commands: Sequence[str]
 
-  edit_patch: str
+    edit_patch: str
 
-  passed_reproducing_test: bool
-  passed_build: bool
-  passed_existing_test: bool
+    passed_reproducing_test: bool
+    passed_build: bool
+    passed_existing_test: bool
 
-  issue_response: str
+    issue_response: str

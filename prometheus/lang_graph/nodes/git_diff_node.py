@@ -13,56 +13,56 @@ from prometheus.git.git_repository import GitRepository
 
 
 class GitDiffNode:
-  """Generates Git diffs for project modifications.
+    """Generates Git diffs for project modifications.
 
-  This class handles the generation of Git diffs to track changes made to a project.
-  It works with a GitRepository instance to access the project's Git operations
-  and create patch output. The node is typically used as part of an automated
-  workflow to capture code modifications made during issue resolution.
-  """
-
-  def __init__(
-    self,
-    git_repo: GitRepository,
-    state_patch_name: str,
-    state_excluded_files_key: Optional[str] = None,
-    return_list: bool = False,
-  ):
-    self.git_repo = git_repo
-    self.state_patch_name = state_patch_name
-    self.state_excluded_files_key = state_excluded_files_key
-    self.return_list = return_list
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.git_diff_node")
-
-  def __call__(self, state: Dict):
-    """Generates a Git diff for the current project state.
-
-    Creates a Git repository instance for the project path specified in the
-    state and generates a diff of any uncommitted changes.
-
-    Args:
-      state: Current state containing project information, including the
-        project_path key specifying the Git repository location.
-
-    Returns:
-      Dictionary that update the state containing:
-      - patch: String containing the Git diff output showing all changes made to the project.
+    This class handles the generation of Git diffs to track changes made to a project.
+    It works with a GitRepository instance to access the project's Git operations
+    and create patch output. The node is typically used as part of an automated
+    workflow to capture code modifications made during issue resolution.
     """
-    excluded_files = None
-    if (
-      self.state_excluded_files_key
-      and self.state_excluded_files_key in state
-      and state[self.state_excluded_files_key]
-    ):
-      excluded_files = state[self.state_excluded_files_key]
-      if isinstance(excluded_files, str):
-        excluded_files = [excluded_files]
-      self._logger.debug(
-        f"Excluding the following files when generating the patch: {excluded_files}"
-      )
-    patch = self.git_repo.get_diff(excluded_files)
-    self._logger.info(f"Generated patch:\n{patch}")
 
-    if self.return_list:
-      patch = [patch]
-    return {self.state_patch_name: patch}
+    def __init__(
+            self,
+            git_repo: GitRepository,
+            state_patch_name: str,
+            state_excluded_files_key: Optional[str] = None,
+            return_list: bool = False,
+    ):
+        self.git_repo = git_repo
+        self.state_patch_name = state_patch_name
+        self.state_excluded_files_key = state_excluded_files_key
+        self.return_list = return_list
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.git_diff_node")
+
+    def __call__(self, state: Dict):
+        """Generates a Git diff for the current project state.
+
+        Creates a Git repository instance for the project path specified in the
+        state and generates a diff of any uncommitted changes.
+
+        Args:
+          state: Current state containing project information, including the
+            project_path key specifying the Git repository location.
+
+        Returns:
+          Dictionary that update the state containing:
+          - patch: String containing the Git diff output showing all changes made to the project.
+        """
+        excluded_files = None
+        if (
+                self.state_excluded_files_key
+                and self.state_excluded_files_key in state
+                and state[self.state_excluded_files_key]
+        ):
+            excluded_files = state[self.state_excluded_files_key]
+            if isinstance(excluded_files, str):
+                excluded_files = [excluded_files]
+            self._logger.debug(
+                f"Excluding the following files when generating the patch: {excluded_files}"
+            )
+        patch = self.git_repo.get_diff(excluded_files)
+        self._logger.info(f"Generated patch:\n{patch}")
+
+        if self.return_list:
+            patch = [patch]
+        return {self.state_patch_name: patch}

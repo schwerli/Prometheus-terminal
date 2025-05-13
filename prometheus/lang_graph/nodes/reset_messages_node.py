@@ -15,44 +15,44 @@ from typing import Dict
 
 
 class ResetMessagesNode:
-  """Resets message states for workflow loop iterations.
+    """Resets message states for workflow loop iterations.
 
-  This class provides functionality to clear or reset message states between
-  workflow loop iterations. It handles both list-type message collections
-  (by clearing the list) and string-type messages (by returning an empty
-  string state).
+    This class provides functionality to clear or reset message states between
+    workflow loop iterations. It handles both list-type message collections
+    (by clearing the list) and string-type messages (by returning an empty
+    string state).
 
-  The node is typically used in loops where:
-  - Message history needs to be cleared for the next iteration
-  - The same state key is reused throughout the loop
-  """
-
-  def __init__(self, message_state_key: str):
-    """Initializes the ResetMessagesNode with a target state key.
-
-    Args:
-      message_state_key: String identifying which state attribute should
-        be reset during node execution.
+    The node is typically used in loops where:
+    - Message history needs to be cleared for the next iteration
+    - The same state key is reused throughout the loop
     """
-    self.message_state_key = message_state_key
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.reset_messages_node")
 
-  def __call__(self, state: Dict):
-    """Resets the specified message state for the next iteration.
+    def __init__(self, message_state_key: str):
+        """Initializes the ResetMessagesNode with a target state key.
 
-    Handles two types of message states:
-    1. List-type: Clears the list in place
-    2. String-type: Returns a new state with empty string
+        Args:
+          message_state_key: String identifying which state attribute should
+            be reset during node execution.
+        """
+        self.message_state_key = message_state_key
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.reset_messages_node")
 
-    Args:
-      state: Current workflow state containing the message attribute to be reset.
+    def __call__(self, state: Dict):
+        """Resets the specified message state for the next iteration.
 
-    Returns:
-      For string-type messages: Dictionary with empty string state
-      For list-type messages: None (list is cleared in place)
-    """
-    self._logger.debug(f"Resetting {self.message_state_key} in state.")
-    if isinstance(state[self.message_state_key], list):
-      state[self.message_state_key].clear()
-    elif isinstance(state[self.message_state_key], str):
-      return {self.message_state_key: ""}
+        Handles two types of message states:
+        1. List-type: Clears the list in place
+        2. String-type: Returns a new state with empty string
+
+        Args:
+          state: Current workflow state containing the message attribute to be reset.
+
+        Returns:
+          For string-type messages: Dictionary with empty string state
+          For list-type messages: None (list is cleared in place)
+        """
+        self._logger.debug(f"Resetting {self.message_state_key} in state.")
+        if isinstance(state[self.message_state_key], list):
+            state[self.message_state_key].clear()
+        elif isinstance(state[self.message_state_key], str):
+            return {self.message_state_key: ""}

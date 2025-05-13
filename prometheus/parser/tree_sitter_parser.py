@@ -18,61 +18,61 @@ from prometheus.parser.file_types import FileType
 
 
 class FileNotSupportedError(Exception):
-  """Exception raised when attempting to parse an unsupported file type.
+    """Exception raised when attempting to parse an unsupported file type.
 
-  This exception is raised when the parser encounters a file type that
-  is not supported by the tree-sitter parser implementation.
-  """
+    This exception is raised when the parser encounters a file type that
+    is not supported by the tree-sitter parser implementation.
+    """
 
-  pass
+    pass
 
 
 FILE_TYPE_TO_LANG = {
-  FileType.BASH: "bash",
-  FileType.C: "c",
-  FileType.CSHARP: "c_sharp",
-  FileType.CPP: "cpp",
-  FileType.GO: "go",
-  FileType.JAVA: "java",
-  FileType.JAVASCRIPT: "javascript",
-  FileType.KOTLIN: "kotlin",
-  FileType.PHP: "php",
-  FileType.PYTHON: "python",
-  FileType.SQL: "sql",
-  FileType.YAML: "yaml",
+    FileType.BASH: "bash",
+    FileType.C: "c",
+    FileType.CSHARP: "c_sharp",
+    FileType.CPP: "cpp",
+    FileType.GO: "go",
+    FileType.JAVA: "java",
+    FileType.JAVASCRIPT: "javascript",
+    FileType.KOTLIN: "kotlin",
+    FileType.PHP: "php",
+    FileType.PYTHON: "python",
+    FileType.SQL: "sql",
+    FileType.YAML: "yaml",
 }
 
 
 def supports_file(file: Path) -> bool:
-  """Checks if a given file type is supported by the parser.
+    """Checks if a given file type is supported by the parser.
 
-  Args:
-    file: A Path object representing the file to check.
+    Args:
+      file: A Path object representing the file to check.
 
-  Returns:
-    bool: True if the file type is supported, False otherwise.
-  """
-  file_type = FileType.from_path(file)
-  return file_type in FILE_TYPE_TO_LANG
+    Returns:
+      bool: True if the file type is supported, False otherwise.
+    """
+    file_type = FileType.from_path(file)
+    return file_type in FILE_TYPE_TO_LANG
 
 
 def parse(file: Path) -> Tree:
-  """Parses a source code file using the appropriate tree-sitter parser.
+    """Parses a source code file using the appropriate tree-sitter parser.
 
-  Args:
-    file: A Path object representing the file to parse.
+    Args:
+      file: A Path object representing the file to parse.
 
-  Returns:
-    Tree: A tree-sitter Tree object representing the parsed syntax tree.
+    Returns:
+      Tree: A tree-sitter Tree object representing the parsed syntax tree.
 
-  Raises:
-    FileNotSupportedError: If the file type is not supported by the parser.
-  """
-  file_type = FileType.from_path(file)
-  lang = FILE_TYPE_TO_LANG.get(file_type, None)
-  if lang is None:
-    raise FileNotSupportedError(f"{file_type.value} is not supported by tree_sitter_parser")
+    Raises:
+      FileNotSupportedError: If the file type is not supported by the parser.
+    """
+    file_type = FileType.from_path(file)
+    lang = FILE_TYPE_TO_LANG.get(file_type, None)
+    if lang is None:
+        raise FileNotSupportedError(f"{file_type.value} is not supported by tree_sitter_parser")
 
-  lang_parser = get_parser(lang)
-  with file.open("rb") as f:
-    return lang_parser.parse(f.read())
+    lang_parser = get_parser(lang)
+    with file.open("rb") as f:
+        return lang_parser.parse(f.read())

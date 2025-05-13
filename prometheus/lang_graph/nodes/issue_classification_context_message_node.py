@@ -5,7 +5,7 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueClassificationContextMessageNode:
-  ISSUE_CLASSIFICATION_QUERY = """\
+    ISSUE_CLASSIFICATION_QUERY = """\
 {issue_info}
 
 OBJECTIVE: Find ALL self-contained context needed to accurately classify this issue as a bug, feature request, documentation update, or question.
@@ -71,16 +71,16 @@ Search priority:
 6. Integration patterns
 """
 
-  def __init__(self):
-    self._logger = logging.getLogger(
-      "prometheus.lang_graph.nodes.issue_classification_context_message_node"
-    )
+    def __init__(self):
+        self._logger = logging.getLogger(
+            "prometheus.lang_graph.nodes.issue_classification_context_message_node"
+        )
 
-  def __call__(self, state: IssueClassificationState):
-    issue_classification_query = self.ISSUE_CLASSIFICATION_QUERY.format(
-      issue_info=format_issue_info(
-        state["issue_title"], state["issue_body"], state["issue_comments"]
-      ),
-    )
-    self._logger.debug(f"Sending query to context provider:\n{issue_classification_query}")
-    return {"issue_classification_query": issue_classification_query}
+    def __call__(self, state: IssueClassificationState):
+        issue_classification_query = self.ISSUE_CLASSIFICATION_QUERY.format(
+            issue_info=format_issue_info(
+                state["issue_title"], state["issue_body"], state["issue_comments"]
+            ),
+        )
+        self._logger.debug(f"Sending query to context provider:\n{issue_classification_query}")
+        return {"issue_classification_query": issue_classification_query}

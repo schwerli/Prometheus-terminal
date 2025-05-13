@@ -10,13 +10,13 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueClassifierOutput(BaseModel):
-  issue_type: IssueType = Field(
-    description='Classified issue type, can only be one of "bug", "feature", "documentation", or "question"',
-  )
+    issue_type: IssueType = Field(
+        description='Classified issue type, can only be one of "bug", "feature", "documentation", or "question"',
+    )
 
 
 class IssueClassifierNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are an expert GitHub issue classifier. Your task is to analyze GitHub issues and classify them into exactly one of these categories:
 - "bug": Issues reporting software defects, unexpected behavior, or crashes
 - "feature": Feature requests, enhancements, or new functionality proposals
@@ -111,32 +111,32 @@ OUTPUT 4:
 Analyze the provided issue and respond with a JSON object containing only the issue_type field with one of the four allowed values: "bug", "feature", "documentation", or "question".
 """.replace("{", "{{").replace("}", "}}")
 
-  ISSUE_CLASSIFICATION_CONTEXT = """\
+    ISSUE_CLASSIFICATION_CONTEXT = """\
 {issue_info}
 
 Issue classification context:
 {issue_classification_context}
 """
 
-  def __init__(self, model: BaseChatModel):
-    prompt = ChatPromptTemplate.from_messages(
-      [("system", self.SYS_PROMPT), ("human", "{context_info}")]
-    )
-    structured_llm = model.with_structured_output(IssueClassifierOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_classifier_node")
+    def __init__(self, model: BaseChatModel):
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", self.SYS_PROMPT), ("human", "{context_info}")]
+        )
+        structured_llm = model.with_structured_output(IssueClassifierOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_classifier_node")
 
-  def format_context_info(self, state: IssueClassificationState) -> str:
-    context_info = self.ISSUE_CLASSIFICATION_CONTEXT.format(
-      issue_info=format_issue_info(
-        state["issue_title"], state["issue_body"], state["issue_comments"]
-      ),
-      issue_classification_context="\n\n".join(state["issue_classification_context"]),
-    )
-    return context_info
+    def format_context_info(self, state: IssueClassificationState) -> str:
+        context_info = self.ISSUE_CLASSIFICATION_CONTEXT.format(
+            issue_info=format_issue_info(
+                state["issue_title"], state["issue_body"], state["issue_comments"]
+            ),
+            issue_classification_context="\n\n".join(state["issue_classification_context"]),
+        )
+        return context_info
 
-  def __call__(self, state: IssueClassificationState):
-    context_info = self.format_context_info(state)
-    response = self.model.invoke({"context_info": context_info})
-    self._logger.info(f"IssueClassifierNode classified the issue as: {response.issue_type}")
-    return {"issue_type": response.issue_type}
+    def __call__(self, state: IssueClassificationState):
+        context_info = self.format_context_info(state)
+        response = self.model.invoke({"context_info": context_info})
+        self._logger.info(f"IssueClassifierNode classified the issue as: {response.issue_type}")
+        return {"issue_type": response.issue_type}

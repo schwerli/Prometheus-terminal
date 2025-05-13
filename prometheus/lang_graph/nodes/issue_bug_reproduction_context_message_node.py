@@ -5,7 +5,7 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueBugReproductionContextMessageNode:
-  BUG_REPRODUCING_QUERY = """\
+    BUG_REPRODUCING_QUERY = """\
 {issue_info}
 
 OBJECTIVE: Find three relevant existing test cases that demonstrates similar functionality to the reported bug,
@@ -107,16 +107,16 @@ Search priority:
 Find the THREE most relevant test cases with complete context, ensuring ALL necessary imports are included at the start of each test file.
 """
 
-  def __init__(self):
-    self._logger = logging.getLogger(
-      "prometheus.lang_graph.nodes.issue_bug_reproduction_context_message_node"
-    )
+    def __init__(self):
+        self._logger = logging.getLogger(
+            "prometheus.lang_graph.nodes.issue_bug_reproduction_context_message_node"
+        )
 
-  def __call__(self, state: BugReproductionState):
-    bug_reproducing_query = self.BUG_REPRODUCING_QUERY.format(
-      issue_info=format_issue_info(
-        state["issue_title"], state["issue_body"], state["issue_comments"]
-      ),
-    )
-    self._logger.debug(f"Sending query to context provider subgraph:\n{bug_reproducing_query}")
-    return {"bug_reproducing_query": bug_reproducing_query}
+    def __call__(self, state: BugReproductionState):
+        bug_reproducing_query = self.BUG_REPRODUCING_QUERY.format(
+            issue_info=format_issue_info(
+                state["issue_title"], state["issue_body"], state["issue_comments"]
+            ),
+        )
+        self._logger.debug(f"Sending query to context provider subgraph:\n{bug_reproducing_query}")
+        return {"bug_reproducing_query": bug_reproducing_query}

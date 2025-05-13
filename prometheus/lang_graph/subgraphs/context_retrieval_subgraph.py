@@ -16,57 +16,61 @@ from prometheus.lang_graph.subgraphs.context_retrieval_state import ContextRetri
 
 
 class ContextRetrievalSubgraph:
-  def __init__(
-    self,
-    model: BaseChatModel,
-    kg: KnowledgeGraph,
-    neo4j_driver: neo4j.Driver,
-    max_token_per_neo4j_result: int,
-  ):
-    context_query_message_node = ContextQueryMessageNode()
-    context_provider_node = ContextProviderNode(model, kg, neo4j_driver, max_token_per_neo4j_result)
-    context_provider_tools = ToolNode(
-      tools=context_provider_node.tools,
-      name="context_provider_tools",
-      messages_key="context_provider_messages",
-    )
-    context_selection_node = ContextSelectionNode(model)
-    reset_context_provider_messages_node = ResetMessagesNode("context_provider_messages")
-    context_refine_node = ContextRefineNode(model, kg)
+    def __init__(
+            self,
+            model: BaseChatModel,
+            kg: KnowledgeGraph,
+            neo4j_driver: neo4j.Driver,
+            max_token_per_neo4j_result: int,
+    ):
+        context_query_message_node = ContextQueryMessageNode()
+        context_provider_node = ContextProviderNode(
+            model, kg, neo4j_driver, max_token_per_neo4j_result
+        )
+        context_provider_tools = ToolNode(
+            tools=context_provider_node.tools,
+            name="context_provider_tools",
+            messages_key="context_provider_messages",
+        )
+        context_selection_node = ContextSelectionNode(model)
+        reset_context_provider_messages_node = ResetMessagesNode("context_provider_messages")
+        context_refine_node = ContextRefineNode(model, kg)
 
-    workflow = StateGraph(ContextRetrievalState)
+        workflow = StateGraph(ContextRetrievalState)
 
-    workflow.add_node("context_query_message_node", context_query_message_node)
-    workflow.add_node("context_provider_node", context_provider_node)
-    workflow.add_node("context_provider_tools", context_provider_tools)
-    workflow.add_node("context_selection_node", context_selection_node)
-    workflow.add_node("reset_context_provider_messages_node", reset_context_provider_messages_node)
-    workflow.add_node("context_refine_node", context_refine_node)
+        workflow.add_node("context_query_message_node", context_query_message_node)
+        workflow.add_node("context_provider_node", context_provider_node)
+        workflow.add_node("context_provider_tools", context_provider_tools)
+        workflow.add_node("context_selection_node", context_selection_node)
+        workflow.add_node(
+            "reset_context_provider_messages_node", reset_context_provider_messages_node
+        )
+        workflow.add_node("context_refine_node", context_refine_node)
 
-    workflow.set_entry_point("context_query_message_node")
-    workflow.add_edge("context_query_message_node", "context_provider_node")
-    workflow.add_conditional_edges(
-      "context_provider_node",
-      functools.partial(tools_condition, messages_key="context_provider_messages"),
-      {"tools": "context_provider_tools", END: "context_selection_node"},
-    )
-    workflow.add_edge("context_provider_tools", "context_provider_node")
-    workflow.add_edge("context_selection_node", "reset_context_provider_messages_node")
-    workflow.add_edge("reset_context_provider_messages_node", "context_refine_node")
-    workflow.add_conditional_edges(
-      "context_refine_node",
-      lambda state: bool(state["refined_query"]),
-      {True: "context_provider_node", False: END},
-    )
+        workflow.set_entry_point("context_query_message_node")
+        workflow.add_edge("context_query_message_node", "context_provider_node")
+        workflow.add_conditional_edges(
+            "context_provider_node",
+            functools.partial(tools_condition, messages_key="context_provider_messages"),
+            {"tools": "context_provider_tools", END: "context_selection_node"},
+        )
+        workflow.add_edge("context_provider_tools", "context_provider_node")
+        workflow.add_edge("context_selection_node", "reset_context_provider_messages_node")
+        workflow.add_edge("reset_context_provider_messages_node", "context_refine_node")
+        workflow.add_conditional_edges(
+            "context_refine_node",
+            lambda state: bool(state["refined_query"]),
+            {True: "context_provider_node", False: END},
+        )
 
-    self.subgraph = workflow.compile()
+        self.subgraph = workflow.compile()
 
-  def invoke(
-    self, query: str, max_refined_query_loop: int, recursion_limit: int = 999
-  ) -> Sequence[str]:
-    config = {"recursion_limit": recursion_limit}
+    def invoke(
+            self, query: str, max_refined_query_loop: int, recursion_limit: int = 999
+    ) -> Sequence[str]:
+        config = {"recursion_limit": recursion_limit}
 
-    input_state = {"query": query, "max_refined_query_loop": max_refined_query_loop}
+        input_state = {"query": query, "max_refined_query_loop": max_refined_query_loop}
 
-    output_state = self.subgraph.invoke(input_state, config)
-    return {"context": output_state["context"]}
+        output_state = self.subgraph.invoke(input_state, config)
+        return {"context": output_state["context"]}

@@ -10,14 +10,14 @@ from prometheus.lang_graph.subgraphs.context_retrieval_state import ContextRetri
 
 
 class ContextRefineStructuredOutput(BaseModel):
-  reasoning: str = Field(description="Your step by step reasoning.")
-  refined_query: str = Field(
-    "Additional query to ask the ContextRetriever if the context is not enough. Empty otherwise."
-  )
+    reasoning: str = Field(description="Your step by step reasoning.")
+    refined_query: str = Field(
+        "Additional query to ask the ContextRetriever if the context is not enough. Empty otherwise."
+    )
 
 
 class ContextRefineNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are an intelligent assistant specialized in analyzing code context to determine if
 additional source code or documentation from the codebase is necessary to fulfill the user's query.
 
@@ -44,7 +44,7 @@ The codebase structure:
 {file_tree}
 """
 
-  REFINE_PROMPT = """\
+    REFINE_PROMPT = """\
 This is the original user query:
 {original_query}
 
@@ -68,41 +68,43 @@ If additional context is needed:
 - Consider both code and documentation that might be relevant
 """
 
-  def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
-    prompt = ChatPromptTemplate.from_messages(
-      [
-        ("system", self.SYS_PROMPT.format(file_tree=kg.get_file_tree())),
-        ("human", "{human_prompt}"),
-      ]
-    )
-    structured_llm = model.with_structured_output(ContextRefineStructuredOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_refine_node")
+    def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", self.SYS_PROMPT.format(file_tree=kg.get_file_tree())),
+                ("human", "{human_prompt}"),
+            ]
+        )
+        structured_llm = model.with_structured_output(ContextRefineStructuredOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_refine_node")
 
-  def format_refine_message(self, state: ContextRetrievalState):
-    original_query = state["query"]
-    context = "\n\n".join(state["context"])
-    return self.REFINE_PROMPT.format(
-      original_query=original_query,
-      context=context,
-    )
+    def format_refine_message(self, state: ContextRetrievalState):
+        original_query = state["query"]
+        context = "\n\n".join(state["context"])
+        return self.REFINE_PROMPT.format(
+            original_query=original_query,
+            context=context,
+        )
 
-  def __call__(self, state: ContextRetrievalState):
-    if "max_refined_query_loop" in state and state["max_refined_query_loop"] == 0:
-      self._logger.info("Reached max_refined_query_loop, not asking for more context")
-      return {"refined_query": ""}
+    def __call__(self, state: ContextRetrievalState):
+        if "max_refined_query_loop" in state and state["max_refined_query_loop"] == 0:
+            self._logger.info("Reached max_refined_query_loop, not asking for more context")
+            return {"refined_query": ""}
 
-    human_prompt = self.format_refine_message(state)
-    self._logger.debug(human_prompt)
-    response = self.model.invoke({"human_prompt": human_prompt})
-    self._logger.debug(response)
+        human_prompt = self.format_refine_message(state)
+        self._logger.debug(human_prompt)
+        response = self.model.invoke({"human_prompt": human_prompt})
+        self._logger.debug(response)
 
-    state_update = {"refined_query": response.refined_query}
+        state_update = {"refined_query": response.refined_query}
 
-    if "max_refined_query_loop" in state:
-      state_update["max_refined_query_loop"] = state["max_refined_query_loop"] - 1
+        if "max_refined_query_loop" in state:
+            state_update["max_refined_query_loop"] = state["max_refined_query_loop"] - 1
 
-    if response.refined_query:
-      state_update["context_provider_messages"] = [HumanMessage(content=response.refined_query)]
+        if response.refined_query:
+            state_update["context_provider_messages"] = [
+                HumanMessage(content=response.refined_query)
+            ]
 
-    return state_update
+        return state_update

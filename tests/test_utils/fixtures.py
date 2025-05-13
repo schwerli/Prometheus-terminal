@@ -18,42 +18,42 @@ NEO4J_PASSWORD = "password"
 
 @pytest.fixture(scope="session")
 def neo4j_container_with_kg_fixture():
-  kg = KnowledgeGraph(1000, 100, 10)
-  kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
-  container = (
-    Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
-    .with_env("NEO4J_PLUGINS", '["apoc"]')
-    .with_name(f"neo4j_container_with_kg_{uuid.uuid4().hex[:12]}")
-  )
-  with container as neo4j_container:
-    driver = neo4j_container.get_driver()
-    handler = KnowledgeGraphHandler(driver, 100)
-    handler.write_knowledge_graph(kg)
-    yield neo4j_container, kg
+    kg = KnowledgeGraph(1000, 100, 10)
+    kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
+    container = (
+        Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
+        .with_env("NEO4J_PLUGINS", '["apoc"]')
+        .with_name(f"neo4j_container_with_kg_{uuid.uuid4().hex[:12]}")
+    )
+    with container as neo4j_container:
+        driver = neo4j_container.get_driver()
+        handler = KnowledgeGraphHandler(driver, 100)
+        handler.write_knowledge_graph(kg)
+        yield neo4j_container, kg
 
 
 @pytest.fixture(scope="session")
 def empty_neo4j_container_fixture():
-  container = (
-    Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
-    .with_env("NEO4J_PLUGINS", '["apoc"]')
-    .with_name(f"empty_neo4j_container_{uuid.uuid4().hex[:12]}")
-  )
-  with container as neo4j_container:
-    yield neo4j_container
+    container = (
+        Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
+        .with_env("NEO4J_PLUGINS", '["apoc"]')
+        .with_name(f"empty_neo4j_container_{uuid.uuid4().hex[:12]}")
+    )
+    with container as neo4j_container:
+        yield neo4j_container
 
 
 @pytest.fixture(scope="function")
 def git_repo_fixture():
-  temp_dir = Path(tempfile.mkdtemp())
-  temp_project_dir = temp_dir / "test_project"
-  original_project_path = test_project_paths.TEST_PROJECT_PATH
+    temp_dir = Path(tempfile.mkdtemp())
+    temp_project_dir = temp_dir / "test_project"
+    original_project_path = test_project_paths.TEST_PROJECT_PATH
 
-  try:
-    shutil.copytree(original_project_path, temp_project_dir)
-    shutil.move(temp_project_dir / test_project_paths.GIT_DIR.name, temp_project_dir / ".git")
+    try:
+        shutil.copytree(original_project_path, temp_project_dir)
+        shutil.move(temp_project_dir / test_project_paths.GIT_DIR.name, temp_project_dir / ".git")
 
-    repo = Repo(temp_project_dir)
-    yield repo
-  finally:
-    shutil.rmtree(temp_project_dir)
+        repo = Repo(temp_project_dir)
+        yield repo
+    finally:
+        shutil.rmtree(temp_project_dir)

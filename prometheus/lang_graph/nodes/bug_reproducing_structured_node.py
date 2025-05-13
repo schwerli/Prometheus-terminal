@@ -8,25 +8,25 @@ from pydantic import BaseModel, Field
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.utils.issue_util import format_issue_comments
 from prometheus.utils.lang_graph_util import (
-  format_agent_tool_message_history,
-  get_last_message_content,
+    format_agent_tool_message_history,
+    get_last_message_content,
 )
 
 
 class BugReproducingStructuredOutput(BaseModel):
-  reproduced_bug: bool = Field(
-    description="True ONLY if test fails as described in the issue and uses provided examples if any exist"
-  )
-  reproduced_bug_failure_log: str = Field(
-    description="Complete test execution log. If test passes, include explanation that test should fail to demonstrate the bug"
-  )
-  reproduced_bug_commands: Sequence[str] = Field(
-    description="A list of commands run to the single file to reproduce the bug"
-  )
+    reproduced_bug: bool = Field(
+        description="True ONLY if test fails as described in the issue and uses provided examples if any exist"
+    )
+    reproduced_bug_failure_log: str = Field(
+        description="Complete test execution log. If test passes, include explanation that test should fail to demonstrate the bug"
+    )
+    reproduced_bug_commands: Sequence[str] = Field(
+        description="A list of commands run to the single file to reproduce the bug"
+    )
 
 
 class BugReproducingStructuredNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are an agent that verifies if a test properly reproduces a reported bug. You analyze:
 1. Issue description and any provided examples
 2. The test code written to reproduce the bug
@@ -115,7 +115,7 @@ Output:
 }
 """.replace("{", "{{").replace("}", "}}")
 
-  HUMAN_PROMPT = """\
+    HUMAN_PROMPT = """\
 ISSUE INFORMATION:
 Title: {title}
 Description: {body}
@@ -128,31 +128,33 @@ Log from executing bug reproducing file:
 {bug_reproducing_log}
 """
 
-  def __init__(self, model: BaseChatModel):
-    prompt = ChatPromptTemplate.from_messages(
-      [("system", self.SYS_PROMPT), ("human", "{bug_reproducing_info}")]
-    )
-    structured_llm = model.with_structured_output(BugReproducingStructuredOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_structured_node")
+    def __init__(self, model: BaseChatModel):
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", self.SYS_PROMPT), ("human", "{bug_reproducing_info}")]
+        )
+        structured_llm = model.with_structured_output(BugReproducingStructuredOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger(
+            "prometheus.lang_graph.nodes.bug_reproducing_structured_node"
+        )
 
-  def __call__(self, state: BugReproductionState):
-    bug_reproducing_log = format_agent_tool_message_history(
-      state["bug_reproducing_execute_messages"]
-    )
-    bug_reproducing_info = self.HUMAN_PROMPT.format(
-      title=state["issue_title"],
-      body=state["issue_body"],
-      comments=format_issue_comments(state["issue_comments"]),
-      bug_reproducing_code=get_last_message_content(state["bug_reproducing_write_messages"]),
-      bug_reproducing_log=bug_reproducing_log,
-    )
+    def __call__(self, state: BugReproductionState):
+        bug_reproducing_log = format_agent_tool_message_history(
+            state["bug_reproducing_execute_messages"]
+        )
+        bug_reproducing_info = self.HUMAN_PROMPT.format(
+            title=state["issue_title"],
+            body=state["issue_body"],
+            comments=format_issue_comments(state["issue_comments"]),
+            bug_reproducing_code=get_last_message_content(state["bug_reproducing_write_messages"]),
+            bug_reproducing_log=bug_reproducing_log,
+        )
 
-    response = self.model.invoke({"bug_reproducing_info": bug_reproducing_info})
-    self._logger.debug(response)
+        response = self.model.invoke({"bug_reproducing_info": bug_reproducing_info})
+        self._logger.debug(response)
 
-    return {
-      "reproduced_bug": response.reproduced_bug,
-      "reproduced_bug_failure_log": response.reproduced_bug_failure_log,
-      "reproduced_bug_commands": response.reproduced_bug_commands,
-    }
+        return {
+            "reproduced_bug": response.reproduced_bug,
+            "reproduced_bug_failure_log": response.reproduced_bug_failure_log,
+            "reproduced_bug_commands": response.reproduced_bug_commands,
+        }

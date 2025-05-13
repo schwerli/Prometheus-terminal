@@ -17,39 +17,39 @@ from prometheus.utils.lang_graph_util import format_agent_tool_message_history
 
 
 class BuildStructuredOutput(BaseModel):
-  """Structured output model for build analysis results.
+    """Structured output model for build analysis results.
 
-  Attributes:
-    exist_build: Boolean indicating presence of a build system.
-    command_summary: Detailed description of build system and required commands.
-    fail_log: Error logs from failed builds, empty string if successful.
-  """
+    Attributes:
+      exist_build: Boolean indicating presence of a build system.
+      command_summary: Detailed description of build system and required commands.
+      fail_log: Error logs from failed builds, empty string if successful.
+    """
 
-  exist_build: bool = Field(
-    description="Indicates if there is any build system present in the project"
-  )
-  command_summary: str = Field(
-    description="Summary of the build system and list of commands required to build the project"
-  )
-  fail_log: str = Field(
-    description="Contains the error logs if build failed, empty string if successful"
-  )
+    exist_build: bool = Field(
+        description="Indicates if there is any build system present in the project"
+    )
+    command_summary: str = Field(
+        description="Summary of the build system and list of commands required to build the project"
+    )
+    fail_log: str = Field(
+        description="Contains the error logs if build failed, empty string if successful"
+    )
 
 
 class GeneralBuildStructuredNode:
-  """Analyzes and summarizes build execution attempts for software projects.
+    """Analyzes and summarizes build execution attempts for software projects.
 
-  This class processes build execution histories to provide structured analysis
-  of build systems, required build steps, and any failures encountered. It can
-  identify and analyze various build systems including CMake, npm, Maven, and others.
+    This class processes build execution histories to provide structured analysis
+    of build systems, required build steps, and any failures encountered. It can
+    identify and analyze various build systems including CMake, npm, Maven, and others.
 
-  The analysis covers three main areas:
-  1. Build system detection and classification
-  2. Required build steps and commands
-  3. Build failure analysis and error logging
-  """
+    The analysis covers three main areas:
+    1. Build system detection and classification
+    2. Required build steps and commands
+    3. Build failure analysis and error logging
+    """
 
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a build system expert analyzing build attempts for software projects. You'll review a history
 of commands executed by an agent that attempted to build the project. Examine this build history to:
 
@@ -221,45 +221,47 @@ Output:
 }
 """.replace("{", "{{").replace("}", "}}")
 
-  def __init__(self, model: BaseChatModel):
-    """Initializes the GeneralBuildSummarizationNode with an analysis model.
+    def __init__(self, model: BaseChatModel):
+        """Initializes the GeneralBuildSummarizationNode with an analysis model.
 
-    Sets up the build summarizer with a prompt template and structured output
-    model for analyzing build execution histories.
+        Sets up the build summarizer with a prompt template and structured output
+        model for analyzing build execution histories.
 
-    Args:
-      model: Language model instance that will be used for analyzing build
-        histories and generating structured summaries. Must be a
-        BaseChatModel implementation.
-    """
-    prompt = ChatPromptTemplate.from_messages(
-      [("system", self.SYS_PROMPT), ("human", "{build_history}")]
-    )
-    structured_llm = model.with_structured_output(BuildStructuredOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_build_structured_node")
+        Args:
+          model: Language model instance that will be used for analyzing build
+            histories and generating structured summaries. Must be a
+            BaseChatModel implementation.
+        """
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", self.SYS_PROMPT), ("human", "{build_history}")]
+        )
+        structured_llm = model.with_structured_output(BuildStructuredOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger(
+            "prometheus.lang_graph.nodes.general_build_structured_node"
+        )
 
-  def __call__(self, state: BuildAndTestState):
-    """Processes build state to generate structured build analysis.
+    def __call__(self, state: BuildAndTestState):
+        """Processes build state to generate structured build analysis.
 
-    Analyzes the build execution history to determine build system presence,
-    required commands, and any failures encountered.
+        Analyzes the build execution history to determine build system presence,
+        required commands, and any failures encountered.
 
-    Args:
-      state: Current state containing build execution messages and history.
+        Args:
+          state: Current state containing build execution messages and history.
 
-    Returns:
-      Dictionary that updates the statecontaining:
-      - exist_build: Boolean indicating if a build system exists
-      - build_command_summary: String describing build system and required commands
-      - build_fail_log: String containing error logs (empty if successful)
-    """
-    build_history = format_agent_tool_message_history(state["build_messages"])
-    response = self.model.invoke({"build_history": build_history})
-    self._logger.debug(response)
+        Returns:
+          Dictionary that updates the statecontaining:
+          - exist_build: Boolean indicating if a build system exists
+          - build_command_summary: String describing build system and required commands
+          - build_fail_log: String containing error logs (empty if successful)
+        """
+        build_history = format_agent_tool_message_history(state["build_messages"])
+        response = self.model.invoke({"build_history": build_history})
+        self._logger.debug(response)
 
-    return {
-      "exist_build": response.exist_build,
-      "build_command_summary": response.command_summary,
-      "build_fail_log": response.fail_log,
-    }
+        return {
+            "exist_build": response.exist_build,
+            "build_command_summary": response.command_summary,
+            "build_fail_log": response.fail_log,
+        }

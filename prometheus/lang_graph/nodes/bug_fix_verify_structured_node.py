@@ -9,13 +9,13 @@ from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class BugFixVerifyStructureOutput(BaseModel):
-  reproducing_test_fail_log: str = Field(
-    description="If the test failed, contains the complete test failure log. Otherwise empty string"
-  )
+    reproducing_test_fail_log: str = Field(
+        description="If the test failed, contains the complete test failure log. Otherwise empty string"
+    )
 
 
 class BugFixVerifyStructuredNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a test result parser. Your only task is to check if the bug reproducing test now passes after code changes.
 
 Your task is to:
@@ -84,20 +84,22 @@ Important:
 - Any error or failure means the bug isn't fixed yet
 """.replace("{", "{{").replace("}", "}}")
 
-  def __init__(self, model: BaseChatModel):
-    prompt = ChatPromptTemplate.from_messages(
-      [("system", self.SYS_PROMPT), ("human", "{bug_reproducing_logs}")]
-    )
-    structured_llm = model.with_structured_output(BugFixVerifyStructureOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_fix_verify_structured_node")
+    def __init__(self, model: BaseChatModel):
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", self.SYS_PROMPT), ("human", "{bug_reproducing_logs}")]
+        )
+        structured_llm = model.with_structured_output(BugFixVerifyStructureOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger(
+            "prometheus.lang_graph.nodes.bug_fix_verify_structured_node"
+        )
 
-  def __call__(self, state: BugFixVerficationState):
-    bug_fix_verify_message = get_last_message_content(state["bug_fix_verify_messages"])
-    response = self.model.invoke({"bug_reproducing_logs": bug_fix_verify_message})
+    def __call__(self, state: BugFixVerficationState):
+        bug_fix_verify_message = get_last_message_content(state["bug_fix_verify_messages"])
+        response = self.model.invoke({"bug_reproducing_logs": bug_fix_verify_message})
 
-    self._logger.debug(response)
+        self._logger.debug(response)
 
-    return {
-      "reproducing_test_fail_log": response.reproducing_test_fail_log,
-    }
+        return {
+            "reproducing_test_fail_log": response.reproducing_test_fail_log,
+        }

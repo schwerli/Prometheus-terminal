@@ -12,7 +12,7 @@ from prometheus.utils.lang_graph_util import get_last_message_content
 
 
 class BugReproducingFileNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a test file manager. Your task is to save the provided bug reproducing code in the project. You should:
 
 1. Examine the project structure to identify existing test file naming patterns and test folder organization
@@ -27,7 +27,7 @@ If create_file fails because there is already a file with that names, use anothe
 Respond with the created file's relative path.
 """
 
-  HUMAN_PROMPT = """\
+    HUMAN_PROMPT = """\
 Save this bug reproducing code in the project:
 {bug_reproducing_code}
 
@@ -35,61 +35,63 @@ Current project structure:
 {project_structure}
 """
 
-  def __init__(
-    self,
-    model: BaseChatModel,
-    kg: KnowledgeGraph,
-  ):
-    self.kg = kg
-    self.tools = self._init_tools(str(kg.get_local_path()))
-    self.model_with_tools = model.bind_tools(self.tools)
-    self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_file_node")
+    def __init__(
+            self,
+            model: BaseChatModel,
+            kg: KnowledgeGraph,
+    ):
+        self.kg = kg
+        self.tools = self._init_tools(str(kg.get_local_path()))
+        self.model_with_tools = model.bind_tools(self.tools)
+        self.system_prompt = SystemMessage(self.SYS_PROMPT)
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_file_node")
 
-  def _init_tools(self, root_path: str):
-    """Initializes file operation tools with the given root path.
+    def _init_tools(self, root_path: str):
+        """Initializes file operation tools with the given root path.
 
-    Args:
-      root_path: Base directory path for all file operations.
+        Args:
+          root_path: Base directory path for all file operations.
 
-    Returns:
-      List of StructuredTool instances configured for file operations.
-    """
-    tools = []
+        Returns:
+          List of StructuredTool instances configured for file operations.
+        """
+        tools = []
 
-    read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
-    read_file_tool = StructuredTool.from_function(
-      func=read_file_fn,
-      name=file_operation.read_file.__name__,
-      description=file_operation.READ_FILE_DESCRIPTION,
-      args_schema=file_operation.ReadFileInput,
-    )
-    tools.append(read_file_tool)
+        read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
+        read_file_tool = StructuredTool.from_function(
+            func=read_file_fn,
+            name=file_operation.read_file.__name__,
+            description=file_operation.READ_FILE_DESCRIPTION,
+            args_schema=file_operation.ReadFileInput,
+        )
+        tools.append(read_file_tool)
 
-    create_file_fn = functools.partial(file_operation.create_file, root_path=root_path)
-    create_file_tool = StructuredTool.from_function(
-      func=create_file_fn,
-      name=file_operation.create_file.__name__,
-      description=file_operation.CREATE_FILE_DESCRIPTION,
-      args_schema=file_operation.CreateFileInput,
-    )
-    tools.append(create_file_tool)
+        create_file_fn = functools.partial(file_operation.create_file, root_path=root_path)
+        create_file_tool = StructuredTool.from_function(
+            func=create_file_fn,
+            name=file_operation.create_file.__name__,
+            description=file_operation.CREATE_FILE_DESCRIPTION,
+            args_schema=file_operation.CreateFileInput,
+        )
+        tools.append(create_file_tool)
 
-    return tools
+        return tools
 
-  def format_human_message(self, state: BugReproductionState) -> HumanMessage:
-    return HumanMessage(
-      self.HUMAN_PROMPT.format(
-        bug_reproducing_code=get_last_message_content(state["bug_reproducing_write_messages"]),
-        project_structure=self.kg.get_file_tree(),
-      )
-    )
+    def format_human_message(self, state: BugReproductionState) -> HumanMessage:
+        return HumanMessage(
+            self.HUMAN_PROMPT.format(
+                bug_reproducing_code=get_last_message_content(
+                    state["bug_reproducing_write_messages"]
+                ),
+                project_structure=self.kg.get_file_tree(),
+            )
+        )
 
-  def __call__(self, state: BugReproductionState):
-    message_history = [self.system_prompt, self.format_human_message(state)] + state[
-      "bug_reproducing_file_messages"
-    ]
+    def __call__(self, state: BugReproductionState):
+        message_history = [self.system_prompt, self.format_human_message(state)] + state[
+            "bug_reproducing_file_messages"
+        ]
 
-    response = self.model_with_tools.invoke(message_history)
-    self._logger.debug(response)
-    return {"bug_reproducing_file_messages": [response]}
+        response = self.model_with_tools.invoke(message_history)
+        self._logger.debug(response)
+        return {"bug_reproducing_file_messages": [response]}

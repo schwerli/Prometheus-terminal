@@ -4,7 +4,7 @@ from prometheus.docker.general_container import GeneralContainer
 
 
 class RunCommandInput(BaseModel):
-  command: str = Field("The shell command to be run in the container")
+    command: str = Field("The shell command to be run in the container")
 
 
 RUN_COMMAND_DESCRIPTION = """\
@@ -14,4 +14,4 @@ of the codebase.
 
 
 def run_command(command: str, container: GeneralContainer) -> str:
-  return container.execute_command(command)
+    return container.execute_command(command)
