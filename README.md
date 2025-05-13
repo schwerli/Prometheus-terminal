@@ -40,20 +40,19 @@ Prometheus can be connected to other services for extended functionality:
    cd Prometheus
    ```
 
-2. Update the `example_settings.toml` file with your API keys and other required configurations. Rename the file to
-   `settings.toml`:
+2. Copy the `example.env` file to `.env` and update it with your API keys and other required configurations:
    ```bash
-   mv example_settings.toml settings.toml
+   mv example.env .env
    ```
 
 3. Start the services using Docker Compose:
     - For Linux:
       ```bash
-      docker-compose up
+      docker-compose up --build
       ```
     - For Windows or macOS:
       ```bash
-      docker-compose -f docker-compose.win_mac.yml up
+      docker-compose -f docker-compose.win_mac.yml up --build
       ```
 
 4. Access Prometheus:
@@ -91,25 +90,26 @@ docker run -d \
   neo4j
 ```
 
-Verify Neo4J at: http://localhost:7474
+Verify Neo4J at: [http://localhost:7474](http://localhost:7474)
 
 ## Configuration
 
-Prometheus requires the following environment variables to be set in the `settings.toml` file:
+Prometheus requires the following environment variables to be set in the `.env` file:
 
 - **Neo4j**:
-    - `NEO4J_URI`
-    - `NEO4J_USERNAME`
-    - `NEO4J_PASSWORD`
+    - `PROMETHEUS_NEO4J_URI`
+    - `PROMETHEUS_NEO4J_USERNAME`
+    - `PROMETHEUS_NEO4J_PASSWORD`
 - **LLM Models**:
-    - `ADVANCED_MODEL`
-    - `BASE_MODEL`
-    - API keys: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`
+    - `PROMETHEUS_ADVANCED_MODEL`
+    - `PROMETHEUS_BASE_MODEL`
+    - API keys: `PROMETHEUS_OPENAI_API_KEY`, `PROMETHEUS_ANTHROPIC_API_KEY`, `PROMETHEUS_GEMINI_API_KEY`,
+      `PROMETHEUS_OPENROUTER_API_KEY`
 - **Other Settings**:
-    - `WORKING_DIRECTORY`
-    - `GITHUB_ACCESS_TOKEN`
-    - `KNOWLEDGE_GRAPH_MAX_AST_DEPTH`
-    - `NEO4J_BATCH_SIZE`
+    - `PROMETHEUS_WORKING_DIRECTORY`
+    - `PROMETHEUS_GITHUB_ACCESS_TOKEN`
+    - `PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH`
+    - `PROMETHEUS_NEO4J_BATCH_SIZE`
 
 ## Development
 
