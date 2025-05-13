@@ -6,7 +6,7 @@ Prometheus is a FastAPI-based backend service designed to perform intelligent co
 answering questions, resolving issues, and reviewing pull requests. At its core, it implements a multi-agent approach
 governed by a state machine to ensure code quality through automated reviews, build verification, and test execution.
 
-## Features
+## 🚀 Features
 
 - **Codebase Analysis**: Answer questions about your codebase and provide insights.
 - **Issue Resolution**: Automatically resolve issues in your repository.
@@ -14,7 +14,9 @@ governed by a state machine to ensure code quality through automated reviews, bu
 - **Multi-Agent System**: Uses a state machine to coordinate multiple agents for efficient task execution.
 - **Integration with External Services**: Seamlessly connects with other services in the `Pantheon-temple` organization.
 
-## Integrations
+---
+
+## 🔗 Integrations
 
 Prometheus can be connected to other services for extended functionality:
 
@@ -24,15 +26,19 @@ Prometheus can be connected to other services for extended functionality:
   GitHub or local).
 - **Custom Services**: Connect your own services by sending requests to the FastAPI endpoints.
 
-## Quick Start
+---
 
-### Prerequisites
+## ⚙️ Quick Start
+
+### ✅ Prerequisites
 
 - Docker
 - Docker Compose
-- API keys for external services (e.g., OpenAI, Anthropic, etc.)
+- API keys (e.g. OpenAI, Anthropic, Google Gemini)
 
-### Setup
+---
+
+### 📦 Setup
 
 1. Clone the repository:
    ```bash
@@ -46,11 +52,18 @@ Prometheus can be connected to other services for extended functionality:
    ```
 
 3. Start the services using Docker Compose:
-    - For Linux:
+
+    - **Linux (includes PostgreSQL)**:
       ```bash
       docker-compose up --build
       ```
-    - For Windows or macOS:
+
+    - **macOS / Windows**:
+
+      > ⚠️ `docker-compose.win_mac.yml` does **not include PostgreSQL**.If you don't have PostgreSQL on your device,
+      you may have to start the PostgreSQL container manually **before starting services** by following the "Database
+      Setup" section below.
+
       ```bash
       docker-compose -f docker-compose.win_mac.yml up --build
       ```
@@ -59,9 +72,14 @@ Prometheus can be connected to other services for extended functionality:
     - Service: [http://localhost:9001](http://localhost:9001)
     - OpenAPI Docs: [http://localhost:9001/docs](http://localhost:9001/docs)
 
-### Database Setup
+---
 
-#### PostgreSQL
+## 🗄️ Database Setup
+
+### PostgreSQL
+
+> ⚠️ If you're using `docker-compose.win_mac.yml`, you may have to manually start PostgreSQL before launching
+> Prometheus:
 
 Run the following command to start a PostgreSQL container:
 
@@ -74,7 +92,7 @@ docker run -d \
   postgres
 ```
 
-#### Neo4j
+### Neo4j
 
 Run the following command to start a Neo4j container:
 
@@ -92,54 +110,75 @@ docker run -d \
 
 Verify Neo4J at: [http://localhost:7474](http://localhost:7474)
 
-## Configuration
+---
 
-Prometheus requires the following environment variables to be set in the `.env` file:
+## ⚙️ Configuration
 
-- **Neo4j**:
-    - `PROMETHEUS_NEO4J_URI`
-    - `PROMETHEUS_NEO4J_USERNAME`
-    - `PROMETHEUS_NEO4J_PASSWORD`
-- **LLM Models**:
-    - `PROMETHEUS_ADVANCED_MODEL`
-    - `PROMETHEUS_BASE_MODEL`
-    - API keys: `PROMETHEUS_OPENAI_API_KEY`, `PROMETHEUS_ANTHROPIC_API_KEY`, `PROMETHEUS_GEMINI_API_KEY`,
-      `PROMETHEUS_OPENROUTER_API_KEY`
-- **Other Settings**:
-    - `PROMETHEUS_WORKING_DIRECTORY`
-    - `PROMETHEUS_GITHUB_ACCESS_TOKEN`
-    - `PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH`
-    - `PROMETHEUS_NEO4J_BATCH_SIZE`
+Set the following variables in your `.env` file:
 
-## Development
+### 🔹 Neo4j
 
-To contribute to Prometheus, follow these steps:
+* `PROMETHEUS_NEO4J_URI`
+* `PROMETHEUS_NEO4J_USERNAME`
+* `PROMETHEUS_NEO4J_PASSWORD`
 
-#### Prerequisites
-* Python >= 3.11
+### 🔹 LLM Models
 
+* `PROMETHEUS_ADVANCED_MODEL`
+* `PROMETHEUS_BASE_MODEL`
+* API Keys:
+
+    * `PROMETHEUS_OPENAI_API_KEY`
+    * `PROMETHEUS_ANTHROPIC_API_KEY`
+    * `PROMETHEUS_GEMINI_API_KEY`
+    * `PROMETHEUS_OPENROUTER_API_KEY`
+
+### 🔹 Other Settings
+
+* `PROMETHEUS_WORKING_DIRECTORY`
+* `PROMETHEUS_GITHUB_ACCESS_TOKEN`
+* `PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH`
+* `PROMETHEUS_NEO4J_BATCH_SIZE`
+* `PROMETHEUS_POSTGRES_URI`
+
+---
+
+## 🧪 Development
+
+### Requirements
+
+* Python 3.11+
+
+### Steps
 
 1. Install dependencies:
+
    ```bash
    pip install hatchling
    pip install .
    ```
 
 2. Run tests:
+
    ```bash
    pytest
    ```
 
-3. Start the development server:
+3. Start dev server:
+
    ```bash
    uvicorn prometheus.app.main:app --host 0.0.0.0 --port 9001
    ```
 
-## License
+---
 
-Prometheus is licensed under the [MIT License](LICENSE).
+## 📄 License
 
-## Contact
+Licensed under the [MIT License](LICENSE).
+
+---
+
+## 📬 Contact
 
 For questions or support, please open an issue in
 the [GitHub repository](https://github.com/Pantheon-temple/Prometheus/issues).
