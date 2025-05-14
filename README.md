@@ -156,15 +156,28 @@ Set the following variables in your `.env` file:
    ```bash
    pip install hatchling
    pip install .
+   pip install .[test]
    ```
 
 2. Run tests:
 
    ```bash
-   pytest
+   coverage run --source=prometheus -m pytest -v -s -m "not git"
    ```
 
-3. Start dev server:
+3. Generate coverage report:
+
+   ```bash
+   coverage report -m
+   ```
+4. Generate HTML report:
+
+   ```bash
+   coverage html
+   open htmlcov/index.html
+   ```
+
+5. Start dev server:
 
    ```bash
    uvicorn prometheus.app.main:app --host 0.0.0.0 --port 9001
