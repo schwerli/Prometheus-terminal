@@ -7,7 +7,7 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueBugAnalyzerMessageNode:
-  FIRST_HUMAN_PROMPT = """\
+    FIRST_HUMAN_PROMPT = """\
 I am going to share details about an issue reported to a codebase and its related bug context.
 Please analyze this bug and provide a high-level description of what needs to be changed:
 
@@ -40,7 +40,7 @@ Bug Context:
 {bug_fix_context}
 """
 
-  FOLLOWUP_HUMAN_PROMPT = """\
+    FOLLOWUP_HUMAN_PROMPT = """\
 Given your suggestion, the edit agent generated the following patch:
 {edit_patch}
 
@@ -63,36 +63,40 @@ Describe in plain English:
 Do NOT provide actual code snippets or diffs. Focus on describing what needs to be changed.
 """
 
-  def __init__(self):
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_analyzer_message_node")
-
-  def format_human_message(self, state: Dict):
-    edit_error = ""
-    if "reproducing_test_fail_log" in state and state["reproducing_test_fail_log"]:
-      edit_error = f"The patch failed to pass the bug exposing test cases:\n{state['reproducing_test_fail_log']}"
-    elif "build_fail_log" in state and state["build_fail_log"]:
-      edit_error = f"The patch failed to pass the build:\n{state['build_fail_log']}"
-    elif "existing_test_fail_log" in state and state["existing_test_fail_log"]:
-      edit_error = f"The patch failed to existing test cases:\n{state['existing_test_fail_log']}"
-
-    if not edit_error:
-      return HumanMessage(
-        self.FIRST_HUMAN_PROMPT.format(
-          issue_info=format_issue_info(
-            state["issue_title"], state["issue_body"], state["issue_comments"]
-          ),
-          bug_fix_context="\n\n".join(state["bug_fix_context"]),
+    def __init__(self):
+        self._logger = logging.getLogger(
+            "prometheus.lang_graph.nodes.issue_bug_analyzer_message_node"
         )
-      )
 
-    return HumanMessage(
-      self.FOLLOWUP_HUMAN_PROMPT.format(
-        edit_patch=state["edit_patch"],
-        edit_error=edit_error,
-      )
-    )
+    def format_human_message(self, state: Dict):
+        edit_error = ""
+        if "reproducing_test_fail_log" in state and state["reproducing_test_fail_log"]:
+            edit_error = f"The patch failed to pass the bug exposing test cases:\n{state['reproducing_test_fail_log']}"
+        elif "build_fail_log" in state and state["build_fail_log"]:
+            edit_error = f"The patch failed to pass the build:\n{state['build_fail_log']}"
+        elif "existing_test_fail_log" in state and state["existing_test_fail_log"]:
+            edit_error = (
+                f"The patch failed to existing test cases:\n{state['existing_test_fail_log']}"
+            )
 
-  def __call__(self, state: Dict):
-    human_message = self.format_human_message(state)
-    self._logger.debug(f"Sending message to IssueBugAnalyzerNode:\n{human_message}")
-    return {"issue_bug_analyzer_messages": [human_message]}
+        if not edit_error:
+            return HumanMessage(
+                self.FIRST_HUMAN_PROMPT.format(
+                    issue_info=format_issue_info(
+                        state["issue_title"], state["issue_body"], state["issue_comments"]
+                    ),
+                    bug_fix_context="\n\n".join(state["bug_fix_context"]),
+                )
+            )
+
+        return HumanMessage(
+            self.FOLLOWUP_HUMAN_PROMPT.format(
+                edit_patch=state["edit_patch"],
+                edit_error=edit_error,
+            )
+        )
+
+    def __call__(self, state: Dict):
+        human_message = self.format_human_message(state)
+        self._logger.debug(f"Sending message to IssueBugAnalyzerNode:\n{human_message}")
+        return {"issue_bug_analyzer_messages": [human_message]}

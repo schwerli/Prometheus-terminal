@@ -12,7 +12,7 @@ from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class BugReproducingWriteNode:
-  SYS_PROMPT = '''\
+    SYS_PROMPT = '''\
 You are a QA automation expert who writes focused a single test case to reproduce software bugs.
 Given an issue description, create a single minimal test with MINIMAL number of assertions
 that demonstrates the problem.
@@ -112,38 +112,38 @@ def test_empty_array_parsing(parser):
 </example>
 '''
 
-  def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
-    self.tools = self._init_tools(str(kg.get_local_path()))
-    self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self.model_with_tools = model.bind_tools(self.tools)
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_write_node")
+    def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
+        self.tools = self._init_tools(str(kg.get_local_path()))
+        self.system_prompt = SystemMessage(self.SYS_PROMPT)
+        self.model_with_tools = model.bind_tools(self.tools)
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_write_node")
 
-  def _init_tools(self, root_path: str):
-    """Initializes file operation tools with the given root path.
+    def _init_tools(self, root_path: str):
+        """Initializes file operation tools with the given root path.
 
-    Args:
-      root_path: Base directory path for all file operations.
+        Args:
+          root_path: Base directory path for all file operations.
 
-    Returns:
-      List of StructuredTool instances configured for file operations.
-    """
-    tools = []
+        Returns:
+          List of StructuredTool instances configured for file operations.
+        """
+        tools = []
 
-    read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
-    read_file_tool = StructuredTool.from_function(
-      func=read_file_fn,
-      name=file_operation.read_file.__name__,
-      description=file_operation.READ_FILE_DESCRIPTION,
-      args_schema=file_operation.ReadFileInput,
-    )
-    tools.append(read_file_tool)
+        read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
+        read_file_tool = StructuredTool.from_function(
+            func=read_file_fn,
+            name=file_operation.read_file.__name__,
+            description=file_operation.READ_FILE_DESCRIPTION,
+            args_schema=file_operation.ReadFileInput,
+        )
+        tools.append(read_file_tool)
 
-    return tools
+        return tools
 
-  def __call__(self, state: BugReproductionState):
-    message_history = [self.system_prompt] + state["bug_reproducing_write_messages"]
-    truncated_message_history = truncate_messages(message_history)
-    response = self.model_with_tools.invoke(truncated_message_history)
+    def __call__(self, state: BugReproductionState):
+        message_history = [self.system_prompt] + state["bug_reproducing_write_messages"]
+        truncated_message_history = truncate_messages(message_history)
+        response = self.model_with_tools.invoke(truncated_message_history)
 
-    self._logger.debug(response)
-    return {"bug_reproducing_write_messages": [response]}
+        self._logger.debug(response)
+        return {"bug_reproducing_write_messages": [response]}

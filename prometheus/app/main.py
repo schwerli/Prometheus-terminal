@@ -8,7 +8,7 @@ from prometheus.app import dependencies
 from prometheus.app.api import issue, repository
 from prometheus.configuration.config import settings
 
-# Create a logger for application's namespace
+# Create a logger for the application's namespace
 logger = logging.getLogger("prometheus")
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 console_handler = logging.StreamHandler()
@@ -16,7 +16,6 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.setLevel(getattr(logging, settings.LOGGING_LEVEL))
 logger.propagate = False
-
 
 logger.info(f"LOGGING_LEVEL={settings.LOGGING_LEVEL}")
 logger.info(f"ADVANCED_MODEL={settings.ADVANCED_MODEL}")
@@ -31,10 +30,10 @@ logger.info(f"MAX_TOKEN_PER_NEO4J_RESULT={settings.MAX_TOKEN_PER_NEO4J_RESULT}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  app.state.service_coordinator = dependencies.initialize_services()
-  yield
-  app.state.service_coordinator.clear()
-  app.state.service_coordinator.close()
+    app.state.service_coordinator = dependencies.initialize_services()
+    yield
+    app.state.service_coordinator.clear()
+    app.state.service_coordinator.close()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -45,4 +44,4 @@ app.include_router(issue.router, prefix="/issue", tags=["issue"])
 
 @app.get("/health", tags=["health"])
 def health_check():
-  return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}

@@ -5,9 +5,9 @@ from langgraph.graph.message import add_messages
 
 
 class ContextRetrievalState(TypedDict):
-  query: str
-  max_refined_query_loop: int
+    query: str
+    max_refined_query_loop: int
 
-  context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
-  refined_query: str
-  context: Sequence[str]
+    context_provider_messages: Annotated[Sequence[BaseMessage], add_messages]
+    refined_query: str
+    context: Sequence[str]

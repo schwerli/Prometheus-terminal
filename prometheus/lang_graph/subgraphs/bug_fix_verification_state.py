@@ -5,9 +5,9 @@ from langgraph.graph.message import add_messages
 
 
 class BugFixVerficationState(TypedDict):
-  reproduced_bug_file: str
-  reproduced_bug_commands: Sequence[str]
+    reproduced_bug_file: str
+    reproduced_bug_commands: Sequence[str]
 
-  bug_fix_verify_messages: Annotated[Sequence[BaseMessage], add_messages]
+    bug_fix_verify_messages: Annotated[Sequence[BaseMessage], add_messages]
 
-  reproducing_test_fail_log: str
+    reproducing_test_fail_log: str

@@ -11,84 +11,84 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 
 
 class IssueService:
-  def __init__(
-    self,
-    kg_service: KnowledgeGraphService,
-    repository_service: RepositoryService,
-    neo4j_service: Neo4jService,
-    llm_service: LLMService,
-    max_token_per_neo4j_result: int,
-  ):
-    self.kg_service = kg_service
-    self.repository_service = repository_service
-    self.neo4j_service = neo4j_service
-    self.llm_service = llm_service
-    self.max_token_per_neo4j_result = max_token_per_neo4j_result
+    def __init__(
+        self,
+        kg_service: KnowledgeGraphService,
+        repository_service: RepositoryService,
+        neo4j_service: Neo4jService,
+        llm_service: LLMService,
+        max_token_per_neo4j_result: int,
+    ):
+        self.kg_service = kg_service
+        self.repository_service = repository_service
+        self.neo4j_service = neo4j_service
+        self.llm_service = llm_service
+        self.max_token_per_neo4j_result = max_token_per_neo4j_result
 
-  def answer_issue(
-    self,
-    issue_title: str,
-    issue_body: str,
-    issue_comments: Sequence[Mapping[str, str]],
-    issue_type: IssueType,
-    run_build: bool,
-    run_existing_test: bool,
-    number_of_candidate_patch: int,
-    dockerfile_content: Optional[str] = None,
-    image_name: Optional[str] = None,
-    workdir: Optional[str] = None,
-    build_commands: Optional[Sequence[str]] = None,
-    test_commands: Optional[Sequence[str]] = None,
-  ):
-    if dockerfile_content or image_name:
-      container = UserDefinedContainer(
-        self.kg_service.kg.get_local_path(),
-        workdir,
-        build_commands,
-        test_commands,
-        dockerfile_content,
-        image_name,
-      )
-    else:
-      container = GeneralContainer(self.kg_service.kg.get_local_path())
+    def answer_issue(
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        issue_type: IssueType,
+        run_build: bool,
+        run_existing_test: bool,
+        number_of_candidate_patch: int,
+        dockerfile_content: Optional[str] = None,
+        image_name: Optional[str] = None,
+        workdir: Optional[str] = None,
+        build_commands: Optional[Sequence[str]] = None,
+        test_commands: Optional[Sequence[str]] = None,
+    ):
+        if dockerfile_content or image_name:
+            container = UserDefinedContainer(
+                self.kg_service.kg.get_local_path(),
+                workdir,
+                build_commands,
+                test_commands,
+                dockerfile_content,
+                image_name,
+            )
+        else:
+            container = GeneralContainer(self.kg_service.kg.get_local_path())
 
-    issue_graph = IssueGraph(
-      advanced_model=self.llm_service.advanced_model,
-      base_model=self.llm_service.base_model,
-      kg=self.kg_service.kg,
-      git_repo=self.repository_service.git_repo,
-      neo4j_driver=self.neo4j_service.neo4j_driver,
-      max_token_per_neo4j_result=self.max_token_per_neo4j_result,
-      container=container,
-      build_commands=build_commands,
-      test_commands=test_commands,
-    )
+        issue_graph = IssueGraph(
+            advanced_model=self.llm_service.advanced_model,
+            base_model=self.llm_service.base_model,
+            kg=self.kg_service.kg,
+            git_repo=self.repository_service.git_repo,
+            neo4j_driver=self.neo4j_service.neo4j_driver,
+            max_token_per_neo4j_result=self.max_token_per_neo4j_result,
+            container=container,
+            build_commands=build_commands,
+            test_commands=test_commands,
+        )
 
-    output_state = issue_graph.invoke(
-      issue_title,
-      issue_body,
-      issue_comments,
-      issue_type,
-      run_build,
-      run_existing_test,
-      number_of_candidate_patch,
-    )
+        output_state = issue_graph.invoke(
+            issue_title,
+            issue_body,
+            issue_comments,
+            issue_type,
+            run_build,
+            run_existing_test,
+            number_of_candidate_patch,
+        )
 
-    if output_state["issue_type"] == IssueType.BUG:
-      return (
-        output_state["edit_patch"],
-        output_state["passed_reproducing_test"],
-        output_state["passed_build"],
-        output_state["passed_existing_test"],
-        output_state["issue_response"],
-      )
-    elif output_state["issue_type"] == IssueType.QUESTION:
-      return (
-        "",
-        False,
-        False,
-        False,
-        output_state["issue_response"],
-      )
+        if output_state["issue_type"] == IssueType.BUG:
+            return (
+                output_state["edit_patch"],
+                output_state["passed_reproducing_test"],
+                output_state["passed_build"],
+                output_state["passed_existing_test"],
+                output_state["issue_response"],
+            )
+        elif output_state["issue_type"] == IssueType.QUESTION:
+            return (
+                "",
+                False,
+                False,
+                False,
+                output_state["issue_response"],
+            )
 
-    return "", False, False, False, ""
+        return "", False, False, False, ""

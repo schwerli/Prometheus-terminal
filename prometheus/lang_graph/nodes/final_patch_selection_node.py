@@ -9,14 +9,14 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class FinalPatchSelectionStructuredOutput(BaseModel):
-  reasoning: str = Field(
-    description="Your step-by-step reasoning why the selected patch is the best"
-  )
-  patch_index: int = Field(description="The patch index that you select")
+    reasoning: str = Field(
+        description="Your step-by-step reasoning why the selected patch is the best"
+    )
+    patch_index: int = Field(description="The patch index that you select")
 
 
 class FinalPatchSelectionNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are an expert programming assistant specialized in evaluating and selecting the best patch among multiple options. Your goal is to analyze each patch and select the most appropriate one based on the following prioritized criteria:
 
 1. EFFECTIVENESS: The patch must correctly fix the reported issue
@@ -109,7 +109,7 @@ Remember:
 - Pay attention to the git diff format, including file paths, chunk headers, and line numbers
 """.replace("{", "{{").replace("}", "}}")
 
-  HUMAN_PROMPT = """\
+    HUMAN_PROMPT = """\
 {issue_info}
 
 Bug Context:
@@ -119,40 +119,40 @@ I have generated the following patches, now please select the best patch among t
 {patches}
 """
 
-  def __init__(self, model: BaseChatModel, max_retries: int = 2):
-    self.max_retries = max_retries
-    prompt = ChatPromptTemplate.from_messages(
-      [("system", self.SYS_PROMPT), ("human", "{human_prompt}")]
-    )
-    structured_llm = model.with_structured_output(FinalPatchSelectionStructuredOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.final_patch_selection_node")
+    def __init__(self, model: BaseChatModel, max_retries: int = 2):
+        self.max_retries = max_retries
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", self.SYS_PROMPT), ("human", "{human_prompt}")]
+        )
+        structured_llm = model.with_structured_output(FinalPatchSelectionStructuredOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.final_patch_selection_node")
 
-  def format_human_message(self, state: Dict):
-    patches = ""
-    for index, patch in enumerate(state["edit_patches"]):
-      patches += f"Patch at index {index}:\n"
-      patches += f"{patch}\n\n"
-    patches += f"You must select a patch with index from 0 to {len(state['edit_patches']) - 1}, and provide your reasoning."
+    def format_human_message(self, state: Dict):
+        patches = ""
+        for index, patch in enumerate(state["edit_patches"]):
+            patches += f"Patch at index {index}:\n"
+            patches += f"{patch}\n\n"
+        patches += f"You must select a patch with index from 0 to {len(state['edit_patches']) - 1}, and provide your reasoning."
 
-    return self.HUMAN_PROMPT.format(
-      issue_info=format_issue_info(
-        state["issue_title"], state["issue_body"], state["issue_comments"]
-      ),
-      bug_fix_context="\n\n".join(state["bug_fix_context"]),
-      patches=patches,
-    )
+        return self.HUMAN_PROMPT.format(
+            issue_info=format_issue_info(
+                state["issue_title"], state["issue_body"], state["issue_comments"]
+            ),
+            bug_fix_context="\n\n".join(state["bug_fix_context"]),
+            patches=patches,
+        )
 
-  def __call__(self, state: Dict):
-    human_prompt = self.format_human_message(state)
-    for try_index in range(self.max_retries):
-      response = self.model.invoke({"human_prompt": human_prompt})
-      self._logger.info(f"FinalPatchSelectionNode response at {try_index} try:\n{response}")
+    def __call__(self, state: Dict):
+        human_prompt = self.format_human_message(state)
+        for try_index in range(self.max_retries):
+            response = self.model.invoke({"human_prompt": human_prompt})
+            self._logger.info(f"FinalPatchSelectionNode response at {try_index} try:\n{response}")
 
-      if response.patch_index >= 0 and response.patch_index < len(state["edit_patches"]):
-        return {"final_patch": state["edit_patches"][response.patch_index]}
+            if response.patch_index >= 0 and response.patch_index < len(state["edit_patches"]):
+                return {"final_patch": state["edit_patches"][response.patch_index]}
 
-    self._logger.info(
-      "FinalPatchSelectionNode failed to select a patch with correct index, defaulting to 0"
-    )
-    return {"final_patch": state["edit_patches"][0]}
+        self._logger.info(
+            "FinalPatchSelectionNode failed to select a patch with correct index, defaulting to 0"
+        )
+        return {"final_patch": state["edit_patches"][0]}

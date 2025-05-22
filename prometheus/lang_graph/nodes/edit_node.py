@@ -20,7 +20,7 @@ from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class EditNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a specialized editing agent responsible for implementing precise changes to files. Your
 primary focus is on accurately implementing the code changes that have been analyzed and
 proposed by the user.
@@ -117,76 +117,76 @@ MANDATORY REQUIREMENTS:
 6. Verify uniqueness of matches before changes
 """
 
-  def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
-    self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self.tools = self._init_tools(kg.get_local_path())
-    self.model_with_tools = model.bind_tools(self.tools)
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.edit_node")
+    def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
+        self.system_prompt = SystemMessage(self.SYS_PROMPT)
+        self.tools = self._init_tools(kg.get_local_path())
+        self.model_with_tools = model.bind_tools(self.tools)
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.edit_node")
 
-  def _init_tools(self, root_path: str):
-    """Initializes file operation tools with the given root path.
+    def _init_tools(self, root_path: str):
+        """Initializes file operation tools with the given root path.
 
-    Args:
-      root_path: Base directory path for all file operations.
+        Args:
+          root_path: Base directory path for all file operations.
 
-    Returns:
-      List of StructuredTool instances configured for file operations.
-    """
-    tools = []
+        Returns:
+          List of StructuredTool instances configured for file operations.
+        """
+        tools = []
 
-    read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
-    read_file_tool = StructuredTool.from_function(
-      func=read_file_fn,
-      name=file_operation.read_file.__name__,
-      description=file_operation.READ_FILE_DESCRIPTION,
-      args_schema=file_operation.ReadFileInput,
-    )
-    tools.append(read_file_tool)
+        read_file_fn = functools.partial(file_operation.read_file, root_path=root_path)
+        read_file_tool = StructuredTool.from_function(
+            func=read_file_fn,
+            name=file_operation.read_file.__name__,
+            description=file_operation.READ_FILE_DESCRIPTION,
+            args_schema=file_operation.ReadFileInput,
+        )
+        tools.append(read_file_tool)
 
-    read_file_with_line_numbers_fn = functools.partial(
-      file_operation.read_file_with_line_numbers, root_path=root_path
-    )
-    read_file_with_line_numbers_tool = StructuredTool.from_function(
-      func=read_file_with_line_numbers_fn,
-      name=file_operation.read_file_with_line_numbers.__name__,
-      description=file_operation.READ_FILE_WITH_LINE_NUMBERS_DESCRIPTION,
-      args_schema=file_operation.ReadFileWithLineNumbersInput,
-    )
-    tools.append(read_file_with_line_numbers_tool)
+        read_file_with_line_numbers_fn = functools.partial(
+            file_operation.read_file_with_line_numbers, root_path=root_path
+        )
+        read_file_with_line_numbers_tool = StructuredTool.from_function(
+            func=read_file_with_line_numbers_fn,
+            name=file_operation.read_file_with_line_numbers.__name__,
+            description=file_operation.READ_FILE_WITH_LINE_NUMBERS_DESCRIPTION,
+            args_schema=file_operation.ReadFileWithLineNumbersInput,
+        )
+        tools.append(read_file_with_line_numbers_tool)
 
-    create_file_fn = functools.partial(file_operation.create_file, root_path=root_path)
-    create_file_tool = StructuredTool.from_function(
-      func=create_file_fn,
-      name=file_operation.create_file.__name__,
-      description=file_operation.CREATE_FILE_DESCRIPTION,
-      args_schema=file_operation.CreateFileInput,
-    )
-    tools.append(create_file_tool)
+        create_file_fn = functools.partial(file_operation.create_file, root_path=root_path)
+        create_file_tool = StructuredTool.from_function(
+            func=create_file_fn,
+            name=file_operation.create_file.__name__,
+            description=file_operation.CREATE_FILE_DESCRIPTION,
+            args_schema=file_operation.CreateFileInput,
+        )
+        tools.append(create_file_tool)
 
-    delete_fn = functools.partial(file_operation.delete, root_path=root_path)
-    delete_tool = StructuredTool.from_function(
-      func=delete_fn,
-      name=file_operation.delete.__name__,
-      description=file_operation.DELETE_DESCRIPTION,
-      args_schema=file_operation.DeleteInput,
-    )
-    tools.append(delete_tool)
+        delete_fn = functools.partial(file_operation.delete, root_path=root_path)
+        delete_tool = StructuredTool.from_function(
+            func=delete_fn,
+            name=file_operation.delete.__name__,
+            description=file_operation.DELETE_DESCRIPTION,
+            args_schema=file_operation.DeleteInput,
+        )
+        tools.append(delete_tool)
 
-    edit_file_fn = functools.partial(file_operation.edit_file, root_path=root_path)
-    edit_file_tool = StructuredTool.from_function(
-      func=edit_file_fn,
-      name=file_operation.edit_file.__name__,
-      description=file_operation.EDIT_FILE_DESCRIPTION,
-      args_schema=file_operation.EditFileInput,
-    )
-    tools.append(edit_file_tool)
+        edit_file_fn = functools.partial(file_operation.edit_file, root_path=root_path)
+        edit_file_tool = StructuredTool.from_function(
+            func=edit_file_fn,
+            name=file_operation.edit_file.__name__,
+            description=file_operation.EDIT_FILE_DESCRIPTION,
+            args_schema=file_operation.EditFileInput,
+        )
+        tools.append(edit_file_tool)
 
-    return tools
+        return tools
 
-  def __call__(self, state: Dict):
-    message_history = [self.system_prompt] + state["edit_messages"]
-    truncated_message_history = truncate_messages(message_history)
-    response = self.model_with_tools.invoke(truncated_message_history)
+    def __call__(self, state: Dict):
+        message_history = [self.system_prompt] + state["edit_messages"]
+        truncated_message_history = truncate_messages(message_history)
+        response = self.model_with_tools.invoke(truncated_message_history)
 
-    self._logger.debug(response)
-    return {"edit_messages": [response]}
+        self._logger.debug(response)
+        return {"edit_messages": [response]}

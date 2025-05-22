@@ -8,7 +8,7 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueBugResponderNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are the final agent in a multi-agent bug fixing system. Users report issues on GitHub/GitLab, and our system works to fix them. 
 Your role is to compose the response that will be posted back to the issue thread.
 
@@ -34,7 +34,7 @@ Avoid:
 Format your response as a properly structured comment.
 """
 
-  HUMAN_PROMPT = """\
+    HUMAN_PROMPT = """\
 {issue_info}
 
 Generated patch:
@@ -44,42 +44,42 @@ Verification:
 {verification}
 """
 
-  def __init__(self, model: BaseChatModel):
-    self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self.model = model
+    def __init__(self, model: BaseChatModel):
+        self.system_prompt = SystemMessage(self.SYS_PROMPT)
+        self.model = model
 
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_responder_node")
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_responder_node")
 
-  def format_human_message(self, state: Dict) -> HumanMessage:
-    verification_messages = []
+    def format_human_message(self, state: Dict) -> HumanMessage:
+        verification_messages = []
 
-    # We only report successful verifications that were performed
-    if state["passed_reproducing_test"]:
-      verification_messages.append("✓ The bug reproducing test passed")
+        # We only report successful verifications that were performed
+        if state["passed_reproducing_test"]:
+            verification_messages.append("✓ The bug reproducing test passed")
 
-    if state["passed_build"]:
-      verification_messages.append("✓ Build passes successfully")
+        if state["passed_build"]:
+            verification_messages.append("✓ Build passes successfully")
 
-    if state["passed_existing_test"]:
-      verification_messages.append("✓ All existing tests pass successfully")
+        if state["passed_existing_test"]:
+            verification_messages.append("✓ All existing tests pass successfully")
 
-    verification_summary = "\n".join(verification_messages)
+        verification_summary = "\n".join(verification_messages)
 
-    formatted_message = self.HUMAN_PROMPT.format(
-      issue_info=format_issue_info(
-        state["issue_title"], state["issue_body"], state["issue_comments"]
-      ),
-      edit_patch=state["edit_patch"],
-      verification=verification_summary,
-    )
+        formatted_message = self.HUMAN_PROMPT.format(
+            issue_info=format_issue_info(
+                state["issue_title"], state["issue_body"], state["issue_comments"]
+            ),
+            edit_patch=state["edit_patch"],
+            verification=verification_summary,
+        )
 
-    return HumanMessage(content=formatted_message)
+        return HumanMessage(content=formatted_message)
 
-  def __call__(self, state: Dict):
-    messages = [
-      self.system_prompt,
-      self.format_human_message(state),
-    ]
-    response = self.model.invoke(messages)
-    self._logger.debug(response)
-    return {"issue_response": response.content}
+    def __call__(self, state: Dict):
+        messages = [
+            self.system_prompt,
+            self.format_human_message(state),
+        ]
+        response = self.model.invoke(messages)
+        self._logger.debug(response)
+        return {"issue_response": response.content}

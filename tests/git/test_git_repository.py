@@ -10,87 +10,87 @@ from tests.test_utils.fixtures import git_repo_fixture  # noqa: F401
 
 
 @pytest.mark.skipif(
-  sys.platform.startswith("win"),
-  reason="Test fails on Windows because of cptree in git_repo_fixture",
+    sys.platform.startswith("win"),
+    reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 @pytest.mark.git
 def test_init_with_https_url(git_repo_fixture):  # noqa: F811
-  with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
-    repo = git_repo_fixture
-    mock_clone_from.return_value = repo
+    with mock.patch("git.Repo.clone_from") as mock_clone_from, mock.patch("shutil.rmtree"):
+        repo = git_repo_fixture
+        mock_clone_from.return_value = repo
 
-    access_token = "access_token"
-    https_url = "https://github.com/foo/bar.git"
-    target_directory = test_project_paths.TEST_PROJECT_PATH
+        access_token = "access_token"
+        https_url = "https://github.com/foo/bar.git"
+        target_directory = test_project_paths.TEST_PROJECT_PATH
 
-    GitRepository(
-      address=https_url, working_directory=target_directory, github_access_token=access_token
-    )
+        GitRepository(
+            address=https_url, working_directory=target_directory, github_access_token=access_token
+        )
 
-    mock_clone_from.assert_called_once_with(
-      f"https://{access_token}@github.com/foo/bar.git", target_directory / "bar"
-    )
+        mock_clone_from.assert_called_once_with(
+            f"https://{access_token}@github.com/foo/bar.git", target_directory / "bar"
+        )
 
 
 @pytest.mark.skipif(
-  sys.platform.startswith("win"),
-  reason="Test fails on Windows because of cptree in git_repo_fixture",
+    sys.platform.startswith("win"),
+    reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 @pytest.mark.git
 def test_checkout_commit(git_repo_fixture):  # noqa: F811
-  git_repo = GitRepository(
-    address=git_repo_fixture.working_dir,
-    working_directory=Path("/foo/bar"),
-    copy_to_working_dir=False,
-  )
+    git_repo = GitRepository(
+        address=git_repo_fixture.working_dir,
+        working_directory=Path("/foo/bar"),
+        copy_to_working_dir=False,
+    )
 
-  commit_sha = "293551b7bd9572b63018c9ed2bccea0f37726805"
-  assert git_repo.repo.head.commit.hexsha != commit_sha
-  git_repo.checkout_commit(commit_sha)
-  assert git_repo.repo.head.commit.hexsha == commit_sha
+    commit_sha = "293551b7bd9572b63018c9ed2bccea0f37726805"
+    assert git_repo.repo.head.commit.hexsha != commit_sha
+    git_repo.checkout_commit(commit_sha)
+    assert git_repo.repo.head.commit.hexsha == commit_sha
 
 
 @pytest.mark.skipif(
-  sys.platform.startswith("win"),
-  reason="Test fails on Windows because of cptree in git_repo_fixture",
+    sys.platform.startswith("win"),
+    reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 @pytest.mark.git
 def test_switch_branch(git_repo_fixture):  # noqa: F811
-  git_repo = GitRepository(
-    address=git_repo_fixture.working_dir,
-    working_directory=Path("/foo/bar"),
-    copy_to_working_dir=False,
-  )
+    git_repo = GitRepository(
+        address=git_repo_fixture.working_dir,
+        working_directory=Path("/foo/bar"),
+        copy_to_working_dir=False,
+    )
 
-  branch_name = "dev"
-  assert git_repo.repo.active_branch.name != branch_name
-  git_repo.switch_branch(branch_name)
-  assert git_repo.repo.active_branch.name == branch_name
+    branch_name = "dev"
+    assert git_repo.repo.active_branch.name != branch_name
+    git_repo.switch_branch(branch_name)
+    assert git_repo.repo.active_branch.name == branch_name
 
 
 @pytest.mark.skipif(
-  sys.platform.startswith("win"),
-  reason="Test fails on Windows because of cptree in git_repo_fixture",
+    sys.platform.startswith("win"),
+    reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 @pytest.mark.git
 def test_get_diff(git_repo_fixture):  # noqa: F811
-  local_path = Path(git_repo_fixture.working_dir).absolute()
-  test_file = local_path / "test.c"
+    local_path = Path(git_repo_fixture.working_dir).absolute()
+    test_file = local_path / "test.c"
 
-  # Initialize repository
-  git_repo = GitRepository(
-    address=str(local_path), working_directory=Path("/foo/bar"), copy_to_working_dir=False
-  )
+    # Initialize repository
+    git_repo = GitRepository(
+        address=str(local_path), working_directory=Path("/foo/bar"), copy_to_working_dir=False
+    )
 
-  # Create a change by modifying test.c
-  original_content = test_file.read_text()
-  new_content = "int main() { return 0; }\n"
-  test_file.write_text(new_content)
+    # Create a change by modifying test.c
+    original_content = test_file.read_text()
+    new_content = "int main() { return 0; }\n"
+    test_file.write_text(new_content)
 
-  # Get diff without exclusions
-  diff = git_repo.get_diff()
-  assert diff is not None
-  expected_diff = """\
+    # Get diff without exclusions
+    diff = git_repo.get_diff()
+    assert diff is not None
+    expected_diff = """\
 diff --git a/test.c b/test.c
 index 79a1160..76e8197 100644
 --- a/test.c
@@ -105,31 +105,31 @@ index 79a1160..76e8197 100644
 \ No newline at end of file
 +int main() { return 0; }
 """
-  assert diff == expected_diff
+    assert diff == expected_diff
 
-  # Test with excluded files
-  diff_with_exclusion = git_repo.get_diff(excluded_files=["test.c"])
-  assert diff_with_exclusion == ""
+    # Test with excluded files
+    diff_with_exclusion = git_repo.get_diff(excluded_files=["test.c"])
+    assert diff_with_exclusion == ""
 
-  # Cleanup - restore original content
-  test_file.write_text(original_content)
+    # Cleanup - restore original content
+    test_file.write_text(original_content)
 
 
 @pytest.mark.skipif(
-  sys.platform.startswith("win"),
-  reason="Test fails on Windows because of cptree in git_repo_fixture",
+    sys.platform.startswith("win"),
+    reason="Test fails on Windows because of cptree in git_repo_fixture",
 )
 @pytest.mark.git
 def test_remove_repository(git_repo_fixture):  # noqa: F811
-  with mock.patch("shutil.rmtree") as mock_rmtree:
-    local_path = git_repo_fixture.working_dir
+    with mock.patch("shutil.rmtree") as mock_rmtree:
+        local_path = git_repo_fixture.working_dir
 
-    git_repo = GitRepository(
-      address=local_path, working_directory=Path("/foo/bar"), copy_to_working_dir=False
-    )
-    assert git_repo.repo is not None
+        git_repo = GitRepository(
+            address=local_path, working_directory=Path("/foo/bar"), copy_to_working_dir=False
+        )
+        assert git_repo.repo is not None
 
-    git_repo.remove_repository()
+        git_repo.remove_repository()
 
-    mock_rmtree.assert_called_once_with(local_path)
-    assert git_repo.repo is None
+        mock_rmtree.assert_called_once_with(local_path)
+        assert git_repo.repo is None

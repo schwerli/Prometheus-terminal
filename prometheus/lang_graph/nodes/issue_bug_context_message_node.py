@@ -5,8 +5,8 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueBugContextMessageNode:
-  BUG_FIX_QUERY = (
-    """\
+    BUG_FIX_QUERY = (
+        """\
 {issue_info}
 
 Find all relevant source code context and documentation needed to understand and fix this issue.
@@ -18,18 +18,20 @@ Focus on production code (ignore test files) and follow these steps:
 
 Skip any test files
 """.replace("{", "{{")
-    .replace("}", "}}")
-    .replace("{{issue_info}}", "{issue_info}")
-  )
-
-  def __init__(self):
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_context_message_node")
-
-  def __call__(self, state: Dict):
-    bug_fix_query = self.BUG_FIX_QUERY.format(
-      issue_info=format_issue_info(
-        state["issue_title"], state["issue_body"], state["issue_comments"]
-      ),
+        .replace("}", "}}")
+        .replace("{{issue_info}}", "{issue_info}")
     )
-    self._logger.debug(f"Sending query to context provider:\n{bug_fix_query}")
-    return {"bug_fix_query": bug_fix_query}
+
+    def __init__(self):
+        self._logger = logging.getLogger(
+            "prometheus.lang_graph.nodes.issue_bug_context_message_node"
+        )
+
+    def __call__(self, state: Dict):
+        bug_fix_query = self.BUG_FIX_QUERY.format(
+            issue_info=format_issue_info(
+                state["issue_title"], state["issue_body"], state["issue_comments"]
+            ),
+        )
+        self._logger.debug(f"Sending query to context provider:\n{bug_fix_query}")
+        return {"bug_fix_query": bug_fix_query}

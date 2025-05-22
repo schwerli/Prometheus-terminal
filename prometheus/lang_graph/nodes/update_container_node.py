@@ -15,38 +15,38 @@ from prometheus.utils.patch_util import get_updated_files
 
 
 class UpdateContainerNode:
-  """Synchronizes agent-made changes with container filesystem.
+    """Synchronizes agent-made changes with container filesystem.
 
-  This class handles the synchronization of file changes between an agent's
-  workspace and a container environment. It ensures that any modifications
-  made by AI agents (such as code fixes or edits) are properly reflected
-  in the container where builds, tests, or other operations may occur.
-  """
-
-  def __init__(self, container: BaseContainer, git_repo: GitRepository):
-    """Initializes the UpdateContainerNode with a target container.
-
-    Args:
-      container: Container instance that will receive file updates. Must
-        be a subclass of BaseContainer implementing the update_files method.
-      git_repo: The local git repository used to retrieve the project's files.
+    This class handles the synchronization of file changes between an agent's
+    workspace and a container environment. It ensures that any modifications
+    made by AI agents (such as code fixes or edits) are properly reflected
+    in the container where builds, tests, or other operations may occur.
     """
-    self.container = container
-    self.git_repo = git_repo
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.update_container_node")
 
-  def __call__(self, _: Dict):
-    """Synchronizes the current project state with the container."""
-    if self.container.is_running():
-      self._logger.info("Copy over all updated files to the container")
-      all_files_patch = self.git_repo.get_diff()
-      self.container.restart_container()
-      added_files, modified_file, removed_files = get_updated_files(all_files_patch)
-      self.container.update_files(
-        self.git_repo.get_working_directory(), added_files + modified_file, removed_files
-      )
-    else:
-      self._logger.info(
-        "Not updating files in docker container because it is not running, "
-        "most likely due to run_build and run_test are both false."
-      )
+    def __init__(self, container: BaseContainer, git_repo: GitRepository):
+        """Initializes the UpdateContainerNode with a target container.
+
+        Args:
+          container: Container instance that will receive file updates. Must
+            be a subclass of BaseContainer implementing the update_files method.
+          git_repo: The local git repository used to retrieve the project's files.
+        """
+        self.container = container
+        self.git_repo = git_repo
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.update_container_node")
+
+    def __call__(self, _: Dict):
+        """Synchronizes the current project state with the container."""
+        if self.container.is_running():
+            self._logger.info("Copy over all updated files to the container")
+            all_files_patch = self.git_repo.get_diff()
+            self.container.restart_container()
+            added_files, modified_file, removed_files = get_updated_files(all_files_patch)
+            self.container.update_files(
+                self.git_repo.get_working_directory(), added_files + modified_file, removed_files
+            )
+        else:
+            self._logger.info(
+                "Not updating files in docker container because it is not running, "
+                "most likely due to run_build and run_test are both false."
+            )

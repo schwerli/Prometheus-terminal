@@ -11,7 +11,7 @@ from prometheus.tools import container_command
 
 
 class BugFixVerifyNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a bug fix verification agent. Your role is to verify whether a bug has been fixed by running the reproduction steps and reporting the results accurately.
 
 Your tasks are to:
@@ -37,7 +37,7 @@ Result:
 Remember: Your only job is to execute the commands and report results faithfully. Do not offer suggestions, analyze results, or try to fix issues.
 """
 
-  HUMAN_PROMPT = """\
+    HUMAN_PROMPT = """\
 Reproducing bug file:
 {reproduced_bug_file}
 
@@ -45,39 +45,39 @@ Reproducing bug commands:
 {reproduced_bug_commands}
 """
 
-  def __init__(self, model: BaseChatModel, container: BaseContainer):
-    self.tools = self._init_tools(container)
-    self.model_with_tools = model.bind_tools(self.tools)
-    self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_verify_node")
+    def __init__(self, model: BaseChatModel, container: BaseContainer):
+        self.tools = self._init_tools(container)
+        self.model_with_tools = model.bind_tools(self.tools)
+        self.system_prompt = SystemMessage(self.SYS_PROMPT)
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_verify_node")
 
-  def _init_tools(self, container: BaseContainer):
-    tools = []
+    def _init_tools(self, container: BaseContainer):
+        tools = []
 
-    run_command_fn = functools.partial(container_command.run_command, container=container)
-    run_command_tool = StructuredTool.from_function(
-      func=run_command_fn,
-      name=container_command.run_command.__name__,
-      description=container_command.RUN_COMMAND_DESCRIPTION,
-      args_schema=container_command.RunCommandInput,
-    )
-    tools.append(run_command_tool)
+        run_command_fn = functools.partial(container_command.run_command, container=container)
+        run_command_tool = StructuredTool.from_function(
+            func=run_command_fn,
+            name=container_command.run_command.__name__,
+            description=container_command.RUN_COMMAND_DESCRIPTION,
+            args_schema=container_command.RunCommandInput,
+        )
+        tools.append(run_command_tool)
 
-    return tools
+        return tools
 
-  def format_human_message(self, state: BugFixVerficationState) -> HumanMessage:
-    return HumanMessage(
-      self.HUMAN_PROMPT.format(
-        reproduced_bug_file=state["reproduced_bug_file"],
-        reproduced_bug_commands=state["reproduced_bug_commands"],
-      )
-    )
+    def format_human_message(self, state: BugFixVerficationState) -> HumanMessage:
+        return HumanMessage(
+            self.HUMAN_PROMPT.format(
+                reproduced_bug_file=state["reproduced_bug_file"],
+                reproduced_bug_commands=state["reproduced_bug_commands"],
+            )
+        )
 
-  def __call__(self, state: BugFixVerficationState):
-    human_message = self.format_human_message(state)
-    message_history = [self.system_prompt, human_message] + state["bug_fix_verify_messages"]
+    def __call__(self, state: BugFixVerficationState):
+        human_message = self.format_human_message(state)
+        message_history = [self.system_prompt, human_message] + state["bug_fix_verify_messages"]
 
-    response = self.model_with_tools.invoke(message_history)
+        response = self.model_with_tools.invoke(message_history)
 
-    self._logger.debug(response)
-    return {"bug_fix_verify_messages": [response]}
+        self._logger.debug(response)
+        return {"bug_fix_verify_messages": [response]}

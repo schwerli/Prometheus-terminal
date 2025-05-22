@@ -8,7 +8,7 @@ from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class IssueBugAnalyzerNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are an expert software engineer specializing in bug analysis and fixes. Your role is to:
 
 1. Carefully analyze reported software issues and bugs by:
@@ -42,15 +42,15 @@ Communicate in a clear, technical manner focused on accurate analysis and practi
 rather than implementation details.
 """
 
-  def __init__(self, model: BaseChatModel):
-    self.system_prompt = SystemMessage(self.SYS_PROMPT)
-    self.model = model
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_analyzer_node")
+    def __init__(self, model: BaseChatModel):
+        self.system_prompt = SystemMessage(self.SYS_PROMPT)
+        self.model = model
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_analyzer_node")
 
-  def __call__(self, state: Dict):
-    message_history = [self.system_prompt] + state["issue_bug_analyzer_messages"]
-    truncated_message_history = truncate_messages(message_history)
-    response = self.model.invoke(truncated_message_history)
+    def __call__(self, state: Dict):
+        message_history = [self.system_prompt] + state["issue_bug_analyzer_messages"]
+        truncated_message_history = truncate_messages(message_history)
+        response = self.model.invoke(truncated_message_history)
 
-    self._logger.debug(response)
-    return {"issue_bug_analyzer_messages": [response]}
+        self._logger.debug(response)
+        return {"issue_bug_analyzer_messages": [response]}

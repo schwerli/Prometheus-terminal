@@ -10,14 +10,14 @@ from prometheus.utils.neo4j_util import neo4j_data_for_context_generator
 
 
 class ContextSelectionStructuredOutput(BaseModel):
-  reasoning: str = Field(
-    description="Your step-by-step reasoning why the context is relevant to the query"
-  )
-  relevant: bool = Field(description="If the context is relevant to the query")
+    reasoning: str = Field(
+        description="Your step-by-step reasoning why the context is relevant to the query"
+    )
+    relevant: bool = Field(description="If the context is relevant to the query")
 
 
 class ContextSelectionNode:
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a context selection agent that evaluates if a piece of code context is relevant to a given query. Your goal is to determine if the context directly answers the query requirements.
 
 Your evaluation must consider two key aspects:
@@ -73,7 +73,7 @@ Example output:
 Your task is to analyze the context and provide a similar structured output with detailed reasoning and a relevance decision.
 """.replace("{", "{{").replace("}", "}}")
 
-  HUMAN_PROMPT = """\
+    HUMAN_PROMPT = """\
 Query:
 {query}
 
@@ -83,26 +83,28 @@ Found context:
 Please classify if the found context is relevant to the query.
 """
 
-  def __init__(self, model: BaseChatModel):
-    prompt = ChatPromptTemplate.from_messages(
-      [("system", self.SYS_PROMPT), ("human", "{human_prompt}")]
-    )
-    structured_llm = model.with_structured_output(ContextSelectionStructuredOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_selection_node")
+    def __init__(self, model: BaseChatModel):
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", self.SYS_PROMPT), ("human", "{human_prompt}")]
+        )
+        structured_llm = model.with_structured_output(ContextSelectionStructuredOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_selection_node")
 
-  def format_human_prompt(self, state: ContextRetrievalState, search_result: str) -> str:
-    context_info = self.HUMAN_PROMPT.format(query=state["query"], context=search_result)
-    return context_info
+    def format_human_prompt(self, state: ContextRetrievalState, search_result: str) -> str:
+        context_info = self.HUMAN_PROMPT.format(query=state["query"], context=search_result)
+        return context_info
 
-  def __call__(self, state: ContextRetrievalState):
-    context_list = state.get("context", [])
-    for tool_message in extract_last_tool_messages(state["context_provider_messages"]):
-      for search_result in neo4j_data_for_context_generator(tool_message.artifact):
-        human_prompt = self.format_human_prompt(state, search_result)
-        response = self.model.invoke({"human_prompt": human_prompt})
-        self._logger.debug(f"Is this search result {search_result} relevant?: {response.relevant}")
-        if response.relevant:
-          context_list.append(search_result)
-    self._logger.info(f"Context selection complete, returning context {context_list}")
-    return {"context": context_list}
+    def __call__(self, state: ContextRetrievalState):
+        context_list = state.get("context", [])
+        for tool_message in extract_last_tool_messages(state["context_provider_messages"]):
+            for search_result in neo4j_data_for_context_generator(tool_message.artifact):
+                human_prompt = self.format_human_prompt(state, search_result)
+                response = self.model.invoke({"human_prompt": human_prompt})
+                self._logger.debug(
+                    f"Is this search result {search_result} relevant?: {response.relevant}"
+                )
+                if response.relevant:
+                    context_list.append(search_result)
+        self._logger.info(f"Context selection complete, returning context {context_list}")
+        return {"context": context_list}

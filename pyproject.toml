@@ -36,7 +36,7 @@ test = [
 ]
 
 [tool.ruff]
-indent-width = 2
+indent-width = 4
 line-length = 100
 
 [tool.ruff.lint]

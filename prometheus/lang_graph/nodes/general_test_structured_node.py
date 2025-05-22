@@ -17,34 +17,34 @@ from prometheus.utils.lang_graph_util import format_agent_tool_message_history
 
 
 class TestStructuredOutput(BaseModel):
-  """Structured output model for test analysis results.
+    """Structured output model for test analysis results.
 
-  Attributes:
-    exist_test: Boolean indicating presence of a test framework.
-    command_summary: Detailed description of test framework and required commands.
-    fail_log: Detailed test failure logs and messages, empty string if all tests passed.
-  """
+    Attributes:
+      exist_test: Boolean indicating presence of a test framework.
+      command_summary: Detailed description of test framework and required commands.
+      fail_log: Detailed test failure logs and messages, empty string if all tests passed.
+    """
 
-  exist_test: bool = Field(
-    description="Indicates if there is any test framework present in the project"
-  )
-  command_summary: str = Field(
-    description="Summary of the test framework and list of commands required to run tests"
-  )
-  fail_log: str = Field(
-    description="Contains the test failure logs if any tests failed, empty string if all passed"
-  )
+    exist_test: bool = Field(
+        description="Indicates if there is any test framework present in the project"
+    )
+    command_summary: str = Field(
+        description="Summary of the test framework and list of commands required to run tests"
+    )
+    fail_log: str = Field(
+        description="Contains the test failure logs if any tests failed, empty string if all passed"
+    )
 
 
 class GeneralTestStructuredNode:
-  """Analyzes and summarizes test execution attempts for software projects.
+    """Analyzes and summarizes test execution attempts for software projects.
 
-  This class processes test execution histories to provide structured analysis
-  of test frameworks, required test steps, and any failures encountered. It can
-  identify and analyze various testing frameworks including pytest, Jest, and others.
-  """
+    This class processes test execution histories to provide structured analysis
+    of test frameworks, required test steps, and any failures encountered. It can
+    identify and analyze various testing frameworks including pytest, Jest, and others.
+    """
 
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a testing expert analyzing test execution history for software projects. You'll review
 a history of commands executed by an agent that attempted to run the tests. Examine this test history to:
 
@@ -270,44 +270,44 @@ Output:
 }
 """.replace("{", "{{").replace("}", "}}")
 
-  def __init__(self, model: BaseChatModel):
-    """Initializes the GeneralTestSummarizationNode with an analysis model.
+    def __init__(self, model: BaseChatModel):
+        """Initializes the GeneralTestSummarizationNode with an analysis model.
 
-    Sets up the test summarizer with a prompt template and structured output
-    model for analyzing test execution histories.
+        Sets up the test summarizer with a prompt template and structured output
+        model for analyzing test execution histories.
 
-    Args:
-      model: Language model instance that will be used for analyzing test
-        histories and generating structured summaries. Must be a
-        BaseChatModel implementation.
-    """
-    prompt = ChatPromptTemplate.from_messages(
-      [("system", self.SYS_PROMPT), ("human", "{test_history}")]
-    )
-    structured_llm = model.with_structured_output(TestStructuredOutput)
-    self.model = prompt | structured_llm
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_structured_node")
+        Args:
+          model: Language model instance that will be used for analyzing test
+            histories and generating structured summaries. Must be a
+            BaseChatModel implementation.
+        """
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", self.SYS_PROMPT), ("human", "{test_history}")]
+        )
+        structured_llm = model.with_structured_output(TestStructuredOutput)
+        self.model = prompt | structured_llm
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.general_test_structured_node")
 
-  def __call__(self, state: BuildAndTestState):
-    """Processes test state to generate structured test analysis.
+    def __call__(self, state: BuildAndTestState):
+        """Processes test state to generate structured test analysis.
 
-    Analyzes the test execution history to determine test framework presence,
-    required commands, and any failures encountered.
+        Analyzes the test execution history to determine test framework presence,
+        required commands, and any failures encountered.
 
-    Args:
-      state: Current state containing test execution messages and history.
+        Args:
+          state: Current state containing test execution messages and history.
 
-    Returns:
-      Dictionary that updates the state containing:
-      - exist_test: Boolean indicating if a test framework exists
-      - test_command_summary: String describing test framework and required commands
-      - existing_test_fail_log: String containing test failure details (empty if all passed)
-    """
-    test_history = format_agent_tool_message_history(state["test_messages"])
-    response = self.model.invoke({"test_history": test_history})
-    self._logger.debug(response)
-    return {
-      "exist_test": response.exist_test,
-      "test_command_summary": response.command_summary,
-      "existing_test_fail_log": response.fail_log,
-    }
+        Returns:
+          Dictionary that updates the state containing:
+          - exist_test: Boolean indicating if a test framework exists
+          - test_command_summary: String describing test framework and required commands
+          - existing_test_fail_log: String containing test failure details (empty if all passed)
+        """
+        test_history = format_agent_tool_message_history(state["test_messages"])
+        response = self.model.invoke({"test_history": test_history})
+        self._logger.debug(response)
+        return {
+            "exist_test": response.exist_test,
+            "test_command_summary": response.command_summary,
+            "existing_test_fail_log": response.fail_log,
+        }

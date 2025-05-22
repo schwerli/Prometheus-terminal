@@ -20,20 +20,20 @@ from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class ContextProviderNode:
-  """Provides contextual information from a codebase using knowledge graph search.
+    """Provides contextual information from a codebase using knowledge graph search.
 
-  This class implements a systematic approach to finding relevant code context
-  by searching through a Neo4j knowledge graph representation of a codebase.
-  It uses a combination of file structure navigation, AST analysis, and text
-  search to gather comprehensive context for queries.
+    This class implements a systematic approach to finding relevant code context
+    by searching through a Neo4j knowledge graph representation of a codebase.
+    It uses a combination of file structure navigation, AST analysis, and text
+    search to gather comprehensive context for queries.
 
-  The knowledge graph contains three main types of nodes:
-  - FileNode: Represents files and directories
-  - ASTNode: Represents syntactic elements from the code
-  - TextNode: Represents documentation and text content
-  """
+    The knowledge graph contains three main types of nodes:
+    - FileNode: Represents files and directories
+    - ASTNode: Represents syntactic elements from the code
+    - TextNode: Represents documentation and text content
+    """
 
-  SYS_PROMPT = """\
+    SYS_PROMPT = """\
 You are a context gatherer that searches a Neo4j knowledge graph representation of a 
 codebase. Your role is to efficiently find relevant code and documentation 
 context based on user queries.
@@ -83,246 +83,246 @@ The file tree of the codebase:
 Available AST node types for code structure search: {ast_node_types}
 """
 
-  def __init__(
-    self,
-    model: BaseChatModel,
-    kg: KnowledgeGraph,
-    neo4j_driver: neo4j.Driver,
-    max_token_per_result: int,
-  ):
-    """Initializes the ContextProviderNode with model, knowledge graph, and database connection.
+    def __init__(
+        self,
+        model: BaseChatModel,
+        kg: KnowledgeGraph,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_result: int,
+    ):
+        """Initializes the ContextProviderNode with model, knowledge graph, and database connection.
 
-    Sets up the context provider with necessary prompts, graph traversal tools,
-    and logging configuration. Initializes the system prompt with the current
-    file tree structure from the knowledge graph.
+        Sets up the context provider with necessary prompts, graph traversal tools,
+        and logging configuration. Initializes the system prompt with the current
+        file tree structure from the knowledge graph.
 
-    Args:
-      model: Language model instance that will be used for query analysis and
-        context finding. Must be a BaseChatModel implementation that supports
-        tool binding.
-      kg: Knowledge graph instance containing the processed codebase structure.
-        Used to obtain the file tree for system prompts.
-      neo4j_driver: Neo4j driver instance for executing graph queries. This
-        driver should be properly configured with authentication and
-        connection details.
-      max_token_per_result: Maximum number of tokens per retrieved Neo4j result.
-    """
-    self.neo4j_driver = neo4j_driver
-    self.max_token_per_result = max_token_per_result
+        Args:
+          model: Language model instance that will be used for query analysis and
+            context finding. Must be a BaseChatModel implementation that supports
+            tool binding.
+          kg: Knowledge graph instance containing the processed codebase structure.
+            Used to obtain the file tree for system prompts.
+          neo4j_driver: Neo4j driver instance for executing graph queries. This
+            driver should be properly configured with authentication and
+            connection details.
+          max_token_per_result: Maximum number of tokens per retrieved Neo4j result.
+        """
+        self.neo4j_driver = neo4j_driver
+        self.max_token_per_result = max_token_per_result
 
-    ast_node_types_str = ", ".join(kg.get_all_ast_node_types())
-    self.system_prompt = SystemMessage(
-      self.SYS_PROMPT.format(file_tree=kg.get_file_tree(), ast_node_types=ast_node_types_str)
-    )
-    self.tools = self._init_tools()
-    self.model_with_tools = model.bind_tools(self.tools)
+        ast_node_types_str = ", ".join(kg.get_all_ast_node_types())
+        self.system_prompt = SystemMessage(
+            self.SYS_PROMPT.format(file_tree=kg.get_file_tree(), ast_node_types=ast_node_types_str)
+        )
+        self.tools = self._init_tools()
+        self.model_with_tools = model.bind_tools(self.tools)
 
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_provider_node")
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_provider_node")
 
-  def _init_tools(self):
-    """Initializes KnowledgeGraph traversal tools.
+    def _init_tools(self):
+        """Initializes KnowledgeGraph traversal tools.
 
 
-    Returns:
-      List of StructuredTool instances configured for KnowledgeGraph traversal.
-    """
-    tools = []
+        Returns:
+          List of StructuredTool instances configured for KnowledgeGraph traversal.
+        """
+        tools = []
 
-    find_file_node_with_basename_fn = functools.partial(
-      graph_traversal.find_file_node_with_basename,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_file_node_with_basename_tool = StructuredTool.from_function(
-      func=find_file_node_with_basename_fn,
-      name=graph_traversal.find_file_node_with_basename.__name__,
-      description=graph_traversal.FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION,
-      args_schema=graph_traversal.FindFileNodeWithBasenameInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_file_node_with_basename_tool)
+        find_file_node_with_basename_fn = functools.partial(
+            graph_traversal.find_file_node_with_basename,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_file_node_with_basename_tool = StructuredTool.from_function(
+            func=find_file_node_with_basename_fn,
+            name=graph_traversal.find_file_node_with_basename.__name__,
+            description=graph_traversal.FIND_FILE_NODE_WITH_BASENAME_DESCRIPTION,
+            args_schema=graph_traversal.FindFileNodeWithBasenameInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_file_node_with_basename_tool)
 
-    find_file_node_with_relative_path_fn = functools.partial(
-      graph_traversal.find_file_node_with_relative_path,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_file_node_with_relative_path_tool = StructuredTool.from_function(
-      func=find_file_node_with_relative_path_fn,
-      name=graph_traversal.find_file_node_with_relative_path.__name__,
-      description=graph_traversal.FIND_FILE_NODE_WITH_RELATIVE_PATH_DESCRIPTION,
-      args_schema=graph_traversal.FindFileNodeWithRelativePathInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_file_node_with_relative_path_tool)
+        find_file_node_with_relative_path_fn = functools.partial(
+            graph_traversal.find_file_node_with_relative_path,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_file_node_with_relative_path_tool = StructuredTool.from_function(
+            func=find_file_node_with_relative_path_fn,
+            name=graph_traversal.find_file_node_with_relative_path.__name__,
+            description=graph_traversal.FIND_FILE_NODE_WITH_RELATIVE_PATH_DESCRIPTION,
+            args_schema=graph_traversal.FindFileNodeWithRelativePathInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_file_node_with_relative_path_tool)
 
-    find_ast_node_with_text_in_file_with_basename_fn = functools.partial(
-      graph_traversal.find_ast_node_with_text_in_file_with_basename,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_ast_node_with_text_in_file_with_basename_tool = StructuredTool.from_function(
-      func=find_ast_node_with_text_in_file_with_basename_fn,
-      name=graph_traversal.find_ast_node_with_text_in_file_with_basename.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_BASENAME_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTextInFileWithBasenameInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_ast_node_with_text_in_file_with_basename_tool)
+        find_ast_node_with_text_in_file_with_basename_fn = functools.partial(
+            graph_traversal.find_ast_node_with_text_in_file_with_basename,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_ast_node_with_text_in_file_with_basename_tool = StructuredTool.from_function(
+            func=find_ast_node_with_text_in_file_with_basename_fn,
+            name=graph_traversal.find_ast_node_with_text_in_file_with_basename.__name__,
+            description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_BASENAME_DESCRIPTION,
+            args_schema=graph_traversal.FindASTNodeWithTextInFileWithBasenameInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_ast_node_with_text_in_file_with_basename_tool)
 
-    find_ast_node_with_text_in_file_with_relative_path_fn = functools.partial(
-      graph_traversal.find_ast_node_with_text_in_file_with_relative_path,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_ast_node_with_text_in_file_with_relative_path_tool = StructuredTool.from_function(
-      func=find_ast_node_with_text_in_file_with_relative_path_fn,
-      name=graph_traversal.find_ast_node_with_text_in_file_with_relative_path.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTextInFileWithRelativePathInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_ast_node_with_text_in_file_with_relative_path_tool)
+        find_ast_node_with_text_in_file_with_relative_path_fn = functools.partial(
+            graph_traversal.find_ast_node_with_text_in_file_with_relative_path,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_ast_node_with_text_in_file_with_relative_path_tool = StructuredTool.from_function(
+            func=find_ast_node_with_text_in_file_with_relative_path_fn,
+            name=graph_traversal.find_ast_node_with_text_in_file_with_relative_path.__name__,
+            description=graph_traversal.FIND_AST_NODE_WITH_TEXT_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
+            args_schema=graph_traversal.FindASTNodeWithTextInFileWithRelativePathInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_ast_node_with_text_in_file_with_relative_path_tool)
 
-    find_ast_node_with_type_in_file_with_basename_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type_in_file_with_basename,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_ast_node_with_type_in_file_with_basename_tool = StructuredTool.from_function(
-      func=find_ast_node_with_type_in_file_with_basename_fn,
-      name=graph_traversal.find_ast_node_with_type_in_file_with_basename.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_BASENAME_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTypeInFileWithBasenameInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_ast_node_with_type_in_file_with_basename_tool)
+        find_ast_node_with_type_in_file_with_basename_fn = functools.partial(
+            graph_traversal.find_ast_node_with_type_in_file_with_basename,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_ast_node_with_type_in_file_with_basename_tool = StructuredTool.from_function(
+            func=find_ast_node_with_type_in_file_with_basename_fn,
+            name=graph_traversal.find_ast_node_with_type_in_file_with_basename.__name__,
+            description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_BASENAME_DESCRIPTION,
+            args_schema=graph_traversal.FindASTNodeWithTypeInFileWithBasenameInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_ast_node_with_type_in_file_with_basename_tool)
 
-    find_ast_node_with_type_in_file_with_relative_path_fn = functools.partial(
-      graph_traversal.find_ast_node_with_type_in_file_with_relative_path,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_ast_node_with_type_in_file_with_relative_path_tool = StructuredTool.from_function(
-      func=find_ast_node_with_type_in_file_with_relative_path_fn,
-      name=graph_traversal.find_ast_node_with_type_in_file_with_relative_path.__name__,
-      description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
-      args_schema=graph_traversal.FindASTNodeWithTypeInFileWithRelativePathInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_ast_node_with_type_in_file_with_relative_path_tool)
+        find_ast_node_with_type_in_file_with_relative_path_fn = functools.partial(
+            graph_traversal.find_ast_node_with_type_in_file_with_relative_path,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_ast_node_with_type_in_file_with_relative_path_tool = StructuredTool.from_function(
+            func=find_ast_node_with_type_in_file_with_relative_path_fn,
+            name=graph_traversal.find_ast_node_with_type_in_file_with_relative_path.__name__,
+            description=graph_traversal.FIND_AST_NODE_WITH_TYPE_IN_FILE_WITH_RELATIVE_PATH_DESCRIPTION,
+            args_schema=graph_traversal.FindASTNodeWithTypeInFileWithRelativePathInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_ast_node_with_type_in_file_with_relative_path_tool)
 
-    find_text_node_with_text_fn = functools.partial(
-      graph_traversal.find_text_node_with_text,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_text_node_with_text_tool = StructuredTool.from_function(
-      func=find_text_node_with_text_fn,
-      name=graph_traversal.find_text_node_with_text.__name__,
-      description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_DESCRIPTION,
-      args_schema=graph_traversal.FindTextNodeWithTextInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_text_node_with_text_tool)
+        find_text_node_with_text_fn = functools.partial(
+            graph_traversal.find_text_node_with_text,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_text_node_with_text_tool = StructuredTool.from_function(
+            func=find_text_node_with_text_fn,
+            name=graph_traversal.find_text_node_with_text.__name__,
+            description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_DESCRIPTION,
+            args_schema=graph_traversal.FindTextNodeWithTextInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_text_node_with_text_tool)
 
-    find_text_node_with_text_in_file_fn = functools.partial(
-      graph_traversal.find_text_node_with_text_in_file,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    find_text_node_with_text_in_file_tool = StructuredTool.from_function(
-      func=find_text_node_with_text_in_file_fn,
-      name=graph_traversal.find_text_node_with_text_in_file.__name__,
-      description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_IN_FILE_DESCRIPTION,
-      args_schema=graph_traversal.FindTextNodeWithTextInFileInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(find_text_node_with_text_in_file_tool)
+        find_text_node_with_text_in_file_fn = functools.partial(
+            graph_traversal.find_text_node_with_text_in_file,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        find_text_node_with_text_in_file_tool = StructuredTool.from_function(
+            func=find_text_node_with_text_in_file_fn,
+            name=graph_traversal.find_text_node_with_text_in_file.__name__,
+            description=graph_traversal.FIND_TEXT_NODE_WITH_TEXT_IN_FILE_DESCRIPTION,
+            args_schema=graph_traversal.FindTextNodeWithTextInFileInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(find_text_node_with_text_in_file_tool)
 
-    get_next_text_node_with_node_id_fn = functools.partial(
-      graph_traversal.get_next_text_node_with_node_id,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    get_next_text_node_with_node_id_tool = StructuredTool.from_function(
-      func=get_next_text_node_with_node_id_fn,
-      name=graph_traversal.get_next_text_node_with_node_id.__name__,
-      description=graph_traversal.GET_NEXT_TEXT_NODE_WITH_NODE_ID_DESCRIPTION,
-      args_schema=graph_traversal.GetNextTextNodeWithNodeIdInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(get_next_text_node_with_node_id_tool)
+        get_next_text_node_with_node_id_fn = functools.partial(
+            graph_traversal.get_next_text_node_with_node_id,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        get_next_text_node_with_node_id_tool = StructuredTool.from_function(
+            func=get_next_text_node_with_node_id_fn,
+            name=graph_traversal.get_next_text_node_with_node_id.__name__,
+            description=graph_traversal.GET_NEXT_TEXT_NODE_WITH_NODE_ID_DESCRIPTION,
+            args_schema=graph_traversal.GetNextTextNodeWithNodeIdInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(get_next_text_node_with_node_id_tool)
 
-    preview_file_content_with_basename_fn = functools.partial(
-      graph_traversal.preview_file_content_with_basename,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    preview_file_content_with_basename_tool = StructuredTool.from_function(
-      func=preview_file_content_with_basename_fn,
-      name=graph_traversal.preview_file_content_with_basename.__name__,
-      description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_BASENAME_DESCRIPTION,
-      args_schema=graph_traversal.PreviewFileContentWithBasenameInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(preview_file_content_with_basename_tool)
+        preview_file_content_with_basename_fn = functools.partial(
+            graph_traversal.preview_file_content_with_basename,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        preview_file_content_with_basename_tool = StructuredTool.from_function(
+            func=preview_file_content_with_basename_fn,
+            name=graph_traversal.preview_file_content_with_basename.__name__,
+            description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_BASENAME_DESCRIPTION,
+            args_schema=graph_traversal.PreviewFileContentWithBasenameInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(preview_file_content_with_basename_tool)
 
-    preview_file_content_with_relative_path_fn = functools.partial(
-      graph_traversal.preview_file_content_with_relative_path,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    preview_file_content_with_relative_path_tool = StructuredTool.from_function(
-      func=preview_file_content_with_relative_path_fn,
-      name=graph_traversal.preview_file_content_with_relative_path.__name__,
-      description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_RELATIVE_PATH_DESCRIPTION,
-      args_schema=graph_traversal.PreviewFileContentWithRelativePathInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(preview_file_content_with_relative_path_tool)
+        preview_file_content_with_relative_path_fn = functools.partial(
+            graph_traversal.preview_file_content_with_relative_path,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        preview_file_content_with_relative_path_tool = StructuredTool.from_function(
+            func=preview_file_content_with_relative_path_fn,
+            name=graph_traversal.preview_file_content_with_relative_path.__name__,
+            description=graph_traversal.PREVIEW_FILE_CONTENT_WITH_RELATIVE_PATH_DESCRIPTION,
+            args_schema=graph_traversal.PreviewFileContentWithRelativePathInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(preview_file_content_with_relative_path_tool)
 
-    read_code_with_basename_fn = functools.partial(
-      graph_traversal.read_code_with_basename,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    read_code_with_basename_tool = StructuredTool.from_function(
-      func=read_code_with_basename_fn,
-      name=graph_traversal.read_code_with_basename.__name__,
-      description=graph_traversal.READ_CODE_WITH_BASENAME_DESCRIPTION,
-      args_schema=graph_traversal.ReadCodeWithBasenameInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(read_code_with_basename_tool)
+        read_code_with_basename_fn = functools.partial(
+            graph_traversal.read_code_with_basename,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        read_code_with_basename_tool = StructuredTool.from_function(
+            func=read_code_with_basename_fn,
+            name=graph_traversal.read_code_with_basename.__name__,
+            description=graph_traversal.READ_CODE_WITH_BASENAME_DESCRIPTION,
+            args_schema=graph_traversal.ReadCodeWithBasenameInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(read_code_with_basename_tool)
 
-    read_code_with_relative_path_fn = functools.partial(
-      graph_traversal.read_code_with_relative_path,
-      driver=self.neo4j_driver,
-      max_token_per_result=self.max_token_per_result,
-    )
-    read_code_with_relative_path_tool = StructuredTool.from_function(
-      func=read_code_with_relative_path_fn,
-      name=graph_traversal.read_code_with_relative_path.__name__,
-      description=graph_traversal.READ_CODE_WITH_RELATIVE_PATH_DESCRIPTION,
-      args_schema=graph_traversal.ReadCodeWithRelativePathInput,
-      response_format="content_and_artifact",
-    )
-    tools.append(read_code_with_relative_path_tool)
+        read_code_with_relative_path_fn = functools.partial(
+            graph_traversal.read_code_with_relative_path,
+            driver=self.neo4j_driver,
+            max_token_per_result=self.max_token_per_result,
+        )
+        read_code_with_relative_path_tool = StructuredTool.from_function(
+            func=read_code_with_relative_path_fn,
+            name=graph_traversal.read_code_with_relative_path.__name__,
+            description=graph_traversal.READ_CODE_WITH_RELATIVE_PATH_DESCRIPTION,
+            args_schema=graph_traversal.ReadCodeWithRelativePathInput,
+            response_format="content_and_artifact",
+        )
+        tools.append(read_code_with_relative_path_tool)
 
-    return tools
+        return tools
 
-  def __call__(self, state: Dict):
-    """Processes the current state and traverse the knowledge graph to retrieve context.
+    def __call__(self, state: Dict):
+        """Processes the current state and traverse the knowledge graph to retrieve context.
 
-    Args:
-      state: Current state containing the human query and preivous context_messages.
+        Args:
+          state: Current state containing the human query and preivous context_messages.
 
-    Returns:
-      Dictionary that will update the state with the model's response messages.
-    """
-    message_history = [self.system_prompt] + state["context_provider_messages"]
-    truncated_message_history = truncate_messages(message_history)
-    response = self.model_with_tools.invoke(truncated_message_history)
-    self._logger.debug(response)
-    return {"context_provider_messages": [response]}
+        Returns:
+          Dictionary that will update the state with the model's response messages.
+        """
+        message_history = [self.system_prompt] + state["context_provider_messages"]
+        truncated_message_history = truncate_messages(message_history)
+        response = self.model_with_tools.invoke(truncated_message_history)
+        self._logger.debug(response)
+        return {"context_provider_messages": [response]}

@@ -10,30 +10,30 @@ from typing import Dict
 
 
 class NoopNode:
-  """No-operation node that routes workflow without processing.
+    """No-operation node that routes workflow without processing.
 
-  This class implements a pass-through node that accepts any input and returns
-  None without performing any operations. It serves as a routing element in
-  node graphs where a connection point is needed but no actual processing
-  should occur.
-  """
-
-  def __init__(self):
-    self._logger = logging.getLogger("prometheus.lang_graph.nodes.noop_node")
-
-  def __call__(self, state: Dict) -> None:
-    """Routes the workflow without performing any operations.
-
-    Accepts any input and returns None, serving as a pass-through point
-    in the workflow.
-
-    Args:
-      _: Any state - not used by this node.
-
-    Returns:
-      None always, as this node performs no operations.
+    This class implements a pass-through node that accepts any input and returns
+    None without performing any operations. It serves as a routing element in
+    node graphs where a connection point is needed but no actual processing
+    should occur.
     """
-    for key, value in state.items():
-      if isinstance(value, bool) or isinstance(value, int):
-        self._logger.debug(f"State {key}: {value}")
-    return
+
+    def __init__(self):
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.noop_node")
+
+    def __call__(self, state: Dict) -> None:
+        """Routes the workflow without performing any operations.
+
+        Accepts any input and returns None, serving as a pass-through point
+        in the workflow.
+
+        Args:
+          _: Any state - not used by this node.
+
+        Returns:
+          None always, as this node performs no operations.
+        """
+        for key, value in state.items():
+            if isinstance(value, bool) or isinstance(value, int):
+                self._logger.debug(f"State {key}: {value}")
+        return
