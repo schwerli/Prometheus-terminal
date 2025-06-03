@@ -21,6 +21,7 @@ class LLMService:
         anthropic_api_key: Optional[str] = None,
         gemini_api_key: Optional[str] = None,
         open_router_api_key: Optional[str] = None,
+        deepseek_api_key: Optional[str] = None,
     ):
         self.advanced_model = get_model(
             advanced_model_name,
@@ -28,9 +29,15 @@ class LLMService:
             anthropic_api_key,
             gemini_api_key,
             open_router_api_key,
+            deepseek_api_key,
         )
         self.base_model = get_model(
-            base_model_name, openai_api_key, anthropic_api_key, gemini_api_key, open_router_api_key
+            base_model_name,
+            openai_api_key,
+            anthropic_api_key,
+            gemini_api_key,
+            open_router_api_key,
+            deepseek_api_key,
         )
 
 
@@ -40,6 +47,7 @@ def get_model(
     anthropic_api_key: Optional[str] = None,
     gemini_api_key: Optional[str] = None,
     open_router_api_key: Optional[str] = None,
+    deepseek_api_key: Optional[str] = None,
 ) -> BaseChatModel:
     if "/" in model_name:
         return CustomChatOpenAI(
@@ -70,6 +78,15 @@ def get_model(
         return ChatGoogleGenerativeAI(
             model=model_name,
             api_key=gemini_api_key,
+            temperature=0.0,
+            max_tokens=None,
+            max_retries=3,
+        )
+    elif "deepseek" in model_name:
+        return CustomChatOpenAI(
+            model=model_name,
+            api_key=deepseek_api_key,
+            base_url="https://api.deepseek.com",
             temperature=0.0,
             max_tokens=None,
             max_retries=3,
