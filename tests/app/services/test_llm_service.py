@@ -100,6 +100,21 @@ def test_get_model_gemini(mock_chat_google):
     )
 
 
+def test_get_model_deepseek(custom_chat_openai):
+    # Exercise
+    get_model(model_name="deepseek-r1", deepseek_api_key="deepseek-key")
+
+    # Verify
+    custom_chat_openai.assert_called_once_with(
+        model="deepseek-R1",
+        api_key="deepseek-key",
+        base_url="https://api.deepseek.com",
+        temperature=0.0,
+        max_tokens=None,
+        max_retries=3,
+    )
+
+
 def test_get_model_unknown():
     # Exercise & Verify
     with pytest.raises(ValueError, match="Unknown model name: unknown-model"):

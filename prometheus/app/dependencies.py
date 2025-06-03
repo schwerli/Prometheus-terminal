@@ -41,6 +41,7 @@ def initialize_services() -> ServiceCoordinator:
         getattr(settings, "ANTHROPIC_API_KEY", None),
         getattr(settings, "GEMINI_API_KEY", None),
         getattr(settings, "OPENROUTER_API_KEY", None),
+        getattr(settings, "DEEPSEEK_API_KEY", None),
     )
     knowledge_graph_service = KnowledgeGraphService(
         neo4j_service,
