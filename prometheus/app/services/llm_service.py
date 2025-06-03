@@ -32,7 +32,12 @@ class LLMService:
             deepseek_api_key,
         )
         self.base_model = get_model(
-            base_model_name, openai_api_key, anthropic_api_key, gemini_api_key, open_router_api_key, deepseek_api_key
+            base_model_name,
+            openai_api_key,
+            anthropic_api_key,
+            gemini_api_key,
+            open_router_api_key,
+            deepseek_api_key,
         )
 
 
