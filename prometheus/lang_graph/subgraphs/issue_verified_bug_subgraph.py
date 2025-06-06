@@ -176,7 +176,6 @@ class IssueVerifiedBugSubgraph:
         # Compile and assign the subgraph
         self.subgraph = workflow.compile()
 
-
     def invoke(
         self,
         issue_title: str,
