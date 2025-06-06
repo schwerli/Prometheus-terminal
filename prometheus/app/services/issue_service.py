@@ -64,6 +64,7 @@ class IssueService:
                 - passed_existing_test (bool): Whether the existing tests passed.
                 - issue_response (str): Response generated for the issue.
         """
+        # Construct the working directory
         if dockerfile_content or image_name:
             container = UserDefinedContainer(
                 self.kg_service.kg.get_local_path(),
@@ -75,7 +76,7 @@ class IssueService:
             )
         else:
             container = GeneralContainer(self.kg_service.kg.get_local_path())
-
+        # Initialize the issue graph with the necessary services and parameters
         issue_graph = IssueGraph(
             advanced_model=self.llm_service.advanced_model,
             base_model=self.llm_service.base_model,
@@ -87,7 +88,7 @@ class IssueService:
             build_commands=build_commands,
             test_commands=test_commands,
         )
-
+        # Invoke the issue graph with the provided parameters
         output_state = issue_graph.invoke(
             issue_title,
             issue_body,

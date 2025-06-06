@@ -13,6 +13,10 @@ from prometheus.lang_graph.subgraphs.issue_bug_subgraph import IssueBugSubgraph
 
 
 class IssueBugSubgraphNode:
+    """
+    A LangGraph node that handles the issue bug subgraph, which is responsible for solving bugs in a GitHub issue.
+    """
+
     def __init__(
         self,
         advanced_model: BaseChatModel,
@@ -40,6 +44,7 @@ class IssueBugSubgraphNode:
         )
 
     def __call__(self, state: IssueState):
+        # Ensure the container is built and started
         self.container.build_docker_image()
         self.container.start_container()
 
@@ -70,11 +75,11 @@ class IssueBugSubgraphNode:
         except GraphRecursionError:
             self._logger.critical("Please increase the recursion limit of IssueBugSubgraph")
             return {
-                "edit_patch": "",
+                "edit_patch": None,
                 "passed_reproducing_test": False,
                 "passed_build": False,
                 "passed_existing_test": False,
-                "issue_response": "",
+                "issue_response": None,
             }
         finally:
             self.container.cleanup()
