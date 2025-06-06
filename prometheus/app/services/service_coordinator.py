@@ -90,6 +90,34 @@ class ServiceCoordinator:
         test_commands: Optional[Sequence[str]] = None,
         push_to_remote: Optional[bool] = None,
     ):
+        """
+        Processes an issue, generates patches if needed, runs optional builds and tests,
+        and can push changes to a remote branch.
+
+        Args:
+            issue_number: The issue number to process.
+            issue_title: Title of the issue.
+            issue_body: Body of the issue.
+            issue_comments: Comments on the issue.
+            issue_type: Type of the issue (e.g., bug, feature).
+            run_build: Whether to run a build after applying the patch.
+            run_existing_test: Whether to run existing tests after applying the patch.
+            number_of_candidate_patch: Number of candidate patches to generate.
+            dockerfile_content: Optional Dockerfile content for user-defined environment.
+            image_name: Optional name for the Docker image.
+            workdir: Working directory for the container.
+            build_commands: Commands to build the project.
+            test_commands: Commands to test the project.
+            push_to_remote: Whether to push changes to a remote branch.
+        Returns:
+            A tuple containing:
+                - remote_branch_name: Name of the remote branch if changes were pushed.
+                - patch: The generated patch for the issue.
+                - passed_reproducing_test: Whether the reproducing test passed.
+                - passed_build: Whether the build passed.
+                - passed_existing_test: Whether existing tests passed.
+                - issue_response: Response from the issue service after processing.
+        """
         logger = logging.getLogger("prometheus")
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -99,6 +127,7 @@ class ServiceCoordinator:
         logger.addHandler(file_handler)
 
         try:
+            # fix issue
             patch, passed_reproducing_test, passed_build, passed_existing_test, issue_response = (
                 self.issue_service.answer_issue(
                     issue_title=issue_title,
@@ -115,7 +144,7 @@ class ServiceCoordinator:
                     test_commands=test_commands,
                 )
             )
-
+            # push to remote if requested
             remote_branch_name = None
             if patch and push_to_remote:
                 remote_branch_name = self.repository_service.push_change_to_remote(

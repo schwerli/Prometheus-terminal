@@ -40,6 +40,30 @@ class IssueService:
         build_commands: Optional[Sequence[str]] = None,
         test_commands: Optional[Sequence[str]] = None,
     ):
+        """
+        Processes an issue, generates patches if needed, runs optional builds and tests, and returning the results.
+
+        Args:
+            issue_title (str): The title of the issue.
+            issue_body (str): The body of the issue.
+            issue_comments (Sequence[Mapping[str, str]]): Comments on the issue.
+            issue_type (IssueType): The type of the issue (BUG or QUESTION).
+            run_build (bool): Whether to run the build commands.
+            run_existing_test (bool): Whether to run existing tests.
+            number_of_candidate_patch (int): Number of candidate patches to generate.
+            dockerfile_content (Optional[str]): Content of the Dockerfile for user-defined environments.
+            image_name (Optional[str]): Name of the Docker image.
+            workdir (Optional[str]): Working directory for the container.
+            build_commands (Optional[Sequence[str]]): Commands to build the project.
+            test_commands (Optional[Sequence[str]]): Commands to test the project.
+        Returns:
+            Tuple containing:
+                - edit_patch (str): The generated patch for the issue.
+                - passed_reproducing_test (bool): Whether the reproducing test passed.
+                - passed_build (bool): Whether the build passed.
+                - passed_existing_test (bool): Whether the existing tests passed.
+                - issue_response (str): Response generated for the issue.
+        """
         if dockerfile_content or image_name:
             container = UserDefinedContainer(
                 self.kg_service.kg.get_local_path(),
@@ -84,11 +108,13 @@ class IssueService:
             )
         elif output_state["issue_type"] == IssueType.QUESTION:
             return (
-                "",
+                None,
                 False,
                 False,
                 False,
                 output_state["issue_response"],
             )
 
-        return "", False, False, False, ""
+        raise ValueError(
+            f"Unknown issue type: {output_state['issue_type']}. Expected BUG or QUESTION."
+        )
