@@ -11,6 +11,8 @@ from langchain_core.messages import (
 )
 from langchain_core.output_parsers import StrOutputParser
 
+from prometheus.configuration.config import settings
+
 
 def check_remaining_steps(
     state: Dict,
@@ -58,7 +60,7 @@ def tiktoken_counter(messages: Sequence[BaseMessage]) -> int:
 
 
 def truncate_messages(
-    messages: Sequence[BaseMessage], max_tokens: int = 100000
+    messages: Sequence[BaseMessage], max_tokens: int = settings.MAX_TOKENS
 ) -> Sequence[BaseMessage]:
     return trim_messages(
         messages,

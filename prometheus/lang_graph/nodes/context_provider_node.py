@@ -84,11 +84,11 @@ Available AST node types for code structure search: {ast_node_types}
 """
 
     def __init__(
-        self,
-        model: BaseChatModel,
-        kg: KnowledgeGraph,
-        neo4j_driver: neo4j.Driver,
-        max_token_per_result: int,
+            self,
+            model: BaseChatModel,
+            kg: KnowledgeGraph,
+            neo4j_driver: neo4j.Driver,
+            max_token_per_result: int,
     ):
         """Initializes the ContextProviderNode with model, knowledge graph, and database connection.
 
@@ -316,7 +316,7 @@ Available AST node types for code structure search: {ast_node_types}
         """Processes the current state and traverse the knowledge graph to retrieve context.
 
         Args:
-          state: Current state containing the human query and preivous context_messages.
+          state: Current state containing the human query and previous context_messages.
 
         Returns:
           Dictionary that will update the state with the model's response messages.
