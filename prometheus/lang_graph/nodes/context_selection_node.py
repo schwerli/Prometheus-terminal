@@ -96,6 +96,7 @@ Please classify if the found context is relevant to the query.
         return context_info
 
     def __call__(self, state: ContextRetrievalState):
+        self._logger.info("Starting context selection process")
         context_list = state.get("context", [])
         for tool_message in extract_last_tool_messages(state["context_provider_messages"]):
             for search_result in neo4j_data_for_context_generator(tool_message.artifact):

@@ -61,6 +61,7 @@ class ContextRetrievalSubgraph:
         )
 
         # Step 3: Add tool node to handle tool-based retrieval invocation dynamically
+        # The tool message will be added to the end of the context provider messages
         context_provider_tools = ToolNode(
             tools=context_provider_node.tools,
             name="context_provider_tools",

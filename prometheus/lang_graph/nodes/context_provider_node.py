@@ -351,4 +351,5 @@ Available AST node types for code structure search: {ast_node_types}
         truncated_message_history = truncate_messages(message_history)
         response = self.model_with_tools.invoke(truncated_message_history)
         self._logger.debug(response)
+        # The response will be added to the bottom of the list
         return {"context_provider_messages": [response]}

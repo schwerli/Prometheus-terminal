@@ -12,4 +12,5 @@ class ContextQueryMessageNode:
     def __call__(self, state: ContextRetrievalState):
         human_message = HumanMessage(state["query"])
         self._logger.debug(f"Sending query to ContextProviderNode:\n{human_message}")
+        # The message will be added to the end of the context provider messages
         return {"context_provider_messages": [human_message]}

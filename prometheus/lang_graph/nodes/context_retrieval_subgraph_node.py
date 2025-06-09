@@ -36,4 +36,5 @@ class ContextRetrievalSubgraphNode:
             state[self.query_key_name], state["max_refined_query_loop"]
         )
 
+        self._logger.info(f"Context retrieved: {output_state['context']}")
         return {self.context_key_name: output_state["context"]}
