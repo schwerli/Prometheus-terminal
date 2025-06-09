@@ -120,14 +120,18 @@ Available AST node types for code structure search: {ast_node_types}
         self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_provider_node")
 
     def _init_tools(self):
-        """Initializes KnowledgeGraph traversal tools.
-
+        """
+        Initializes KnowledgeGraph traversal tools.
 
         Returns:
           List of StructuredTool instances configured for KnowledgeGraph traversal.
         """
         tools = []
 
+        # === FILE SEARCH TOOLS ===
+
+        # Tool: Find file node by filename (basename)
+        # Used when only the filename (not full path) is known
         find_file_node_with_basename_fn = functools.partial(
             graph_traversal.find_file_node_with_basename,
             driver=self.neo4j_driver,
@@ -142,6 +146,8 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_file_node_with_basename_tool)
 
+        # Tool: Find file node by relative path
+        # Preferred method when the exact file path is known
         find_file_node_with_relative_path_fn = functools.partial(
             graph_traversal.find_file_node_with_relative_path,
             driver=self.neo4j_driver,
@@ -156,6 +162,10 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_file_node_with_relative_path_tool)
 
+        # === AST NODE SEARCH TOOLS ===
+
+        # Tool: Find AST node by text match in file (by basename)
+        # Useful for searching specific snippets or patterns in unknown locations
         find_ast_node_with_text_in_file_with_basename_fn = functools.partial(
             graph_traversal.find_ast_node_with_text_in_file_with_basename,
             driver=self.neo4j_driver,
@@ -170,6 +180,7 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_ast_node_with_text_in_file_with_basename_tool)
 
+        # Tool: Find AST node by text match in file (by relative path)
         find_ast_node_with_text_in_file_with_relative_path_fn = functools.partial(
             graph_traversal.find_ast_node_with_text_in_file_with_relative_path,
             driver=self.neo4j_driver,
@@ -184,6 +195,8 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_ast_node_with_text_in_file_with_relative_path_tool)
 
+        # Tool: Find AST node by type in file (by basename)
+        # Example types: FunctionDef, ClassDef, Assign, etc.
         find_ast_node_with_type_in_file_with_basename_fn = functools.partial(
             graph_traversal.find_ast_node_with_type_in_file_with_basename,
             driver=self.neo4j_driver,
@@ -198,6 +211,7 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_ast_node_with_type_in_file_with_basename_tool)
 
+        # Tool: Find AST node by type in file (by relative path)
         find_ast_node_with_type_in_file_with_relative_path_fn = functools.partial(
             graph_traversal.find_ast_node_with_type_in_file_with_relative_path,
             driver=self.neo4j_driver,
@@ -212,6 +226,9 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_ast_node_with_type_in_file_with_relative_path_tool)
 
+        # === TEXT/DOCUMENT SEARCH TOOLS ===
+
+        # Tool: Find text node globally by keyword
         find_text_node_with_text_fn = functools.partial(
             graph_traversal.find_text_node_with_text,
             driver=self.neo4j_driver,
@@ -226,6 +243,7 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_text_node_with_text_tool)
 
+        # Tool: Find text node by keyword in specific file
         find_text_node_with_text_in_file_fn = functools.partial(
             graph_traversal.find_text_node_with_text_in_file,
             driver=self.neo4j_driver,
@@ -240,6 +258,7 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(find_text_node_with_text_in_file_tool)
 
+        # Tool: Fetch the next text node chunk in a chain (used for long docs/comments)
         get_next_text_node_with_node_id_fn = functools.partial(
             graph_traversal.get_next_text_node_with_node_id,
             driver=self.neo4j_driver,
@@ -254,6 +273,9 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(get_next_text_node_with_node_id_tool)
 
+        # === FILE PREVIEW & READING TOOLS ===
+
+        # Tool: Preview contents of file by basename
         preview_file_content_with_basename_fn = functools.partial(
             graph_traversal.preview_file_content_with_basename,
             driver=self.neo4j_driver,
@@ -268,6 +290,7 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(preview_file_content_with_basename_tool)
 
+        # Tool: Preview contents of file by relative path
         preview_file_content_with_relative_path_fn = functools.partial(
             graph_traversal.preview_file_content_with_relative_path,
             driver=self.neo4j_driver,
@@ -282,6 +305,7 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(preview_file_content_with_relative_path_tool)
 
+        # Tool: Read entire code file by basename
         read_code_with_basename_fn = functools.partial(
             graph_traversal.read_code_with_basename,
             driver=self.neo4j_driver,
@@ -296,6 +320,7 @@ Available AST node types for code structure search: {ast_node_types}
         )
         tools.append(read_code_with_basename_tool)
 
+        # Tool: Read entire code file by relative path
         read_code_with_relative_path_fn = functools.partial(
             graph_traversal.read_code_with_relative_path,
             driver=self.neo4j_driver,
@@ -316,13 +341,15 @@ Available AST node types for code structure search: {ast_node_types}
         """Processes the current state and traverse the knowledge graph to retrieve context.
 
         Args:
-          state: Current state containing the human query and preivous context_messages.
+          state: Current state containing the human query and previous context_messages.
 
         Returns:
           Dictionary that will update the state with the model's response messages.
         """
+        self._logger.debug(f"Context provider messages: {state['context_provider_messages']}")
         message_history = [self.system_prompt] + state["context_provider_messages"]
         truncated_message_history = truncate_messages(message_history)
         response = self.model_with_tools.invoke(truncated_message_history)
         self._logger.debug(response)
+        # The response will be added to the bottom of the list
         return {"context_provider_messages": [response]}

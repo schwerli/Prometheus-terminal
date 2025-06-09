@@ -16,6 +16,13 @@ from prometheus.lang_graph.nodes.noop_node import NoopNode
 
 
 class IssueGraph:
+    """
+    A LangGraph-based workflow to handle and triage GitHub issues with LLM assistance.
+    Attributes:
+        git_repo (GitRepository): The Git repository to work with.
+        graph (StateGraph): The state graph representing the issue handling workflow.
+    """
+
     def __init__(
         self,
         advanced_model: BaseChatModel,
@@ -30,7 +37,9 @@ class IssueGraph:
     ):
         self.git_repo = git_repo
 
+        # Entrance point for the issue handling workflow
         issue_type_branch_node = NoopNode()
+        # Subgraph nodes for issue classification and bug handling
         issue_classification_subgraph_node = IssueClassificationSubgraphNode(
             model=base_model,
             kg=kg,
@@ -48,14 +57,16 @@ class IssueGraph:
             build_commands=build_commands,
             test_commands=test_commands,
         )
-
+        # Create the state graph for the issue handling workflow
         workflow = StateGraph(IssueState)
-
+        # Add nodes to the workflow
         workflow.add_node("issue_type_branch_node", issue_type_branch_node)
         workflow.add_node("issue_classification_subgraph_node", issue_classification_subgraph_node)
         workflow.add_node("issue_bug_subgraph_node", issue_bug_subgraph_node)
-
+        # Set the entry point for the workflow
         workflow.set_entry_point("issue_type_branch_node")
+        # Define the edges and conditions for the workflow
+        # Classify the issue type if not provided
         workflow.add_conditional_edges(
             "issue_type_branch_node",
             lambda state: state["issue_type"],
@@ -67,6 +78,7 @@ class IssueGraph:
                 IssueType.QUESTION: END,
             },
         )
+        # Add edges for the issue classification subgraph
         workflow.add_conditional_edges(
             "issue_classification_subgraph_node",
             lambda state: state["issue_type"],
@@ -77,6 +89,7 @@ class IssueGraph:
                 IssueType.QUESTION: END,
             },
         )
+        # Add edges for ending the workflow
         workflow.add_edge("issue_bug_subgraph_node", END)
 
         self.graph = workflow.compile()
@@ -91,6 +104,9 @@ class IssueGraph:
         run_existing_test: bool,
         number_of_candidate_patch: int,
     ):
+        """
+        Invoke the issue handling workflow with the provided parameters.
+        """
         config = None
 
         input_state = {
@@ -105,6 +121,7 @@ class IssueGraph:
 
         output_state = self.graph.invoke(input_state, config)
 
+        # Reset the git repository to its original state
         self.git_repo.reset_repository()
 
         return output_state

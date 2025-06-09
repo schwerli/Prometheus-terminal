@@ -5,8 +5,7 @@ from prometheus.utils.issue_util import format_issue_info
 
 
 class IssueBugContextMessageNode:
-    BUG_FIX_QUERY = (
-        """\
+    BUG_FIX_QUERY = """\
 {issue_info}
 
 Find all relevant source code context and documentation needed to understand and fix this issue.
@@ -17,10 +16,7 @@ Focus on production code (ignore test files) and follow these steps:
 4. Follow imports to find dependent code that directly impacts the issue
 
 Skip any test files
-""".replace("{", "{{")
-        .replace("}", "}}")
-        .replace("{{issue_info}}", "{issue_info}")
-    )
+"""
 
     def __init__(self):
         self._logger = logging.getLogger(

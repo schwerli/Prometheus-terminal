@@ -21,7 +21,7 @@ class ContextRetrievalSubgraphNode:
         self._logger = logging.getLogger(
             "prometheus.lang_graph.nodes.context_retrieval_subgraph_node"
         )
-        self.context_retrevial_subgraph = ContextRetrievalSubgraph(
+        self.context_retrieval_subgraph = ContextRetrievalSubgraph(
             model=model,
             kg=kg,
             neo4j_driver=neo4j_driver,
@@ -32,8 +32,9 @@ class ContextRetrievalSubgraphNode:
 
     def __call__(self, state: Dict):
         self._logger.info("Enter context retrieval subgraph")
-        output_state = self.context_retrevial_subgraph.invoke(
+        output_state = self.context_retrieval_subgraph.invoke(
             state[self.query_key_name], state["max_refined_query_loop"]
         )
 
+        self._logger.info(f"Context retrieved: {output_state['context']}")
         return {self.context_key_name: output_state["context"]}

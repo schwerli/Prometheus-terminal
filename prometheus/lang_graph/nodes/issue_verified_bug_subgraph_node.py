@@ -12,6 +12,10 @@ from prometheus.lang_graph.subgraphs.issue_verified_bug_subgraph import IssueVer
 
 
 class IssueVerifiedBugSubgraphNode:
+    """
+    A LangGraph node that handles the verified issue bug, which is responsible for solving bugs.
+    """
+
     def __init__(
         self,
         advanced_model: BaseChatModel,
@@ -56,14 +60,16 @@ class IssueVerifiedBugSubgraphNode:
             self._logger.info("Recursion limit reached")
             self.git_repo.reset_repository()
             return {
-                "edit_patch": "",
+                "edit_patch": None,
                 "passed_reproducing_test": False,
                 "passed_build": False,
                 "passed_existing_test": False,
             }
-
+        # if all the tests passed
         passed_reproducing_test = not bool(output_state["reproducing_test_fail_log"])
+        # if the build passed
         passed_build = state["run_build"] and not output_state["build_fail_log"]
+        # if the existing tests passed
         passed_existing_test = (
             state["run_existing_test"] and not output_state["existing_test_fail_log"]
         )
