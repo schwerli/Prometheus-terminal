@@ -37,6 +37,9 @@ class ContextProviderNode:
 You are a context gatherer that searches a Neo4j knowledge graph representation of a 
 codebase. Your role is to efficiently find relevant code and documentation 
 context based on user queries.
+Do not select a whole file or directory as context, but rather specific code snippets.
+Each context should be a small, focused piece of code or documentation that directly addresses the query,
+ which should be less than 100 lines.
 
 Knowledge Graph Structure:
 1. Node Types:
