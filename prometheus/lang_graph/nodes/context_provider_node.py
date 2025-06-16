@@ -72,7 +72,7 @@ Search Strategy Guidelines:
    - Always have fallback strategies ready if primary search fails
 
 4. Critical Rules:
-   - Do not repeat the same query
+   - Do not repeat the same query!
    - Do not select a whole file or directory as context, but rather specific code snippets.
    - Each context should be a small, focused piece of code or documentation that directly addresses the query, which must be less than 100 lines!
    - But several contexts snippets can be selected if they are relevant to the query.
