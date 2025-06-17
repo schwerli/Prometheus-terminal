@@ -31,7 +31,7 @@ class LLMService:
             gemini_api_key,
             open_router_api_key,
             deepseek_api_key,
-            0.0
+            0.0,
         )
         self.base_model = get_model(
             base_model_name,
@@ -40,7 +40,7 @@ class LLMService:
             gemini_api_key,
             open_router_api_key,
             deepseek_api_key,
-            temperature
+            temperature,
         )
 
 
