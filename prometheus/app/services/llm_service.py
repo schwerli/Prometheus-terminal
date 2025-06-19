@@ -22,6 +22,7 @@ class LLMService:
         gemini_api_key: Optional[str] = None,
         open_router_api_key: Optional[str] = None,
         deepseek_api_key: Optional[str] = None,
+        temperature: float = 0.0,
     ):
         self.advanced_model = get_model(
             advanced_model_name,
@@ -30,6 +31,7 @@ class LLMService:
             gemini_api_key,
             open_router_api_key,
             deepseek_api_key,
+            0.0,
         )
         self.base_model = get_model(
             base_model_name,
@@ -38,6 +40,7 @@ class LLMService:
             gemini_api_key,
             open_router_api_key,
             deepseek_api_key,
+            temperature,
         )
 
 
@@ -48,13 +51,14 @@ def get_model(
     gemini_api_key: Optional[str] = None,
     open_router_api_key: Optional[str] = None,
     deepseek_api_key: Optional[str] = None,
+    temperature: float = 0.0,
 ) -> BaseChatModel:
     if "/" in model_name:
         return CustomChatOpenAI(
             model=model_name,
             api_key=open_router_api_key,
             base_url="https://openrouter.ai/api/v1",
-            temperature=0.0,
+            temperature=temperature,
             max_tokens=None,
             max_retries=3,
         )
@@ -62,7 +66,7 @@ def get_model(
         return ChatAnthropic(
             model=model_name,
             api_key=anthropic_api_key,
-            temperature=0.0,
+            temperature=temperature,
             max_tokens=8192,
             max_retries=3,
         )
@@ -70,7 +74,7 @@ def get_model(
         return CustomChatOpenAI(
             model=model_name,
             api_key=openai_api_key,
-            temperature=0.0,
+            temperature=temperature,
             max_tokens=None,
             max_retries=3,
         )
@@ -78,7 +82,7 @@ def get_model(
         return ChatGoogleGenerativeAI(
             model=model_name,
             api_key=gemini_api_key,
-            temperature=0.0,
+            temperature=temperature,
             max_tokens=None,
             max_retries=3,
         )
@@ -87,7 +91,7 @@ def get_model(
             model=model_name,
             api_key=deepseek_api_key,
             base_url="https://api.deepseek.com",
-            temperature=0.0,
+            temperature=temperature,
             max_tokens=None,
             max_retries=3,
         )
