@@ -9,7 +9,7 @@ class Neo4jService:
             neo4j_uri,
             auth=(neo4j_username, neo4j_password),
             connection_timeout=60,
-            max_transaction_retry_time=60
+            max_transaction_retry_time=60,
         )
 
     def close(self):
