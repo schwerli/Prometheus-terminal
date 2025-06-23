@@ -8,6 +8,8 @@ class Neo4jService:
         self.neo4j_driver = GraphDatabase.driver(
             neo4j_uri,
             auth=(neo4j_username, neo4j_password),
+            connection_timeout=300,
+            max_transaction_retry_time=300,
         )
 
     def close(self):
