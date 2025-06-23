@@ -71,8 +71,3 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    develop:
-      watch:
-        - path: .
-          target: /app
-          action: sync+restart
