@@ -1,7 +1,13 @@
+networks:
+  prometheus_network:
+    driver: bridge
+
 services:
   neo4j:
     image: neo4j
     container_name: neo4j_container
+    networks:
+      - prometheus_network
     environment:
       - NEO4J_AUTH=neo4j/password
       - NEO4J_PLUGINS=["apoc"]
@@ -24,6 +30,8 @@ services:
   postgres:
     image: postgres
     container_name: postgres_container
+    networks:
+      - prometheus_network
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
@@ -41,8 +49,10 @@ services:
   prometheus:
     build: .
     container_name: prometheus
+    networks:
+      - prometheus_network
     ports:
-      - "9001:9001"
+      - "9002:9002"
     environment:
       - PROMETHEUS_LOGGING_LEVEL=${PROMETHEUS_LOGGING_LEVEL}
       - PROMETHEUS_NEO4J_URI=${PROMETHEUS_NEO4J_URI}

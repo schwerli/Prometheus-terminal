@@ -69,8 +69,8 @@ Prometheus can be connected to other services for extended functionality:
       ```
 
 4. Access Prometheus:
-    - Service: [http://localhost:9001](http://localhost:9001)
-    - OpenAPI Docs: [http://localhost:9001/docs](http://localhost:9001/docs)
+    - Service: [http://localhost:9002](http://localhost:9002)
+    - OpenAPI Docs: [http://localhost:9002/docs](http://localhost:9002/docs)
 
 ---
 
@@ -180,7 +180,7 @@ Set the following variables in your `.env` file:
 5. Start dev server:
 
    ```bash
-   uvicorn prometheus.app.main:app --host 0.0.0.0 --port 9001
+   uvicorn prometheus.app.main:app --host 0.0.0.0 --port 9002
    ```
 
 ---
