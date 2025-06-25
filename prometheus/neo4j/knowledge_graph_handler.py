@@ -185,7 +185,6 @@ class KnowledgeGraphHandler:
             session.execute_write(self._init_database)
 
         self._write_knowledge_graph(self._write_meta_node, kg.get_neo4j_metadata_node())
-        self._write_knowledge_graph(self._write_meta_node, kg.get_neo4j_metadata_node())
         self._write_knowledge_graph(self._write_file_nodes, kg.get_neo4j_file_nodes())
         self._write_knowledge_graph(self._write_ast_nodes, kg.get_neo4j_ast_nodes())
         self._write_knowledge_graph(self._write_text_nodes, kg.get_neo4j_text_nodes())
@@ -199,6 +198,13 @@ class KnowledgeGraphHandler:
     def _write_knowledge_graph(self, write_func, items):
         if not items:
             return
+
+        # 如果是单个对象，直接写一次
+        if not isinstance(items, list):
+            with self.driver.session() as session:
+                session.execute_write(write_func, items)
+            return
+
         total = len(items)
         self._logger.debug(f"Writing {total} items to neo4j")
         size = 100000
