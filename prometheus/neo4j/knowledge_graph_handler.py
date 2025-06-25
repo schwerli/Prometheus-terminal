@@ -183,56 +183,16 @@ class KnowledgeGraphHandler:
         with self.driver.session() as session:
             session.execute_write(self._init_database)
 
-            # Write metadata node (single node, no batching needed)
             session.execute_write(self._write_meta_node, kg.get_neo4j_metadata_node())
+            session.execute_write(self._write_file_nodes, kg.get_neo4j_file_nodes())
+            session.execute_write(self._write_ast_nodes, kg.get_neo4j_ast_nodes())
+            session.execute_write(self._write_text_nodes, kg.get_neo4j_text_nodes())
 
-            # Write file nodes in batches
-            self._write_in_batches(session, self._write_file_nodes, kg.get_neo4j_file_nodes())
-
-            # Write AST nodes in batches
-            self._write_in_batches(session, self._write_ast_nodes, kg.get_neo4j_ast_nodes())
-
-            # Write text nodes in batches
-            self._write_in_batches(session, self._write_text_nodes, kg.get_neo4j_text_nodes())
-
-            # Write has_ast_edges in batches
-            self._write_in_batches(session, self._write_has_ast_edges, kg.get_neo4j_has_ast_edges())
-
-            # Write has_file_edges in batches
-            self._write_in_batches(
-                session, self._write_has_file_edges, kg.get_neo4j_has_file_edges()
-            )
-
-            # Write has_text_edges in batches
-            self._write_in_batches(
-                session, self._write_has_text_edges, kg.get_neo4j_has_text_edges()
-            )
-
-            # Write next_chunk_edges in batches
-            self._write_in_batches(
-                session, self._write_next_chunk_edges, kg.get_neo4j_next_chunk_edges()
-            )
-
-            # Write parent_of_edges in batches (this is the largest dataset)
-            self._write_in_batches(
-                session, self._write_parent_of_edges, kg.get_neo4j_parent_of_edges()
-            )
-
-    def _write_in_batches(self, session, write_func, items):
-        """Helper function to write items to Neo4j in batches.
-
-        Args:
-            session: Neo4j session.
-            write_func: The write function to execute.
-            items: List of items to write.
-        """
-        if not items:
-            return
-        total = len(items)
-        for i in range(0, total, self.batch_size):
-            batch = items[i : i + self.batch_size]
-            self._logger.debug(f"Writing batch {i} ~ {i + len(batch)} / {total} to neo4j")
-            session.execute_write(write_func, batch)
+            session.execute_write(self._write_has_ast_edges, kg.get_neo4j_has_ast_edges())
+            session.execute_write(self._write_has_file_edges, kg.get_neo4j_has_file_edges())
+            session.execute_write(self._write_has_text_edges, kg.get_neo4j_has_text_edges())
+            session.execute_write(self._write_next_chunk_edges, kg.get_neo4j_next_chunk_edges())
+            session.execute_write(self._write_parent_of_edges, kg.get_neo4j_parent_of_edges())
 
     def _read_metadata_node(self, tx: ManagedTransaction) -> MetadataNode:
         """Read MetadataNode from neo4j."""
