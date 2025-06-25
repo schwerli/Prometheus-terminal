@@ -14,7 +14,7 @@ services:
       - NEO4J_server_memory_heap_initial__size=6G
       - NEO4J_server_memory_heap_max__size=12G
       - NEO4J_dbms_memory_transaction_total_max=12G
-      - NEO4J_dbms_transaction_timeout=300s
+      - NEO4J_dbms_transaction_timeout=600s
     ports:
       - "7474:7474"
       - "7687:7687"
