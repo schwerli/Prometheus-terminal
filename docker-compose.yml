@@ -75,7 +75,6 @@ services:
     volumes:
       - .:/app
       - /var/run/docker.sock:/var/run/docker.sock
-    network_mode: host
     depends_on:
       neo4j:
         condition: service_healthy
