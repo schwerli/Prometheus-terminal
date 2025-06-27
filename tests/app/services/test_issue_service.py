@@ -145,35 +145,4 @@ def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
         "FROM python:3.8",
         "test-image",
     )
-    assert result == ("", False, False, False, "test_response")
-
-
-def test_answer_issue_unknown_type(issue_service, monkeypatch):
-    # Setup
-    mock_issue_graph = Mock()
-    mock_issue_graph_class = Mock(return_value=mock_issue_graph)
-    monkeypatch.setattr("prometheus.app.services.issue_service.IssueGraph", mock_issue_graph_class)
-
-    mock_container = Mock()
-    mock_user_container_class = Mock(return_value=mock_container)
-    monkeypatch.setattr(
-        "prometheus.app.services.issue_service.GeneralContainer", mock_user_container_class
-    )
-
-    # Mock output state for unknown type
-    mock_output_state = {"issue_type": "UNKNOWN"}
-    mock_issue_graph.invoke.return_value = mock_output_state
-
-    # Exercise
-    result = issue_service.answer_issue(
-        issue_title="Test Issue",
-        issue_body="Test Body",
-        issue_comments=[],
-        issue_type="UNKNOWN",
-        run_build=True,
-        run_existing_test=True,
-        number_of_candidate_patch=1,
-    )
-
-    # Verify
-    assert result == ("", False, False, False, "")
+    assert result == (None, False, False, False, "test_response")

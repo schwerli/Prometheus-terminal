@@ -55,12 +55,12 @@ def test_llm_service_init(mock_custom_chat_openai, mock_chat_anthropic):
     )
 
 
-def test_get_model_openrouter(mock_chat_openai):
+def test_get_model_openrouter(mock_custom_chat_openai):
     # Exercise
     get_model(model_name="openrouter/model", open_router_api_key="openrouter-key")
 
     # Verify
-    mock_chat_openai.assert_called_once_with(
+    mock_custom_chat_openai.assert_called_once_with(
         model="openrouter/model",
         api_key="openrouter-key",
         base_url="https://openrouter.ai/api/v1",
@@ -100,13 +100,13 @@ def test_get_model_gemini(mock_chat_google):
     )
 
 
-def test_get_model_deepseek(custom_chat_openai):
+def test_get_model_deepseek(mock_custom_chat_openai):
     # Exercise
-    get_model(model_name="deepseek-r1", deepseek_api_key="deepseek-key")
+    get_model(model_name="deepseek-chat", deepseek_api_key="deepseek-key")
 
     # Verify
-    custom_chat_openai.assert_called_once_with(
-        model="deepseek-R1",
+    mock_custom_chat_openai.assert_called_once_with(
+        model="deepseek-chat",
         api_key="deepseek-key",
         base_url="https://api.deepseek.com",
         temperature=0.0,
