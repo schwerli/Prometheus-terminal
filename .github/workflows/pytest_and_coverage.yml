@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir -p coverage
 
-      - name: Generate coverage Bagdge
+      - name: Generate coverage Badge
         uses: tj-actions/coverage-badge-py@v1.8
         with:
           output: coverage/coverage.svg
