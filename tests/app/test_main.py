@@ -27,6 +27,8 @@ def mock_settings():
         "WORKING_DIRECTORY": "/tmp",
         "GITHUB_ACCESS_TOKEN": "GITHUB_ACCESS_TOKEN",
         "POSTGRES_URI": "postgresql://postgres:password@localhost:5432/postgres?sslmode=disable",
+        "MAX_TOKENS": 55000,
+        "TEMPERATURE": 0.3,
     }
 
     # Create a DynaconfDict that properly implements attribute access

@@ -52,12 +52,12 @@ class IssueRequest(BaseModel):
     )
     dockerfile_content: Optional[str] = Field(
         default=None,
-        description="Specify the containerized enviroment with dockerfile content",
+        description="Specify the containerized environment with dockerfile content",
         examples=["FROM python:3.11\nWORKDIR /app\nCOPY . /app"],
     )
     image_name: Optional[str] = Field(
         default=None,
-        description="Specify the containerized enviroment with image name that should be pulled from dockerhub",
+        description="Specify the containerized environment with image name that should be pulled from dockerhub",
         examples=["python:3.11-slim"],
     )
     workdir: Optional[str] = Field(
