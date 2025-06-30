@@ -200,7 +200,7 @@ class KnowledgeGraphHandler:
                 session.execute_write(
                     self._write_parent_of_edges, kg.get_neo4j_parent_of_edges()[i : i + 50000]
                 )
-                time.sleep(15)
+            time.sleep(10)
 
     def _read_metadata_node(self, tx: ManagedTransaction) -> MetadataNode:
         """Read MetadataNode from neo4j."""
