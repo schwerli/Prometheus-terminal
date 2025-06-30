@@ -34,8 +34,6 @@ def mock_services():
         "repository_service": repository_service,
         "github_token": "test_token",
         "working_directory": Path(tempfile.TemporaryDirectory().name),
-        "MAX_TOKENS": 55000,
-        "TEMPERATURE": 0.3,
     }
 
 
