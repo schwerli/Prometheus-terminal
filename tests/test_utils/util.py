@@ -3,7 +3,7 @@ from testcontainers.neo4j import Neo4jContainer
 
 
 class FakeListChatWithToolsModel(FakeListChatModel):
-    def bind_tools(self, tools=None, tool_choice=None):
+    def bind_tools(self, tools=None, tool_choice=None, **kwargs):
         return self
 
 

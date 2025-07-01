@@ -23,6 +23,7 @@ class LLMService:
         open_router_api_key: Optional[str] = None,
         deepseek_api_key: Optional[str] = None,
         temperature: float = 0.0,
+        max_output_tokens: int = 15000,
     ):
         self.advanced_model = get_model(
             advanced_model_name,
@@ -32,6 +33,7 @@ class LLMService:
             open_router_api_key,
             deepseek_api_key,
             0.0,
+            max_output_tokens,
         )
         self.base_model = get_model(
             base_model_name,
@@ -41,6 +43,7 @@ class LLMService:
             open_router_api_key,
             deepseek_api_key,
             temperature,
+            max_output_tokens,
         )
 
 
@@ -52,6 +55,7 @@ def get_model(
     open_router_api_key: Optional[str] = None,
     deepseek_api_key: Optional[str] = None,
     temperature: float = 0.0,
+    max_output_tokens: int = 15000,
 ) -> BaseChatModel:
     if "/" in model_name:
         return CustomChatOpenAI(
@@ -59,7 +63,7 @@ def get_model(
             api_key=open_router_api_key,
             base_url="https://openrouter.ai/api/v1",
             temperature=temperature,
-            max_tokens=None,
+            max_tokens=max_output_tokens,
             max_retries=3,
         )
     elif "claude" in model_name:
@@ -67,7 +71,7 @@ def get_model(
             model=model_name,
             api_key=anthropic_api_key,
             temperature=temperature,
-            max_tokens=8192,
+            max_tokens=max_output_tokens,
             max_retries=3,
         )
     elif "gpt" in model_name:
@@ -75,7 +79,7 @@ def get_model(
             model=model_name,
             api_key=openai_api_key,
             temperature=temperature,
-            max_tokens=None,
+            max_tokens=max_output_tokens,
             max_retries=3,
         )
     elif "gemini" in model_name:
@@ -83,7 +87,7 @@ def get_model(
             model=model_name,
             api_key=gemini_api_key,
             temperature=temperature,
-            max_tokens=None,
+            max_tokens=max_output_tokens,
             max_retries=3,
         )
     elif "deepseek" in model_name:
@@ -92,7 +96,7 @@ def get_model(
             api_key=deepseek_api_key,
             base_url="https://api.deepseek.com",
             temperature=temperature,
-            max_tokens=None,
+            max_tokens=max_output_tokens,
             max_retries=3,
         )
     else:

@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from prometheus.app.services.llm_service import CustomChatOpenAI, LLMService, get_model
+from prometheus.configuration.config import settings
 
 
 @pytest.fixture
@@ -48,10 +49,18 @@ def test_llm_service_init(mock_custom_chat_openai, mock_chat_anthropic):
     assert service.advanced_model == mock_gpt_instance
     assert service.base_model == mock_claude_instance
     mock_custom_chat_openai.assert_called_once_with(
-        model="gpt-4", api_key="openai-key", temperature=0.0, max_tokens=None, max_retries=3
+        model="gpt-4",
+        api_key="openai-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
     mock_chat_anthropic.assert_called_once_with(
-        model="claude-2.1", api_key="anthropic-key", temperature=0.0, max_tokens=8192, max_retries=3
+        model="claude-2.1",
+        api_key="anthropic-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
@@ -65,7 +74,7 @@ def test_get_model_openrouter(mock_custom_chat_openai):
         api_key="openrouter-key",
         base_url="https://openrouter.ai/api/v1",
         temperature=0.0,
-        max_tokens=None,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
 
@@ -76,7 +85,11 @@ def test_get_model_claude(mock_chat_anthropic):
 
     # Verify
     mock_chat_anthropic.assert_called_once_with(
-        model="claude-2.1", api_key="anthropic-key", temperature=0.0, max_tokens=8192, max_retries=3
+        model="claude-2.1",
+        api_key="anthropic-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
@@ -86,7 +99,11 @@ def test_get_model_gpt(mock_custom_chat_openai):
 
     # Verify
     mock_custom_chat_openai.assert_called_once_with(
-        model="gpt-4", api_key="openai-key", temperature=0.0, max_tokens=None, max_retries=3
+        model="gpt-4",
+        api_key="openai-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
@@ -96,7 +113,11 @@ def test_get_model_gemini(mock_chat_google):
 
     # Verify
     mock_chat_google.assert_called_once_with(
-        model="gemini-pro", api_key="gemini-key", temperature=0.0, max_tokens=None, max_retries=3
+        model="gemini-pro",
+        api_key="gemini-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
@@ -110,7 +131,7 @@ def test_get_model_deepseek(mock_custom_chat_openai):
         api_key="deepseek-key",
         base_url="https://api.deepseek.com",
         temperature=0.0,
-        max_tokens=None,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
 
