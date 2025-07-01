@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from prometheus.app import dependencies
 from prometheus.app.api import issue, repository
+from prometheus.app.db import create_db_and_tables, create_superuser
 from prometheus.configuration.config import settings
 
 # Create a logger for the application's namespace
@@ -17,6 +18,7 @@ logger.addHandler(console_handler)
 logger.setLevel(getattr(logging, settings.LOGGING_LEVEL))
 logger.propagate = False
 
+# Log the configuration settings
 logger.info(f"LOGGING_LEVEL={settings.LOGGING_LEVEL}")
 logger.info(f"ADVANCED_MODEL={settings.ADVANCED_MODEL}")
 logger.info(f"BASE_MODEL={settings.BASE_MODEL}")
@@ -48,3 +50,13 @@ app.include_router(issue.router, prefix="/issue", tags=["issue"])
 @app.get("/health", tags=["health"])
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+# Import the database initialization function
+# TODO : Not Executing at initialization stage
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+    create_superuser(
+        settings.SUPERUSER_USERNAME, settings.SUPERUSER_PASSWORD, settings.SUPERUSER_EMAIL
+    )
