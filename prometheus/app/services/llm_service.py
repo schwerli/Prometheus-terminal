@@ -33,7 +33,7 @@ class LLMService:
             open_router_api_key,
             deepseek_api_key,
             0.0,
-            max_output_tokens
+            max_output_tokens,
         )
         self.base_model = get_model(
             base_model_name,
@@ -43,7 +43,7 @@ class LLMService:
             open_router_api_key,
             deepseek_api_key,
             temperature,
-            max_output_tokens
+            max_output_tokens,
         )
 
 
