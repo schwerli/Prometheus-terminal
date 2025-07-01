@@ -35,8 +35,15 @@ logger.info(f"MAX_OUTPUT_TOKENS={settings.MAX_OUTPUT_TOKENS}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize the database and create tables
+    create_db_and_tables()
+    create_superuser(
+        settings.SUPERUSER_USERNAME, settings.SUPERUSER_PASSWORD, settings.SUPERUSER_EMAIL
+    )
     app.state.service_coordinator = dependencies.initialize_services()
+    # Initialization Completed
     yield
+    # Cleanup on shutdown
     app.state.service_coordinator.clear()
     app.state.service_coordinator.close()
 
@@ -50,13 +57,3 @@ app.include_router(issue.router, prefix="/issue", tags=["issue"])
 @app.get("/health", tags=["health"])
 def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
-
-
-# Import the database initialization function
-# TODO : Not Executing at initialization stage
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
-    create_superuser(
-        settings.SUPERUSER_USERNAME, settings.SUPERUSER_PASSWORD, settings.SUPERUSER_EMAIL
-    )
