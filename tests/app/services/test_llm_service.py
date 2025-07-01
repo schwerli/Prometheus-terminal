@@ -49,12 +49,18 @@ def test_llm_service_init(mock_custom_chat_openai, mock_chat_anthropic):
     assert service.advanced_model == mock_gpt_instance
     assert service.base_model == mock_claude_instance
     mock_custom_chat_openai.assert_called_once_with(
-        model="gpt-4", api_key="openai-key", temperature=0.0, max_tokens=settings.MAX_OUTPUT_TOKENS,
-        max_retries=3
+        model="gpt-4",
+        api_key="openai-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
     mock_chat_anthropic.assert_called_once_with(
-        model="claude-2.1", api_key="anthropic-key", temperature=0.0, max_tokens=settings.MAX_OUTPUT_TOKENS,
-        max_retries=3
+        model="claude-2.1",
+        api_key="anthropic-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
@@ -79,8 +85,11 @@ def test_get_model_claude(mock_chat_anthropic):
 
     # Verify
     mock_chat_anthropic.assert_called_once_with(
-        model="claude-2.1", api_key="anthropic-key", temperature=0.0, max_tokens=settings.MAX_OUTPUT_TOKENS,
-        max_retries=3
+        model="claude-2.1",
+        api_key="anthropic-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
@@ -90,7 +99,11 @@ def test_get_model_gpt(mock_custom_chat_openai):
 
     # Verify
     mock_custom_chat_openai.assert_called_once_with(
-        model="gpt-4", api_key="openai-key", temperature=0.0, max_tokens=settings.MAX_OUTPUT_TOKENS, max_retries=3
+        model="gpt-4",
+        api_key="openai-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
@@ -100,7 +113,11 @@ def test_get_model_gemini(mock_chat_google):
 
     # Verify
     mock_chat_google.assert_called_once_with(
-        model="gemini-pro", api_key="gemini-key", temperature=0.0, max_tokens=settings.MAX_OUTPUT_TOKENS, max_retries=3
+        model="gemini-pro",
+        api_key="gemini-key",
+        temperature=0.0,
+        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_retries=3,
     )
 
 
