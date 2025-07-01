@@ -1,7 +1,6 @@
 from typing import Callable, Dict, Sequence
 
 import tiktoken
-from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import (
     AIMessage,
     BaseMessage,
@@ -60,30 +59,8 @@ def tiktoken_counter(messages: Sequence[BaseMessage]) -> int:
     return num_tokens
 
 
-def compress_messages(
-    model: BaseChatModel, messages: Sequence[BaseMessage], max_tokens: int = settings.MAX_TOKENS
-) -> Sequence[BaseMessage]:
-    """Compress messages if it exceeds the max token limit."""
-    if tiktoken_counter(messages) <= max_tokens:
-        return messages
-    prompt = """
-    You are a helpful assistant for software engineering.
-    Your task is to compress the following conversation messages while preserving their meaning as most as you can.
-    All these messages are context information for a software engineering issues, which including debugging,
-     feature, document and question.
-    The compressed messages should be concise and clear.
-    Avoid adding any new information or changing the meaning of the original messages.
-    Any redundant or irrelevant information should be removed.
-    """
-    filtered_messages = [msg for msg in messages if not isinstance(msg, SystemMessage)]
-    system_messages = [msg for msg in messages if isinstance(msg, SystemMessage)]
-    messages = [SystemMessage(content=prompt)] + filtered_messages
-    response = model.invoke(messages)
-    return system_messages + [response]
-
-
 def truncate_messages(
-    messages: Sequence[BaseMessage], max_tokens: int = settings.MAX_TOKENS
+    messages: Sequence[BaseMessage], max_tokens: int = settings.MAX_INPUT_TOKENS
 ) -> Sequence[BaseMessage]:
     """TODO: Instead of truncating, we should use a better strategy to keep the most relevant messages."""
     return trim_messages(

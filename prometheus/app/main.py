@@ -27,6 +27,8 @@ logger.info(f"KNOWLEDGE_GRAPH_CHUNK_SIZE={settings.KNOWLEDGE_GRAPH_CHUNK_SIZE}")
 logger.info(f"KNOWLEDGE_GRAPH_CHUNK_OVERLAP={settings.KNOWLEDGE_GRAPH_CHUNK_OVERLAP}")
 logger.info(f"MAX_TOKEN_PER_NEO4J_RESULT={settings.MAX_TOKEN_PER_NEO4J_RESULT}")
 logger.info(f"MAX_TOKENS={settings.MAX_TOKENS}")
+logger.info(f"TEMPERATURE={settings.TEMPERATURE}")
+logger.info(f"MAX_OUTPUT_TOKENS={settings.MAX_OUTPUT_TOKENS}")
 
 
 @asynccontextmanager
