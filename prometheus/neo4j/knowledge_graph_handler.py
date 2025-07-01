@@ -54,7 +54,7 @@ class KnowledgeGraphHandler:
 
     def _write_meta_node(self, tx: ManagedTransaction, metadata_node: Neo4jMetadataNode):
         """Write Neo4jMetadataNode to neo4j."""
-        self._logger.debug("Writing MetadataNode to neo4j")
+        self._logger.debug(f"Writing {len(metadata_node)} MetadataNode to neo4j")
         query = """
       CREATE (a:MetadataNode {codebase_source: $codebase_source, local_path: $local_path, https_url: $https_url, commit_id: $commit_id})
     """
