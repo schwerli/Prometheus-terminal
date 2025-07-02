@@ -3,6 +3,8 @@ from sqlmodel import Session, select
 
 from prometheus.app.db import create_superuser
 from prometheus.app.entity.user import User
+from tests.test_utils.fixtures import postgres_container_fixture
+from tests.app.services.test_db_engine import test_engine
 
 
 @pytest.mark.slow
