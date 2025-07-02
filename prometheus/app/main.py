@@ -6,7 +6,6 @@ from fastapi import FastAPI
 
 from prometheus.app import dependencies
 from prometheus.app.api import issue, repository
-from prometheus.app.db import create_db_and_tables, create_superuser
 from prometheus.configuration.config import settings
 
 # Create a logger for the application's namespace
@@ -35,11 +34,7 @@ logger.info(f"MAX_OUTPUT_TOKENS={settings.MAX_OUTPUT_TOKENS}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize the database and create tables
-    create_db_and_tables()
-    create_superuser(
-        settings.SUPERUSER_USERNAME, settings.SUPERUSER_PASSWORD, settings.SUPERUSER_EMAIL
-    )
+    # Initialization on startup
     app.state.service_coordinator = dependencies.initialize_services()
     # Initialization Completed
     yield

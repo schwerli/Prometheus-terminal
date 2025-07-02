@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from passlib.hash import bcrypt
-from sqlmodel import Session, SQLModel, create_engine, select
+from sqlmodel import Session, SQLModel, create_engine
 
 from prometheus.app.entity.user import User
 from prometheus.configuration.config import settings
@@ -36,10 +36,6 @@ def create_superuser(
         User: The created superuser instance.
     """
     with Session(engine) as session:
-        existing_superuser = session.exec(select(User).where(User.is_superuser)).first()
-        if existing_superuser:
-            _logger.info("Superuser already exists, skipping creation.")
-            return
         if session.query(User).filter(User.username == username).first():
             raise ValueError(f"Username '{username}' already exists")
         if session.query(User).filter(User.email == email).first():
