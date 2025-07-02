@@ -37,11 +37,10 @@ def initialize_services() -> ServiceCoordinator:
     llm_service = LLMService(
         settings.ADVANCED_MODEL,
         settings.BASE_MODEL,
-        getattr(settings, "OPENAI_API_KEY", None),
+        getattr(settings, "OPENAI_FORMAT_API_KEY", None),
+        getattr(settings, "OPENAI_FORMAT_BASE_URL", None),
         getattr(settings, "ANTHROPIC_API_KEY", None),
         getattr(settings, "GEMINI_API_KEY", None),
-        getattr(settings, "OPENROUTER_API_KEY", None),
-        getattr(settings, "DEEPSEEK_API_KEY", None),
         getattr(settings, "TEMPERATURE", None),
         getattr(settings, "MAX_OUTPUT_TOKENS", None),
     )

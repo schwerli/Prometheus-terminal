@@ -17,31 +17,28 @@ class LLMService:
         self,
         advanced_model_name: str,
         base_model_name: str,
-        openai_api_key: Optional[str] = None,
+        openai_format_api_key: Optional[str] = None,
+        openai_format_base_url: Optional[str] = None,
         anthropic_api_key: Optional[str] = None,
         gemini_api_key: Optional[str] = None,
-        open_router_api_key: Optional[str] = None,
-        deepseek_api_key: Optional[str] = None,
         temperature: float = 0.0,
         max_output_tokens: int = 15000,
     ):
         self.advanced_model = get_model(
             advanced_model_name,
-            openai_api_key,
+            openai_format_api_key,
+            openai_format_base_url,
             anthropic_api_key,
             gemini_api_key,
-            open_router_api_key,
-            deepseek_api_key,
             0.0,
             max_output_tokens,
         )
         self.base_model = get_model(
             base_model_name,
-            openai_api_key,
+            openai_format_api_key,
+            openai_format_base_url,
             anthropic_api_key,
             gemini_api_key,
-            open_router_api_key,
-            deepseek_api_key,
             temperature,
             max_output_tokens,
         )
@@ -49,37 +46,19 @@ class LLMService:
 
 def get_model(
     model_name: str,
-    openai_api_key: Optional[str] = None,
+    openai_format_api_key: Optional[str] = None,
+    openai_format_base_url: Optional[str] = None,
     anthropic_api_key: Optional[str] = None,
     gemini_api_key: Optional[str] = None,
-    open_router_api_key: Optional[str] = None,
-    deepseek_api_key: Optional[str] = None,
     temperature: float = 0.0,
     max_output_tokens: int = 15000,
 ) -> BaseChatModel:
-    if "/" in model_name:
-        return CustomChatOpenAI(
-            model=model_name,
-            api_key=open_router_api_key,
-            base_url="https://openrouter.ai/api/v1",
-            temperature=temperature,
-            max_tokens=max_output_tokens,
-            max_retries=3,
-        )
-    elif "claude" in model_name:
+    if "claude" in model_name:
         return ChatAnthropic(
-            model=model_name,
+            model_name=model_name,
             api_key=anthropic_api_key,
             temperature=temperature,
-            max_tokens=max_output_tokens,
-            max_retries=3,
-        )
-    elif "gpt" in model_name:
-        return CustomChatOpenAI(
-            model=model_name,
-            api_key=openai_api_key,
-            temperature=temperature,
-            max_tokens=max_output_tokens,
+            max_tokens_to_sample=max_output_tokens,
             max_retries=3,
         )
     elif "gemini" in model_name:
@@ -90,14 +69,12 @@ def get_model(
             max_tokens=max_output_tokens,
             max_retries=3,
         )
-    elif "deepseek" in model_name:
+    else:
         return CustomChatOpenAI(
             model=model_name,
-            api_key=deepseek_api_key,
-            base_url="https://api.deepseek.com",
+            api_key=openai_format_api_key,
+            base_url=openai_format_base_url,
             temperature=temperature,
             max_tokens=max_output_tokens,
             max_retries=3,
         )
-    else:
-        raise ValueError(f"Unknown model name: {model_name}")
