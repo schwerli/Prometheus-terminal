@@ -17,6 +17,7 @@ logger.addHandler(console_handler)
 logger.setLevel(getattr(logging, settings.LOGGING_LEVEL))
 logger.propagate = False
 
+# Log the configuration settings
 logger.info(f"LOGGING_LEVEL={settings.LOGGING_LEVEL}")
 logger.info(f"ADVANCED_MODEL={settings.ADVANCED_MODEL}")
 logger.info(f"BASE_MODEL={settings.BASE_MODEL}")
@@ -33,8 +34,11 @@ logger.info(f"MAX_OUTPUT_TOKENS={settings.MAX_OUTPUT_TOKENS}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialization on startup
     app.state.service_coordinator = dependencies.initialize_services()
+    # Initialization Completed
     yield
+    # Cleanup on shutdown
     app.state.service_coordinator.clear()
     app.state.service_coordinator.close()
 

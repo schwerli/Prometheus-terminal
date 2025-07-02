@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from git import Repo
 from testcontainers.neo4j import Neo4jContainer
+from testcontainers.postgres import PostgresContainer
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
@@ -14,6 +15,11 @@ from tests.test_utils import test_project_paths
 NEO4J_IMAGE = "neo4j:5.20.0"
 NEO4J_USERNAME = "neo4j"
 NEO4J_PASSWORD = "password"
+
+POSTGRES_IMAGE = "postgres"
+POSTGRES_USERNAME = "postgres"
+POSTGRES_PASSWORD = "password"
+POSTGRES_DB = "postgres"
 
 
 @pytest.fixture(scope="session")
@@ -41,6 +47,23 @@ def empty_neo4j_container_fixture():
     )
     with container as neo4j_container:
         yield neo4j_container
+
+
+@pytest.fixture(scope="session")
+def postgres_container_fixture():
+    container = (
+        PostgresContainer(
+            image=POSTGRES_IMAGE,
+            username=POSTGRES_USERNAME,
+            password=POSTGRES_PASSWORD,
+            dbname=POSTGRES_DB,
+            port=5432,
+        )
+        .with_name(f"postgres_container_{uuid.uuid4().hex[:12]}")
+        .with_bind_ports(5432, 5432)  # Bind to a specific port for testing
+    )
+    with container as postgres_container:
+        yield postgres_container
 
 
 @pytest.fixture(scope="function")
