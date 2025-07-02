@@ -133,7 +133,7 @@ Set the following variables in your `.env` file:
     * `PROMETHEUS_GEMINI_API_KEY`
 * Base URL for LLMs:
 
-    * `PROMETHEUS_OPENAI_BASE_URL`
+    * `PROMETHEUS_OPENAI_FORMAT_BASE_URL`
 
 ### 🔹 Other Settings
 
