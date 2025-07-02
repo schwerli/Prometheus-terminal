@@ -1,7 +1,7 @@
-from prometheus.configuration.config import settings
+from langchain_core.messages import HumanMessage
 
 from prometheus.app.services.llm_service import LLMService
-from langchain_core.messages import HumanMessage
+from prometheus.configuration.config import settings
 
 
 def test_model_response():
