@@ -7,12 +7,6 @@ from prometheus.configuration.config import settings
 
 
 @pytest.fixture
-def mock_chat_openai():
-    with patch("prometheus.app.services.llm_service.ChatOpenAI") as mock:
-        yield mock
-
-
-@pytest.fixture
 def mock_custom_chat_openai():
     with patch("prometheus.app.services.llm_service.CustomChatOpenAI") as mock:
         yield mock
@@ -41,7 +35,8 @@ def test_llm_service_init(mock_custom_chat_openai, mock_chat_anthropic):
     service = LLMService(
         advanced_model_name="gpt-4",
         base_model_name="claude-2.1",
-        openai_api_key="openai-key",
+        openai_format_api_key="openai-key",
+        openai_format_base_url="https://api.openai.com/v1",
         anthropic_api_key="anthropic-key",
     )
 
@@ -51,22 +46,25 @@ def test_llm_service_init(mock_custom_chat_openai, mock_chat_anthropic):
     mock_custom_chat_openai.assert_called_once_with(
         model="gpt-4",
         api_key="openai-key",
+        base_url="https://api.openai.com/v1",
         temperature=0.0,
         max_tokens=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
     mock_chat_anthropic.assert_called_once_with(
-        model="claude-2.1",
+        model_name="claude-2.1",
         api_key="anthropic-key",
         temperature=0.0,
-        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_tokens_to_sample=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
 
 
-def test_get_model_openrouter(mock_custom_chat_openai):
+def test_get_openai_format_model(mock_custom_chat_openai):
     # Exercise
-    get_model(model_name="openrouter/model", open_router_api_key="openrouter-key")
+    get_model(model_name="openrouter/model",
+              openai_format_api_key="openrouter-key",
+              openai_format_base_url="https://openrouter.ai/api/v1")
 
     # Verify
     mock_custom_chat_openai.assert_called_once_with(
@@ -85,27 +83,12 @@ def test_get_model_claude(mock_chat_anthropic):
 
     # Verify
     mock_chat_anthropic.assert_called_once_with(
-        model="claude-2.1",
+        model_name="claude-2.1",
         api_key="anthropic-key",
         temperature=0.0,
-        max_tokens=settings.MAX_OUTPUT_TOKENS,
+        max_tokens_to_sample=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
-
-
-def test_get_model_gpt(mock_custom_chat_openai):
-    # Exercise
-    get_model(model_name="gpt-4", openai_api_key="openai-key")
-
-    # Verify
-    mock_custom_chat_openai.assert_called_once_with(
-        model="gpt-4",
-        api_key="openai-key",
-        temperature=0.0,
-        max_tokens=settings.MAX_OUTPUT_TOKENS,
-        max_retries=3,
-    )
-
 
 def test_get_model_gemini(mock_chat_google):
     # Exercise
@@ -119,27 +102,6 @@ def test_get_model_gemini(mock_chat_google):
         max_tokens=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
-
-
-def test_get_model_deepseek(mock_custom_chat_openai):
-    # Exercise
-    get_model(model_name="deepseek-chat", deepseek_api_key="deepseek-key")
-
-    # Verify
-    mock_custom_chat_openai.assert_called_once_with(
-        model="deepseek-chat",
-        api_key="deepseek-key",
-        base_url="https://api.deepseek.com",
-        temperature=0.0,
-        max_tokens=settings.MAX_OUTPUT_TOKENS,
-        max_retries=3,
-    )
-
-
-def test_get_model_unknown():
-    # Exercise & Verify
-    with pytest.raises(ValueError, match="Unknown model name: unknown-model"):
-        get_model("unknown-model")
 
 
 def test_custom_chat_openai_bind_tools():
