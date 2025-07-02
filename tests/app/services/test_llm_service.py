@@ -62,9 +62,11 @@ def test_llm_service_init(mock_custom_chat_openai, mock_chat_anthropic):
 
 def test_get_openai_format_model(mock_custom_chat_openai):
     # Exercise
-    get_model(model_name="openrouter/model",
-              openai_format_api_key="openrouter-key",
-              openai_format_base_url="https://openrouter.ai/api/v1")
+    get_model(
+        model_name="openrouter/model",
+        openai_format_api_key="openrouter-key",
+        openai_format_base_url="https://openrouter.ai/api/v1",
+    )
 
     # Verify
     mock_custom_chat_openai.assert_called_once_with(
@@ -89,6 +91,7 @@ def test_get_model_claude(mock_chat_anthropic):
         max_tokens_to_sample=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
+
 
 def test_get_model_gemini(mock_chat_google):
     # Exercise
