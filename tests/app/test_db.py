@@ -3,12 +3,12 @@ from sqlmodel import Session, select
 
 from prometheus.app.db import create_superuser
 from prometheus.app.entity.user import User
-from tests.test_utils.fixtures import postgres_container_fixture
-from tests.app.services.test_db_engine import test_engine
+from tests.app.services.test_db_engine import test_engine  # noqa: F401
+from tests.test_utils.fixtures import postgres_container_fixture  # noqa: F401
 
 
 @pytest.mark.slow
-def test_create_superuser(postgres_container_fixture, test_engine):
+def test_create_superuser(postgres_container_fixture, test_engine):  # noqa: F811
     username = "admin"
     email = "admin@example.com"
     password = "strongpassword"
@@ -34,7 +34,7 @@ def test_create_superuser(postgres_container_fixture, test_engine):
 
 
 @pytest.mark.slow
-def test_duplicate_superuser_raises(postgres_container_fixture, test_engine):
+def test_duplicate_superuser_raises(postgres_container_fixture, test_engine):  # noqa: F811
     username = "admin2"
     email = "admin2@example.com"
     password = "password"
