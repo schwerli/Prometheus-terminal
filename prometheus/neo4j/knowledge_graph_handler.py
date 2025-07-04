@@ -1,7 +1,6 @@
 """The neo4j handler for writing the knowledge graph to neo4j."""
 
 import logging
-import time
 from typing import Mapping, Sequence
 
 from neo4j import GraphDatabase, ManagedTransaction
@@ -16,7 +15,6 @@ from prometheus.graph.graph_types import (
     Neo4jHasTextEdge,
     Neo4jMetadataNode,
     Neo4jNextChunkEdge,
-    Neo4jParentOfEdge,
     Neo4jTextNode,
 )
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -144,20 +142,27 @@ class KnowledgeGraphHandler:
             has_text_edges_batch = has_text_edges[i : i + self.batch_size]
             tx.run(query, edges=has_text_edges_batch)
 
-    def _write_parent_of_edges(
-        self, tx: ManagedTransaction, parent_of_edges: Sequence[Neo4jParentOfEdge]
-    ):
-        """Write Neo4jParentOfEdge to neo4j."""
+    def write_parent_of_edges(self, parent_of_edges):
         self._logger.debug(f"Writing {len(parent_of_edges)} ParentOfEdge to neo4j")
+
         query = """
-      UNWIND $edges AS edge
-      MATCH (source:ASTNode), (target:ASTNode)
-      WHERE source.node_id = edge.source.node_id AND target.node_id = edge.target.node_id
-      CREATE (source) -[:PARENT_OF]-> (target)
-    """
+            UNWIND $edges AS edge
+            MATCH (source:ASTNode {node_id: edge.source.node_id})
+            MATCH (target:ASTNode {node_id: edge.target.node_id})
+            CREATE (source)-[:PARENT_OF]->(target)
+        """
+
         for i in range(0, len(parent_of_edges), self.batch_size):
             parent_of_edges_batch = parent_of_edges[i : i + self.batch_size]
-            tx.run(query, edges=parent_of_edges_batch)
+            edge_dicts = [
+                {
+                    "source": {"node_id": e.source.node_id},
+                    "target": {"node_id": e.target.node_id},
+                }
+                for e in parent_of_edges_batch
+            ]
+            with self.driver.session() as session:
+                session.write_transaction(lambda tx: tx.run(query, edges=edge_dicts))
 
     def _write_next_chunk_edges(
         self, tx: ManagedTransaction, next_chunk_edges: Sequence[Neo4jNextChunkEdge]
@@ -193,14 +198,7 @@ class KnowledgeGraphHandler:
             session.execute_write(self._write_has_file_edges, kg.get_neo4j_has_file_edges())
             session.execute_write(self._write_has_text_edges, kg.get_neo4j_has_text_edges())
             session.execute_write(self._write_next_chunk_edges, kg.get_neo4j_next_chunk_edges())
-        for i in range(0, len(kg.get_neo4j_parent_of_edges()), 50000):
-            with self.driver.session() as session:
-                # Write PARENT_OF edges in batches to avoid transaction size limits
-                self._logger.info("Writing parent of edges to neo4j")
-                session.execute_write(
-                    self._write_parent_of_edges, kg.get_neo4j_parent_of_edges()[i : i + 50000]
-                )
-            time.sleep(10)
+        self.write_parent_of_edges(kg.get_parent_of_edges())
 
     def _read_metadata_node(self, tx: ManagedTransaction) -> MetadataNode:
         """Read MetadataNode from neo4j."""

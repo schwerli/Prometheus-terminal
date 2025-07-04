@@ -128,10 +128,12 @@ Set the following variables in your `.env` file:
 * `PROMETHEUS_BASE_MODEL`
 * API Keys:
 
-    * `PROMETHEUS_OPENAI_API_KEY`
+    * `PROMETHEUS_OPENAI_FORMAT_API_KEY`
     * `PROMETHEUS_ANTHROPIC_API_KEY`
     * `PROMETHEUS_GEMINI_API_KEY`
-    * `PROMETHEUS_OPENROUTER_API_KEY`
+* Base URL for LLMs:
+
+    * `PROMETHEUS_OPENAI_FORMAT_BASE_URL`
 
 ### 🔹 Other Settings
 

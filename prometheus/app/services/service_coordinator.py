@@ -184,10 +184,13 @@ class ServiceCoordinator:
             https_url: HTTPS URL of the GitHub repository.
             commit_id: Optional specific commit to analyze.
         """
+        # CLean the existing knowledge graph and repository state
         self.clear()
+        # Clone the repository
         saved_path = self.repository_service.clone_github_repo(
             self.github_token, https_url, commit_id
         )
+        # Build and save the knowledge graph from the cloned repository
         self.knowledge_graph_service.build_and_save_knowledge_graph(
             saved_path, https_url, commit_id
         )

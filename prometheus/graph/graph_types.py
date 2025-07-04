@@ -27,8 +27,8 @@ class MetadataNode:
 
     local_path: str
 
-    https_url: str
-    commit_id: str
+    https_url: str | None
+    commit_id: str | None
 
     def to_neo4j_node(self) -> "Neo4jMetadataNode":
         return Neo4jMetadataNode(
