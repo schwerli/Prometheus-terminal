@@ -1,4 +1,5 @@
 import logging
+import traceback
 from typing import Dict
 
 import neo4j
@@ -41,10 +42,12 @@ class ContextRetrievalSubgraphNode:
                 )
                 break
             except Exception as e:
-                if attempt < max_tries:
-                    self._logger.warning(
-                        f"Context retrieval failed, retrying {attempt}/{max_tries} times: {e}"
-                    )
+                self._logger.warning(
+                    f"Context retrieval failed, retrying {attempt}/{max_tries} times:\n"
+                    f"{type(e).__name__}: {e}\n"
+                    f"{traceback.format_exc()}"
+                )
+
         if output_state is None:
             self._logger.error("Context retrieval failed after maximum attempts")
             raise RuntimeError("Failed to retrieve context after maximum attempts")
