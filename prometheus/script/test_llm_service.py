@@ -12,8 +12,8 @@ def test_model_response():
         openai_format_base_url=settings.OPENAI_FORMAT_BASE_URL,
         anthropic_api_key=settings.ANTHROPIC_API_KEY,
         gemini_api_key=settings.GEMINI_API_KEY,
-        temperature=0.3,
-        max_output_tokens=55000,
+        temperature=settings.TEMPERATURE,
+        max_output_tokens=settings.MAX_OUTPUT_TOKENS,
     )
 
     # Test base model
