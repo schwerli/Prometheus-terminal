@@ -1,7 +1,6 @@
 """The neo4j handler for writing the knowledge graph to neo4j."""
 
 import logging
-import time
 from typing import Mapping, Sequence
 
 from neo4j import GraphDatabase, ManagedTransaction
@@ -16,7 +15,6 @@ from prometheus.graph.graph_types import (
     Neo4jHasTextEdge,
     Neo4jMetadataNode,
     Neo4jNextChunkEdge,
-    Neo4jParentOfEdge,
     Neo4jTextNode,
 )
 from prometheus.graph.knowledge_graph import KnowledgeGraph
@@ -155,7 +153,7 @@ class KnowledgeGraphHandler:
         """
 
         for i in range(0, len(parent_of_edges), self.batch_size):
-            parent_of_edges_batch = parent_of_edges[i: i + self.batch_size]
+            parent_of_edges_batch = parent_of_edges[i : i + self.batch_size]
             edge_dicts = [
                 {
                     "source": {"node_id": e.source.node_id},
