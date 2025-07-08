@@ -6,7 +6,7 @@ parsing operations, returning a syntax tree representation of the source code.
 
 The module uses tree-sitter parsers from the tree_sitter_languages package
 and supports various common programming languages including Python, Java,
-JavaScript, C++, and others.
+JavaScript, C++, Rust, Ruby, Typescript and others.
 """
 
 from pathlib import Path
@@ -40,6 +40,9 @@ FILE_TYPE_TO_LANG = {
     FileType.PYTHON: "python",
     FileType.SQL: "sql",
     FileType.YAML: "yaml",
+    FileType.RUST: "rust",
+    FileType.RUBY: "ruby",
+    FileType.TYPESCRIPT: "typescript",
 }
 
 
