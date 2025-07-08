@@ -14,19 +14,6 @@ governed by a state machine to ensure code quality through automated reviews, bu
 - **Multi-Agent System**: Uses a state machine to coordinate multiple agents for efficient task execution.
 - **Integration with External Services**: Seamlessly connects with other services in the `Pantheon-temple` organization.
 
----
-
-## 🔗 Integrations
-
-Prometheus can be connected to other services for extended functionality:
-
-- **[Argus-GitHub](https://github.com/Pantheon-temple/Argus-GitHub)**: Automatically pull the latest changes from your
-  GitHub repository, answer/fix issues, and review pull requests.
-- **[Hermes](https://github.com/Pantheon-temple/Hermes)**: Enable a chat interface to interact with your codebase (
-  GitHub or local).
-- **Custom Services**: Connect your own services by sending requests to the FastAPI endpoints.
-
----
 
 ## ⚙️ Quick Start
 
