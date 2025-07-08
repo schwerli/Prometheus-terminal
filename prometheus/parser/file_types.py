@@ -17,6 +17,9 @@ class FileType(enum.StrEnum):
     PYTHON = "python"
     SQL = "sql"
     YAML = "yaml"
+    RUST = "rust"
+    RUBY = "ruby"
+    TYPESCRIPT="typescript"
     UNKNOWN = "UNKNOWN"
 
     @classmethod
@@ -44,6 +47,12 @@ class FileType(enum.StrEnum):
                 return cls.PYTHON
             case ".sql":
                 return cls.SQL
+            case ".rs":
+                return cls.RUST
+            case ".rb":
+                return cls.RUBY
+            case ".ts":
+                return cls.TYPESCRIPT
             case ".yaml" | ".yml":
                 return cls.YAML
             case _:
