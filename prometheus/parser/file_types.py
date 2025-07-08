@@ -19,7 +19,7 @@ class FileType(enum.StrEnum):
     YAML = "yaml"
     RUST = "rust"
     RUBY = "ruby"
-    TYPESCRIPT="typescript"
+    TYPESCRIPT = "typescript"
     UNKNOWN = "UNKNOWN"
 
     @classmethod
