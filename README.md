@@ -1,3 +1,22 @@
+<a name="readme-top"></a>
+
+<div align="center">
+  <img src="./docs/static/images/icon.jpg" alt="Logo" width="200">
+  <h1 align="center">Prometheus</h1>
+</div>
+
+
+<div align="center">
+  <a href="https://github.com/Pantheon-temple/Prometheus/graphs/contributors"><img src="https://img.shields.io/github/contributors/Pantheon-temple/Prometheus?style=for-the-badge&color=blue" alt="Contributors"></a>
+  <a href="https://github.com/Pantheon-temple/Prometheus/stargazers"><img src="https://img.shields.io/github/stars/Pantheon-temple/Prometheus?style=for-the-badge&color=blue" alt="Stargazers"></a>
+  <a href="https://github.com/Pantheon-temple/Prometheus/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Pantheon-temple/Prometheus?style=for-the-badge&color=blue" alt="MIT License"></a>
+  <br/>
+    <a href="https://github.com/Pantheon-temple/Prometheus/blob/main/CREDITS.md"><img src="https://img.shields.io/badge/Project-Credits-blue?style=for-the-badge&color=FFE165&logo=github&logoColor=white" alt="Credits"></a>
+  <br/>
+  <hr>
+</div>
+
+
 ![Code Coverage](https://github.com/Pantheon-temple/Prometheus/raw/coverage-badge/coverage.svg)
 
 # Prometheus
