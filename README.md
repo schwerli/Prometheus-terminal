@@ -33,6 +33,14 @@ governed by a state machine to ensure code quality through automated reviews, bu
 - **Multi-Agent System**: Uses a state machine to coordinate multiple agents for efficient task execution.
 - **Integration with External Services**: Seamlessly connects with other services in the `Pantheon-temple` organization.
 
+## 📊 Evaluation Results on SWE-bench Lite
+
+<div align="center">
+  <img src="./docs/static/images/barChart.png" alt="SWE-bench Lite Result" width="800"/>
+  <p><em>Success Rate Comparison across popular agents. Prometheus achieves 28.67%.</em></p>
+</div>
+
+
 
 ## ⚙️ Quick Start
 
