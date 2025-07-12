@@ -18,7 +18,7 @@ def test_model_response():
 
     # Test base model
     chat_model = llm_service.base_model
-    print(f"\nTesting model Base Model: {chat_model.model_name}")
+    print(f"\nTesting model Base Model: {settings.BASE_MODEL}")
 
     # Run a simple chat generation
     response = chat_model.invoke([HumanMessage(content="Hello! Tell me a fun fact about space.")])
@@ -26,7 +26,7 @@ def test_model_response():
 
     # Test advanced model
     chat_model = llm_service.advanced_model
-    print(f"\nTesting model Advanced Model: {chat_model.model_name}")
+    print(f"\nTesting model Advanced Model: {settings.ADVANCED_MODEL}")
     # Run a simple chat generation
     response = chat_model.invoke([HumanMessage(content="Hello! Tell me a fun fact about space.")])
     print("Response:", response.content)
