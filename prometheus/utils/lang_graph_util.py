@@ -95,6 +95,11 @@ def extract_human_queries(messages: Sequence[BaseMessage]) -> Sequence[str]:
 
 
 def extract_last_tool_messages(messages: Sequence[BaseMessage]) -> Sequence[ToolMessage]:
+    """
+        Extracts all tool messages that come after the last human message in the sequence.
+        :param messages:
+        :return: messages: A list of ToolMessage objects that come after the last HumanMessage.
+    """
     tool_messages = []
     last_human_index = -1
     for i in range(len(messages) - 1, -1, -1):
