@@ -1,11 +1,13 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class Context(BaseModel):
     """
     Context for Software Engineering tasks.
     """
+
     relative_path: str
     content: str
     start_line_number: Optional[int] = None
