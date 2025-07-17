@@ -8,7 +8,6 @@ from langchain_core.messages import SystemMessage
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.tools import file_operation
-from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class BugReproducingWriteNode:
@@ -142,8 +141,7 @@ def test_empty_array_parsing(parser):
 
     def __call__(self, state: BugReproductionState):
         message_history = [self.system_prompt] + state["bug_reproducing_write_messages"]
-        truncated_message_history = truncate_messages(message_history)
-        response = self.model_with_tools.invoke(truncated_message_history)
+        response = self.model_with_tools.invoke(message_history)
 
         self._logger.debug(response)
         return {"bug_reproducing_write_messages": [response]}

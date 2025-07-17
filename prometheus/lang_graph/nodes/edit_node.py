@@ -16,7 +16,6 @@ from langchain_core.messages import SystemMessage
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.tools import file_operation
-from prometheus.utils.lang_graph_util import truncate_messages
 
 
 class EditNode:
@@ -185,8 +184,7 @@ MANDATORY REQUIREMENTS:
 
     def __call__(self, state: Dict):
         message_history = [self.system_prompt] + state["edit_messages"]
-        truncated_message_history = truncate_messages(message_history)
-        response = self.model_with_tools.invoke(truncated_message_history)
+        response = self.model_with_tools.invoke(message_history)
 
         self._logger.debug(response)
         return {"edit_messages": [response]}

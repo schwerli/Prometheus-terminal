@@ -4,8 +4,6 @@ from typing import Dict
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import SystemMessage
 
-from prometheus.utils.lang_graph_util import truncate_messages
-
 
 class IssueBugAnalyzerNode:
     SYS_PROMPT = """\
@@ -49,8 +47,7 @@ rather than implementation details.
 
     def __call__(self, state: Dict):
         message_history = [self.system_prompt] + state["issue_bug_analyzer_messages"]
-        truncated_message_history = truncate_messages(message_history)
-        response = self.model.invoke(truncated_message_history)
+        response = self.model.invoke(message_history)
 
         self._logger.debug(response)
         return {"issue_bug_analyzer_messages": [response]}
