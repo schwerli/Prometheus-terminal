@@ -1,11 +1,11 @@
-from typing import Optional, Any
+from typing import Any, Optional
 
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import BaseMessage, trim_messages
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
-from prometheus.configuration.config import settings
 
+from prometheus.configuration.config import settings
 from prometheus.utils.llm_util import tiktoken_counter
 
 
@@ -15,12 +15,12 @@ class CustomChatOpenAI(ChatOpenAI):
         return super().bind_tools(tools, tool_choice=tool_choice, **kwargs)
 
     def invoke(
-            self,
-            input: LanguageModelInput,
-            config: Optional[RunnableConfig] = None,
-            *,
-            stop: Optional[list[str]] = None,
-            **kwargs: Any,
+        self,
+        input: LanguageModelInput,
+        config: Optional[RunnableConfig] = None,
+        *,
+        stop: Optional[list[str]] = None,
+        **kwargs: Any,
     ) -> BaseMessage:
         return super().invoke(
             input=trim_messages(
@@ -34,4 +34,5 @@ class CustomChatOpenAI(ChatOpenAI):
             ),
             config=config,
             stop=stop,
-            **kwargs)
+            **kwargs,
+        )

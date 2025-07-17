@@ -10,10 +10,10 @@ from langchain_core.output_parsers import StrOutputParser
 
 
 def check_remaining_steps(
-        state: Dict,
-        router: Callable[..., str],
-        min_remaining_steps: int,
-        remaining_steps_key: str = "remaining_steps",
+    state: Dict,
+    router: Callable[..., str],
+    min_remaining_steps: int,
+    remaining_steps_key: str = "remaining_steps",
 ) -> str:
     original_route = router(state)
     if state[remaining_steps_key] > min_remaining_steps:
@@ -27,7 +27,7 @@ def extract_ai_responses(messages: Sequence[BaseMessage]) -> Sequence[str]:
     output_parser = StrOutputParser()
     for index, message in enumerate(messages):
         if isinstance(message, AIMessage) and (
-                index == len(messages) - 1 or isinstance(messages[index + 1], HumanMessage)
+            index == len(messages) - 1 or isinstance(messages[index + 1], HumanMessage)
         ):
             ai_responses.append(output_parser.invoke(message))
     return ai_responses
@@ -58,7 +58,7 @@ def extract_last_tool_messages(messages: Sequence[BaseMessage]) -> Sequence[Tool
     if last_human_index == -1:
         return []
 
-    for message in messages[last_human_index + 1:]:
+    for message in messages[last_human_index + 1 :]:
         if isinstance(message, ToolMessage):
             tool_messages.append(message)
     return tool_messages
@@ -76,9 +76,9 @@ def format_agent_tool_message_history(messages: Sequence[BaseMessage]) -> str:
             if message.content:
                 formatted_messages.append(f"Assistant internal thought: {message.content}")
             if (
-                    message.additional_kwargs
-                    and "tool_calls" in message.additional_kwargs
-                    and message.additional_kwargs["tool_calls"]
+                message.additional_kwargs
+                and "tool_calls" in message.additional_kwargs
+                and message.additional_kwargs["tool_calls"]
             ):
                 for tool_call in message.additional_kwargs["tool_calls"]:
                     formatted_messages.append(f"Assistant executed tool: {tool_call['function']}")

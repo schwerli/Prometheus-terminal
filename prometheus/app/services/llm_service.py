@@ -9,15 +9,15 @@ from prometheus.chat_models.custom_chat_openai import CustomChatOpenAI
 
 class LLMService:
     def __init__(
-            self,
-            advanced_model_name: str,
-            base_model_name: str,
-            openai_format_api_key: Optional[str] = None,
-            openai_format_base_url: Optional[str] = None,
-            anthropic_api_key: Optional[str] = None,
-            gemini_api_key: Optional[str] = None,
-            temperature: float = 0.0,
-            max_output_tokens: int = 15000,
+        self,
+        advanced_model_name: str,
+        base_model_name: str,
+        openai_format_api_key: Optional[str] = None,
+        openai_format_base_url: Optional[str] = None,
+        anthropic_api_key: Optional[str] = None,
+        gemini_api_key: Optional[str] = None,
+        temperature: float = 0.0,
+        max_output_tokens: int = 15000,
     ):
         self.advanced_model = get_model(
             advanced_model_name,
@@ -40,13 +40,13 @@ class LLMService:
 
 
 def get_model(
-        model_name: str,
-        openai_format_api_key: Optional[str] = None,
-        openai_format_base_url: Optional[str] = None,
-        anthropic_api_key: Optional[str] = None,
-        gemini_api_key: Optional[str] = None,
-        temperature: float = 0.0,
-        max_output_tokens: int = 15000,
+    model_name: str,
+    openai_format_api_key: Optional[str] = None,
+    openai_format_base_url: Optional[str] = None,
+    anthropic_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None,
+    temperature: float = 0.0,
+    max_output_tokens: int = 15000,
 ) -> BaseChatModel:
     if "claude" in model_name:
         return ChatAnthropic(

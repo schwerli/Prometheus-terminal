@@ -11,7 +11,7 @@ from prometheus.utils.lang_graph_util import (
     extract_human_queries,
     extract_last_tool_messages,
     format_agent_tool_message_history,
-    get_last_message_content
+    get_last_message_content,
 )
 from prometheus.utils.llm_util import str_token_counter, tiktoken_counter
 
