@@ -2,6 +2,7 @@ from typing import Any, Iterator, Mapping, Optional, Sequence, Tuple
 
 import neo4j
 
+from prometheus.models.context import Context
 from prometheus.utils.str_util import truncate_text
 
 EMPTY_DATA_MESSAGE = "Your query returned empty result, please try a different query."
@@ -29,29 +30,33 @@ def format_neo4j_data(data: Sequence[Mapping[str, Any]], max_token_per_result: i
     return truncate_text(output.strip(), max_token_per_result)
 
 
-def neo4j_data_for_context_generator(data: Optional[Sequence[Mapping[str, Any]]]) -> Iterator[str]:
+def neo4j_data_for_context_generator(
+    data: Optional[Sequence[Mapping[str, Any]]],
+) -> Iterator[Context]:
     if data is None:
         return
 
     for search_result in data:
         search_result_keys = search_result.keys()
+        # Skip if the result has no keys or only contains the "FileNode" key
         if len(search_result_keys) == 1:
             continue
 
-        search_result_components = [f"File: {search_result['FileNode']['relative_path']}"]
-        for key in search_result:
-            if key == "FileNode":
-                continue
+        context = Context(
+            relative_path=search_result["FileNode"]["relative_path"],
+            content=search_result.get("ASTNode", {}).get("text")
+            or search_result.get("TextNode", {}).get("text")
+            or search_result.get("preview", {}).get("text")
+            or search_result.get("SelectedLines", {}).get("text"),
+            start_line_number=search_result.get("ASTNode", {}).get("start_line")
+            or search_result.get("SelectedLines", {}).get("start_line")
+            or search_result.get("preview", {}).get("start_line"),
+            end_line_number=search_result.get("ASTNode", {}).get("end_line")
+            or search_result.get("SelectedLines", {}).get("end_line")
+            or search_result.get("preview", {}).get("end_line"),
+        )
 
-            if "start_line" in search_result[key] and "end_line" in search_result[key]:
-                search_result_components.append(
-                    f"Line number range: {search_result[key]['start_line']} - {search_result[key]['end_line']}"
-                )
-                search_result[key].pop("start_line")
-                search_result[key].pop("end_line")
-
-            search_result_components.append(f"{key}: {search_result[key]}")
-        yield "\n".join(search_result_components)
+        yield context
 
 
 def run_neo4j_query(

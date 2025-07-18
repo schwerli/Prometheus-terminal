@@ -348,7 +348,7 @@ Available AST node types for code structure search: {ast_node_types}
         Returns:
           Dictionary that will update the state with the model's response messages.
         """
-        self._logger.debug(f"Context provider messages: {state['context_provider_messages']}")
+        # self._logger.debug(f"Context provider messages: {state['context_provider_messages']}")
         message_history = [self.system_prompt] + state["context_provider_messages"]
         response = self.model_with_tools.invoke(message_history)
         self._logger.debug(response)

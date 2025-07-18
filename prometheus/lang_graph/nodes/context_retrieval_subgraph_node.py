@@ -52,4 +52,4 @@ class ContextRetrievalSubgraphNode:
             self._logger.error("Context retrieval failed after maximum attempts")
             raise RuntimeError("Failed to retrieve context after maximum attempts")
         self._logger.info(f"Context retrieved: {output_state['context']}")
-        return {self.context_key_name: output_state["context"]}
+        return {self.context_key_name: [str(context) for context in output_state["context"]]}

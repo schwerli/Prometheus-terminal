@@ -8,6 +8,17 @@ from prometheus.utils import neo4j_util
 
 MAX_RESULT = 30
 
+
+"""
+Tools for retrieving nodes from the Neo4j graph database.
+These tools allow you to search for FileNode, ASTNode, and TextNode based on various attributes
+like basename, relative path, text content, and node type.
+
+A content and an artifact will be returned.
+The content is a string representation of the node(s) found, and the artifact is a list of dictionaries
+"""
+
+
 ###############################################################################
 #                          FileNode retrieval                                 #
 ###############################################################################
