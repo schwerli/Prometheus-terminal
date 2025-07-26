@@ -38,6 +38,7 @@ def test_llm_service_init(mock_custom_chat_openai, mock_chat_anthropic):
         openai_format_api_key="openai-key",
         openai_format_base_url="https://api.openai.com/v1",
         anthropic_api_key="anthropic-key",
+        max_output_tokens=settings.MAX_OUTPUT_TOKENS,
     )
 
     # Verify
@@ -66,6 +67,8 @@ def test_get_openai_format_model(mock_custom_chat_openai):
         model_name="openrouter/model",
         openai_format_api_key="openrouter-key",
         openai_format_base_url="https://openrouter.ai/api/v1",
+        max_output_tokens=settings.MAX_OUTPUT_TOKENS,
+        temperature=settings.TEMPERATURE
     )
 
     # Verify
@@ -73,7 +76,7 @@ def test_get_openai_format_model(mock_custom_chat_openai):
         model="openrouter/model",
         api_key="openrouter-key",
         base_url="https://openrouter.ai/api/v1",
-        temperature=0.0,
+        temperature=settings.TEMPERATURE,
         max_tokens=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
@@ -81,13 +84,18 @@ def test_get_openai_format_model(mock_custom_chat_openai):
 
 def test_get_model_claude(mock_chat_anthropic):
     # Exercise
-    get_model(model_name="claude-2.1", anthropic_api_key="anthropic-key")
+    get_model(
+        model_name="claude-2.1",
+        anthropic_api_key="anthropic-key",
+        temperature=settings.TEMPERATURE,
+        max_output_tokens=settings.MAX_OUTPUT_TOKENS
+    )
 
     # Verify
     mock_chat_anthropic.assert_called_once_with(
         model_name="claude-2.1",
         api_key="anthropic-key",
-        temperature=0.0,
+        temperature=settings.TEMPERATURE,
         max_tokens_to_sample=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
@@ -95,13 +103,17 @@ def test_get_model_claude(mock_chat_anthropic):
 
 def test_get_model_gemini(mock_chat_google):
     # Exercise
-    get_model(model_name="gemini-pro", gemini_api_key="gemini-key")
+    get_model(
+        model_name="gemini-pro",
+        gemini_api_key="gemini-key",
+        temperature=settings.TEMPERATURE,
+        max_output_tokens=settings.MAX_OUTPUT_TOKENS)
 
     # Verify
     mock_chat_google.assert_called_once_with(
         model="gemini-pro",
         api_key="gemini-key",
-        temperature=0.0,
+        temperature=settings.TEMPERATURE,
         max_tokens=settings.MAX_OUTPUT_TOKENS,
         max_retries=3,
     )
@@ -109,11 +121,13 @@ def test_get_model_gemini(mock_chat_google):
 
 def test_custom_chat_openai_bind_tools():
     # Setup
-    model = CustomChatOpenAI(api_key="test-key")
+    model = CustomChatOpenAI(
+        api_key="test-key"
+    )
     mock_tools = [Mock()]
 
     # Exercise
-    with patch("prometheus.app.services.llm_service.ChatOpenAI.bind_tools") as mock_bind:
+    with patch("prometheus.chat_models.custom_chat_openai.ChatOpenAI.bind_tools") as mock_bind:
         model.bind_tools(mock_tools)
 
     # Verify
