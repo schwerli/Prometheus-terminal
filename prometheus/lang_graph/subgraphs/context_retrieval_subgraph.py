@@ -1,5 +1,5 @@
 import functools
-from typing import Sequence, Dict
+from typing import Dict, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
