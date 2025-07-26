@@ -21,10 +21,14 @@ def base_state():
             {"username": "user1", "comment": "Comment 1"},
             {"username": "user2", "comment": "Comment 2"},
         ],
-        "bug_fix_context": [Context(relative_path='foobar.py',
-                                    content='# Context 1',
-                                    start_line_number=1,
-                                    end_line_number=1)],
+        "bug_fix_context": [
+            Context(
+                relative_path="foobar.py",
+                content="# Context 1",
+                start_line_number=1,
+                end_line_number=1,
+            )
+        ],
         "issue_bug_analyzer_messages": ["Analysis message"],
     }
 
