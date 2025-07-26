@@ -86,7 +86,7 @@ class ContextExtractionNode:
         self.model = structured_llm
         self.system_prompt = SystemMessage(SYS_PROMPT)
         self.root_path = root_path
-        self._logger = logging.getLogger("app.lang_graph.nodes.context_extraction_node")
+        self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_extraction_node")
 
     def __call__(self, state: ContextRetrievalState):
         self._logger.info("Starting context extraction process")
