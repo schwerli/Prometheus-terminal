@@ -131,7 +131,9 @@ Issue classification context:
             issue_info=format_issue_info(
                 state["issue_title"], state["issue_body"], state["issue_comments"]
             ),
-            issue_classification_context="\n\n".join(state["issue_classification_context"]),
+            issue_classification_context="\n\n".join(
+                [str(context) for context in state["issue_classification_context"]]
+            ),
         )
         return context_info
 

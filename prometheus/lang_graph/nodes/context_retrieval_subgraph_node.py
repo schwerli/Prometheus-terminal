@@ -6,6 +6,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.context_retrieval_subgraph import ContextRetrievalSubgraph
+from prometheus.models.context import Context
 
 
 class ContextRetrievalSubgraphNode:
@@ -30,10 +31,10 @@ class ContextRetrievalSubgraphNode:
         self.query_key_name = query_key_name
         self.context_key_name = context_key_name
 
-    def __call__(self, state: Dict) -> Dict[str, Sequence[str]]:
+    def __call__(self, state: Dict) -> Dict[str, Sequence[Context]]:
         self._logger.info("Enter context retrieval subgraph")
         output_state = self.context_retrieval_subgraph.invoke(
             state[self.query_key_name], state["max_refined_query_loop"]
         )
         self._logger.info(f"Context retrieved: {output_state['context']}")
-        return {self.context_key_name: [str(context) for context in output_state["context"]]}
+        return {self.context_key_name: output_state["context"]}

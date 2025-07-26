@@ -1,5 +1,5 @@
 import functools
-from typing import Sequence
+from typing import Sequence, Dict
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -13,6 +13,7 @@ from prometheus.lang_graph.nodes.context_refine_node import ContextRefineNode
 from prometheus.lang_graph.nodes.context_selection_node import ContextSelectionNode
 from prometheus.lang_graph.nodes.reset_messages_node import ResetMessagesNode
 from prometheus.lang_graph.subgraphs.context_retrieval_state import ContextRetrievalState
+from prometheus.models.context import Context
 
 
 class ContextRetrievalSubgraph:
@@ -117,7 +118,7 @@ class ContextRetrievalSubgraph:
 
     def invoke(
         self, query: str, max_refined_query_loop: int, recursion_limit: int = 999
-    ) -> Sequence[str]:
+    ) -> Dict[str, Sequence[Context]]:
         """
         Executes the context retrieval subgraph given an initial query.
 

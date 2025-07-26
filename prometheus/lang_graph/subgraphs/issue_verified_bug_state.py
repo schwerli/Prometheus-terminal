@@ -3,6 +3,8 @@ from typing import Annotated, Mapping, Sequence, TypedDict
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
+from prometheus.models.context import Context
+
 
 class IssueVerifiedBugState(TypedDict):
     issue_title: str
@@ -16,7 +18,7 @@ class IssueVerifiedBugState(TypedDict):
     max_refined_query_loop: int
 
     bug_fix_query: str
-    bug_fix_context: Sequence[str]
+    bug_fix_context: Sequence[Context]
 
     issue_bug_analyzer_messages: Annotated[Sequence[BaseMessage], add_messages]
     edit_messages: Annotated[Sequence[BaseMessage], add_messages]
