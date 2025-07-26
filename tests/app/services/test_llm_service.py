@@ -68,7 +68,7 @@ def test_get_openai_format_model(mock_custom_chat_openai):
         openai_format_api_key="openrouter-key",
         openai_format_base_url="https://openrouter.ai/api/v1",
         max_output_tokens=settings.MAX_OUTPUT_TOKENS,
-        temperature=settings.TEMPERATURE
+        temperature=settings.TEMPERATURE,
     )
 
     # Verify
@@ -88,7 +88,7 @@ def test_get_model_claude(mock_chat_anthropic):
         model_name="claude-2.1",
         anthropic_api_key="anthropic-key",
         temperature=settings.TEMPERATURE,
-        max_output_tokens=settings.MAX_OUTPUT_TOKENS
+        max_output_tokens=settings.MAX_OUTPUT_TOKENS,
     )
 
     # Verify
@@ -107,7 +107,8 @@ def test_get_model_gemini(mock_chat_google):
         model_name="gemini-pro",
         gemini_api_key="gemini-key",
         temperature=settings.TEMPERATURE,
-        max_output_tokens=settings.MAX_OUTPUT_TOKENS)
+        max_output_tokens=settings.MAX_OUTPUT_TOKENS,
+    )
 
     # Verify
     mock_chat_google.assert_called_once_with(
@@ -121,9 +122,7 @@ def test_get_model_gemini(mock_chat_google):
 
 def test_custom_chat_openai_bind_tools():
     # Setup
-    model = CustomChatOpenAI(
-        api_key="test-key"
-    )
+    model = CustomChatOpenAI(api_key="test-key")
     mock_tools = [Mock()]
 
     # Exercise
