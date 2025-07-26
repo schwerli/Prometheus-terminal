@@ -129,7 +129,7 @@ class ContextRetrievalSubgraph:
 
         Returns:
             Dict with a single key:
-                - "context" (Sequence[str]): A list of selected context snippets relevant to the query.
+                - "context" (Sequence[Context]): A list of selected context snippets relevant to the query.
         """
         config = {"recursion_limit": recursion_limit}
 
