@@ -147,7 +147,7 @@ I have generated the following patches, now please select the best patch among t
         human_prompt = self.format_human_message(state)
         for try_index in range(self.max_retries):
             response = self.model.invoke({"human_prompt": human_prompt})
-            self._logger.info(f"FinalPatchSelectionNode response at {try_index} try:\n{response}")
+            self._logger.info(f"FinalPatchSelectionNode response at {try_index+1} try:\n{response}")
 
             if 0 <= response.patch_index < len(state["edit_patches"]):
                 return {"final_patch": state["edit_patches"][response.patch_index]}
