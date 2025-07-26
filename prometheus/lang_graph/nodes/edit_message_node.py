@@ -58,7 +58,7 @@ specific issues that caused the previous error.
                 issue_info=format_issue_info(
                     state["issue_title"], state["issue_body"], state["issue_comments"]
                 ),
-                bug_fix_context="\n\n".join(state["bug_fix_context"]),
+                bug_fix_context="\n\n".join([str(context) for context in state["bug_fix_context"]]),
                 bug_analyzer_message=get_last_message_content(state["issue_bug_analyzer_messages"]),
             )
         )

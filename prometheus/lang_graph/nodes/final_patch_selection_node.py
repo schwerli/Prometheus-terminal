@@ -139,7 +139,7 @@ I have generated the following patches, now please select the best patch among t
             issue_info=format_issue_info(
                 state["issue_title"], state["issue_body"], state["issue_comments"]
             ),
-            bug_fix_context="\n\n".join(state["bug_fix_context"]),
+            bug_fix_context="\n\n".join([str(context) for context in state["bug_fix_context"]]),
             patches=patches,
         )
 
@@ -149,7 +149,7 @@ I have generated the following patches, now please select the best patch among t
             response = self.model.invoke({"human_prompt": human_prompt})
             self._logger.info(f"FinalPatchSelectionNode response at {try_index} try:\n{response}")
 
-            if response.patch_index >= 0 and response.patch_index < len(state["edit_patches"]):
+            if 0 <= response.patch_index < len(state["edit_patches"]):
                 return {"final_patch": state["edit_patches"][response.patch_index]}
 
         self._logger.info(

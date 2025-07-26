@@ -1,12 +1,12 @@
 import logging
-import traceback
-from typing import Dict
+from typing import Dict, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.context_retrieval_subgraph import ContextRetrievalSubgraph
+from prometheus.models.context import Context
 
 
 class ContextRetrievalSubgraphNode:
@@ -31,25 +31,10 @@ class ContextRetrievalSubgraphNode:
         self.query_key_name = query_key_name
         self.context_key_name = context_key_name
 
-    def __call__(self, state: Dict, max_tries: int = 3) -> Dict[str, str]:
+    def __call__(self, state: Dict) -> Dict[str, Sequence[Context]]:
         self._logger.info("Enter context retrieval subgraph")
-        output_state = None
-        # Trying several times to retrieve context
-        for attempt in range(1, max_tries + 1):
-            try:
-                output_state = self.context_retrieval_subgraph.invoke(
-                    state[self.query_key_name], state["max_refined_query_loop"]
-                )
-                break
-            except Exception as e:
-                self._logger.warning(
-                    f"Context retrieval failed, retrying {attempt}/{max_tries} times:\n"
-                    f"{type(e).__name__}: {e}\n"
-                    f"{traceback.format_exc()}"
-                )
-
-        if output_state is None:
-            self._logger.error("Context retrieval failed after maximum attempts")
-            raise RuntimeError("Failed to retrieve context after maximum attempts")
+        output_state = self.context_retrieval_subgraph.invoke(
+            state[self.query_key_name], state["max_refined_query_loop"]
+        )
         self._logger.info(f"Context retrieved: {output_state['context']}")
         return {self.context_key_name: output_state["context"]}

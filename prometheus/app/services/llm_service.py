@@ -3,13 +3,8 @@ from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
 
-
-class CustomChatOpenAI(ChatOpenAI):
-    def bind_tools(self, tools, tool_choice=None, **kwargs):
-        kwargs["parallel_tool_calls"] = False
-        return super().bind_tools(tools, tool_choice=tool_choice, **kwargs)
+from prometheus.chat_models.custom_chat_openai import CustomChatOpenAI
 
 
 class LLMService:
@@ -70,6 +65,9 @@ def get_model(
             max_retries=3,
         )
     else:
+        """
+        Use tiktoken_counter to ensure that the input messages do not exceed the maximum token limit.
+        """
         return CustomChatOpenAI(
             model=model_name,
             api_key=openai_format_api_key,

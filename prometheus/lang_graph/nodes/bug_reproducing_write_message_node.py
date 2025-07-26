@@ -41,7 +41,9 @@ Now think about what went wrong and generate the complete self-contained test ca
                 issue_info=format_issue_info(
                     state["issue_title"], state["issue_body"], state["issue_comments"]
                 ),
-                bug_reproducing_context="\n\n".join(state["bug_reproducing_context"]),
+                bug_reproducing_context="\n\n".join(
+                    [str(context) for context in state["bug_reproducing_context"]]
+                ),
             )
         )
 

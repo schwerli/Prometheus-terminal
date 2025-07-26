@@ -99,13 +99,14 @@ Please classify if the found context is relevant to the query.
         self._logger.info("Starting context selection process")
         context_list = state.get("context", [])
         for tool_message in extract_last_tool_messages(state["context_provider_messages"]):
-            for search_result in neo4j_data_for_context_generator(tool_message.artifact):
-                human_prompt = self.format_human_prompt(state, search_result)
+            for context in neo4j_data_for_context_generator(tool_message.artifact):
+                context_str = str(context)
+                human_prompt = self.format_human_prompt(state, context_str)
                 response = self.model.invoke({"human_prompt": human_prompt})
                 self._logger.debug(
-                    f"Is this search result {search_result} relevant?: {response.relevant}"
+                    f"Is this search result {context_str} relevant?: {response.relevant}"
                 )
                 if response.relevant:
-                    context_list.append(search_result)
+                    context_list.append(context)
         self._logger.info(f"Context selection complete, returning context {context_list}")
         return {"context": context_list}
