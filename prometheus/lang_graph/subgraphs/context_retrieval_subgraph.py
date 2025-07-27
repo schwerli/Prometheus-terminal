@@ -117,7 +117,7 @@ class ContextRetrievalSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-        self, query: str, max_refined_query_loop: int, recursion_limit: int = 999
+        self, query: str, max_refined_query_loop: int, recursion_limit: int = 500
     ) -> Dict[str, Sequence[Context]]:
         """
         Executes the context retrieval subgraph given an initial query.
