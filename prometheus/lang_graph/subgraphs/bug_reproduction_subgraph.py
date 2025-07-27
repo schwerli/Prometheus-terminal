@@ -3,7 +3,6 @@ from typing import Mapping, Optional, Sequence
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
-from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
@@ -125,7 +124,10 @@ class BugReproductionSubgraph:
         workflow = StateGraph(BugReproductionState)
 
         # Add nodes to the state machine
-        workflow.add_node("issue_bug_reproduction_context_message_node", issue_bug_reproduction_context_message_node)
+        workflow.add_node(
+            "issue_bug_reproduction_context_message_node",
+            issue_bug_reproduction_context_message_node,
+        )
         workflow.add_node("context_retrieval_subgraph_node", context_retrieval_subgraph_node)
         workflow.add_node("bug_reproducing_write_message_node", bug_reproducing_write_message_node)
         workflow.add_node("bug_reproducing_write_node", bug_reproducing_write_node)
@@ -137,13 +139,20 @@ class BugReproductionSubgraph:
         workflow.add_node("bug_reproducing_execute_node", bug_reproducing_execute_node)
         workflow.add_node("bug_reproducing_execute_tools", bug_reproducing_execute_tools)
         workflow.add_node("bug_reproducing_structured_node", bug_reproducing_structured_node)
-        workflow.add_node("reset_bug_reproducing_file_messages_node", reset_bug_reproducing_file_messages_node)
-        workflow.add_node("reset_bug_reproducing_execute_messages_node", reset_bug_reproducing_execute_messages_node)
+        workflow.add_node(
+            "reset_bug_reproducing_file_messages_node", reset_bug_reproducing_file_messages_node
+        )
+        workflow.add_node(
+            "reset_bug_reproducing_execute_messages_node",
+            reset_bug_reproducing_execute_messages_node,
+        )
         workflow.add_node("git_reset_node", git_reset_node)
 
         # Define transitions between nodes
         workflow.set_entry_point("issue_bug_reproduction_context_message_node")
-        workflow.add_edge("issue_bug_reproduction_context_message_node", "context_retrieval_subgraph_node")
+        workflow.add_edge(
+            "issue_bug_reproduction_context_message_node", "context_retrieval_subgraph_node"
+        )
         workflow.add_edge("context_retrieval_subgraph_node", "bug_reproducing_write_message_node")
         workflow.add_edge("bug_reproducing_write_message_node", "bug_reproducing_write_node")
 
@@ -192,7 +201,10 @@ class BugReproductionSubgraph:
         )
 
         # Retry loop: reset messages, revert repo, then go back to rewriting
-        workflow.add_edge("reset_bug_reproducing_file_messages_node", "reset_bug_reproducing_execute_messages_node")
+        workflow.add_edge(
+            "reset_bug_reproducing_file_messages_node",
+            "reset_bug_reproducing_execute_messages_node",
+        )
         workflow.add_edge("reset_bug_reproducing_execute_messages_node", "git_reset_node")
         workflow.add_edge("git_reset_node", "bug_reproducing_write_message_node")
 
@@ -204,7 +216,7 @@ class BugReproductionSubgraph:
         issue_title: str,
         issue_body: str,
         issue_comments: Sequence[Mapping[str, str]],
-        recursion_limit: int = 50,
+        recursion_limit: int = 100,
     ):
         """
         Run the bug reproduction subgraph.
@@ -227,18 +239,9 @@ class BugReproductionSubgraph:
             "max_refined_query_loop": 3,
         }
 
-        try:
-            output_state = self.subgraph.invoke(input_state, config)
-            return {
-                "reproduced_bug": output_state["reproduced_bug"],
-                "reproduced_bug_file": output_state["reproduced_bug_file"],
-                "reproduced_bug_commands": output_state["reproduced_bug_commands"],
-            }
-        except GraphRecursionError:
-            # Fallback: Reset repository if infinite loop or stuck path
-            self.git_repo.reset_repository()
-            return {
-                "reproduced_bug": False,
-                "reproduced_bug_file": "",
-                "reproduced_bug_commands": "",
-            }
+        output_state = self.subgraph.invoke(input_state, config)
+        return {
+            "reproduced_bug": output_state["reproduced_bug"],
+            "reproduced_bug_file": output_state["reproduced_bug_file"],
+            "reproduced_bug_commands": output_state["reproduced_bug_commands"],
+        }
