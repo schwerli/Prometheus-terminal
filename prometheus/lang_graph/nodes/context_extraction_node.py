@@ -51,8 +51,8 @@ Example output:
     "context": [{
         "reasoning": "1. Query requirement analysis:\n   - Query specifically asks about password validation\n   - Context provides implementation details for password validation\n2. Extended relevance:\n   - This function is essential for understanding how passwords are validated in the system",
         "relative_path": "pychemia/code/fireball/fireball.py",
-        "start_line": 270,
-        "end_line": 293
+        "start_line": 270, # Must be greater than or equal to 1
+        "end_line": 293 # Must be greater than or equal to start_line
     } ......]
 }
 ```
