@@ -1,5 +1,6 @@
 import functools
 import logging
+from pathlib import Path
 from typing import Optional, Sequence
 
 from langchain.tools import StructuredTool
@@ -22,10 +23,13 @@ Adapt the user provided test command to execute the single bug reproduction test
 figure out what test framework it uses.
 
 Rules:
-* DO NOT EXECUTE THE WHOLE TEST SUITE. ONLY EXECTUTE THE SINGLE BUG REPRODUCTION TEST FILE.
+* DO NOT EXECUTE THE WHOLE TEST SUITE. ONLY EXECUTE THE SINGLE BUG REPRODUCTION TEST FILE.
 * DO NOT EDIT ANY FILES.
-* ASSUME ALL DEPENDECIES ARE INSTALLED.
+* DO NOT ASSUME ALL DEPENDENCIES ARE INSTALLED.
 * STOP TRYING IF THE TEST EXECUTES.
+
+REMINDER:
+* Install dependencies if needed!
 """
 
     HUMAN_PROMPT = """\
@@ -67,7 +71,7 @@ User provided test commands:
 
         return tools
 
-    def added_test_filename(self, state: BugReproductionState) -> str:
+    def added_test_filename(self, state: BugReproductionState) -> Path:
         added_files, modified_file, removed_files = get_updated_files(
             state["bug_reproducing_patch"]
         )
@@ -108,7 +112,7 @@ User provided test commands:
 
         message_history = [
             self.system_prompt,
-            self.format_human_message(state, reproduced_bug_file),
+            self.format_human_message(state, str(reproduced_bug_file)),
         ] + state["bug_reproducing_execute_messages"]
 
         response = self.model_with_tools.invoke(message_history)
