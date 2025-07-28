@@ -185,7 +185,7 @@ class IssueVerifiedBugSubgraph:
         run_existing_test: bool,
         reproduced_bug_file: str,
         reproduced_bug_commands: Sequence[str],
-        recursion_limit: int = 150,
+        recursion_limit: int = 120,
     ):
         config = {"recursion_limit": recursion_limit}
 

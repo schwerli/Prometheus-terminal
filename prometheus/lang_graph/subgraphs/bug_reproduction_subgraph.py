@@ -216,7 +216,7 @@ class BugReproductionSubgraph:
         issue_title: str,
         issue_body: str,
         issue_comments: Sequence[Mapping[str, str]],
-        recursion_limit: int = 150,
+        recursion_limit: int = 120,
     ):
         """
         Run the bug reproduction subgraph.

@@ -27,6 +27,10 @@ Guidelines for command execution:
   * Adding basic command prefixes if clearly needed (e.g., "python" for .py files)
 - Do NOT modify the core logic or parameters of the commands
 - Do NOT attempt to fix bugs or modify test logic
+- DO NOT ASSUME ALL DEPENDENCIES ARE INSTALLED.
+
+REMINDER:
+- Install dependencies if needed!
 
 Format your response as:
 ```
