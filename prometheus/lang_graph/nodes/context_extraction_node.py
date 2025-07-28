@@ -67,12 +67,11 @@ class ContextOutput(BaseModel):
     )
     relative_path: str = Field(description="Relative path to the context file in the codebase")
     start_line: int = Field(
-        description="Start line number of the context in the file, minimum is 1", ge=1
+        description="Start line number of the context in the file, minimum is 1"
     )
     end_line: int = Field(
         description="End line number of the context in the file, minimum is 1. "
-        "The Content in the end line is including",
-        ge=1,
+        "The Content in the end line is including"
     )
 
 
@@ -99,6 +98,11 @@ class ContextExtractionNode:
         self._logger.debug(f"Model response: {response}")
         context_list = response.context
         for context_ in context_list:
+            if context_.start_line < 1 or context_.end_line < 1:
+                self._logger.warning(
+                    f"Skipping invalid context with start_line={context_.start_line}, end_line={context_.end_line}"
+                )
+                continue
             try:
                 content = read_file_with_line_numbers(
                     relative_path=context_.relative_path,
