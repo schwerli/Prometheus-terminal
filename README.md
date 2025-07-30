@@ -41,6 +41,17 @@ governed by a state machine to ensure code quality through automated reviews, bu
 </div>
 
 
+```bibtex
+@misc{Prometheus-code-agent-2025,
+      title={Prometheus: Unified Knowledge Graphs for Issue Resolution in Multilingual Codebases}, 
+      author={Zimin Chen and Yue Pan and Siyu Lu and Jiayi Xu and Claire Le Goues and Martin Monperrus and He Ye},
+      year={2025},
+      eprint={2507.19942},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2507.19942}, 
+}
+```
 
 ## ⚙️ Quick Start
 
