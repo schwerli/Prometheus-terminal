@@ -77,7 +77,13 @@ governed by a state machine to ensure code quality through automated reviews, bu
    mv example.env .env
    ```
 
-3. Start the services using Docker Compose:
+3. Create the working directory to store logs and cloned repositories:
+
+   ```bash
+   mkdir working_dir
+   ```
+
+4. Start the services using Docker Compose:
 
     - **Linux (includes PostgreSQL)**:
       ```bash
@@ -94,7 +100,7 @@ governed by a state machine to ensure code quality through automated reviews, bu
       docker-compose -f docker-compose.win_mac.yml up --build
       ```
 
-4. Access Prometheus:
+5. Access Prometheus:
     - Service: [http://localhost:9002](http://localhost:9002)
     - OpenAPI Docs: [http://localhost:9002/docs](http://localhost:9002/docs)
 
