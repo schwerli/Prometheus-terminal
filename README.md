@@ -66,24 +66,24 @@ governed by a state machine to ensure code quality through automated reviews, bu
 
 ### 📦 Setup
 
-1. Clone the repository:
+1. #### Clone the repository:
    ```bash
    git clone https://github.com/Pantheon-temple/Prometheus.git
    cd Prometheus
    ```
 
-2. Copy the `example.env` file to `.env` and update it with your API keys and other required configurations:
+2. #### Copy the `example.env` file to `.env` and update it with your API keys and other required configurations:
    ```bash
    mv example.env .env
    ```
 
-3. Create the working directory to store logs and cloned repositories:
+3. #### Create the working directory to store logs and cloned repositories:
 
    ```bash
    mkdir working_dir
    ```
 
-4. Start the services using Docker Compose:
+4. #### Start the services using Docker Compose:
 
     - **Linux (includes PostgreSQL)**:
       ```bash
@@ -100,9 +100,32 @@ governed by a state machine to ensure code quality through automated reviews, bu
       docker-compose -f docker-compose.win_mac.yml up --build
       ```
 
-5. Access Prometheus:
+5. #### Access Prometheus:
     - Service: [http://localhost:9002](http://localhost:9002)
     - OpenAPI Docs: [http://localhost:9002/docs](http://localhost:9002/docs)
+
+6. #### Upload Your Codebase:
+
+   You can upload a GitHub repository to Prometheus using the following API endpoint:
+
+   - **Endpoint:** `GET /github/`
+   - **Query Parameter:** `https_url` (the HTTPS URL of your GitHub repository)
+
+   **Example using `curl`:**
+
+   ```bash
+   curl -X GET "http://localhost:9002/github/?https_url=https://github.com/your/repo.git"
+   ```
+
+   This will clone the specified repository (defaulting to the latest commit on the main branch) into Prometheus.
+
+7. #### 📝 Answer Repository Issues
+
+   You can ask Prometheus to analyze and answer a specific issue in your codebase using the `/answer/` API endpoint.
+   
+   - **Endpoint:** `POST /answer/`
+     - **Request Body:** JSON object matching the `IssueRequest` schema (see [API Documents](http://localhost:9002/docs#/issue/answer_issue_issue_answer__post))
+     - **Response:** Returns the generated patch, test/build results, and a summary response.
 
 ---
 
