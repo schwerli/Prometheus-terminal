@@ -108,22 +108,22 @@ governed by a state machine to ensure code quality through automated reviews, bu
 
    You can upload a GitHub repository to Prometheus using the following API endpoint:
 
-   - **Endpoint:** `GET /github/`
+   - **Endpoint:** `GET /repository/github/`
    - **Query Parameter:** `https_url` (the HTTPS URL of your GitHub repository)
 
    **Example using `curl`:**
 
    ```bash
-   curl -X GET "http://localhost:9002/github/?https_url=https://github.com/your/repo.git"
+   curl -X GET "http://localhost:9002/repository/github/?https_url=https://github.com/your/repo.git"
    ```
 
    This will clone the specified repository (defaulting to the latest commit on the main branch) into Prometheus.
 
 7. #### 📝 Answer Repository Issues
 
-   You can ask Prometheus to analyze and answer a specific issue in your codebase using the `/answer/` API endpoint.
+   You can ask Prometheus to analyze and answer a specific issue in your codebase using the `/issue/answer/` API endpoint.
    
-   - **Endpoint:** `POST /answer/`
+   - **Endpoint:** `POST /issue/answer/`
      - **Request Body:** JSON object matching the `IssueRequest` schema (see [API Documents](http://localhost:9002/docs#/issue/answer_issue_issue_answer__post))
      - **Response:** Returns the generated patch, test/build results, and a summary response.
 
