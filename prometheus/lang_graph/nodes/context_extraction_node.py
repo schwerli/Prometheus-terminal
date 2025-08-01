@@ -76,7 +76,10 @@ class ContextOutput(BaseModel):
 
 
 class ContextExtractionStructuredOutput(BaseModel):
-    context: Sequence[ContextOutput]
+    context: Sequence[ContextOutput] = Field(
+        description="List of contexts extracted from the history messages. "
+        "Each context must have a reasoning, relative path, start line and end line."
+    )
 
 
 class ContextExtractionNode:
