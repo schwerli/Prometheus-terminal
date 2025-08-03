@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 
 from prometheus.app import dependencies
 from prometheus.app.api import issue, repository
@@ -46,7 +47,21 @@ async def lifespan(app: FastAPI):
         service.close()
 
 
-app = FastAPI(lifespan=lifespan)
+def custom_generate_unique_id(route: APIRoute) -> str:
+    """
+    Custom function to generate unique IDs for API routes based on their tags and names.
+    """
+    return f"{route.tags[0]}-{route.name}"
+
+
+app = FastAPI(
+    lifespan=lifespan,
+    title=settings.PROJECT_NAME,  # Title on generated documentation
+    openapi_url=f"{settings.BASE_URL}/openapi.json",  # Path to generated OpenAPI documentation
+    generate_unique_id_function=custom_generate_unique_id,  # Custom function for generating unique route IDs
+    version=settings.version,  # Version of the API
+    debug=True if settings.ENVIRONMENT == "local" else False,
+)
 
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])
