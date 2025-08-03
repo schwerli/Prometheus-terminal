@@ -12,7 +12,7 @@ router = APIRouter()
     response_description="Returns the patch, test results, and issue response",
 )
 def answer_issue(issue: IssueRequest, request: Request):
-    if not request.app.state.service_coordinator.exists_knowledge_graph():
+    if not request.app.state.service["knowledge_graph_service"].exists():
         raise HTTPException(
             status_code=404,
             detail="A repository is not uploaded, use /repository/ endpoint to upload one",
