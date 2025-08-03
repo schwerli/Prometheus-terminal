@@ -1,12 +1,12 @@
-from typing import Literal, List
+from typing import List, Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file='.env',
-                                      env_file_encoding='utf-8',
-                                      env_prefix='PROMETHEUS_'
-                                      )
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", env_prefix="PROMETHEUS_"
+    )
     # General settings
     version: str = "1.1"
     BASE_URL: str = f"/api/v{version}"
