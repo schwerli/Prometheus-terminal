@@ -21,13 +21,9 @@ def upload_github_repository(github_token: str, https_url: str, request: Request
         knowledge_graph_service.clean()
 
         # Clone the repository
-        saved_path = repository_service.clone_github_repo(
-            github_token, https_url
-        )
+        saved_path = repository_service.clone_github_repo(github_token, https_url)
         # Build and save the knowledge graph from the cloned repository
-        knowledge_graph_service.build_and_save_knowledge_graph(
-            saved_path, https_url
-        )
+        knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url)
     except git.exc.GitCommandError:
         raise HTTPException(status_code=400, detail=f"Unable to clone {https_url}")
 
@@ -38,7 +34,9 @@ def upload_github_repository(github_token: str, https_url: str, request: Request
     Upload a GitHub repository at a specific commit to Prometheus.
     """,
 )
-def upload_github_repository_at_commit(github_token, https_url: str, commit_id: str, request: Request):
+def upload_github_repository_at_commit(
+    github_token, https_url: str, commit_id: str, request: Request
+):
     try:
         # Get the repository and knowledge graph services
         repository_service = request.app.state.service["repository_service"]
@@ -49,14 +47,10 @@ def upload_github_repository_at_commit(github_token, https_url: str, commit_id: 
         knowledge_graph_service.clean()
 
         # Clone the repository
-        saved_path = repository_service.clone_github_repo(
-            github_token, https_url, commit_id
-        )
+        saved_path = repository_service.clone_github_repo(github_token, https_url, commit_id)
 
         # Build and save the knowledge graph from the cloned repository
-        knowledge_graph_service.build_and_save_knowledge_graph(
-            saved_path, https_url, commit_id
-        )
+        knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
     except git.exc.GitCommandError:
         raise HTTPException(
             status_code=400, detail=f"Unable to clone {https_url} with commit {commit_id}"
