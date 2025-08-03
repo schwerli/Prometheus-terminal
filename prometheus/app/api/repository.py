@@ -1,6 +1,9 @@
 import git
 from fastapi import APIRouter, HTTPException, Request
 
+from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
+from prometheus.app.services.repository_service import RepositoryService
+
 router = APIRouter()
 
 
@@ -13,12 +16,14 @@ router = APIRouter()
 def upload_github_repository(github_token: str, https_url: str, request: Request):
     try:
         # Get the repository and knowledge graph services
-        repository_service = request.app.state.service["repository_service"]
-        knowledge_graph_service = request.app.state.service["knowledge_graph_service"]
+        repository_service: RepositoryService = request.app.state.service["repository_service"]
+        knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+            "knowledge_graph_service"
+        ]
 
         # Clean the services to ensure no previous data is present
         repository_service.clean()
-        knowledge_graph_service.clean()
+        knowledge_graph_service.clear()
 
         # Clone the repository
         saved_path = repository_service.clone_github_repo(github_token, https_url)
@@ -39,12 +44,14 @@ def upload_github_repository_at_commit(
 ):
     try:
         # Get the repository and knowledge graph services
-        repository_service = request.app.state.service["repository_service"]
-        knowledge_graph_service = request.app.state.service["knowledge_graph_service"]
+        repository_service: RepositoryService = request.app.state.service["repository_service"]
+        knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+            "knowledge_graph_service"
+        ]
 
         # Clean the services to ensure no previous data is present
         repository_service.clean()
-        knowledge_graph_service.clean()
+        knowledge_graph_service.clear()
 
         # Clone the repository
         saved_path = repository_service.clone_github_repo(github_token, https_url, commit_id)
