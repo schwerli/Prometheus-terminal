@@ -32,7 +32,7 @@ def answer_issue(issue: IssueRequest, request: Request):
         passed_build,
         passed_existing_test,
         issue_response,
-    ) = request.app.state.service_coordinator.answer_issue(
+    ) = request.app.state.service["issue_service"].answer_issue(
         issue_number=issue.issue_number,
         issue_title=issue.issue_title,
         issue_body=issue.issue_body,

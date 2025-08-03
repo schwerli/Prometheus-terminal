@@ -140,6 +140,7 @@ class IssueService(BaseService):
             elif output_state["issue_type"] == IssueType.QUESTION:
                 return (
                     None,
+                    None,
                     False,
                     False,
                     False,

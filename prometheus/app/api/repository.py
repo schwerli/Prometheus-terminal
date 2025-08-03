@@ -71,10 +71,17 @@ def upload_github_repository_at_commit(
     """,
 )
 def delete(request: Request):
-    if not request.app.state.service["knowledge_graph_service"].exists():
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+    if not knowledge_graph_service.exists():
         return {"message": "No knowledge graph to delete"}
+    # Get the repository service to clean up the repository data
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
 
-    request.app.state.service_coordinator.clear()
+    # Clear the knowledge graph and repository data
+    knowledge_graph_service.clear()
+    repository_service.clean()
     return {"message": "Successfully deleted knowledge graph"}
 
 
