@@ -5,11 +5,12 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+from prometheus.app.services.base_service import BaseService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.git.git_repository import GitRepository
 
 
-class RepositoryService:
+class RepositoryService(BaseService):
     """Manages repository operations.
 
     This service provides functionality for Git repository operations including
@@ -93,3 +94,7 @@ class RepositoryService:
         self.git_repo = None
         shutil.rmtree(self.target_directory)
         self.target_directory.mkdir(parents=True)
+
+    def close(self):
+        """Cleans up the repository service before shutdown."""
+        self.clean()

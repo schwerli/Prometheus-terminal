@@ -2,8 +2,10 @@
 
 from neo4j import GraphDatabase
 
+from prometheus.app.services.base_service import BaseService
 
-class Neo4jService:
+
+class Neo4jService(BaseService):
     def __init__(self, neo4j_uri: str, neo4j_username: str, neo4j_password: str):
         self.neo4j_driver = GraphDatabase.driver(
             neo4j_uri,

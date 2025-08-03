@@ -4,10 +4,11 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from prometheus.app.services.base_service import BaseService
 from prometheus.chat_models.custom_chat_openai import CustomChatOpenAI
 
 
-class LLMService:
+class LLMService(BaseService):
     def __init__(
         self,
         advanced_model_name: str,
