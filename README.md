@@ -124,7 +124,7 @@ governed by a state machine to ensure code quality through automated reviews, bu
    You can ask Prometheus to analyze and answer a specific issue in your codebase using the `/issue/answer/` API endpoint.
    
    - **Endpoint:** `POST /issue/answer/`
-     - **Request Body:** JSON object matching the `IssueRequest` schema (see [API Documents](http://localhost:9002/docs#/issue/answer_issue_issue_answer__post))
+     - **Request Body:** JSON object matching the `IssueRequest` schema (see [API Documents](http://127.0.0.1:9002/docs#/issue/issue-answer_issue))
      - **Response:** Returns the generated patch, test/build results, and a summary response.
 
 ---
