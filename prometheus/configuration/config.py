@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     TEMPERATURE: float
     MAX_OUTPUT_TOKENS: int
 
+    # GitHub Token
+    GITHUB_ACCESS_TOKEN: str
+
     # Database
     DATABASE_URL: str
 
