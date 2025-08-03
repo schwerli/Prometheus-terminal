@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
 from typing import Mapping, Optional, Sequence
+
+from pydantic import BaseModel, Field
 
 from prometheus.lang_graph.graphs.issue_state import IssueType
 
