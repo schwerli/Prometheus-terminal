@@ -38,15 +38,12 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str
     GEMINI_API_KEY: str
     OPENAI_FORMAT_BASE_URL: str
-    OPENAI_API_KEY: str
+    OPENAI_FORMAT_API_KEY: str
 
     # Model parameters
     MAX_INPUT_TOKENS: int
     TEMPERATURE: float
     MAX_OUTPUT_TOKENS: int
-
-    # GitHub Token
-    GITHUB_ACCESS_TOKEN: str
 
     # Database
     DATABASE_URL: str
