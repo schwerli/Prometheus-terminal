@@ -56,6 +56,7 @@ def initialize_services() -> dict[str, BaseService]:
         neo4j_service,
         llm_service,
         settings.MAX_TOKEN_PER_NEO4J_RESULT,
+        settings.WORKING_DIRECTORY,
     )
 
     return {

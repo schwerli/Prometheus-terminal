@@ -23,7 +23,7 @@ class IssueService(BaseService):
         neo4j_service: Neo4jService,
         llm_service: LLMService,
         max_token_per_neo4j_result: int,
-        working_directory: Path,
+        working_directory: str,
     ):
         self.kg_service = kg_service
         self.repository_service = repository_service
@@ -31,7 +31,7 @@ class IssueService(BaseService):
         self.llm_service = llm_service
         self.max_token_per_neo4j_result = max_token_per_neo4j_result
         self.working_directory = working_directory
-        self.answer_issue_log_dir = self.working_directory / "answer_issue_logs"
+        self.answer_issue_log_dir = Path(self.working_directory) / "answer_issue_logs"
         self.answer_issue_log_dir.mkdir(parents=True, exist_ok=True)
 
     def answer_issue(
