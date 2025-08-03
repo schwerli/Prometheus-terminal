@@ -19,6 +19,8 @@ logger.propagate = False
 
 # Log the configuration settings
 logger.info(f"LOGGING_LEVEL={settings.LOGGING_LEVEL}")
+logger.info(f"ENVIRONMENT={settings.ENVIRONMENT}")
+logger.info(f"BACKEND_CORS_ORIGINS={settings.BACKEND_CORS_ORIGINS}")
 logger.info(f"ADVANCED_MODEL={settings.ADVANCED_MODEL}")
 logger.info(f"BASE_MODEL={settings.BASE_MODEL}")
 logger.info(f"NEO4J_BATCH_SIZE={settings.NEO4J_BATCH_SIZE}")
