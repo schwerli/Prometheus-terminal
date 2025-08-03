@@ -35,12 +35,13 @@ logger.info(f"MAX_OUTPUT_TOKENS={settings.MAX_OUTPUT_TOKENS}")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialization on startup
-    app.state.service_coordinator = dependencies.initialize_services()
+    app.state.service = dependencies.initialize_services()
     # Initialization Completed
     yield
     # Cleanup on shutdown
-    app.state.service_coordinator.clear()
-    app.state.service_coordinator.close()
+    logger.info("Shutting down services...")
+    for service in app.state.service.values():
+        service.close()
 
 
 app = FastAPI(lifespan=lifespan)
