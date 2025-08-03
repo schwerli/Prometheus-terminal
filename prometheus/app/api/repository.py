@@ -1,33 +1,7 @@
-from pathlib import Path
-
 import git
 from fastapi import APIRouter, HTTPException, Request
 
 router = APIRouter()
-
-
-@router.get(
-    "/local/",
-    description="""
-    Upload a local codebase to Prometheus.
-    """,
-    responses={
-        404: {"description": "Local repository not found"},
-        200: {"description": "Repository uploaded successfully"},
-    },
-)
-def upload_local_repository(local_repository: str, request: Request):
-    local_path = Path(local_repository)
-
-    if not local_path.exists():
-        raise HTTPException(
-            status_code=404,
-            detail=f"Local repository not found at path: {local_repository}",
-        )
-
-    request.app.state.service_coordinator.upload_local_repository(local_path)
-
-    return {"message": "Repository uploaded successfully"}
 
 
 @router.get(
