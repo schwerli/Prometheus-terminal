@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 
 from prometheus.app.models.requests.issue import IssueRequest
 from prometheus.app.models.response.issue import IssueResponse
+from prometheus.app.models.response.response import Response
+from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
 
@@ -9,22 +11,23 @@ router = APIRouter()
 @router.post(
     "/answer/",
     summary="Process and generate a response for an issue",
-    description="Analyzes an issue, generates patches if needed, runs optional builds and tests, and can push changes to a remote branch.",
+    description="Analyzes an issue, generates patches if needed, runs optional builds and tests, and can push changes "
+    "to a remote branch.",
     response_description="Returns the patch, test results, and issue response",
-    response_model=IssueResponse,
+    response_model=Response[IssueResponse],
 )
-def answer_issue(issue: IssueRequest, request: Request) -> IssueResponse:
+def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueResponse]:
     if not request.app.state.service["knowledge_graph_service"].exists():
-        raise HTTPException(
-            status_code=404,
-            detail="A repository is not uploaded, use /repository/ endpoint to upload one",
+        raise ServerException(
+            code=404,
+            message="A repository is not uploaded, use /repository/ endpoint to upload one",
         )
 
     if issue.dockerfile_content or issue.image_name:
         if issue.workdir is None:
-            raise HTTPException(
-                status_code=400,
-                detail="workdir must be provided for user defined environment",
+            raise ServerException(
+                code=400,
+                message="workdir must be provided for user defined environment",
             )
 
     (
@@ -50,11 +53,13 @@ def answer_issue(issue: IssueRequest, request: Request) -> IssueResponse:
         test_commands=issue.test_commands,
         push_to_remote=issue.push_to_remote,
     )
-    return IssueResponse(
-        patch=patch,
-        passed_reproducing_test=passed_reproducing_test,
-        passed_build=passed_build,
-        passed_existing_test=passed_existing_test,
-        issue_response=issue_response,
-        remote_branch_name=remote_branch_name,
+    return Response(
+        data=IssueResponse(
+            patch=patch,
+            passed_reproducing_test=passed_reproducing_test,
+            passed_build=passed_build,
+            passed_existing_test=passed_existing_test,
+            issue_response=issue_response,
+            remote_branch_name=remote_branch_name,
+        )
     )
