@@ -25,22 +25,18 @@ class UserService(BaseService):
         is_superuser: bool = False,
     ) -> None:
         """
-        Create a new user in the database.
+        Create a new superuser and commit it to the database.
 
-        This method is a placeholder and should be implemented with actual user creation logic.
+        Args:
+            username (str): Desired username.
+            email (str): Email address.
+            password (str): Plaintext password (will be hashed).
+            github_token (Optional[str]): Optional GitHub token.
+            issue_credit (int): Optional issue credit.
+            is_superuser (bool): Whether the user is a superuser.
+        Returns:
+            User: The created superuser instance.
         """
-        """
-                Create a new superuser and commit it to the database.
-
-                Args:
-                    username (str): Desired username.
-                    email (str): Email address.
-                    password (str): Plaintext password (will be hashed).
-                    github_token (Optional[str]): Optional GitHub token.
-
-                Returns:
-                    User: The created superuser instance.
-                """
         with Session(self.engine) as session:
             if session.query(User).filter(User.username == username).first():
                 raise ValueError(f"Username '{username}' already exists")
