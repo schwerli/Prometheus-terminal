@@ -48,5 +48,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
 
+    # JWT Configuration
+    JWT_SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRE_TIME: int = 7  # days
+
 
 settings = Settings()
