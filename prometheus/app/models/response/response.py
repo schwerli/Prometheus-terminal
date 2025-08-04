@@ -11,5 +11,5 @@ class Response(BaseModel, Generic[T]):
     """
 
     code: int = 200
-    message: str = "Success"
+    message: str = "success"
     data: T | None = None
