@@ -8,6 +8,7 @@ from fastapi.routing import APIRoute
 from prometheus.app import dependencies
 from prometheus.app.api import issue, repository
 from prometheus.app.exception_handler import register_exception_handlers
+from prometheus.app.middlewares.response_wrapper_middleware import ResponseWrapperMiddleware
 from prometheus.configuration.config import settings
 
 # Create a logger for the application's namespace
@@ -66,6 +67,9 @@ app = FastAPI(
     version=settings.version,  # Version of the API
     debug=True if settings.ENVIRONMENT == "local" else False,
 )
+
+# Register middlewares
+app.add_middleware(ResponseWrapperMiddleware)
 
 # Register the exception handlers
 register_exception_handlers(app)
