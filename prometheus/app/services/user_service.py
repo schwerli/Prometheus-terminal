@@ -74,5 +74,7 @@ class UserService(BaseService):
 
         This method creates a superuser with the provided credentials and commits it to the database.
         """
-        self.create_user(username, email, password, github_token, is_superuser=True)
+        self.create_user(
+            username, email, password, github_token, is_superuser=True, issue_credit=999999
+        )
         self._logger.info(f"Superuser '{username}' created successfully.")
