@@ -32,7 +32,7 @@ def mock_knowledge_graph():
 
 @pytest.fixture
 def service(mock_kg_service):
-    working_dir = Path("/test/working/dir")
+    working_dir = "/test/working/dir"
     # Don't mock GitRepository in the fixture anymore
     with patch("pathlib.Path.mkdir"):
         return RepositoryService(

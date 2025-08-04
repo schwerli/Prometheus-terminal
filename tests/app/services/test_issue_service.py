@@ -49,6 +49,7 @@ def issue_service(mock_kg_service, mock_repository_service, mock_neo4j_service, 
         mock_neo4j_service,
         mock_llm_service,
         max_token_per_neo4j_result=1000,
+        working_directory="/test/working/dir",
     )
 
 
