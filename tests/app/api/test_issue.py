@@ -52,7 +52,7 @@ def test_answer_issue(mock_service):
             "passed_build": True,
             "passed_existing_test": True,
             "issue_response": "Issue fixed",
-        }
+        },
     }
 
 
