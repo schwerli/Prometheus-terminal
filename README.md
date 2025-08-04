@@ -73,9 +73,19 @@ governed by a state machine to ensure code quality through automated reviews, bu
    ```
 
 2. #### Copy the `example.env` file to `.env` and update it with your API keys and other required configurations:
+
    ```bash
    mv example.env .env
    ```
+
+   > You need to provide a secure `JWT_SECRET_KEY` in the `.env` file.
+   > You can generate a strong key by running the following command:
+
+   ```bash
+   python -m prometheus.script.generate_jwt_token
+   ```
+
+   This will print a secure token you can copy and paste into your `.env` file
 
 3. #### Create the working directory to store logs and cloned repositories:
 
