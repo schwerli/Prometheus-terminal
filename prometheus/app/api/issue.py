@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from prometheus.app.models.requests.issue import IssueRequest
+from prometheus.app.models.response.issue import IssueResponse
 
 router = APIRouter()
 
@@ -10,8 +11,9 @@ router = APIRouter()
     summary="Process and generate a response for an issue",
     description="Analyzes an issue, generates patches if needed, runs optional builds and tests, and can push changes to a remote branch.",
     response_description="Returns the patch, test results, and issue response",
+    response_model=IssueResponse,
 )
-def answer_issue(issue: IssueRequest, request: Request):
+def answer_issue(issue: IssueRequest, request: Request) -> IssueResponse:
     if not request.app.state.service["knowledge_graph_service"].exists():
         raise HTTPException(
             status_code=404,
@@ -48,11 +50,11 @@ def answer_issue(issue: IssueRequest, request: Request):
         test_commands=issue.test_commands,
         push_to_remote=issue.push_to_remote,
     )
-    return {
-        "patch": patch,
-        "passed_reproducing_test": passed_reproducing_test,
-        "passed_build": passed_build,
-        "passed_existing_test": passed_existing_test,
-        "issue_response": issue_response,
-        "remote_branch_name": remote_branch_name,
-    }
+    return IssueResponse(
+        patch=patch,
+        passed_reproducing_test=passed_reproducing_test,
+        passed_build=passed_build,
+        passed_existing_test=passed_existing_test,
+        issue_response=issue_response,
+        remote_branch_name=remote_branch_name,
+    )
