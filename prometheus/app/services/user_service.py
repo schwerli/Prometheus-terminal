@@ -102,3 +102,17 @@ class UserService(BaseService):
             username, email, password, github_token, is_superuser=True, issue_credit=999999
         )
         self._logger.info(f"Superuser '{username}' created successfully.")
+
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        """
+        Retrieve a user by their ID.
+
+        Args:
+            user_id (int): The ID of the user to retrieve.
+
+        Returns:
+            User: The user instance if found, otherwise None.
+        """
+        with Session(self.engine) as session:
+            statement = select(User).where(User.id == user_id)
+            return session.exec(statement).first()
