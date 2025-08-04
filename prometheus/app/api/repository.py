@@ -1,8 +1,9 @@
 import git
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
+from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
 
@@ -14,23 +15,22 @@ router = APIRouter()
     """,
 )
 def upload_github_repository(github_token: str, https_url: str, request: Request):
+    # Get the repository and knowledge graph services
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+
+    # Clean the services to ensure no previous data is present
+    repository_service.clean()
+    knowledge_graph_service.clear()
     try:
-        # Get the repository and knowledge graph services
-        repository_service: RepositoryService = request.app.state.service["repository_service"]
-        knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
-            "knowledge_graph_service"
-        ]
-
-        # Clean the services to ensure no previous data is present
-        repository_service.clean()
-        knowledge_graph_service.clear()
-
         # Clone the repository
         saved_path = repository_service.clone_github_repo(github_token, https_url)
-        # Build and save the knowledge graph from the cloned repository
-        knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url)
     except git.exc.GitCommandError:
-        raise HTTPException(status_code=400, detail=f"Unable to clone {https_url}")
+        raise ServerException(code=400, message=f"Unable to clone {https_url}")
+    # Build and save the knowledge graph from the cloned repository
+    knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url)
 
 
 @router.get(
@@ -42,26 +42,23 @@ def upload_github_repository(github_token: str, https_url: str, request: Request
 def upload_github_repository_at_commit(
     github_token, https_url: str, commit_id: str, request: Request
 ):
+    # Get the repository and knowledge graph services
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+
+    # Clean the services to ensure no previous data is present
+    repository_service.clean()
+    knowledge_graph_service.clear()
+
     try:
-        # Get the repository and knowledge graph services
-        repository_service: RepositoryService = request.app.state.service["repository_service"]
-        knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
-            "knowledge_graph_service"
-        ]
-
-        # Clean the services to ensure no previous data is present
-        repository_service.clean()
-        knowledge_graph_service.clear()
-
         # Clone the repository
         saved_path = repository_service.clone_github_repo(github_token, https_url, commit_id)
-
-        # Build and save the knowledge graph from the cloned repository
-        knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
     except git.exc.GitCommandError:
-        raise HTTPException(
-            status_code=400, detail=f"Unable to clone {https_url} with commit {commit_id}"
-        )
+        raise ServerException(code=400, message=f"Unable to clone {https_url}")
+    # Build and save the knowledge graph from the cloned repository
+    knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
 
 
 @router.get(
