@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from passlib.hash import bcrypt
+from argon2 import PasswordHasher
 from sqlmodel import Session
 
 from prometheus.app.entity.user import User
@@ -14,6 +14,7 @@ class UserService(BaseService):
         self.database_service = database_service
         self.engine = database_service.engine
         self._logger = logging.getLogger("prometheus.app.services.user_service")
+        self.ph = PasswordHasher()
 
     def create_user(
         self,
@@ -43,7 +44,7 @@ class UserService(BaseService):
             if session.query(User).filter(User.email == email).first():
                 raise ValueError(f"Email '{email}' already exists")
 
-            hashed_password = bcrypt.hash(password)
+            hashed_password = self.ph.hash(password)
 
             user = User(
                 username=username,
