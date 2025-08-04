@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from prometheus.exceptions.file_operation_exceptions import FileOperationException
+from prometheus.exceptions.file_operation_exception import FileOperationException
 
 
 def read_file_with_line_numbers(

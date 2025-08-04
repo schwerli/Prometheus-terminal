@@ -5,7 +5,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import SystemMessage
 from pydantic import BaseModel, Field
 
-from prometheus.exceptions.file_operation_exceptions import FileOperationException
+from prometheus.exceptions.file_operation_exception import FileOperationException
 from prometheus.lang_graph.subgraphs.context_retrieval_state import ContextRetrievalState
 from prometheus.models.context import Context
 from prometheus.utils.file_utils import read_file_with_line_numbers
