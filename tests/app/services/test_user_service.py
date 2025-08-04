@@ -2,13 +2,15 @@ import pytest
 
 from prometheus.app.services.database_service import DatabaseService
 from prometheus.app.services.user_service import UserService
+from tests.test_utils.fixtures import postgres_container_fixture  # noqa: F401
 
 
 @pytest.fixture
-def mock_database_service(postgres_container_fixture):
+def mock_database_service(postgres_container_fixture):  # noqa: F811
     service = DatabaseService(postgres_container_fixture.get_connection_url())
     service.start()
-    return service
+    yield service
+    service.close()
 
 
 def test_create_superuser(mock_database_service):
