@@ -39,6 +39,9 @@ logger.info(f"MAX_OUTPUT_TOKENS={settings.MAX_OUTPUT_TOKENS}")
 async def lifespan(app: FastAPI):
     # Initialization on startup
     app.state.service = dependencies.initialize_services()
+    logger.info("Starting services...")
+    for service in app.state.service.values():
+        service.start()
     # Initialization Completed
     yield
     # Cleanup on shutdown
