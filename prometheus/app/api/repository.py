@@ -1,6 +1,7 @@
 import git
 from fastapi import APIRouter, Request
 
+from prometheus.app.models.response.response import Response
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.exceptions.server_exception import ServerException
@@ -13,6 +14,7 @@ router = APIRouter()
     description="""
     Upload a GitHub repository to Prometheus, default to the latest commit in the main branch.
     """,
+    response_model=Response,
 )
 def upload_github_repository(github_token: str, https_url: str, request: Request):
     # Get the repository and knowledge graph services
@@ -31,6 +33,7 @@ def upload_github_repository(github_token: str, https_url: str, request: Request
         raise ServerException(code=400, message=f"Unable to clone {https_url}")
     # Build and save the knowledge graph from the cloned repository
     knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url)
+    return Response()
 
 
 @router.get(
@@ -38,6 +41,7 @@ def upload_github_repository(github_token: str, https_url: str, request: Request
     description="""
     Upload a GitHub repository at a specific commit to Prometheus.
     """,
+    response_model=Response,
 )
 def upload_github_repository_at_commit(
     github_token, https_url: str, commit_id: str, request: Request
@@ -59,6 +63,7 @@ def upload_github_repository_at_commit(
         raise ServerException(code=400, message=f"Unable to clone {https_url}")
     # Build and save the knowledge graph from the cloned repository
     knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
+    return Response()
 
 
 @router.get(
@@ -66,20 +71,21 @@ def upload_github_repository_at_commit(
     description="""
     Delete the repository uploaded to Prometheus, along with other information.
     """,
+    response_model=Response,
 )
 def delete(request: Request):
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
     ]
     if not knowledge_graph_service.exists():
-        return {"message": "No knowledge graph to delete"}
+        return Response(message="No knowledge graph to delete")
     # Get the repository service to clean up the repository data
     repository_service: RepositoryService = request.app.state.service["repository_service"]
 
     # Clear the knowledge graph and repository data
     knowledge_graph_service.clear()
     repository_service.clean()
-    return {"message": "Successfully deleted knowledge graph"}
+    return Response()
 
 
 @router.get(
@@ -87,7 +93,7 @@ def delete(request: Request):
     description="""
     If there is a codebase uploaded to Promtheus.
     """,
-    response_model=bool,
+    response_model=Response[bool],
 )
-def knowledge_graph_exists(request: Request) -> bool:
-    return request.app.state.service["knowledge_graph_service"].exists()
+def knowledge_graph_exists(request: Request) -> Response[bool]:
+    return Response(data=request.app.state.service["knowledge_graph_service"].exists())
