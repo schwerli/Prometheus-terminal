@@ -17,8 +17,9 @@ class LoginRequest(BaseModel):
         max_length=30,
     )
 
+    @classmethod
     @field_validator("email", mode="after")
-    def validate_email_format(self, v: str) -> str:
+    def validate_email_format(cls, v: str) -> str:
         pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
         if not re.match(pattern, v):
             raise ValueError("Invalid email format")
