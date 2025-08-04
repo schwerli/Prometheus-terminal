@@ -19,4 +19,9 @@ def test_create_superuser(mock_database_service):
     service.create_superuser("testuser", "test@gmail.com", "password123", github_token="gh_token")
 
 
-# TODO test login
+def test_login(mock_database_service):
+    # Exercise
+    service = UserService(mock_database_service)
+    access_token = service.login("testuser", "test@gmail.com", "password123")
+    # Verify
+    assert access_token is not None

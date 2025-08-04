@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from argon2 import PasswordHasher
-from sqlmodel import Session
+from sqlmodel import Session, or_, select
 
 from prometheus.app.entity.user import User
 from prometheus.app.services.base_service import BaseService
@@ -41,9 +41,11 @@ class UserService(BaseService):
             User: The created superuser instance.
         """
         with Session(self.engine) as session:
-            if session.query(User).filter(User.username == username).first():
+            statement = select(User).where(User.username == username)
+            if session.exec(statement).first():
                 raise ValueError(f"Username '{username}' already exists")
-            if session.query(User).filter(User.email == email).first():
+            statement = select(User).where(User.email == email)
+            if session.exec(statement).first():
                 raise ValueError(f"Email '{email}' already exists")
 
             hashed_password = self.ph.hash(password)
@@ -70,11 +72,8 @@ class UserService(BaseService):
             password (str): Plaintext password.
         """
         with Session(self.engine) as session:
-            user = (
-                session.query(User)
-                .filter((User.username == username) | (User.email == email))
-                .first()
-            )
+            statement = select(User).where(or_(User.username == username, User.email == email))
+            user = session.exec(statement).first()
 
             if not user:
                 raise ValueError("Invalid username or email")
