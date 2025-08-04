@@ -49,7 +49,7 @@ def issue_service(mock_kg_service, mock_repository_service, mock_neo4j_service, 
         mock_neo4j_service,
         mock_llm_service,
         max_token_per_neo4j_result=1000,
-        working_directory="/test/working/dir",
+        working_directory="/tmp/working_dir/",
     )
 
 
@@ -78,6 +78,7 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
 
     # Exercise
     result = issue_service.answer_issue(
+        issue_number=-1,
         issue_title="Test Issue",
         issue_body="Test Body",
         issue_comments=[],
@@ -102,7 +103,7 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
         build_commands=None,
         test_commands=None,
     )
-    assert result == ("test_patch", True, True, True, "test_response")
+    assert result == (None, "test_patch", True, True, True, "test_response")
 
 
 def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
@@ -123,6 +124,7 @@ def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
 
     # Exercise
     result = issue_service.answer_issue(
+        issue_number=-1,
         issue_title="Test Issue",
         issue_body="Test Body",
         issue_comments=[],
@@ -146,4 +148,4 @@ def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
         "FROM python:3.8",
         "test-image",
     )
-    assert result == (None, False, False, False, "test_response")
+    assert result == (None, None, False, False, False, "test_response")
