@@ -60,7 +60,6 @@ def postgres_container_fixture():
             port=5432,
         )
         .with_name(f"postgres_container_{uuid.uuid4().hex[:12]}")
-        .with_bind_ports(5432, 5432)  # Bind to a specific port for testing
     )
     with container as postgres_container:
         yield postgres_container
