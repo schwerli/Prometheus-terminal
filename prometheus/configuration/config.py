@@ -10,9 +10,12 @@ class Settings(BaseSettings):
     # General settings
     version: str = "1.1"
     BASE_URL: str = f"/api/v{version}"
+    PROJECT_NAME: str = "Prometheus"
+
     ENVIRONMENT: Literal["local", "production"]
     BACKEND_CORS_ORIGINS: List[str]
-    PROJECT_NAME: str = "Prometheus"
+    ENABLE_AUTHENTICATION: bool
+    AUTHENTICATION_EXCLUDED_PATHS: List[str] = ["/auth/login"]
 
     # Logging
     LOGGING_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
