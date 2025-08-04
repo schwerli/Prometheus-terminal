@@ -3,12 +3,13 @@
 from pathlib import Path
 from typing import Optional
 
+from prometheus.app.services.base_service import BaseService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j import knowledge_graph_handler
 
 
-class KnowledgeGraphService:
+class KnowledgeGraphService(BaseService):
     """Manages the lifecycle and operations of Knowledge Graphs.
 
     This service handles the creation, persistence, and management of Knowledge Graphs
@@ -84,3 +85,7 @@ class KnowledgeGraphService:
     def clear(self):
         self.kg_handler.clear_knowledge_graph()
         self.kg = None
+
+    def close(self):
+        """Clear the knowledge graph before closing the service."""
+        self.clear()

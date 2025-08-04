@@ -1,17 +1,17 @@
 """Initializes and configures all prometheus services."""
 
-from pathlib import Path
-
+from prometheus.app.services.base_service import BaseService
+from prometheus.app.services.database_service import DatabaseService
 from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.app.services.repository_service import RepositoryService
-from prometheus.app.services.service_coordinator import ServiceCoordinator
+from prometheus.app.services.user_service import UserService
 from prometheus.configuration.config import settings
 
 
-def initialize_services() -> ServiceCoordinator:
+def initialize_services() -> dict[str, BaseService]:
     """Initializes and configures the complete prometheus service stack.
 
     This function creates and configures all required services for prometheus
@@ -58,17 +58,17 @@ def initialize_services() -> ServiceCoordinator:
         neo4j_service,
         llm_service,
         settings.MAX_TOKEN_PER_NEO4J_RESULT,
+        settings.WORKING_DIRECTORY,
     )
+    database_service = DatabaseService(settings.DATABASE_URL)
+    user_service = UserService(database_service)
 
-    service_coordinator = ServiceCoordinator(
-        issue_service,
-        knowledge_graph_service,
-        llm_service,
-        neo4j_service,
-        repository_service,
-        settings.MAX_TOKEN_PER_NEO4J_RESULT,
-        settings.GITHUB_ACCESS_TOKEN,
-        Path(settings.WORKING_DIRECTORY).absolute(),
-    )
-
-    return service_coordinator
+    return {
+        "neo4j_service": neo4j_service,
+        "llm_service": llm_service,
+        "knowledge_graph_service": knowledge_graph_service,
+        "repository_service": repository_service,
+        "issue_service": issue_service,
+        "database_service": database_service,
+        "user_service": user_service,
+    }

@@ -3,9 +3,11 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 
 from prometheus.app import dependencies
 from prometheus.app.api import issue, repository
+from prometheus.app.exception_handler import register_exception_handlers
 from prometheus.configuration.config import settings
 
 # Create a logger for the application's namespace
@@ -19,6 +21,8 @@ logger.propagate = False
 
 # Log the configuration settings
 logger.info(f"LOGGING_LEVEL={settings.LOGGING_LEVEL}")
+logger.info(f"ENVIRONMENT={settings.ENVIRONMENT}")
+logger.info(f"BACKEND_CORS_ORIGINS={settings.BACKEND_CORS_ORIGINS}")
 logger.info(f"ADVANCED_MODEL={settings.ADVANCED_MODEL}")
 logger.info(f"BASE_MODEL={settings.BASE_MODEL}")
 logger.info(f"NEO4J_BATCH_SIZE={settings.NEO4J_BATCH_SIZE}")
@@ -35,15 +39,36 @@ logger.info(f"MAX_OUTPUT_TOKENS={settings.MAX_OUTPUT_TOKENS}")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialization on startup
-    app.state.service_coordinator = dependencies.initialize_services()
+    app.state.service = dependencies.initialize_services()
+    logger.info("Starting services...")
+    for service in app.state.service.values():
+        service.start()
     # Initialization Completed
     yield
     # Cleanup on shutdown
-    app.state.service_coordinator.clear()
-    app.state.service_coordinator.close()
+    logger.info("Shutting down services...")
+    for service in app.state.service.values():
+        service.close()
 
 
-app = FastAPI(lifespan=lifespan)
+def custom_generate_unique_id(route: APIRoute) -> str:
+    """
+    Custom function to generate unique IDs for API routes based on their tags and names.
+    """
+    return f"{route.tags[0]}-{route.name}"
+
+
+app = FastAPI(
+    lifespan=lifespan,
+    title=settings.PROJECT_NAME,  # Title on generated documentation
+    openapi_url=f"{settings.BASE_URL}/openapi.json",  # Path to generated OpenAPI documentation
+    generate_unique_id_function=custom_generate_unique_id,  # Custom function for generating unique route IDs
+    version=settings.version,  # Version of the API
+    debug=True if settings.ENVIRONMENT == "local" else False,
+)
+
+# Register the exception handlers
+register_exception_handlers(app)
 
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])

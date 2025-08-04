@@ -51,17 +51,13 @@ def empty_neo4j_container_fixture():
 
 @pytest.fixture(scope="session")
 def postgres_container_fixture():
-    container = (
-        PostgresContainer(
-            image=POSTGRES_IMAGE,
-            username=POSTGRES_USERNAME,
-            password=POSTGRES_PASSWORD,
-            dbname=POSTGRES_DB,
-            port=5432,
-        )
-        .with_name(f"postgres_container_{uuid.uuid4().hex[:12]}")
-        .with_bind_ports(5432, 5432)  # Bind to a specific port for testing
-    )
+    container = PostgresContainer(
+        image=POSTGRES_IMAGE,
+        username=POSTGRES_USERNAME,
+        password=POSTGRES_PASSWORD,
+        dbname=POSTGRES_DB,
+        port=5432,
+    ).with_name(f"postgres_container_{uuid.uuid4().hex[:12]}")
     with container as postgres_container:
         yield postgres_container
 

@@ -1,33 +1,12 @@
-from pathlib import Path
-
 import git
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
+
+from prometheus.app.models.response.response import Response
+from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
+from prometheus.app.services.repository_service import RepositoryService
+from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
-
-
-@router.get(
-    "/local/",
-    description="""
-    Upload a local codebase to Prometheus.
-    """,
-    responses={
-        404: {"description": "Local repository not found"},
-        200: {"description": "Repository uploaded successfully"},
-    },
-)
-def upload_local_repository(local_repository: str, request: Request):
-    local_path = Path(local_repository)
-
-    if not local_path.exists():
-        raise HTTPException(
-            status_code=404,
-            detail=f"Local repository not found at path: {local_repository}",
-        )
-
-    request.app.state.service_coordinator.upload_local_repository(local_path)
-
-    return {"message": "Repository uploaded successfully"}
 
 
 @router.get(
@@ -35,12 +14,26 @@ def upload_local_repository(local_repository: str, request: Request):
     description="""
     Upload a GitHub repository to Prometheus, default to the latest commit in the main branch.
     """,
+    response_model=Response,
 )
-def upload_github_repository(https_url: str, request: Request):
+def upload_github_repository(github_token: str, https_url: str, request: Request):
+    # Get the repository and knowledge graph services
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+
+    # Clean the services to ensure no previous data is present
+    repository_service.clean()
+    knowledge_graph_service.clear()
     try:
-        request.app.state.service_coordinator.upload_github_repository(https_url)
+        # Clone the repository
+        saved_path = repository_service.clone_github_repo(github_token, https_url)
     except git.exc.GitCommandError:
-        raise HTTPException(status_code=400, detail=f"Unable to clone {https_url}")
+        raise ServerException(code=400, message=f"Unable to clone {https_url}")
+    # Build and save the knowledge graph from the cloned repository
+    knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url)
+    return Response()
 
 
 @router.get(
@@ -48,14 +41,29 @@ def upload_github_repository(https_url: str, request: Request):
     description="""
     Upload a GitHub repository at a specific commit to Prometheus.
     """,
+    response_model=Response,
 )
-def upload_github_repository_at_commit(https_url: str, commit_id: str, request: Request):
+def upload_github_repository_at_commit(
+    github_token, https_url: str, commit_id: str, request: Request
+):
+    # Get the repository and knowledge graph services
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+
+    # Clean the services to ensure no previous data is present
+    repository_service.clean()
+    knowledge_graph_service.clear()
+
     try:
-        request.app.state.service_coordinator.upload_github_repository(https_url, commit_id)
+        # Clone the repository
+        saved_path = repository_service.clone_github_repo(github_token, https_url, commit_id)
     except git.exc.GitCommandError:
-        raise HTTPException(
-            status_code=400, detail=f"Unable to clone {https_url} with commit {commit_id}"
-        )
+        raise ServerException(code=400, message=f"Unable to clone {https_url}")
+    # Build and save the knowledge graph from the cloned repository
+    knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
+    return Response()
 
 
 @router.get(
@@ -63,13 +71,21 @@ def upload_github_repository_at_commit(https_url: str, commit_id: str, request: 
     description="""
     Delete the repository uploaded to Prometheus, along with other information.
     """,
+    response_model=Response,
 )
 def delete(request: Request):
-    if not request.app.state.service_coordinator.exists_knowledge_graph():
-        return {"message": "No knowledge graph to delete"}
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+    if not knowledge_graph_service.exists():
+        return Response(message="No knowledge graph to delete")
+    # Get the repository service to clean up the repository data
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
 
-    request.app.state.service_coordinator.clear()
-    return {"message": "Successfully deleted knowledge graph"}
+    # Clear the knowledge graph and repository data
+    knowledge_graph_service.clear()
+    repository_service.clean()
+    return Response()
 
 
 @router.get(
@@ -77,7 +93,7 @@ def delete(request: Request):
     description="""
     If there is a codebase uploaded to Promtheus.
     """,
-    response_model=bool,
+    response_model=Response[bool],
 )
-def knowledge_graph_exists(request: Request) -> bool:
-    return request.app.state.service_coordinator.exists_knowledge_graph()
+def knowledge_graph_exists(request: Request) -> Response[bool]:
+    return Response(data=request.app.state.service["knowledge_graph_service"].exists())

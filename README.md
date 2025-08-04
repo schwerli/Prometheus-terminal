@@ -73,9 +73,19 @@ governed by a state machine to ensure code quality through automated reviews, bu
    ```
 
 2. #### Copy the `example.env` file to `.env` and update it with your API keys and other required configurations:
+
    ```bash
    mv example.env .env
    ```
+
+   > You need to provide a secure `JWT_SECRET_KEY` in the `.env` file.
+   > You can generate a strong key by running the following command:
+
+   ```bash
+   python -m prometheus.script.generate_jwt_token
+   ```
+
+   This will print a secure token you can copy and paste into your `.env` file
 
 3. #### Create the working directory to store logs and cloned repositories:
 
@@ -124,7 +134,7 @@ governed by a state machine to ensure code quality through automated reviews, bu
    You can ask Prometheus to analyze and answer a specific issue in your codebase using the `/issue/answer/` API endpoint.
    
    - **Endpoint:** `POST /issue/answer/`
-     - **Request Body:** JSON object matching the `IssueRequest` schema (see [API Documents](http://localhost:9002/docs#/issue/answer_issue_issue_answer__post))
+     - **Request Body:** JSON object matching the `IssueRequest` schema (see [API Documents](http://127.0.0.1:9002/docs#/issue/issue-answer_issue))
      - **Response:** Returns the generated patch, test/build results, and a summary response.
 
 ---
