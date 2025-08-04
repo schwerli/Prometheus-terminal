@@ -7,6 +7,7 @@ from fastapi.routing import APIRoute
 
 from prometheus.app import dependencies
 from prometheus.app.api import issue, repository
+from prometheus.app.exception_handler import register_exception_handlers
 from prometheus.configuration.config import settings
 
 # Create a logger for the application's namespace
@@ -65,6 +66,9 @@ app = FastAPI(
     version=settings.version,  # Version of the API
     debug=True if settings.ENVIRONMENT == "local" else False,
 )
+
+# Register the exception handlers
+register_exception_handlers(app)
 
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])
