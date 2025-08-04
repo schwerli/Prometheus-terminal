@@ -1,9 +1,9 @@
 import re
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-class CreateUserRequest(BaseModel):
+class LoginRequest(BaseModel):
     username: str = Field(description="username of the user", max_length=20)
     email: str = Field(
         description="email of the user",
@@ -16,7 +16,6 @@ class CreateUserRequest(BaseModel):
         min_length=12,
         max_length=30,
     )
-    github_token: str = Field(description="github token of the user", max_length=100)
 
     @field_validator("email", mode="after")
     def validate_email_format(self, v: str) -> str:
@@ -24,3 +23,9 @@ class CreateUserRequest(BaseModel):
         if not re.match(pattern, v):
             raise ValueError("Invalid email format")
         return v
+
+    @model_validator(mode="after")
+    def check_username_or_email(self) -> "LoginRequest":
+        if not self.username and not self.email:
+            raise ValueError("At least one of 'username' or 'email' must be provided.")
+        return self

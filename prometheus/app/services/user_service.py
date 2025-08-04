@@ -7,6 +7,7 @@ from sqlmodel import Session
 from prometheus.app.entity.user import User
 from prometheus.app.services.base_service import BaseService
 from prometheus.app.services.database_service import DatabaseService
+from prometheus.utils.jwt_utils import JWTUtils
 
 
 class UserService(BaseService):
@@ -15,6 +16,7 @@ class UserService(BaseService):
         self.engine = database_service.engine
         self._logger = logging.getLogger("prometheus.app.services.user_service")
         self.ph = PasswordHasher()
+        self.jwt_utils = JWTUtils()
 
     def create_user(
         self,
@@ -57,6 +59,32 @@ class UserService(BaseService):
             session.add(user)
             session.commit()
             session.refresh(user)
+
+    def login(self, username: str, email: str, password: str) -> str:
+        """
+        Log in a user by verifying their credentials and return an access token.
+
+        Args:
+            username (str): Username of the user.
+            email (str): Email address of the user.
+            password (str): Plaintext password.
+        """
+        with Session(self.engine) as session:
+            user = (
+                session.query(User)
+                .filter((User.username == username) | (User.email == email))
+                .first()
+            )
+
+            if not user:
+                raise ValueError("Invalid username or email")
+
+            if not self.ph.verify(user.password_hash, password):
+                raise ValueError("Invalid password")
+
+            # Generate and return a JWT token for the user
+            token = self.jwt_utils.generate_token({"user_id": user.id})
+            return token
 
     # Create a superuser and commit it to the database
     def create_superuser(
