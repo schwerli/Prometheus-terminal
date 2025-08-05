@@ -48,7 +48,8 @@ class IssueRequest(BaseModel):
     )
     number_of_candidate_patch: Optional[int] = Field(
         default=4,
-        description="When the patch is not verfied (through build or test), number of candidate patches we generate to select the best one",
+        description="When the patch is not verified (through build or test), "
+        "number of candidate patches we generate to select the best one",
         examples=[4],
     )
     dockerfile_content: Optional[str] = Field(
@@ -68,16 +69,18 @@ class IssueRequest(BaseModel):
     )
     build_commands: Optional[Sequence[str]] = Field(
         default=None,
-        description="If you specified dockerfile_content and run_build is True, you must also specify the build commands.",
+        description="If you specified dockerfile_content and run_build is True, "
+        "you must also specify the build commands.",
         examples=[["pip install -r requirements.txt", "python -m build"]],
     )
     test_commands: Optional[Sequence[str]] = Field(
         default=None,
-        description="If you specified dockerfile_content and run_test is True, you must also specify the test commands.",
+        description="If you specified dockerfile_content and run_test is True, "
+        "you must also specify the test commands.",
         examples=[["pytest ."]],
     )
     push_to_remote: Optional[bool] = Field(
         default=False,
-        description="When editing the code, whenver we should push the changes to a remote branch",
+        description="When editing the code, whenever we should push the changes to a remote branch",
         examples=[True],
     )
