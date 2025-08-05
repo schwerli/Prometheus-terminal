@@ -91,7 +91,9 @@ app.add_middleware(
 
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
+
+if settings.ENABLE_AUTHENTICATION:
+    app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
 # Register the exception handlers
 register_exception_handlers(app)
