@@ -12,13 +12,22 @@ router = APIRouter()
 
 def get_github_token(request: Request, github_token: str) -> str:
     """Retrieve GitHub token from the request or user profile."""
+    # If the token is provided in the request, use it directly
     if github_token:
         return github_token
-    # If the token is not provided, fetch it from the user profile
+    # If the token is not provided, fetch it from the user profile if logged in
+    # Check if the user is authenticated
+    if not request.state.user_id:
+        # If the user is not authenticated, raise an exception
+        raise ServerException(
+            code=401, message="GitHub token is required, please provide it or log in"
+        )
+    # If the user is authenticated, get the user service and fetch the token
     user_service: UserService = request.app.state.service["user_service"]
     user = user_service.get_user_by_id(request.state.user_id)
     github_token = user.github_token if user else None
 
+    # If the token is still not available, raise an exception
     if not github_token:
         raise ServerException(
             code=423, message="Either provide a GitHub token or set it in your user profile"
