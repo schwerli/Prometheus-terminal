@@ -86,6 +86,7 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
         run_build=True,
         run_existing_test=True,
         number_of_candidate_patch=1,
+        run_reproduce_test=True,
     )
 
     # Verify
@@ -137,6 +138,7 @@ def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
         workdir="/app",
         build_commands=["pip install -r requirements.txt"],
         test_commands=["pytest"],
+        run_reproduce_test=True,
     )
 
     # Verify

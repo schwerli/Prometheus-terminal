@@ -100,6 +100,7 @@ def test_answer_issue_with_container(mock_service):
         "issue_title": "Test Issue",
         "issue_body": "Test description",
         "dockerfile_content": "FROM python:3.11",
+        "run_reproduce_test": True,
         "workdir": "/app",
         "build_commands": ["pip install -r requirements.txt"],
         "test_commands": ["pytest ."],
