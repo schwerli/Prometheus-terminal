@@ -2,11 +2,13 @@ import logging
 from typing import Optional
 
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from sqlmodel import Session, or_, select
 
 from prometheus.app.entity.user import User
 from prometheus.app.services.base_service import BaseService
 from prometheus.app.services.database_service import DatabaseService
+from prometheus.exceptions.server_exception import ServerException
 from prometheus.utils.jwt_utils import JWTUtils
 
 
@@ -76,10 +78,12 @@ class UserService(BaseService):
             user = session.exec(statement).first()
 
             if not user:
-                raise ValueError("Invalid username or email")
+                raise ServerException(code=400, message="Invalid username or email")
 
-            if not self.ph.verify(user.password_hash, password):
-                raise ValueError("Invalid password")
+            try:
+                self.ph.verify(user.password_hash, password)
+            except VerifyMismatchError:
+                raise ServerException(code=400, message="Invalid password")
 
             # Generate and return a JWT token for the user
             token = self.jwt_utils.generate_token({"user_id": user.id})
@@ -102,3 +106,17 @@ class UserService(BaseService):
             username, email, password, github_token, is_superuser=True, issue_credit=999999
         )
         self._logger.info(f"Superuser '{username}' created successfully.")
+
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        """
+        Retrieve a user by their ID.
+
+        Args:
+            user_id (int): The ID of the user to retrieve.
+
+        Returns:
+            User: The user instance if found, otherwise None.
+        """
+        with Session(self.engine) as session:
+            statement = select(User).where(User.id == user_id)
+            return session.exec(statement).first()

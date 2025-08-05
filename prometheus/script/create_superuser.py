@@ -27,3 +27,4 @@ if __name__ == "__main__":
         password=args.password,
         github_token=args.github_token,
     )
+    print("Superuser account created!")

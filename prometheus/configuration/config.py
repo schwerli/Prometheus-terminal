@@ -8,11 +8,13 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", env_prefix="PROMETHEUS_"
     )
     # General settings
-    version: str = "1.1"
+    version: str = "1.2"
     BASE_URL: str = f"/api/v{version}"
+    PROJECT_NAME: str = "Prometheus"
+
     ENVIRONMENT: Literal["local", "production"]
     BACKEND_CORS_ORIGINS: List[str]
-    PROJECT_NAME: str = "Prometheus"
+    ENABLE_AUTHENTICATION: bool
 
     # Logging
     LOGGING_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]

@@ -17,6 +17,7 @@ jobs:
       # General settings
       PROMETHEUS_ENVIRONMENT: local
       PROMETHEUS_BACKEND_CORS_ORIGINS: "[\"*\"]"
+      PROMETHEUS_ENABLE_AUTHENTICATION: false
 
       # Neo4j settings
       PROMETHEUS_NEO4J_URI: bolt://localhost:7687

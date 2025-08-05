@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request
 
+from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.requests.issue import IssueRequest
 from prometheus.app.models.response.issue import IssueResponse
 from prometheus.app.models.response.response import Response
@@ -16,6 +17,7 @@ router = APIRouter()
     response_description="Returns the patch, test results, and issue response",
     response_model=Response[IssueResponse],
 )
+@requireLogin
 def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueResponse]:
     if not request.app.state.service["knowledge_graph_service"].exists():
         raise ServerException(
