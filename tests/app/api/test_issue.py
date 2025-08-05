@@ -117,6 +117,7 @@ def test_answer_issue_with_container(mock_service):
         issue_type=IssueType.AUTO,
         run_build=False,
         run_existing_test=False,
+        run_reproduce_test=True,
         number_of_candidate_patch=4,
         dockerfile_content="FROM python:3.11",
         image_name=None,
