@@ -57,6 +57,7 @@ class IssueBugSubgraphNode:
                 issue_comments=state["issue_comments"],
                 run_build=state["run_build"],
                 run_existing_test=state["run_existing_test"],
+                run_reproduce_test=state["run_reproduce_test"],
                 number_of_candidate_patch=state["number_of_candidate_patch"],
             )
 

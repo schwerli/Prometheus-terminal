@@ -77,8 +77,17 @@ class IssueBugSubgraph:
         )
 
         workflow.add_node("issue_bug_responder_node", issue_bug_responder_node)
-        # Set the entry point for the workflow
-        workflow.set_entry_point("bug_reproduction_subgraph_node")
+
+        # Start with bug reproduction subgraph if reproducing bug is required,
+        # otherwise start with not verified bug subgraph
+        workflow.set_conditional_entry_point(
+            lambda state: state["run_reproduce_test"],
+            {
+                True: "bug_reproduction_subgraph_node",
+                False: "issue_not_verified_bug_subgraph_node",
+            },
+        )
+
         # Go to verified bug subgraph if the bug is verified, otherwise go to not verified bug subgraph
         workflow.add_conditional_edges(
             "bug_reproduction_subgraph_node",
@@ -109,6 +118,7 @@ class IssueBugSubgraph:
         issue_comments: Sequence[Mapping[str, str]],
         run_build: bool,
         run_existing_test: bool,
+        run_reproduce_test: bool,
         number_of_candidate_patch: int,
         recursion_limit: int = 30,
     ):
@@ -120,6 +130,7 @@ class IssueBugSubgraph:
             "issue_comments": issue_comments,
             "run_build": run_build,
             "run_existing_test": run_existing_test,
+            "run_reproduce_test": run_reproduce_test,
             "number_of_candidate_patch": number_of_candidate_patch,
         }
 

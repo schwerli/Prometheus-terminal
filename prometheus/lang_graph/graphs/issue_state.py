@@ -18,6 +18,7 @@ class IssueState(TypedDict):
     issue_type: IssueType
     run_build: bool
     run_existing_test: bool
+    run_reproduce_test: bool
     number_of_candidate_patch: int
 
     edit_patch: str

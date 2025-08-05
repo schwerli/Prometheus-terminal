@@ -43,6 +43,7 @@ class IssueService(BaseService):
         issue_type: IssueType,
         run_build: bool,
         run_existing_test: bool,
+        run_reproduce_test: bool,
         number_of_candidate_patch: int,
         dockerfile_content: Optional[str] = None,
         image_name: Optional[str] = None,
@@ -62,6 +63,7 @@ class IssueService(BaseService):
             issue_type (IssueType): The type of the issue (BUG or QUESTION).
             run_build (bool): Whether to run the build commands.
             run_existing_test (bool): Whether to run existing tests.
+            run_reproduce_test (bool): Whether to run reproduce tests.
             number_of_candidate_patch (int): Number of candidate patches to generate.
             dockerfile_content (Optional[str]): Content of the Dockerfile for user-defined environments.
             image_name (Optional[str]): Name of the Docker image.
@@ -118,6 +120,7 @@ class IssueService(BaseService):
                 issue_type,
                 run_build,
                 run_existing_test,
+                run_reproduce_test,
                 number_of_candidate_patch,
             )
 

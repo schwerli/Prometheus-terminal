@@ -102,6 +102,7 @@ class IssueGraph:
         issue_type: IssueType,
         run_build: bool,
         run_existing_test: bool,
+        run_reproduce_test: bool,
         number_of_candidate_patch: int,
     ):
         """
@@ -116,6 +117,7 @@ class IssueGraph:
             "issue_type": issue_type,
             "run_build": run_build,
             "run_existing_test": run_existing_test,
+            "run_reproduce_test": run_reproduce_test,
             "number_of_candidate_patch": number_of_candidate_patch,
         }
 

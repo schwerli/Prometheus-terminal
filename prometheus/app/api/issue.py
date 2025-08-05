@@ -47,6 +47,7 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
         issue_type=issue.issue_type,
         run_build=issue.run_build,
         run_existing_test=issue.run_existing_test,
+        run_reproduce_test=issue.run_reproduce_test,
         number_of_candidate_patch=issue.number_of_candidate_patch,
         dockerfile_content=issue.dockerfile_content,
         image_name=issue.image_name,

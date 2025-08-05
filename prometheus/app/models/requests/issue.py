@@ -33,12 +33,17 @@ class IssueRequest(BaseModel):
     )
     run_build: Optional[bool] = Field(
         default=False,
-        description="When editing the code, whenver we should run the build to verify the fix",
+        description="When editing the code, whenever we should run the build to verify the fix",
         examples=[False],
     )
     run_existing_test: Optional[bool] = Field(
         default=False,
-        description="When editing the code, whenver we should run the existing test to verify the fix",
+        description="When editing the code, whenever we should run the existing test to verify the fix",
+        examples=[False],
+    )
+    run_reproduce_test: Optional[bool] = Field(
+        default=True,
+        description="When editing the code, whenever we should run the reproduce test to verify the fix",
         examples=[False],
     )
     number_of_candidate_patch: Optional[int] = Field(
