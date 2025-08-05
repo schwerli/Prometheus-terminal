@@ -1,6 +1,7 @@
 import git
 from fastapi import APIRouter, Request
 
+from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.response.response import Response
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
@@ -42,6 +43,7 @@ def get_github_token(request: Request, github_token: str) -> str:
     """,
     response_model=Response,
 )
+@requireLogin
 def upload_github_repository(github_token: str, https_url: str, request: Request):
     # Get the repository and knowledge graph services
     repository_service: RepositoryService = request.app.state.service["repository_service"]
@@ -71,6 +73,7 @@ def upload_github_repository(github_token: str, https_url: str, request: Request
     """,
     response_model=Response,
 )
+@requireLogin
 def upload_github_repository_at_commit(
     github_token, https_url: str, commit_id: str, request: Request
 ):
@@ -103,6 +106,7 @@ def upload_github_repository_at_commit(
     """,
     response_model=Response,
 )
+@requireLogin
 def delete(request: Request):
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
@@ -118,6 +122,7 @@ def delete(request: Request):
     return Response()
 
 
+@requireLogin
 @router.get(
     "/exists/",
     description="""
