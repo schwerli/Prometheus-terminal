@@ -1,3 +1,5 @@
+from typing import Set, Tuple
+
 from fastapi import FastAPI, Request
 from fastapi.security.utils import get_authorization_scheme_param
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -8,10 +10,12 @@ from prometheus.utils.jwt_utils import JWTUtils
 
 
 class JWTMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: FastAPI, base_url: str, excluded_paths: list[str]):
+    def __init__(self, app: FastAPI, base_url: str, login_required_routes: Set[Tuple[str, str]]):
         super().__init__(app)
         self.jwt_utils = JWTUtils()  # Initialize the JWT utility
-        self.excluded_paths = excluded_paths  # List of paths to exclude from JWT validation
+        self.login_required_routes = (
+            login_required_routes  # List of paths to exclude from JWT validation
+        )
         self.base_url = base_url
 
     async def dispatch(self, request: Request, call_next):
@@ -22,7 +26,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
 
         # Check if the request path is in excluded paths
         path = request.url.path.replace(self.base_url, "")
-        if path in self.excluded_paths:
+        if (request.method, path) not in self.login_required_routes:
             # Proceed to the next middleware or route handler if the path is excluded
             response = await call_next(request)
             return response

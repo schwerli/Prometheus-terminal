@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["local", "production"]
     BACKEND_CORS_ORIGINS: List[str]
     ENABLE_AUTHENTICATION: bool
-    AUTHENTICATION_EXCLUDED_PATHS: List[str] = ["/auth/login"]
 
     # Logging
     LOGGING_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]

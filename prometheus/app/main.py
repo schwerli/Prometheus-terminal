@@ -7,9 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from prometheus.app import dependencies
-from prometheus.app.api import issue, repository
+from prometheus.app.api import auth, issue, repository
 from prometheus.app.exception_handler import register_exception_handlers
 from prometheus.app.middlewares.jwt_middleware import JWTMiddleware
+from prometheus.app.register_login_required_routes import (
+    login_required_routes,
+    register_login_required_routes,
+)
 from prometheus.configuration.config import settings
 
 # Create a logger for the application's namespace
@@ -69,15 +73,12 @@ app = FastAPI(
     debug=True if settings.ENVIRONMENT == "local" else False,
 )
 
-# Register the exception handlers
-register_exception_handlers(app)
-
 # Register middlewares
 if settings.ENABLE_AUTHENTICATION:
     app.add_middleware(
         JWTMiddleware,
         base_url=settings.BASE_URL,
-        excluded_paths=settings.AUTHENTICATION_EXCLUDED_PATHS,
+        login_required_routes=login_required_routes,
     )
 # Add CORS middleware
 app.add_middleware(
@@ -90,6 +91,12 @@ app.add_middleware(
 
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+
+# Register the exception handlers
+register_exception_handlers(app)
+# Register the login-required routes
+register_login_required_routes(app)
 
 
 @app.get("/health", tags=["health"])
