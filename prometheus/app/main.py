@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
 from prometheus.app import dependencies
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus.app.api import issue, repository
 from prometheus.app.exception_handler import register_exception_handlers
 from prometheus.app.middlewares.jwt_middleware import JWTMiddleware
@@ -78,6 +79,14 @@ if settings.ENABLE_AUTHENTICATION:
         base_url=settings.BASE_URL,
         excluded_paths=settings.AUTHENTICATION_EXCLUDED_PATHS,
     )
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(repository.router, prefix="/repository", tags=["repository"])
 app.include_router(issue.router, prefix="/issue", tags=["issue"])
