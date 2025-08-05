@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from sqlmodel import Session, or_, select
 
 from prometheus.app.entity.user import User
@@ -79,7 +80,9 @@ class UserService(BaseService):
             if not user:
                 raise ServerException(code=400, message="Invalid username or email")
 
-            if not self.ph.verify(user.password_hash, password):
+            try:
+                self.ph.verify(user.password_hash, password)
+            except VerifyMismatchError:
                 raise ServerException(code=400, message="Invalid password")
 
             # Generate and return a JWT token for the user
