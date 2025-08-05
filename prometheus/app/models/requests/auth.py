@@ -13,7 +13,7 @@ class LoginRequest(BaseModel):
     password: str = Field(
         description="password of the user",
         examples=["P@ssw0rd!"],
-        min_length=12,
+        min_length=8,
         max_length=30,
     )
 
