@@ -3,10 +3,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from prometheus.app import dependencies
-from fastapi.middleware.cors import CORSMiddleware
 from prometheus.app.api import issue, repository
 from prometheus.app.exception_handler import register_exception_handlers
 from prometheus.app.middlewares.jwt_middleware import JWTMiddleware
