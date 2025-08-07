@@ -6,10 +6,10 @@ from typing import TypedDict, Union
 
 
 class CodeBaseSourceEnum(enum.StrEnum):
-    """Enum of all knowledge graph edge types"""
+    """Enum of all knowledge graph source types"""
 
     github = "GitHub"
-    local = "local"
+    other = "Other"
 
 
 @dataclasses.dataclass(frozen=True)

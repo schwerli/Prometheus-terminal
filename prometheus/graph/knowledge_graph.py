@@ -1,6 +1,6 @@
 """The in-memory knowledge graph representation of a codebase.
 
-In the knowledgegraph, we have the following node types:
+In the knowledge graph, we have the following node types:
 * FileNode: Represent a file/dir
 * ASTNode: Represent a tree-sitter node
 * TextNode: Represent a string
@@ -8,7 +8,7 @@ In the knowledgegraph, we have the following node types:
 and the following edge types:
 * HAS_FILE: Relationship between two FileNode, if one FileNode is the parent dir of another FileNode.
 * HAS_AST: Relationship between FileNode and ASTNode, if the ASTNode is the root AST node for FileNode.
-* HAS_TEXT: Relationship between FileNode and TextNode, if the TextNode is chunk of text from FileNode.
+* HAS_TEXT: Relationship between FileNode and TextNode, if the TextNode is a chunk of text from FileNode.
 * PARENT_OF: Relationship between two ASTNode, if one ASTNode is the parent of another ASTNode.
 * NEXT_CHUNK: Relationship between two TextNode, if one TextNode is the next chunk of text of another TextNode.
 
@@ -85,19 +85,21 @@ class KnowledgeGraph:
         self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
     def build_graph(
-        self, root_dir: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
+        self, root_dir: Path, https_url: str, commit_id: Optional[str] = None
     ):
-        """Builds knowledege graph for a codebase at a location.
+        """Builds knowledge graph for a codebase at a location.
 
         Args:
-          root_dir: The codebase root directory.
+            root_dir: The codebase root directory.
+            https_url: The HTTPS URL of the codebase, used for metadata.
+            commit_id: The commit id of the codebase. (Optional, defaults to None)
         """
         root_dir = root_dir.absolute()
         gitignore_parser = igittigitt.IgnoreParser()
         gitignore_parser.parse_rule_files(root_dir)
         gitignore_parser.add_rule(".git", root_dir)
 
-        if https_url is not None:
+        if https_url[:18] == "https://github.com":
             metadata_node = MetadataNode(
                 codebase_source=CodeBaseSourceEnum.github,
                 local_path=str(root_dir),
@@ -106,7 +108,7 @@ class KnowledgeGraph:
             )
         else:
             metadata_node = MetadataNode(
-                codebase_source=CodeBaseSourceEnum.local,
+                codebase_source=CodeBaseSourceEnum.other,
                 local_path=str(root_dir),
                 https_url=None,
                 commit_id=None,
@@ -169,7 +171,7 @@ class KnowledgeGraph:
                 self._knowledge_graph_edges.extend(kg_edges)
                 continue
 
-            # This can only happend for files that are not supported by file_graph_builder.
+            # This can only happen for files that are not supported by file_graph_builder.
             self._logger.info(f"Skip parsing {file} because it is not supported")
 
     @classmethod
@@ -278,9 +280,9 @@ class KnowledgeGraph:
 
         Args:
           max_depth: Maximum depth of the tree to display. Nodes beyond this depth will
-            be omitted. Defaults to 5.
+            be omitted. Default to 5.
           max_lines: Maximum number of lines in the output string. Useful for truncating
-            very large trees. Defaults to 5000.
+            very large trees. Default to 5000.
 
         Returns:
           str: A string representation of the file tree, where each line represents a file
@@ -330,8 +332,8 @@ class KnowledgeGraph:
             ast_node_types.add(ast_node.node.type)
         return list(ast_node_types)
 
-    def is_built_from_local_codebase(self) -> bool:
-        return self._metadata_node.codebase_source == CodeBaseSourceEnum.local
+    def is_built_from_other_codebase(self) -> bool:
+        return self._metadata_node.codebase_source == CodeBaseSourceEnum.other
 
     def is_built_from_github(self) -> bool:
         return self._metadata_node.codebase_source == CodeBaseSourceEnum.github
