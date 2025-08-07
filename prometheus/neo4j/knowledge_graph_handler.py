@@ -263,29 +263,41 @@ class KnowledgeGraphHandler:
                 session.execute_read(self._read_next_chunk_edges),
             )
 
-    def knowledge_graph_exists(self, root_node_id:int) -> bool:
-        """Check if the knowledge graph exists in the Neo4j database.
+    def knowledge_graph_exists(self, root_node_id: int) -> bool:
+        """
+        Check if the knowledge graph with specific root_node_id exists in the Neo4j database.
+
+        Args:
+            root_node_id (int): The node id of the root node.
 
         Returns:
-          True if there are any nodes in the database, False otherwise.
+            bool: True if the root node exists, False otherwise.
+        """
+        query = "MATCH (n {node_id: $root_node_id}) RETURN count(n) > 0 AS exists"
+        with self.driver.session() as session:
+            result = session.run(query, root_node_id=root_node_id)
+            return result.single()["exists"]
+
+    def count_nodes(self, tx: ManagedTransaction) -> int:
+        """
+        Return the number of nodes in the Neo4j database.
+
+        Args:
+            tx (ManagedTransaction): An active Neo4j transaction.
+
+        Returns:
+            int: The total number of nodes in the database.
         """
         query = """
-      MATCH (n)
-      RETURN COUNT(n) > 0 AS graph_exists
-    """
-        with self.driver.session() as session:
-            result = session.run(query)
-            record = result.single()
-            return record["graph_exists"] if record else False
-
-    def verify_empty(self, tx: ManagedTransaction):
-        """Verify that the Neo4j database is empty."""
-        query = """
-      MATCH (n)
-      RETURN count(n) as count
-    """
+          MATCH (n)
+          RETURN count(n) as count
+        """
         result = tx.run(query)
-        return result.single()["count"] == 0
+        return result.single()["count"]
+
+    def verify_empty(self, tx: ManagedTransaction) -> bool:
+        """Verify that the Neo4j database is empty."""
+        return self.count_nodes(tx) == 0
 
     def clear_all_knowledge_graph(self):
         """Clear all knowledge graphs from neo4j."""
@@ -305,8 +317,30 @@ class KnowledgeGraphHandler:
                 self._logger.warning(f"Database not empty after attempt {attempt + 1}, retrying...")
                 session.run(query)
 
-    def get_new_knowledge_graph_root_node_id(self):
-        raise NotImplementedError("This method is not implemented yet.")
+    def get_new_knowledge_graph_root_node_id(self) -> int:
+        """
+        Estimate the next available node id in the Neo4j database.
 
-    def clear_knowledge_graph(self, root_node_id):
-        raise NotImplementedError("This method is not implemented yet.")
+        Returns:
+            int: The next available node id (max id + 1), or 0 if no nodes exist.
+        """
+        query = "MATCH (n) RETURN max(id(n)) AS max_id"
+        with self.driver.session() as session:
+            result = session.run(query)
+            max_id = result.single()["max_id"]
+            return 0 if max_id is None else max_id + 1
+
+    def clear_knowledge_graph(self, root_node_id: int):
+        """
+        Delete the subgraph rooted at root_node_id, including all descendant nodes and their relationships.
+
+        Args:
+            root_node_id (int): The node id of the root node.
+        """
+        query = """
+        MATCH (root {node_id: $root_node_id})
+        OPTIONAL MATCH (root)-[*]->(descendant)
+        DETACH DELETE root, descendant
+        """
+        with self.driver.session() as session:
+            session.run(query, root_node_id=root_node_id)

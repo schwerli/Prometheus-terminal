@@ -17,12 +17,12 @@ class KnowledgeGraphService(BaseService):
     """
 
     def __init__(
-            self,
-            neo4j_service: Neo4jService,
-            neo4j_batch_size: int,
-            max_ast_depth: int,
-            chunk_size: int,
-            chunk_overlap: int,
+        self,
+        neo4j_service: Neo4jService,
+        neo4j_batch_size: int,
+        max_ast_depth: int,
+        chunk_size: int,
+        chunk_overlap: int,
     ):
         """Initializes the Knowledge Graph service.
 
