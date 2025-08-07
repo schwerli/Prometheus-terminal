@@ -42,15 +42,15 @@ class FileGraphBuilder:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
+    def support_code_file(self, file: Path) -> bool:
+        return tree_sitter_parser.supports_file(file)
+
+    def support_text_file(self, file: Path) -> bool:
+        return file.suffix in [".md", ".txt", ".rst"]
+
     def supports_file(self, file: Path) -> bool:
         """Checks if we support building knowledge graph for this file."""
-        if tree_sitter_parser.supports_file(file):
-            return True
-
-        if file.suffix in [".md", ".txt", ".rst"]:
-            return True
-
-        return False
+        return self.support_code_file(file) or self.support_text_file(file)
 
     def build_file_graph(
         self, parent_node: KnowledgeGraphNode, file: Path, next_node_id: int
@@ -69,10 +69,10 @@ class FileGraphBuilder:
           and kg_edges is a list of all edges created for this file.
         """
         # In this case, it is a file that tree sitter can parse (source code)
-        if tree_sitter_parser.supports_file(file):
+        if self.support_code_file(file):
             return self._tree_sitter_file_graph(parent_node, file, next_node_id)
-
-        if file.suffix in [".md", ".txt", ".rst"]:
+        # otherwise it is a text file that we can parse using langchain text splitter
+        else:
             return self._text_file_graph(parent_node, file, next_node_id)
 
     def _tree_sitter_file_graph(

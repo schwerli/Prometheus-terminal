@@ -143,10 +143,9 @@ class KnowledgeGraph:
                 self._next_node_id = next_node_id
                 self._knowledge_graph_nodes.extend(kg_nodes)
                 self._knowledge_graph_edges.extend(kg_edges)
-                continue
-
-            # This can only happen for files that are not supported by file_graph_builder.
-            self._logger.info(f"Skip parsing {file} because it is not supported")
+            else:
+                # This can only happen for files that are not supported by file_graph_builder.
+                self._logger.info(f"Skip parsing {file} because it is not supported")
 
     """@classmethod
     def from_neo4j(
