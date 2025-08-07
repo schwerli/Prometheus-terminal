@@ -4,6 +4,8 @@ from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.requests.issue import IssueRequest
 from prometheus.app.models.response.issue import IssueResponse
 from prometheus.app.models.response.response import Response
+from prometheus.app.services.repository_service import RepositoryService
+from prometheus.configuration.config import settings
 from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
@@ -19,11 +21,12 @@ router = APIRouter()
 )
 @requireLogin
 def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueResponse]:
-    if not request.app.state.service["knowledge_graph_service"].exists():
-        raise ServerException(
-            code=404,
-            message="A repository is not uploaded, use /repository/ endpoint to upload one",
-        )
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    repository = repository_service.get_repository_by_id(issue.repository_id)
+    if not repository:
+        raise ServerException(code=404, message="Repository not found")
+    if settings.ENABLE_AUTHENTICATION and repository.user_id != request.state.user_id:
+        raise ServerException(code=403, message="You do not have access to this repository")
 
     if issue.dockerfile_content or issue.image_name:
         if issue.workdir is None:

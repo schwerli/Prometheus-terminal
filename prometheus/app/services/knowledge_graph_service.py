@@ -58,8 +58,5 @@ class KnowledgeGraphService(BaseService):
         self.kg_handler.write_knowledge_graph(kg)
         return kg.root_node_id
 
-    def exists(self, root_node_id: int) -> bool:
-        return self.kg_handler.knowledge_graph_exists(root_node_id)
-
     def clear_kg(self, root_node_id: int):
         self.kg_handler.clear_knowledge_graph(root_node_id)

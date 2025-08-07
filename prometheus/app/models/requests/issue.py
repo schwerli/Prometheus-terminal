@@ -6,6 +6,9 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 
 
 class IssueRequest(BaseModel):
+    repository_id: int = Field(
+        description="The ID of the repository this issue belongs to.", examples=[1]
+    )
     issue_number: int = Field(description="The number of the issue", examples=[42])
     issue_title: str = Field(
         description="The title of the issue", examples=["There is a memory leak"]
