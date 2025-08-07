@@ -60,3 +60,14 @@ class KnowledgeGraphService(BaseService):
 
     def clear_kg(self, root_node_id: int):
         self.kg_handler.clear_knowledge_graph(root_node_id)
+
+    def get_knowledge_graph(
+        self,
+        root_node_id: int,
+        max_ast_depth: int,
+        chunk_size: int,
+        chunk_overlap: int,
+    ) -> KnowledgeGraph:
+        return self.kg_handler.read_knowledge_graph(
+            root_node_id, max_ast_depth, chunk_size, chunk_overlap
+        )
