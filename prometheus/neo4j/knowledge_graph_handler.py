@@ -29,10 +29,11 @@ class KnowledgeGraphHandler:
         """
         self.driver = driver
         self.batch_size = batch_size
-
+        # initialize the database and logger
+        self._init_database()
         self._logger = logging.getLogger("prometheus.neo4j.knowledge_graph_handler")
 
-    def _init_database(self, tx: ManagedTransaction):
+    def _init_database(self):
         """Initialization of the neo4j database."""
 
         # Create constraints for node_id attributes.
@@ -45,8 +46,9 @@ class KnowledgeGraphHandler:
             "CREATE CONSTRAINT unique_text_node_id IF NOT EXISTS "
             "FOR (n:TextNode) REQUIRE n.node_id IS UNIQUE",
         ]
-        for query in queries:
-            tx.run(query)
+        with self.driver.session() as session:
+            for query in queries:
+                session.run(query)
 
     def _write_file_nodes(self, tx: ManagedTransaction, file_nodes: Sequence[Neo4jFileNode]):
         """Write Neo4jFileNode to neo4j."""
@@ -171,8 +173,6 @@ class KnowledgeGraphHandler:
         """
         self._logger.info("Writing knowledge graph to neo4j")
         with self.driver.session() as session:
-            session.execute_write(self._init_database)
-
             session.execute_write(self._write_file_nodes, kg.get_neo4j_file_nodes())
             session.execute_write(self._write_ast_nodes, kg.get_neo4j_ast_nodes())
             session.execute_write(self._write_text_nodes, kg.get_neo4j_text_nodes())
