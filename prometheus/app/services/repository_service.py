@@ -150,7 +150,7 @@ class RepositoryService(BaseService):
         path = Path(repository.playground_path)
         if path.exists():
             shutil.rmtree(repository.playground_path)
-            path.rmdir()
+            path.parent.rmdir()
 
     def delete_repository(self, repository: Repository):
         """
