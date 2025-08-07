@@ -155,7 +155,8 @@ class RepositoryService(BaseService):
             return session.exec(statement).first()
 
     def clean_repository(self, repository: Repository):
-        shutil.rmtree(repository.playground_path)
+        if Path(repository.playground_path).exists():
+            shutil.rmtree(repository.playground_path)
 
     def mark_repository_as_cleaned(self, repository: Repository):
         """
