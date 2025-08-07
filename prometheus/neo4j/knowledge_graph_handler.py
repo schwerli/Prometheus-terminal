@@ -269,7 +269,7 @@ class KnowledgeGraphHandler:
         OPTIONAL MATCH (root)-[*]->(ast:ASTNode)
         WITH collect(ast) AS all_ast_nodes
         UNWIND all_ast_nodes AS node1
-        WITH node1 WHERE node1 IS NOT NULL
+        WITH node1, all_ast_nodes WHERE node1 IS NOT NULL
         // Find PARENT_OF edges only between those ASTNodes
         MATCH (node1)-[:PARENT_OF]->(node2:ASTNode)
         WHERE node2 IN all_ast_nodes
@@ -298,7 +298,7 @@ class KnowledgeGraphHandler:
         OPTIONAL MATCH (root)-[:HAS_FILE*]->(subfile:FileNode)
         WITH collect(root) + collect(subfile) AS all_file_nodes
         UNWIND all_file_nodes AS file_node
-        WITH file_node WHERE file_node IS NOT NULL
+        WITH file_node, all_file_nodes WHERE file_node IS NOT NULL
         // Find HAS_FILE edges between those nodes
         MATCH (file_node)-[:HAS_FILE]->(child:FileNode)
         WHERE child IN all_file_nodes
@@ -380,7 +380,7 @@ class KnowledgeGraphHandler:
         OPTIONAL MATCH (root)-[*]->(text_node:TextNode)
         WITH collect(text_node) AS all_text_nodes
         UNWIND all_text_nodes AS node1
-        WITH node1 WHERE node1 IS NOT NULL
+        WITH node1, all_text_nodes WHERE node1 IS NOT NULL
         // Find NEXT_CHUNK edges only between those TextNodes
         MATCH (node1)-[:NEXT_CHUNK]->(node2:TextNode)
         WHERE node2 IN all_text_nodes
