@@ -50,7 +50,7 @@ class KnowledgeGraph:
         max_ast_depth: int,
         chunk_size: int,
         chunk_overlap: int,
-        root_node_id: int = 0,
+        root_node_id: int,
         root_node: Optional[KnowledgeGraphNode] = None,
         knowledge_graph_nodes: Optional[Sequence[KnowledgeGraphNode]] = None,
         knowledge_graph_edges: Optional[Sequence[KnowledgeGraphEdge]] = None,
