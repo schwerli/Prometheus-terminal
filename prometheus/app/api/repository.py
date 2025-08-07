@@ -2,6 +2,7 @@ import git
 from fastapi import APIRouter, Request
 
 from prometheus.app.decorators.require_login import requireLogin
+from prometheus.app.models.requests.repository import UploadRepositoryRequest
 from prometheus.app.models.response.response import Response
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
@@ -44,58 +45,32 @@ def get_github_token(request: Request, github_token: str) -> str:
     response_model=Response,
 )
 @requireLogin
-def upload_github_repository(github_token: str, https_url: str, request: Request):
+def upload_github_repository(upload_repository_request: UploadRepositoryRequest, request: Request):
     # Get the repository and knowledge graph services
     repository_service: RepositoryService = request.app.state.service["repository_service"]
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
     ]
-    github_token = get_github_token(request, github_token)
-
-    # Clean the services to ensure no previous data is present
-    repository_service.clean()
-    knowledge_graph_service.clear()
+    github_token = get_github_token(request, upload_repository_request.github_token)
 
     try:
         # Clone the repository
-        saved_path = repository_service.clone_github_repo(github_token, https_url)
+        saved_path = repository_service.clone_github_repo(
+            github_token, upload_repository_request.https_url, upload_repository_request.commit_id
+        )
     except git.exc.GitCommandError:
-        raise ServerException(code=400, message=f"Unable to clone {https_url}")
+        raise ServerException(
+            code=400, message=f"Unable to clone {upload_repository_request.https_url}."
+        )
     # Build and save the knowledge graph from the cloned repository
-    knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url)
-    return Response()
-
-
-@router.get(
-    "/github_commit/",
-    description="""
-    Upload a GitHub repository at a specific commit to Prometheus.
-    """,
-    response_model=Response,
-)
-@requireLogin
-def upload_github_repository_at_commit(
-    github_token, https_url: str, commit_id: str, request: Request
-):
-    # Get the repository and knowledge graph services
-    repository_service: RepositoryService = request.app.state.service["repository_service"]
-    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
-        "knowledge_graph_service"
-    ]
-
-    github_token = get_github_token(request, github_token)
-
-    # Clean the services to ensure no previous data is present
-    repository_service.clean()
-    knowledge_graph_service.clear()
-
-    try:
-        # Clone the repository
-        saved_path = repository_service.clone_github_repo(github_token, https_url, commit_id)
-    except git.exc.GitCommandError:
-        raise ServerException(code=400, message=f"Unable to clone {https_url}")
-    # Build and save the knowledge graph from the cloned repository
-    knowledge_graph_service.build_and_save_knowledge_graph(saved_path, https_url, commit_id)
+    root_node_id = knowledge_graph_service.build_and_save_knowledge_graph(saved_path)
+    repository_service.create_new_repository(
+        url=upload_repository_request.https_url,
+        commit_id=None,
+        playground_path=str(saved_path),
+        user_id=upload_repository_request.user_id,
+        kg_root_node_id=root_node_id,
+    )
     return Response()
 
 
