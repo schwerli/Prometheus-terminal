@@ -99,14 +99,6 @@ class RepositoryService(BaseService):
         git_repo.create_and_push_branch(branch_name, commit_message, patch)
         return branch_name
 
-    def clean(self):
-        shutil.rmtree(self.target_directory)
-        self.target_directory.mkdir(parents=True)
-
-    def close(self):
-        """Cleans up the repository service before shutdown."""
-        self.clean()
-
     def create_new_repository(
         self,
         url: str,

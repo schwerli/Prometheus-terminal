@@ -63,10 +63,3 @@ class KnowledgeGraphService(BaseService):
 
     def clear_kg(self, root_node_id: int):
         self.kg_handler.clear_knowledge_graph(root_node_id)
-
-    def clear_all_kg(self):
-        self.kg_handler.clear_all_knowledge_graph()
-
-    def close(self):
-        """Clear All knowledge graph before closing the service."""
-        self.clear_all_kg()
