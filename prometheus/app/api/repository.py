@@ -48,8 +48,9 @@ def get_github_token(request: Request, github_token: str) -> str:
 def upload_github_repository(upload_repository_request: UploadRepositoryRequest, request: Request):
     # Get the repository and knowledge graph services
     repository_service: RepositoryService = request.app.state.service["repository_service"]
-    repository = repository_service.get_repository_by_url_and_commit_id(upload_repository_request.https_url,
-                                                                        commit_id=upload_repository_request.commit_id)
+    repository = repository_service.get_repository_by_url_and_commit_id(
+        upload_repository_request.https_url, commit_id=upload_repository_request.commit_id
+    )
     if repository:
         return Response(message="Repository already exists")
 
