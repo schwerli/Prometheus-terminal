@@ -263,7 +263,7 @@ class KnowledgeGraphHandler:
                 session.execute_read(self._read_next_chunk_edges),
             )
 
-    def knowledge_graph_exists(self) -> bool:
+    def knowledge_graph_exists(self, root_node_id:int) -> bool:
         """Check if the knowledge graph exists in the Neo4j database.
 
         Returns:
@@ -279,6 +279,7 @@ class KnowledgeGraphHandler:
             return record["graph_exists"] if record else False
 
     def verify_empty(self, tx: ManagedTransaction):
+        """Verify that the Neo4j database is empty."""
         query = """
       MATCH (n)
       RETURN count(n) as count
@@ -286,8 +287,8 @@ class KnowledgeGraphHandler:
         result = tx.run(query)
         return result.single()["count"] == 0
 
-    def clear_knowledge_graph(self):
-        """Clear the knowledge graph from neo4j."""
+    def clear_all_knowledge_graph(self):
+        """Clear all knowledge graphs from neo4j."""
         query = """
       MATCH (n)
       DETACH DELETE n
@@ -303,3 +304,9 @@ class KnowledgeGraphHandler:
 
                 self._logger.warning(f"Database not empty after attempt {attempt + 1}, retrying...")
                 session.run(query)
+
+    def get_new_knowledge_graph_root_node_id(self):
+        raise NotImplementedError("This method is not implemented yet.")
+
+    def clear_knowledge_graph(self, root_node_id):
+        raise NotImplementedError("This method is not implemented yet.")
