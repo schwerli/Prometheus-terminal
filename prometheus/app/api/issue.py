@@ -42,7 +42,7 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
 
     git_repository = repository_service.get_repository(repository.playground_path)
     knowledge_graph = knowledge_graph_service.get_knowledge_graph(
-        repository.root_node_id,
+        repository.kg_root_node_id,
         repository.kg_max_ast_depth,
         repository.kg_chunk_size,
         repository.kg_chunk_overlap,

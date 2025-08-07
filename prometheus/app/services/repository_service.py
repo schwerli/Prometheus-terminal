@@ -169,5 +169,5 @@ class RepositoryService(BaseService):
 
     def get_repository(self, local_path) -> GitRepository:
         git_repo = GitRepository()
-        git_repo.from_local_repository(local_path)
+        git_repo.from_local_repository(Path(local_path))
         return git_repo
