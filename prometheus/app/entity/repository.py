@@ -5,7 +5,7 @@ class Repository(SQLModel, table=True):
     id: int = Field(primary_key=True, description="ID")
     url: str = Field(
         index=True,
-        max_length=100,
+        max_length=200,
         description="The URL of the repository.",
     )
     commit_id: str = Field(
@@ -17,7 +17,7 @@ class Repository(SQLModel, table=True):
     )
     playground_path: str = Field(
         unique=True,
-        max_length=100,
+        max_length=300,
         description="The playground path of the repository where the repository was cloned.",
     )
     user_id: int = Field(

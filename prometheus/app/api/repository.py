@@ -19,7 +19,7 @@ def get_github_token(request: Request, github_token: str) -> str:
         return github_token
     # If the token is not provided, fetch it from the user profile if logged in
     # Check if the user is authenticated
-    if not request.state.user_id:
+    if not getattr(request.state, "user_id", None):
         # If the user is not authenticated, raise an exception
         raise ServerException(
             code=401, message="GitHub token is required, please provide it or log in"
@@ -38,7 +38,7 @@ def get_github_token(request: Request, github_token: str) -> str:
 
 
 @router.post(
-    "/github/",
+    "/upload/",
     description="""
     Upload a GitHub repository to Prometheus, default to the latest commit in the main branch.
     """,
@@ -68,7 +68,7 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
         url=upload_repository_request.https_url,
         commit_id=None,
         playground_path=str(saved_path),
-        user_id=upload_repository_request.user_id,
+        user_id=getattr(request.state, "user_id", None),
         kg_root_node_id=root_node_id,
     )
     return Response()
