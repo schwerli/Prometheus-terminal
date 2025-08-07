@@ -127,6 +127,9 @@ class RepositoryService(BaseService):
                 playground_path=playground_path,
                 user_id=user_id,
                 kg_root_node_id=kg_root_node_id,
+                kg_max_ast_depth=self.kg_service.max_ast_depth,
+                kg_chunk_size=self.kg_service.chunk_size,
+                kg_chunk_overlap=self.kg_service.chunk_overlap,
             )
             session.add(repository)
             session.commit()

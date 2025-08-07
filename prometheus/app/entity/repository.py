@@ -26,3 +26,10 @@ class Repository(SQLModel, table=True):
     kg_root_node_id: int = Field(
         index=True, unique=True, description="The ID of the root node of the knowledge graph."
     )
+    kg_max_ast_depth: int = Field(description="The maximum AST depth of the knowledge graph.")
+    kg_chunk_size: int = Field(
+        description="The size of the chunks used in the knowledge graph.",
+    )
+    kg_chunk_overlap: int = Field(
+        description="The overlap of the chunks used in the knowledge graph."
+    )
