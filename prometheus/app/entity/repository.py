@@ -3,8 +3,10 @@ from sqlmodel import Field, SQLModel
 
 class Repository(SQLModel, table=True):
     id: int = Field(primary_key=True, description="ID")
-    repo: str = Field(
-        index=True, max_length=100, description="The repository owner/name identifier from GitHub."
+    url: str = Field(
+        index=True,
+        max_length=100,
+        description="The URL of the repository.",
     )
     commit_id: str = Field(
         index=True,
