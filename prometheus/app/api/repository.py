@@ -1,6 +1,5 @@
 import git
 from fastapi import APIRouter, Request
-from prometheus.configuration.config import settings
 
 from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.requests.repository import UploadRepositoryRequest
@@ -8,6 +7,7 @@ from prometheus.app.models.response.response import Response
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.app.services.user_service import UserService
+from prometheus.configuration.config import settings
 from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
