@@ -183,24 +183,71 @@ class KnowledgeGraphHandler:
             session.execute_write(self._write_next_chunk_edges, kg.get_neo4j_next_chunk_edges())
         self.write_parent_of_edges(kg.get_parent_of_edges())
 
-    def _read_file_nodes(self, tx: ManagedTransaction) -> Sequence[KnowledgeGraphNode]:
-        """Read FileNode from neo4j."""
-        query = "MATCH (n:FileNode) RETURN n.node_id AS node_id, n.basename AS basename, n.relative_path AS relative_path"
-        result = tx.run(query)
+    def _read_file_nodes(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[KnowledgeGraphNode]:
+        """
+        Read all FileNode nodes that are reachable from the specified root_node_id (including the root node itself).
+
+        Args:
+            tx (ManagedTransaction): An active Neo4j transaction.
+            root_node_id (int): The node id of the root node.
+
+        Returns:
+            Sequence[KnowledgeGraphNode]: List of FileNode KnowledgeGraphNode objects.
+        """
+        query = """
+        MATCH (root:FileNode {node_id: $root_node_id})
+        RETURN root.node_id AS node_id, root.basename AS basename, root.relative_path AS relative_path
+        UNION
+        MATCH (root:FileNode {node_id: $root_node_id})-[:HAS_FILE*]->(n:FileNode)
+        RETURN n.node_id AS node_id, n.basename AS basename, n.relative_path AS relative_path
+        """
+        result = tx.run(query, root_node_id=root_node_id)
         return [KnowledgeGraphNode.from_neo4j_file_node(record.data()) for record in result]
 
-    def _read_ast_nodes(self, tx: ManagedTransaction) -> Sequence[KnowledgeGraphNode]:
-        """Read ASTNode from neo4j."""
-        query = "MATCH (n:ASTNode) RETURN n.node_id AS node_id, n.start_line AS start_line, n.end_line AS end_line, n.type AS type, n.text AS text"
-        result = tx.run(query)
+    def _read_ast_nodes(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[KnowledgeGraphNode]:
+        """
+        Read all ASTNode nodes related to the file tree rooted at root_node_id:
+          - Traverse from the root FileNode via HAS_FILE* to get all reachable FileNodes.
+          - For each FileNode, get its AST root node via HAS_AST, and all its AST descendants via PARENT_OF*.
+
+        Args:
+            tx (ManagedTransaction): An active Neo4j transaction.
+            root_node_id (int): The node id of the root FileNode.
+
+        Returns:
+            Sequence[KnowledgeGraphNode]: List of ASTNode KnowledgeGraphNode objects.
+        """
+        query = """
+        MATCH (root {node_id: $root_node_id})
+        OPTIONAL MATCH (root)-[*]->(n:ASTNode)
+        RETURN DISTINCT n.node_id AS node_id, n.start_line AS start_line, n.end_line AS end_line, n.type AS type, n.text AS text
+        """
+        result = tx.run(query, root_node_id=root_node_id)
         return [KnowledgeGraphNode.from_neo4j_ast_node(record.data()) for record in result]
 
-    def _read_text_nodes(self, tx: ManagedTransaction) -> Sequence[KnowledgeGraphNode]:
-        """Read TextNode from neo4j."""
-        query = (
-            "MATCH (n:TextNode) RETURN n.node_id AS node_id, n.text AS text, n.metadata AS metadata"
-        )
-        result = tx.run(query)
+    def _read_text_nodes(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[KnowledgeGraphNode]:
+        """
+        Read all TextNode nodes that are reachable from the specified root_node_id (regardless of edge type).
+
+        Args:
+            tx (ManagedTransaction): An active Neo4j transaction.
+            root_node_id (int): The node id of the root node.
+
+        Returns:
+            Sequence[KnowledgeGraphNode]: List of TextNode KnowledgeGraphNode objects.
+        """
+        query = """
+        MATCH (root {node_id: $root_node_id})
+        OPTIONAL MATCH (root)-[*]->(n:TextNode)
+        RETURN DISTINCT n.node_id AS node_id, n.text AS text, n.metadata AS metadata
+        """
+        result = tx.run(query, root_node_id=root_node_id)
         return [KnowledgeGraphNode.from_neo4j_text_node(record.data()) for record in result]
 
     def _read_parent_of_edges(self, tx: ManagedTransaction) -> Sequence[Mapping[str, int]]:
@@ -248,12 +295,12 @@ class KnowledgeGraphHandler:
         result = tx.run(query)
         return [record.data() for record in result]
 
-    def read_knowledge_graph(self) -> KnowledgeGraph:
+    def read_knowledge_graph(self, root_node_id: int) -> KnowledgeGraph:
         """Read KnowledgeGraph from neo4j."""
         self._logger.info("Reading knowledge graph from neo4j")
         with self.driver.session() as session:
             return KnowledgeGraph.from_neo4j(
-                session.execute_read(self._read_file_nodes),
+                session.execute_read(self._read_file_nodes, root_node_id=root_node_id),
                 session.execute_read(self._read_ast_nodes),
                 session.execute_read(self._read_text_nodes),
                 session.execute_read(self._read_parent_of_edges),
