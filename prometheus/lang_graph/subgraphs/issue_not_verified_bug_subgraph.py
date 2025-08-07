@@ -46,7 +46,7 @@ class IssueNotVerifiedBugSubgraph:
         issue_bug_analyzer_node = IssueBugAnalyzerNode(advanced_model)
 
         edit_message_node = EditMessageNode()
-        edit_node = EditNode(advanced_model, kg)
+        edit_node = EditNode(advanced_model, git_repo.playground_path)
         edit_tools = ToolNode(
             tools=edit_node.tools,
             name="edit_tools",

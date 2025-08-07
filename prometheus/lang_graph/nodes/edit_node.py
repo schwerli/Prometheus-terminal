@@ -14,7 +14,6 @@ from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import SystemMessage
 
-from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.tools import file_operation
 
 
@@ -116,9 +115,9 @@ MANDATORY REQUIREMENTS:
 6. Verify uniqueness of matches before changes
 """
 
-    def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
+    def __init__(self, model: BaseChatModel, local_path: str):
         self.system_prompt = SystemMessage(self.SYS_PROMPT)
-        self.tools = self._init_tools(kg.get_local_path())
+        self.tools = self._init_tools(local_path)
         self.model_with_tools = model.bind_tools(self.tools)
         self._logger = logging.getLogger("prometheus.lang_graph.nodes.edit_node")
 

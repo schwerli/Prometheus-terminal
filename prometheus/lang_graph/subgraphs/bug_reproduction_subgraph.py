@@ -76,7 +76,9 @@ class BugReproductionSubgraph:
 
         # Step 3: Write a patch to reproduce the bug
         bug_reproducing_write_message_node = BugReproducingWriteMessageNode()
-        bug_reproducing_write_node = BugReproducingWriteNode(advanced_model, kg)
+        bug_reproducing_write_node = BugReproducingWriteNode(
+            advanced_model, git_repo.playground_path
+        )
         bug_reproducing_write_tools = ToolNode(
             tools=bug_reproducing_write_node.tools,
             name="bug_reproducing_write_tools",
@@ -84,7 +86,7 @@ class BugReproductionSubgraph:
         )
 
         # Step 4: Edit files if necessary (based on tool calls)
-        bug_reproducing_file_node = BugReproducingFileNode(base_model, kg)
+        bug_reproducing_file_node = BugReproducingFileNode(base_model, kg, git_repo.playground_path)
         bug_reproducing_file_tools = ToolNode(
             tools=bug_reproducing_file_node.tools,
             name="bug_reproducing_file_tools",

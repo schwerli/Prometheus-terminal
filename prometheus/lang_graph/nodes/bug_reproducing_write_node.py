@@ -5,7 +5,6 @@ from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import SystemMessage
 
-from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.bug_reproduction_state import BugReproductionState
 from prometheus.tools import file_operation
 
@@ -111,8 +110,8 @@ def test_empty_array_parsing(parser):
 </example>
 '''
 
-    def __init__(self, model: BaseChatModel, kg: KnowledgeGraph):
-        self.tools = self._init_tools(str(kg.get_local_path()))
+    def __init__(self, model: BaseChatModel, local_path: str):
+        self.tools = self._init_tools(local_path)
         self.system_prompt = SystemMessage(self.SYS_PROMPT)
         self.model_with_tools = model.bind_tools(self.tools)
         self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_write_node")
