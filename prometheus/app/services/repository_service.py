@@ -80,25 +80,6 @@ class RepositoryService(BaseService):
             git_repo.checkout_commit(commit_id)
         return git_repo.get_working_directory()
 
-    def push_change_to_remote(self, git_repo: GitRepository, commit_message: str, patch: str):
-        """Pushes local changes to a new remote branch.
-
-        Creates a new branch with a unique name, commits the current changes,
-        and pushes them to the remote repository. Branch names are prefixed with
-        'prometheus_fix_' and include a unique identifier.
-
-        Args:
-            git_repo: GitRepository instance to perform operations on.
-            commit_message: Message to use for the commit.
-            patch: Patch to apply to the commit.
-
-        Returns:
-          Name of the created branch.
-        """
-        branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
-        git_repo.create_and_push_branch(branch_name, commit_message, patch)
-        return branch_name
-
     def create_new_repository(
         self,
         url: str,

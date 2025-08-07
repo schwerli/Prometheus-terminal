@@ -1,16 +1,17 @@
 import logging
 import traceback
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 from prometheus.app.services.base_service import BaseService
-from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
-from prometheus.app.services.repository_service import RepositoryService
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.docker.user_defined_container import UserDefinedContainer
+from prometheus.git.git_repository import GitRepository
+from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_graph import IssueGraph
 from prometheus.lang_graph.graphs.issue_state import IssueType
 
@@ -18,15 +19,11 @@ from prometheus.lang_graph.graphs.issue_state import IssueType
 class IssueService(BaseService):
     def __init__(
         self,
-        kg_service: KnowledgeGraphService,
-        repository_service: RepositoryService,
         neo4j_service: Neo4jService,
         llm_service: LLMService,
         max_token_per_neo4j_result: int,
         working_directory: str,
     ):
-        self.kg_service = kg_service
-        self.repository_service = repository_service
         self.neo4j_service = neo4j_service
         self.llm_service = llm_service
         self.max_token_per_neo4j_result = max_token_per_neo4j_result
@@ -36,6 +33,8 @@ class IssueService(BaseService):
 
     def answer_issue(
         self,
+        repository: GitRepository,
+        knowledge_graph: KnowledgeGraph,
         issue_number: int,
         issue_title: str,
         issue_body: str,
@@ -56,6 +55,8 @@ class IssueService(BaseService):
         Processes an issue, generates patches if needed, runs optional builds and tests, and returning the results.
 
         Args:
+            repository (GitRepository): The Git repository instance.
+            knowledge_graph (KnowledgeGraph): The knowledge graph instance.
             issue_number (int): The number of the issue.
             issue_title (str): The title of the issue.
             issue_body (str): The body of the issue.
@@ -91,7 +92,7 @@ class IssueService(BaseService):
             # Construct the working directory
             if dockerfile_content or image_name:
                 container = UserDefinedContainer(
-                    self.kg_service.kg.get_local_path(),
+                    repository.get_working_directory(),
                     workdir,
                     build_commands,
                     test_commands,
@@ -99,13 +100,13 @@ class IssueService(BaseService):
                     image_name,
                 )
             else:
-                container = GeneralContainer(self.kg_service.kg.get_local_path())
+                container = GeneralContainer(repository.get_working_directory())
             # Initialize the issue graph with the necessary services and parameters
             issue_graph = IssueGraph(
                 advanced_model=self.llm_service.advanced_model,
                 base_model=self.llm_service.base_model,
-                kg=self.kg_service.kg,
-                git_repo=self.repository_service.git_repo,
+                kg=knowledge_graph,
+                git_repo=repository,
                 neo4j_driver=self.neo4j_service.neo4j_driver,
                 max_token_per_neo4j_result=self.max_token_per_neo4j_result,
                 container=container,
@@ -128,8 +129,9 @@ class IssueService(BaseService):
                 # push to remote if requested
                 remote_branch_name = None
                 if output_state["edit_patch"] and push_to_remote:
-                    remote_branch_name = self.repository_service.push_change_to_remote(
-                        f"Fixes #{issue_number}", output_state["edit_patch"]
+                    remote_branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
+                    repository.create_and_push_branch(
+                        remote_branch_name, f"Fixes #{issue_number}", output_state["edit_patch"]
                     )
 
                 return (
