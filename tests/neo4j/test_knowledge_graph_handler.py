@@ -1,6 +1,5 @@
 import pytest
 
-from prometheus.graph.graph_types import MetadataNode
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.neo4j.knowledge_graph_handler import KnowledgeGraphHandler
 from tests.test_utils import test_project_paths
@@ -8,17 +7,6 @@ from tests.test_utils.fixtures import (  # noqa: F401
     empty_neo4j_container_fixture,
     neo4j_container_with_kg_fixture,
 )
-
-
-@pytest.mark.slow
-def test_num_metadata_node(neo4j_container_with_kg_fixture):  # noqa: F811
-    neo4j_container, _ = neo4j_container_with_kg_fixture
-    handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
-
-    with neo4j_container.get_driver() as driver:
-        with driver.session() as session:
-            read_metadata_node = session.execute_read(handler._read_metadata_node)
-            assert isinstance(read_metadata_node, MetadataNode)
 
 
 @pytest.mark.slow
@@ -114,20 +102,20 @@ def test_knowledge_graph_exists(neo4j_container_with_kg_fixture):  # noqa: F811
     neo4j_container, _ = neo4j_container_with_kg_fixture
     handler = KnowledgeGraphHandler(neo4j_container.get_driver(), 100)
 
-    assert handler.knowledge_graph_exists()
+    assert handler.knowledge_graph_exists(0)
 
 
 @pytest.mark.slow
 def test_clear_knowledge_graph(empty_neo4j_container_fixture):  # noqa: F811
-    kg = KnowledgeGraph(1000, 1000, 100)
+    kg = KnowledgeGraph(1000, 1000, 100, 0)
     kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
 
     driver = empty_neo4j_container_fixture.get_driver()
     handler = KnowledgeGraphHandler(driver, 100)
     handler.write_knowledge_graph(kg)
 
-    assert handler.knowledge_graph_exists()
+    assert handler.knowledge_graph_exists(0)
 
-    handler.clear_knowledge_graph()
+    handler.clear_knowledge_graph(0)
 
-    assert not handler.knowledge_graph_exists()
+    assert not handler.knowledge_graph_exists(0)
