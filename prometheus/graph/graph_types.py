@@ -9,7 +9,6 @@ class CodeBaseSourceEnum(enum.StrEnum):
     """Enum of all knowledge graph source types"""
 
     github = "GitHub"
-    other = "Other"
 
 
 @dataclasses.dataclass(frozen=True)

@@ -107,11 +107,8 @@ class KnowledgeGraph:
                 commit_id=commit_id,
             )
         else:
-            metadata_node = MetadataNode(
-                codebase_source=CodeBaseSourceEnum.other,
-                local_path=str(root_dir),
-                https_url=None,
-                commit_id=None,
+            raise ValueError(
+                f"Unsupported codebase source URL: {https_url}. Only GitHub URLs are supported"
             )
         self._metadata_node = metadata_node
 
@@ -331,9 +328,6 @@ class KnowledgeGraph:
         for ast_node in self.get_ast_nodes():
             ast_node_types.add(ast_node.node.type)
         return list(ast_node_types)
-
-    def is_built_from_other_codebase(self) -> bool:
-        return self._metadata_node.codebase_source == CodeBaseSourceEnum.other
 
     def is_built_from_github(self) -> bool:
         return self._metadata_node.codebase_source == CodeBaseSourceEnum.github
