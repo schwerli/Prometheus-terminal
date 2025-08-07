@@ -53,7 +53,7 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
         upload_repository_request.https_url, commit_id=upload_repository_request.commit_id
     )
     if repository:
-        return Response(message="Repository already exists")
+        return Response(message="Repository already exists", data={"repository_id": repository.id})
 
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
@@ -71,14 +71,14 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
         )
     # Build and save the knowledge graph from the cloned repository
     root_node_id = knowledge_graph_service.build_and_save_knowledge_graph(saved_path)
-    repository_service.create_new_repository(
+    repository_id = repository_service.create_new_repository(
         url=upload_repository_request.https_url,
         commit_id=None,
         playground_path=str(saved_path),
-        user_id=request.state.user_id if settings.ENABLE_GITHUB_TOKEN else None,
+        user_id=request.state.user_id if settings.ENABLE_AUTHENTICATION else None,
         kg_root_node_id=root_node_id,
     )
-    return Response()
+    return Response(data={"repository_id": repository_id})
 
 
 @router.delete(

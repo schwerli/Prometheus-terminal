@@ -106,7 +106,7 @@ class RepositoryService(BaseService):
         playground_path: str,
         user_id: Optional[int],
         kg_root_node_id: int,
-    ):
+    ) -> int:
         """
         Creates a new empty repository in the working directory.
 
@@ -118,7 +118,7 @@ class RepositoryService(BaseService):
             kg_root_node_id: ID of the root node in the knowledge graph for this repository.
 
         Returns:
-            Path to the newly created repository directory.
+            The ID of the newly created repository in the database.
         """
         with Session(self.engine) as session:
             repository = Repository(
@@ -131,6 +131,7 @@ class RepositoryService(BaseService):
             session.add(repository)
             session.commit()
             session.refresh(repository)
+        return repository.id
 
     def get_repository_by_id(self, repository_id: int) -> Optional[Repository]:
         """
