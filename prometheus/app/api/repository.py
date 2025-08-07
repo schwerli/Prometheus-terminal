@@ -1,5 +1,6 @@
 import git
 from fastapi import APIRouter, Request
+from prometheus.configuration.config import settings
 
 from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.requests.repository import UploadRepositoryRequest
@@ -19,7 +20,7 @@ def get_github_token(request: Request, github_token: str) -> str:
         return github_token
     # If the token is not provided, fetch it from the user profile if logged in
     # Check if the user is authenticated
-    if not getattr(request.state, "user_id", None):
+    if not settings.ENABLE_GITHUB_TOKEN:
         # If the user is not authenticated, raise an exception
         raise ServerException(
             code=401, message="GitHub token is required, please provide it or log in"
@@ -74,7 +75,7 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
         url=upload_repository_request.https_url,
         commit_id=None,
         playground_path=str(saved_path),
-        user_id=getattr(request.state, "user_id", None),
+        user_id=request.state.user_id if settings.ENABLE_GITHUB_TOKEN else None,
         kg_root_node_id=root_node_id,
     )
     return Response()
@@ -96,24 +97,14 @@ def delete(repository_id: int, request: Request):
     repository = repository_service.get_repository_by_id(repository_id)
     if not repository:
         raise ServerException(code=404, message="Repository not found")
+    # Check if the user has permission to delete the repository
+    if settings.ENABLE_AUTHENTICATION and repository.user_id != request.state.user_id:
+        raise ServerException(
+            code=403, message="You do not have permission to delete this repository"
+        )
     # Clear the knowledge graph and repository data
     knowledge_graph_service.clear_kg(repository.kg_root_node_id)
     repository_service.clean_repository(repository)
     # Delete the repository from the database
     repository_service.delete_repository(repository)
     return Response()
-
-
-@requireLogin
-@router.get(
-    "/exists/",
-    description="""
-    If there is a codebase uploaded to Prometheus.
-    """,
-    response_model=Response[bool],
-)
-def knowledge_graph_exists(repository_id: int, request: Request) -> Response[bool]:
-    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
-        "knowledge_graph_service"
-    ]
-    return Response(data=knowledge_graph_service.exists(repository_id))
