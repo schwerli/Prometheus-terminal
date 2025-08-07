@@ -90,13 +90,11 @@ def delete(repository_id: int, request: Request):
     repository = repository_service.get_repository_by_id(repository_id)
     if not repository:
         raise ServerException(code=404, message="Repository not found")
-    if repository.is_cleaned:
-        raise ServerException(code=400, message="Repository is already cleaned")
     # Clear the knowledge graph and repository data
     knowledge_graph_service.clear_kg(repository.kg_root_node_id)
     repository_service.clean_repository(repository)
-    # Mark the repository as cleaned
-    repository_service.mark_repository_as_cleaned(repository)
+    # Delete the repository from the database
+    repository_service.delete_repository(repository)
     return Response()
 
 

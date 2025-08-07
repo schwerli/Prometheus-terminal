@@ -23,7 +23,6 @@ class Repository(SQLModel, table=True):
     user_id: int = Field(
         index=True, nullable=True, description="The ID of the user who upload this repository."
     )
-    is_cleaned: bool = Field(default=False, description="Whether the repository is cleaned or not.")
     kg_root_node_id: int = Field(
         index=True, unique=True, description="The ID of the root node of the knowledge graph."
     )

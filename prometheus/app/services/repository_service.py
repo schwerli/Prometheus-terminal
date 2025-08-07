@@ -147,17 +147,20 @@ class RepositoryService(BaseService):
             return session.exec(statement).first()
 
     def clean_repository(self, repository: Repository):
-        if Path(repository.playground_path).exists():
+        path = Path(repository.playground_path)
+        if path.exists():
             shutil.rmtree(repository.playground_path)
+            path.rmdir()
 
-    def mark_repository_as_cleaned(self, repository: Repository):
+    def delete_repository(self, repository: Repository):
         """
-        Marks a repository as cleaned in the database.
+        deletes a repository from the database.
 
         Args:
             repository: The repository instance to mark as cleaned.
         """
         with Session(self.engine) as session:
-            repository.is_cleaned = True
-            session.add(repository)
-            session.commit()
+            obj = session.get(Repository, repository.id)
+            if obj:
+                session.delete(obj)
+                session.commit()
