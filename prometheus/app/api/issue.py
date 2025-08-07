@@ -4,6 +4,7 @@ from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.requests.issue import IssueRequest
 from prometheus.app.models.response.issue import IssueResponse
 from prometheus.app.models.response.response import Response
+from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.configuration.config import settings
 from prometheus.exceptions.server_exception import ServerException
@@ -35,6 +36,17 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
                 message="workdir must be provided for user defined environment",
             )
 
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+
+    git_repository = repository_service.get_repository(repository.playground_path)
+    knowledge_graph = knowledge_graph_service.get_knowledge_graph(
+        repository.root_node_id,
+        repository.kg_max_ast_depth,
+        repository.kg_chunk_size,
+        repository.kg_chunk_overlap,
+    )
     (
         remote_branch_name,
         patch,
@@ -43,6 +55,8 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
         passed_existing_test,
         issue_response,
     ) = request.app.state.service["issue_service"].answer_issue(
+        repository=git_repository,
+        knowledge_graph=knowledge_graph,
         issue_number=issue.issue_number,
         issue_title=issue.issue_title,
         issue_body=issue.issue_body,

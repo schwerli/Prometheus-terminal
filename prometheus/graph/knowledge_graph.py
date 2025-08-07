@@ -75,7 +75,7 @@ class KnowledgeGraph:
         self._knowledge_graph_edges = (
             knowledge_graph_edges if knowledge_graph_edges is not None else []
         )
-        self._next_node_id = root_node_id + len(knowledge_graph_nodes)
+        self._next_node_id = root_node_id + len(self._knowledge_graph_nodes)
 
         self._file_graph_builder = FileGraphBuilder(max_ast_depth, chunk_size, chunk_overlap)
         self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
