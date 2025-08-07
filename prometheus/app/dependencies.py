@@ -34,6 +34,7 @@ def initialize_services() -> dict[str, BaseService]:
     neo4j_service = Neo4jService(
         settings.NEO4J_URI, settings.NEO4J_USERNAME, settings.NEO4J_PASSWORD
     )
+    database_service = DatabaseService(settings.DATABASE_URL)
     llm_service = LLMService(
         settings.ADVANCED_MODEL,
         settings.BASE_MODEL,
@@ -51,7 +52,9 @@ def initialize_services() -> dict[str, BaseService]:
         settings.KNOWLEDGE_GRAPH_CHUNK_SIZE,
         settings.KNOWLEDGE_GRAPH_CHUNK_OVERLAP,
     )
-    repository_service = RepositoryService(knowledge_graph_service, settings.WORKING_DIRECTORY)
+    repository_service = RepositoryService(
+        knowledge_graph_service, database_service, settings.WORKING_DIRECTORY
+    )
     issue_service = IssueService(
         knowledge_graph_service,
         repository_service,
@@ -60,7 +63,7 @@ def initialize_services() -> dict[str, BaseService]:
         settings.MAX_TOKEN_PER_NEO4J_RESULT,
         settings.WORKING_DIRECTORY,
     )
-    database_service = DatabaseService(settings.DATABASE_URL)
+
     user_service = UserService(database_service)
 
     return {
