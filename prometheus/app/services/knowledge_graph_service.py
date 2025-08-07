@@ -52,11 +52,6 @@ class KnowledgeGraphService(BaseService):
             return self.kg_handler.read_knowledge_graph()
         return None
 
-    def get_local_path(self) -> Path:
-        if self.kg:
-            return self.kg.get_local_path()
-        return None
-
     def build_and_save_knowledge_graph(
         self, path: Path, https_url: Optional[str] = None, commit_id: Optional[str] = None
     ):
