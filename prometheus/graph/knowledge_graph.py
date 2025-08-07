@@ -53,7 +53,7 @@ class KnowledgeGraph:
         max_ast_depth: int,
         chunk_size: int,
         chunk_overlap: int,
-        next_node_id: int = 0,
+        root_node_id: int = 0,
         root_node: Optional[KnowledgeGraphNode] = None,
         metadata_node: Optional[MetadataNode] = None,
         knowledge_graph_nodes: Optional[Sequence[KnowledgeGraphNode]] = None,
@@ -65,14 +65,15 @@ class KnowledgeGraph:
           max_ast_depth: The maximum depth of tree-sitter nodes to parse.
           chunk_size: The chunk size for text files.
           chunk_overlap: The overlap size for text files.
-          next_node_id: The next available node id.
+          root_node_id: The root_node_id.
           root_node: The root node for the knowledge graph.
           metadata_node: The metadata node for the knowledge graph.
           knowledge_graph_nodes: The initial list of knowledge graph nodes.
           knowledge_graph_edges: The initial list of knowledge graph edges.
         """
         self.max_ast_depth = max_ast_depth
-        self._next_node_id = next_node_id
+        self.root_node_id = root_node_id
+        self._next_node_id = root_node_id
         self._root_node = root_node
         self._metadata_node = metadata_node
         self._knowledge_graph_nodes = (
@@ -84,9 +85,7 @@ class KnowledgeGraph:
         self._file_graph_builder = FileGraphBuilder(max_ast_depth, chunk_size, chunk_overlap)
         self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
-    def build_graph(
-        self, root_dir: Path, https_url: str, commit_id: Optional[str] = None
-    ):
+    def build_graph(self, root_dir: Path, https_url: str, commit_id: Optional[str] = None):
         """Builds knowledge graph for a codebase at a location.
 
         Args:
@@ -170,9 +169,10 @@ class KnowledgeGraph:
             # This can only happen for files that are not supported by file_graph_builder.
             self._logger.info(f"Skip parsing {file} because it is not supported")
 
-    @classmethod
+    """@classmethod
     def from_neo4j(
         cls,
+        root_node_id:int,
         metadata_node: MetadataNode,
         file_nodes: Sequence[KnowledgeGraphNode],
         ast_nodes: Sequence[KnowledgeGraphNode],
@@ -183,7 +183,7 @@ class KnowledgeGraph:
         has_text_edges_ids: Sequence[Mapping[str, int]],
         next_chunk_edges_ids: Sequence[Mapping[str, int]],
     ):
-        """Creates a knowledge graph from nodes and edges stored in neo4j."""
+        Creates a knowledge graph from nodes and edges stored in neo4j.
         # All nodes
         knowledge_graph_nodes = [x for x in itertools.chain(file_nodes, ast_nodes, text_nodes)]
 
@@ -254,7 +254,7 @@ class KnowledgeGraph:
             metadata_node=metadata_node,
             knowledge_graph_nodes=knowledge_graph_nodes,
             knowledge_graph_edges=knowledge_graph_edges,
-        )
+        )"""
 
     def get_file_tree(self, max_depth: int = 5, max_lines: int = 5000) -> str:
         """Generate a tree-like string representation of the file structure.
@@ -284,17 +284,29 @@ class KnowledgeGraph:
           str: A string representation of the file tree, where each line represents a file
               or directory, with appropriate indentation and connecting lines showing
               the hierarchy.
-        """
-        file_node_adjacency_dict = self._get_file_node_adjacency_dict()
 
+        Algorithm:
+            - Uses a stack-based depth-first traversal to walk the file tree.
+            - Maintains a prefix string to build up the correct indentation and connectors.
+            - For each node, determines whether it is the last child in its directory to use
+              the correct tree connector (├── or └──).
+            - Accumulates results in `result_lines` until either max_depth or max_lines is reached.
+        """
+        file_node_adjacency_dict = (
+            self._get_file_node_adjacency_dict()
+        )  # Maps nodes to their children
+
+        # Each stack entry contains: (current_node, depth, prefix_string, is_last_child)
         stack = deque()
         stack.append((self._root_node, 0, "", None))
         result_lines = []
 
-        SPACE = "    "
-        BRANCH = "|   "
-        TEE = "├── "
-        LAST = "└── "
+        # Box-drawing characters and indentation constants
+        SPACE = "    "  # Indentation for levels without children
+        BRANCH = "|   "  # Vertical line for intermediate children
+        TEE = "├── "  # Entry for a non-final child
+        LAST = "└── "  # Entry for the last child
+
         while stack and (len(result_lines)) < max_lines:
             file_node, depth, prefix, is_last = stack.pop()
 
@@ -302,24 +314,32 @@ class KnowledgeGraph:
             if depth > max_depth:
                 continue
 
+            # Choose the connector character depending on whether this is the last child
             pointer = LAST if is_last else TEE
             line_prefix = "" if depth == 0 else prefix + pointer
+
+            # Add the current file or directory to the result lines
             result_lines.append(line_prefix + file_node.node.basename)
 
+            # Get the current node's children and sort them alphabetically by name
             sorted_children_file_node = sorted(
                 file_node_adjacency_dict[file_node], key=lambda x: x.node.basename
             )
+
+            # Traverse the children in reverse order to maintain the correct tree shape
             for i in range(len(sorted_children_file_node) - 1, -1, -1):
-                extension = SPACE if is_last else BRANCH
+                extension = SPACE if is_last else BRANCH  # Update prefix for children
                 new_prefix = "" if depth == 0 else prefix + extension
                 stack.append(
                     (
                         sorted_children_file_node[i],
                         depth + 1,
                         new_prefix,
-                        i == len(sorted_children_file_node) - 1,
+                        i == len(sorted_children_file_node) - 1,  # True if last child
                     )
                 )
+
+        # Join all lines into a single string for output
         return "\n".join(result_lines)
 
     def get_all_ast_node_types(self) -> Sequence[str]:
