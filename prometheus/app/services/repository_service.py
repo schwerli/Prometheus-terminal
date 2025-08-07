@@ -73,9 +73,9 @@ class RepositoryService(BaseService):
         Returns:
             Path to the local repository directory.
         """
-        git_repo = GitRepository(
-            https_url, self.get_new_playground_path(), github_access_token=github_token
-        )
+        git_repo = GitRepository()
+        git_repo.from_clone_repository(https_url, github_token, self.get_new_playground_path())
+
         if commit_id:
             git_repo.checkout_commit(commit_id)
         return git_repo.get_working_directory()
@@ -185,3 +185,8 @@ class RepositoryService(BaseService):
             if obj:
                 session.delete(obj)
                 session.commit()
+
+    def get_repository(self, local_path) -> GitRepository:
+        git_repo = GitRepository()
+        git_repo.from_local_repository(local_path)
+        return git_repo
