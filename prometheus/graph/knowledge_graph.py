@@ -68,7 +68,6 @@ class KnowledgeGraph:
         """
         self.max_ast_depth = max_ast_depth
         self.root_node_id = root_node_id
-        self._next_node_id = root_node_id
         self._root_node = root_node
         self._knowledge_graph_nodes = (
             knowledge_graph_nodes if knowledge_graph_nodes is not None else []
@@ -76,6 +75,8 @@ class KnowledgeGraph:
         self._knowledge_graph_edges = (
             knowledge_graph_edges if knowledge_graph_edges is not None else []
         )
+        self._next_node_id = root_node_id + len(knowledge_graph_nodes)
+
         self._file_graph_builder = FileGraphBuilder(max_ast_depth, chunk_size, chunk_overlap)
         self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
@@ -147,11 +148,13 @@ class KnowledgeGraph:
                 # This can only happen for files that are not supported by file_graph_builder.
                 self._logger.info(f"Skip parsing {file} because it is not supported")
 
-    """@classmethod
+    @classmethod
     def from_neo4j(
         cls,
-        root_node_id:int,
-        metadata_node: MetadataNode,
+        root_node_id: int,
+        max_ast_depth: int,
+        chunk_size: int,
+        chunk_overlap: int,
         file_nodes: Sequence[KnowledgeGraphNode],
         ast_nodes: Sequence[KnowledgeGraphNode],
         text_nodes: Sequence[KnowledgeGraphNode],
@@ -161,7 +164,7 @@ class KnowledgeGraph:
         has_text_edges_ids: Sequence[Mapping[str, int]],
         next_chunk_edges_ids: Sequence[Mapping[str, int]],
     ):
-        Creates a knowledge graph from nodes and edges stored in neo4j.
+        """Creates a knowledge graph from nodes and edges stored in neo4j."""
         # All nodes
         knowledge_graph_nodes = [x for x in itertools.chain(file_nodes, ast_nodes, text_nodes)]
 
@@ -217,22 +220,21 @@ class KnowledgeGraph:
         # Root node
         root_node = None
         for node in knowledge_graph_nodes:
-            if node.node_id == 0:
+            if node.node_id == root_node_id:
                 root_node = node
                 break
         if root_node is None:
-            raise ValueError("Node with node_id 0 not found.")
+            raise ValueError(f"Node with node_id {root_node_id} not found.")
 
         return cls(
-            max_ast_depth=-1,
-            chunk_size=-1,
-            chunk_overlap=-1,
-            next_node_id=len(knowledge_graph_nodes),
+            max_ast_depth=max_ast_depth,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            root_node_id=root_node_id,
             root_node=root_node,
-            metadata_node=metadata_node,
             knowledge_graph_nodes=knowledge_graph_nodes,
             knowledge_graph_edges=knowledge_graph_edges,
-        )"""
+        )
 
     def get_file_tree(self, max_depth: int = 5, max_lines: int = 5000) -> str:
         """Generate a tree-like string representation of the file structure.

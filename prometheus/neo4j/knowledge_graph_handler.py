@@ -389,11 +389,21 @@ class KnowledgeGraphHandler:
         result = tx.run(query, root_node_id=root_node_id)
         return [record.data() for record in result]
 
-    def read_knowledge_graph(self, root_node_id: int) -> KnowledgeGraph:
+    def read_knowledge_graph(
+        self,
+        root_node_id: int,
+        max_ast_depth: int,
+        chunk_size: int,
+        chunk_overlap: int,
+    ) -> KnowledgeGraph:
         """Read KnowledgeGraph from neo4j."""
         self._logger.info("Reading knowledge graph from neo4j")
         with self.driver.session() as session:
             return KnowledgeGraph.from_neo4j(
+                root_node_id,
+                max_ast_depth,
+                chunk_size,
+                chunk_overlap,
                 session.execute_read(self._read_file_nodes, root_node_id=root_node_id),
                 session.execute_read(self._read_ast_nodes, root_node_id=root_node_id),
                 session.execute_read(self._read_text_nodes, root_node_id=root_node_id),
