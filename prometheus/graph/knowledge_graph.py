@@ -126,7 +126,7 @@ class KnowledgeGraph:
         while file_stack:
             file, kg_file_path_node = file_stack.pop()
 
-            # The file is a directory, we create FileNode for all children files.
+            # If the file is a directory, we create FileNode for all children files.
             if file.is_dir():
                 self._logger.info(f"Processing directory {file}")
                 for child_file in sorted(file.iterdir()):
@@ -150,11 +150,10 @@ class KnowledgeGraph:
                     )
 
                     file_stack.append((child_file, kg_child_file_node))
-                continue
 
-            # The file is a file that file_graph_builder supports, it means that we can
+            # else if the file is a file that file_graph_builder supports, it means that we can
             # build a knowledge graph over it.
-            if self._file_graph_builder.supports_file(file):
+            elif self._file_graph_builder.supports_file(file):
                 self._logger.info(f"Processing file {file}")
                 try:
                     next_node_id, kg_nodes, kg_edges = self._file_graph_builder.build_file_graph(
