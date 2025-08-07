@@ -146,6 +146,23 @@ class RepositoryService(BaseService):
             statement = select(Repository).where(Repository.id == repository_id)
             return session.exec(statement).first()
 
+    def get_repository_by_url_and_commit_id(self, url: str, commit_id: str) -> Optional[Repository]:
+        """
+        Retrieves a repository by its URL and commit ID.
+
+        Args:
+            url: The URL of the repository.
+            commit_id: The commit ID of the repository.
+
+        Returns:
+            The Repository instance if found, otherwise None.
+        """
+        with Session(self.engine) as session:
+            statement = select(Repository).where(
+                Repository.url == url, Repository.commit_id == commit_id
+            )
+            return session.exec(statement).first()
+
     def clean_repository(self, repository: Repository):
         path = Path(repository.playground_path)
         if path.exists():
