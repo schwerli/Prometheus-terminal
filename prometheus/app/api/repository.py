@@ -37,7 +37,7 @@ def get_github_token(request: Request, github_token: str) -> str:
     return github_token
 
 
-@router.get(
+@router.post(
     "/github/",
     description="""
     Upload a GitHub repository to Prometheus, default to the latest commit in the main branch.
@@ -74,7 +74,7 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
     return Response()
 
 
-@router.get(
+@router.delete(
     "/delete/",
     description="""
     Delete the repository uploaded to Prometheus, along with other information.
@@ -82,18 +82,21 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
     response_model=Response,
 )
 @requireLogin
-def delete(request: Request):
+def delete(repository_id: int, request: Request):
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
     ]
-    if not knowledge_graph_service.exists():
-        return Response(message="No knowledge graph to delete")
-    # Get the repository service to clean up the repository data
     repository_service: RepositoryService = request.app.state.service["repository_service"]
-
+    repository = repository_service.get_repository_by_id(repository_id)
+    if not repository:
+        raise ServerException(code=404, message="Repository not found")
+    if repository.is_cleaned:
+        raise ServerException(code=400, message="Repository is already cleaned")
     # Clear the knowledge graph and repository data
-    knowledge_graph_service.clear()
-    repository_service.clean()
+    knowledge_graph_service.clear_kg(repository.kg_root_node_id)
+    repository_service.clean_repository(repository)
+    # Mark the repository as cleaned
+    repository_service.mark_repository_as_cleaned(repository)
     return Response()
 
 
@@ -101,9 +104,12 @@ def delete(request: Request):
 @router.get(
     "/exists/",
     description="""
-    If there is a codebase uploaded to Promtheus.
+    If there is a codebase uploaded to Prometheus.
     """,
     response_model=Response[bool],
 )
-def knowledge_graph_exists(request: Request) -> Response[bool]:
-    return Response(data=request.app.state.service["knowledge_graph_service"].exists())
+def knowledge_graph_exists(repository_id: int, request: Request) -> Response[bool]:
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+    return Response(data=knowledge_graph_service.exists(repository_id))

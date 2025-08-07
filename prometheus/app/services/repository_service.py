@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from prometheus.app.entity.repository import Repository
 from prometheus.app.services.base_service import BaseService
@@ -139,3 +139,32 @@ class RepositoryService(BaseService):
             session.add(repository)
             session.commit()
             session.refresh(repository)
+
+    def get_repository_by_id(self, repository_id: int) -> Optional[Repository]:
+        """
+        Retrieves a repository by its ID.
+
+        Args:
+            repository_id: The ID of the repository to retrieve.
+
+        Returns:
+            The Repository instance if found, otherwise None.
+        """
+        with Session(self.engine) as session:
+            statement = select(Repository).where(Repository.id == repository_id)
+            return session.exec(statement).first()
+
+    def clean_repository(self, repository: Repository):
+        shutil.rmtree(repository.playground_path)
+
+    def mark_repository_as_cleaned(self, repository: Repository):
+        """
+        Marks a repository as cleaned in the database.
+
+        Args:
+            repository: The repository instance to mark as cleaned.
+        """
+        with Session(self.engine) as session:
+            repository.is_cleaned = True
+            session.add(repository)
+            session.commit()
