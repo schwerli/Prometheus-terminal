@@ -119,11 +119,11 @@ class KnowledgeGraphNode:
 class KnowledgeGraphEdgeType(enum.StrEnum):
     """Enum of all knowledge graph edge types"""
 
-    parent_of = "PARENT_OF"
-    has_file = "HAS_FILE"
-    has_ast = "HAS_AST"
-    has_text = "HAS_TEXT"
-    next_chunk = "NEXT_CHUNK"
+    parent_of = "PARENT_OF"  # ASTNode -> ASTNode
+    has_file = "HAS_FILE"  # FileNode -> FileNode
+    has_ast = "HAS_AST"  # FileNode -> ASTNode
+    has_text = "HAS_TEXT"  # FileNode -> TextNode
+    next_chunk = "NEXT_CHUNK"  # TextNode -> TextNode
 
 
 @dataclasses.dataclass(frozen=True)
