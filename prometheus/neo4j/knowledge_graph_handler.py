@@ -250,7 +250,9 @@ class KnowledgeGraphHandler:
         result = tx.run(query, root_node_id=root_node_id)
         return [KnowledgeGraphNode.from_neo4j_text_node(record.data()) for record in result]
 
-    def _read_parent_of_edges(self, tx: ManagedTransaction, root_node_id: int) -> Sequence[Mapping[str, int]]:
+    def _read_parent_of_edges(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[Mapping[str, int]]:
         """
         Read all PARENT_OF edges where both source and target ASTNode are reachable from the subtree rooted at root_node_id.
 
@@ -276,7 +278,9 @@ class KnowledgeGraphHandler:
         result = tx.run(query, root_node_id=root_node_id)
         return [record.data() for record in result]
 
-    def _read_has_file_edges(self, tx: ManagedTransaction, root_node_id: int) -> Sequence[Mapping[str, int]]:
+    def _read_has_file_edges(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[Mapping[str, int]]:
         """
         Read all HAS_FILE edges that are reachable from the specified root_node_id (i.e., only those
         between FileNodes in the subtree of root_node_id, including root itself).
@@ -303,7 +307,9 @@ class KnowledgeGraphHandler:
         result = tx.run(query, root_node_id=root_node_id)
         return [record.data() for record in result]
 
-    def _read_has_ast_edges(self, tx: ManagedTransaction, root_node_id: int) -> Sequence[Mapping[str, int]]:
+    def _read_has_ast_edges(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[Mapping[str, int]]:
         """
         Read all HAS_AST edges where the source FileNode is in the subtree rooted at root_node_id.
 
@@ -328,7 +334,9 @@ class KnowledgeGraphHandler:
         result = tx.run(query, root_node_id=root_node_id)
         return [record.data() for record in result]
 
-    def _read_has_text_edges(self, tx: ManagedTransaction, root_node_id: int) -> Sequence[Mapping[str, int]]:
+    def _read_has_text_edges(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[Mapping[str, int]]:
         """
         Read all HAS_TEXT edges where the source FileNode is in the subtree rooted at root_node_id.
 
@@ -353,7 +361,9 @@ class KnowledgeGraphHandler:
         result = tx.run(query, root_node_id=root_node_id)
         return [record.data() for record in result]
 
-    def _read_next_chunk_edges(self, tx: ManagedTransaction, root_node_id: int) -> Sequence[Mapping[str, int]]:
+    def _read_next_chunk_edges(
+        self, tx: ManagedTransaction, root_node_id: int
+    ) -> Sequence[Mapping[str, int]]:
         """
         Read all NEXT_CHUNK edges between TextNodes that are reachable from the subtree rooted at root_node_id.
 
