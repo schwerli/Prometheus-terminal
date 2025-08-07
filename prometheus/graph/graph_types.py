@@ -5,48 +5,6 @@ import enum
 from typing import TypedDict, Union
 
 
-class CodeBaseSourceEnum(enum.StrEnum):
-    """Enum of all knowledge graph source types"""
-
-    github = "GitHub"
-
-
-@dataclasses.dataclass(frozen=True)
-class MetadataNode:
-    """A node for the codebase metadata.
-
-    Attributes:
-      codebase_source: Where the codebase originated from.
-      local_path: The local path where the codebase is stored.
-      https_url: The HTTPS URL of the remote repository.
-      commit_id: The commit ID of the remote repository.
-    """
-
-    codebase_source: CodeBaseSourceEnum
-
-    local_path: str
-
-    https_url: str | None
-    commit_id: str | None
-
-    def to_neo4j_node(self) -> "Neo4jMetadataNode":
-        return Neo4jMetadataNode(
-            codebase_source=self.codebase_source,
-            local_path=self.local_path,
-            https_url=self.https_url,
-            commit_id=self.commit_id,
-        )
-
-    @classmethod
-    def from_neo4j_metadata_node(cls, node: "Neo4jMetadataNode") -> "MetadataNode":
-        return cls(
-            codebase_source=node["codebase_source"],
-            local_path=node["local_path"],
-            https_url=node["https_url"],
-            commit_id=node["commit_id"],
-        )
-
-
 @dataclasses.dataclass(frozen=True)
 class FileNode:
     """A node representing a file/dir.

@@ -28,18 +28,15 @@ import igittigitt
 from prometheus.graph.file_graph_builder import FileGraphBuilder
 from prometheus.graph.graph_types import (
     ASTNode,
-    CodeBaseSourceEnum,
     FileNode,
     KnowledgeGraphEdge,
     KnowledgeGraphEdgeType,
     KnowledgeGraphNode,
-    MetadataNode,
     Neo4jASTNode,
     Neo4jFileNode,
     Neo4jHasASTEdge,
     Neo4jHasFileEdge,
     Neo4jHasTextEdge,
-    Neo4jMetadataNode,
     Neo4jNextChunkEdge,
     Neo4jParentOfEdge,
     Neo4jTextNode,
@@ -55,7 +52,6 @@ class KnowledgeGraph:
         chunk_overlap: int,
         root_node_id: int = 0,
         root_node: Optional[KnowledgeGraphNode] = None,
-        metadata_node: Optional[MetadataNode] = None,
         knowledge_graph_nodes: Optional[Sequence[KnowledgeGraphNode]] = None,
         knowledge_graph_edges: Optional[Sequence[KnowledgeGraphEdge]] = None,
     ):
@@ -67,7 +63,6 @@ class KnowledgeGraph:
           chunk_overlap: The overlap size for text files.
           root_node_id: The root_node_id.
           root_node: The root node for the knowledge graph.
-          metadata_node: The metadata node for the knowledge graph.
           knowledge_graph_nodes: The initial list of knowledge graph nodes.
           knowledge_graph_edges: The initial list of knowledge graph edges.
         """
@@ -75,7 +70,6 @@ class KnowledgeGraph:
         self.root_node_id = root_node_id
         self._next_node_id = root_node_id
         self._root_node = root_node
-        self._metadata_node = metadata_node
         self._knowledge_graph_nodes = (
             knowledge_graph_nodes if knowledge_graph_nodes is not None else []
         )
@@ -85,31 +79,16 @@ class KnowledgeGraph:
         self._file_graph_builder = FileGraphBuilder(max_ast_depth, chunk_size, chunk_overlap)
         self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
-    def build_graph(self, root_dir: Path, https_url: str, commit_id: Optional[str] = None):
+    def build_graph(self, root_dir: Path):
         """Builds knowledge graph for a codebase at a location.
 
         Args:
             root_dir: The codebase root directory.
-            https_url: The HTTPS URL of the codebase, used for metadata.
-            commit_id: The commit id of the codebase. (Optional, defaults to None)
         """
         root_dir = root_dir.absolute()
         gitignore_parser = igittigitt.IgnoreParser()
         gitignore_parser.parse_rule_files(root_dir)
         gitignore_parser.add_rule(".git", root_dir)
-
-        if https_url[:18] == "https://github.com":
-            metadata_node = MetadataNode(
-                codebase_source=CodeBaseSourceEnum.github,
-                local_path=str(root_dir),
-                https_url=https_url,
-                commit_id=commit_id,
-            )
-        else:
-            raise ValueError(
-                f"Unsupported codebase source URL: {https_url}. Only GitHub URLs are supported"
-            )
-        self._metadata_node = metadata_node
 
         # The root node for the whole graph
         root_dir_node = FileNode(basename=root_dir.name, relative_path=".")
@@ -348,18 +327,6 @@ class KnowledgeGraph:
             ast_node_types.add(ast_node.node.type)
         return list(ast_node_types)
 
-    def is_built_from_github(self) -> bool:
-        return self._metadata_node.codebase_source == CodeBaseSourceEnum.github
-
-    def get_local_path(self) -> Path:
-        return Path(self._metadata_node.local_path).absolute()
-
-    def get_codebase_https_url(self) -> str:
-        return self._metadata_node.https_url
-
-    def get_codebase_commit_id(self) -> str:
-        return self._metadata_node.commit_id
-
     def _get_file_node_adjacency_dict(
         self,
     ) -> Mapping[KnowledgeGraphNode, Sequence[KnowledgeGraphNode]]:
@@ -367,9 +334,6 @@ class KnowledgeGraph:
         for has_file_edge in self.get_has_file_edges():
             file_node_adjacency_dict[has_file_edge.source].append(has_file_edge.target)
         return file_node_adjacency_dict
-
-    def get_metadata_node(self) -> MetadataNode:
-        return self._metadata_node
 
     def get_file_nodes(self) -> Sequence[KnowledgeGraphNode]:
         return [
@@ -421,9 +385,6 @@ class KnowledgeGraph:
             if kg_edge.type == KnowledgeGraphEdgeType.parent_of
         ]
 
-    def get_neo4j_metadata_node(self) -> Neo4jMetadataNode:
-        return self._metadata_node.to_neo4j_node()
-
     def get_neo4j_file_nodes(self) -> Sequence[Neo4jFileNode]:
         return [kg_node.to_neo4j_node() for kg_node in self.get_file_nodes()]
 
@@ -450,9 +411,6 @@ class KnowledgeGraph:
 
     def __eq__(self, other: "KnowledgeGraph") -> bool:
         if not isinstance(other, KnowledgeGraph):
-            return False
-
-        if self._metadata_node != other._metadata_node:
             return False
 
         self._knowledge_graph_nodes.sort(key=lambda x: x.node_id)

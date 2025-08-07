@@ -7,13 +7,11 @@ from neo4j import GraphDatabase, ManagedTransaction
 
 from prometheus.graph.graph_types import (
     KnowledgeGraphNode,
-    MetadataNode,
     Neo4jASTNode,
     Neo4jFileNode,
     Neo4jHasASTEdge,
     Neo4jHasFileEdge,
     Neo4jHasTextEdge,
-    Neo4jMetadataNode,
     Neo4jNextChunkEdge,
     Neo4jTextNode,
 )
@@ -49,20 +47,6 @@ class KnowledgeGraphHandler:
         ]
         for query in queries:
             tx.run(query)
-
-    def _write_meta_node(self, tx: ManagedTransaction, metadata_node: Neo4jMetadataNode):
-        """Write Neo4jMetadataNode to neo4j."""
-        self._logger.debug(f"Writing {len(metadata_node)} MetadataNode to neo4j")
-        query = """
-      CREATE (a:MetadataNode {codebase_source: $codebase_source, local_path: $local_path, https_url: $https_url, commit_id: $commit_id})
-    """
-        tx.run(
-            query,
-            codebase_source=metadata_node["codebase_source"],
-            local_path=metadata_node["local_path"],
-            https_url=metadata_node["https_url"],
-            commit_id=metadata_node["commit_id"],
-        )
 
     def _write_file_nodes(self, tx: ManagedTransaction, file_nodes: Sequence[Neo4jFileNode]):
         """Write Neo4jFileNode to neo4j."""
@@ -189,7 +173,6 @@ class KnowledgeGraphHandler:
         with self.driver.session() as session:
             session.execute_write(self._init_database)
 
-            session.execute_write(self._write_meta_node, kg.get_neo4j_metadata_node())
             session.execute_write(self._write_file_nodes, kg.get_neo4j_file_nodes())
             session.execute_write(self._write_ast_nodes, kg.get_neo4j_ast_nodes())
             session.execute_write(self._write_text_nodes, kg.get_neo4j_text_nodes())
@@ -199,12 +182,6 @@ class KnowledgeGraphHandler:
             session.execute_write(self._write_has_text_edges, kg.get_neo4j_has_text_edges())
             session.execute_write(self._write_next_chunk_edges, kg.get_neo4j_next_chunk_edges())
         self.write_parent_of_edges(kg.get_parent_of_edges())
-
-    def _read_metadata_node(self, tx: ManagedTransaction) -> MetadataNode:
-        """Read MetadataNode from neo4j."""
-        query = "MATCH (n:MetadataNode) RETURN n.codebase_source AS codebase_source, n.local_path AS local_path, n.https_url AS https_url, n.commit_id AS commit_id"
-        result = tx.run(query)
-        return [MetadataNode.from_neo4j_metadata_node(record.data()) for record in result][0]
 
     def _read_file_nodes(self, tx: ManagedTransaction) -> Sequence[KnowledgeGraphNode]:
         """Read FileNode from neo4j."""
@@ -276,7 +253,6 @@ class KnowledgeGraphHandler:
         self._logger.info("Reading knowledge graph from neo4j")
         with self.driver.session() as session:
             return KnowledgeGraph.from_neo4j(
-                session.execute_read(self._read_metadata_node),
                 session.execute_read(self._read_file_nodes),
                 session.execute_read(self._read_ast_nodes),
                 session.execute_read(self._read_text_nodes),
