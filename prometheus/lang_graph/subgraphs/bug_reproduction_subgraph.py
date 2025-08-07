@@ -67,6 +67,7 @@ class BugReproductionSubgraph:
         context_retrieval_subgraph_node = ContextRetrievalSubgraphNode(
             base_model,
             kg,
+            git_repo.playground_path,
             neo4j_driver,
             max_token_per_neo4j_result,
             "bug_reproducing_query",

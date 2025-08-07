@@ -15,6 +15,7 @@ class IssueClassificationSubgraphNode:
         self,
         model: BaseChatModel,
         kg: KnowledgeGraph,
+        local_path: str,
         neo4j_driver: neo4j.Driver,
         max_token_per_neo4j_result: int,
     ):
@@ -24,6 +25,7 @@ class IssueClassificationSubgraphNode:
         self.issue_classification_subgraph = IssueClassificationSubgraph(
             model=model,
             kg=kg,
+            local_path=local_path,
             neo4j_driver=neo4j_driver,
             max_token_per_neo4j_result=max_token_per_neo4j_result,
         )
