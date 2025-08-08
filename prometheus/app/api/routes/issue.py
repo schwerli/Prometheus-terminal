@@ -4,6 +4,7 @@ from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.requests.issue import IssueRequest
 from prometheus.app.models.response.issue import IssueResponse
 from prometheus.app.models.response.response import Response
+from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
 from prometheus.configuration.config import settings
@@ -21,7 +22,7 @@ router = APIRouter()
     response_model=Response[IssueResponse],
 )
 @requireLogin
-def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueResponse]:
+async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueResponse]:
     repository_service: RepositoryService = request.app.state.service["repository_service"]
     repository = repository_service.get_repository_by_id(issue.repository_id)
     if not repository:
@@ -41,7 +42,6 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
             code=400,
             message="The repository is currently being used. Please try again later.",
         )
-    repository_service.update_repository_status(repository.id, is_working=True)
 
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
@@ -54,6 +54,9 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
         repository.kg_chunk_size,
         repository.kg_chunk_overlap,
     )
+
+    issue_service: IssueService = request.app.state.service["issue_service"]
+
     (
         remote_branch_name,
         patch,
@@ -61,7 +64,8 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
         passed_build,
         passed_existing_test,
         issue_response,
-    ) = request.app.state.service["issue_service"].answer_issue(
+    ) = await issue_service.answer_issue(
+        repository_id=repository.id,
         repository=git_repository,
         knowledge_graph=knowledge_graph,
         issue_number=issue.issue_number,
