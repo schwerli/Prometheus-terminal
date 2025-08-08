@@ -293,17 +293,13 @@ class KnowledgeGraphHandler:
             Sequence[Mapping[str, int]]: List of dicts with source_id and target_id for each HAS_FILE edge.
         """
         query = """
-        // Find all reachable FileNodes (including root)
-        MATCH (root:FileNode {node_id: $root_node_id})
-        OPTIONAL MATCH (root)-[:HAS_FILE*]->(subfile:FileNode)
-        WITH collect(root) + collect(subfile) AS all_file_nodes
-        UNWIND all_file_nodes AS file_node
-        WITH file_node, all_file_nodes WHERE file_node IS NOT NULL
-        // Find HAS_FILE edges between those nodes
-        MATCH (file_node)-[:HAS_FILE]->(child:FileNode)
-        WHERE child IN all_file_nodes
-        RETURN file_node.node_id AS source_id, child.node_id AS target_id
-        """
+            MATCH p = (root:FileNode {node_id: $root_node_id})-[:HAS_FILE*0..]->(n:FileNode)
+            WITH collect(DISTINCT n) AS nodes_in_subtree
+            UNWIND nodes_in_subtree AS src
+            MATCH (src)-[:HAS_FILE]->(dst:FileNode)
+            WHERE dst IN nodes_in_subtree
+            RETURN DISTINCT src.node_id AS source_id, dst.node_id AS target_id
+            """
         result = tx.run(query, root_node_id=root_node_id)
         return [record.data() for record in result]
 
