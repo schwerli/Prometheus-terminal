@@ -84,7 +84,7 @@ async def upload_github_repository(
     root_node_id = await knowledge_graph_service.build_and_save_knowledge_graph(saved_path)
     repository_id = repository_service.create_new_repository(
         url=upload_repository_request.https_url,
-        commit_id=None,
+        commit_id=upload_repository_request.commit_id,
         playground_path=str(saved_path),
         user_id=request.state.user_id if settings.ENABLE_AUTHENTICATION else None,
         kg_root_node_id=root_node_id,
