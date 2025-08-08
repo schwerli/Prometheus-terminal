@@ -33,7 +33,7 @@ class IssueService(BaseService):
         self.answer_issue_log_dir = Path(self.working_directory) / "answer_issue_logs"
         self.answer_issue_log_dir.mkdir(parents=True, exist_ok=True)
 
-    def answer_issue(
+    async def answer_issue(
         self,
         repository_id: int,
         repository: GitRepository,
@@ -135,7 +135,7 @@ class IssueService(BaseService):
                 remote_branch_name = None
                 if output_state["edit_patch"] and push_to_remote:
                     remote_branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
-                    repository.create_and_push_branch(
+                    await repository.create_and_push_branch(
                         remote_branch_name, f"Fixes #{issue_number}", output_state["edit_patch"]
                     )
 
