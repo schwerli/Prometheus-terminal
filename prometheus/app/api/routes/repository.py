@@ -20,7 +20,7 @@ def get_github_token(request: Request, github_token: str) -> str:
         return github_token
     # If the token is not provided, fetch it from the user profile if logged in
     # Check if the user is authenticated
-    if not settings.ENABLE_GITHUB_TOKEN:
+    if not settings.ENABLE_AUTHENTICATION:
         # If the user is not authenticated, raise an exception
         raise ServerException(
             code=401, message="GitHub token is required, please provide it or log in"
