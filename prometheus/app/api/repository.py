@@ -54,11 +54,15 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
     )
     if settings.ENABLE_AUTHENTICATION:
         if repository and request.state.user_id == repository.user_id:
-            return Response(message="Repository already exists", data={"repository_id": repository.id})
+            return Response(
+                message="Repository already exists", data={"repository_id": repository.id}
+            )
     else:
         if repository:
             # If the repository already exists, return its ID
-            return Response(message="Repository already exists", data={"repository_id": repository.id})
+            return Response(
+                message="Repository already exists", data={"repository_id": repository.id}
+            )
 
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
