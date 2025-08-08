@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     )
     # General settings
     version: str = "1.2"
-    BASE_URL: str = f"/api/v{version}"
+    BASE_URL: str = f"/v{version}"
     PROJECT_NAME: str = "Prometheus"
 
     ENVIRONMENT: Literal["local", "production"]
