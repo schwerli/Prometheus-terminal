@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from prometheus.app import dependencies
-from prometheus.app.api import auth, issue, repository
+from prometheus.app.api.main import api_router
 from prometheus.app.exception_handler import register_exception_handlers
 from prometheus.app.middlewares.jwt_middleware import JWTMiddleware
 from prometheus.app.register_login_required_routes import (
@@ -89,11 +89,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(repository.router, prefix="/repository", tags=["repository"])
-app.include_router(issue.router, prefix="/issue", tags=["issue"])
-
-if settings.ENABLE_AUTHENTICATION:
-    app.include_router(auth.router, prefix="/auth", tags=["auth"])
+# Include the API router with a prefix
+app.include_router(api_router, prefix=settings.BASE_URL)
 
 # Register the exception handlers
 register_exception_handlers(app)

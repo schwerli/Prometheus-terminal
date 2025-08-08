@@ -4,7 +4,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from prometheus.app.api import repository
+from prometheus.app.api.routes import repository
 from prometheus.app.entity.repository import Repository
 from prometheus.app.exception_handler import register_exception_handlers
 

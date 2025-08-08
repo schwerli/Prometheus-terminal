@@ -4,7 +4,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from prometheus.app.api import auth
+from prometheus.app.api.routes import auth
 from prometheus.app.exception_handler import register_exception_handlers
 
 app = FastAPI()
