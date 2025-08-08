@@ -16,7 +16,7 @@ def test_num_ast_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_ast_nodes = session.execute_read(handler._read_ast_nodes)
+            read_ast_nodes = session.execute_read(handler._read_ast_nodes, root_node_id=0)
             assert len(read_ast_nodes) == 84
 
 
@@ -27,7 +27,7 @@ def test_num_file_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_file_nodes = session.execute_read(handler._read_file_nodes)
+            read_file_nodes = session.execute_read(handler._read_file_nodes, root_node_id=0)
             assert len(read_file_nodes) == 9
 
 
@@ -38,7 +38,7 @@ def test_num_text_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_text_nodes = session.execute_read(handler._read_text_nodes)
+            read_text_nodes = session.execute_read(handler._read_text_nodes, root_node_id=0)
             assert len(read_text_nodes) == 2
 
 
@@ -49,7 +49,9 @@ def test_num_parent_of_edges(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_parent_of_edges = session.execute_read(handler._read_parent_of_edges)
+            read_parent_of_edges = session.execute_read(
+                handler._read_parent_of_edges, root_node_id=0
+            )
             assert len(read_parent_of_edges) == 81
 
 
@@ -60,7 +62,8 @@ def test_num_has_file_edges(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_has_file_edges = session.execute_read(handler._read_has_file_edges)
+            read_has_file_edges = session.execute_read(handler._read_has_file_edges, root_node_id=0)
+            print(read_has_file_edges)
             assert len(read_has_file_edges) == 8
 
 
@@ -71,7 +74,7 @@ def test_num_has_ast_edges(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_has_ast_edges = session.execute_read(handler._read_has_ast_edges)
+            read_has_ast_edges = session.execute_read(handler._read_has_ast_edges, root_node_id=0)
             assert len(read_has_ast_edges) == 3
 
 
@@ -82,7 +85,7 @@ def test_num_has_text_edges(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_has_text_edges = session.execute_read(handler._read_has_text_edges)
+            read_has_text_edges = session.execute_read(handler._read_has_text_edges, root_node_id=0)
             assert len(read_has_text_edges) == 2
 
 
@@ -93,7 +96,9 @@ def test_num_next_chunk_edges(neo4j_container_with_kg_fixture):  # noqa: F811
 
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
-            read_next_chunk_edges = session.execute_read(handler._read_next_chunk_edges)
+            read_next_chunk_edges = session.execute_read(
+                handler._read_next_chunk_edges, root_node_id=0
+            )
             assert len(read_next_chunk_edges) == 1
 
 
