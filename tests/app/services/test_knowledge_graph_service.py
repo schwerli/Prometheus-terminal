@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
@@ -30,48 +31,10 @@ def mock_kg_handler(monkeypatch):
     return mock
 
 
-def test_init_with_existing_graph(mock_neo4j_service, mock_kg_handler, mock_knowledge_graph):
-    # Setup
-    mock_kg_handler.knowledge_graph_exists.return_value = True
-    mock_kg_handler.read_knowledge_graph.return_value = mock_knowledge_graph
-
-    # Exercise
-    service = KnowledgeGraphService(
-        mock_neo4j_service,
-        neo4j_batch_size=100,
-        max_ast_depth=5,
-        chunk_size=1000,
-        chunk_overlap=100,
-    )
-
-    # Verify
-    mock_kg_handler.knowledge_graph_exists.assert_called_once()
-    mock_kg_handler.read_knowledge_graph.assert_called_once()
-    assert service.kg == mock_knowledge_graph
-
-
-def test_init_without_existing_graph(mock_neo4j_service, mock_kg_handler):
-    # Setup
-    mock_kg_handler.knowledge_graph_exists.return_value = False
-
-    # Exercise
-    service = KnowledgeGraphService(
-        mock_neo4j_service,
-        neo4j_batch_size=100,
-        max_ast_depth=5,
-        chunk_size=1000,
-        chunk_overlap=100,
-    )
-
-    # Verify
-    mock_kg_handler.knowledge_graph_exists.assert_called_once()
-    mock_kg_handler.read_knowledge_graph.assert_not_called()
-    assert service.kg is None
-
-
 def test_build_and_save_new_knowledge_graph(mock_neo4j_service, mock_kg_handler, monkeypatch):
     # Setup
     mock_kg_handler.knowledge_graph_exists.return_value = False
+    mock_kg_handler.get_new_knowledge_graph_root_node_id.return_value = 0
 
     # Mock KnowledgeGraph constructor and instance
     mock_kg = Mock()
@@ -80,7 +43,7 @@ def test_build_and_save_new_knowledge_graph(mock_neo4j_service, mock_kg_handler,
         "prometheus.app.services.knowledge_graph_service.KnowledgeGraph", mock_kg_class
     )
     mock_kg_class.build_graph.return_value = None
-    mock_path = "/foo/bar"
+    mock_path = Path("/foo/bar")
     mock_kg.get_local_path.return_value = mock_path
 
     # Exercise
@@ -95,30 +58,16 @@ def test_build_and_save_new_knowledge_graph(mock_neo4j_service, mock_kg_handler,
 
     # Verify
     mock_kg_class.assert_called_once_with(
-        service.max_ast_depth, service.chunk_size, service.chunk_overlap
+        service.max_ast_depth,
+        service.chunk_size,
+        service.chunk_overlap,
+        mock_kg_handler.get_new_knowledge_graph_root_node_id(),
     )
-    mock_kg.build_graph.assert_called_once_with(mock_path, None, None)
+    mock_kg.build_graph.assert_called_once_with(mock_path)
     mock_kg_handler.write_knowledge_graph.assert_called_once_with(mock_kg)
-    assert service.kg == mock_kg
 
 
-def test_build_and_save_clear_existing_knowledge_graph(
-    mock_neo4j_service, mock_kg_handler, monkeypatch
-):
-    # Setup
-    mock_kg_handler.knowledge_graph_exists.return_value = True
-
-    # Mock KnowledgeGraph constructor and instance
-    mock_kg = Mock()
-    mock_kg_class = Mock(return_value=mock_kg)
-    monkeypatch.setattr(
-        "prometheus.app.services.knowledge_graph_service.KnowledgeGraph", mock_kg_class
-    )
-    mock_kg_class.build_graph.return_value = None
-    mock_path = "/foo/bar"
-    mock_kg.get_local_path.return_value = mock_path
-
-    # Exercise
+def test_clear_knowledge_graph(mock_neo4j_service, mock_kg_handler):
     service = KnowledgeGraphService(
         mock_neo4j_service,
         neo4j_batch_size=100,
@@ -126,36 +75,10 @@ def test_build_and_save_clear_existing_knowledge_graph(
         chunk_size=1000,
         chunk_overlap=100,
     )
-    service.build_and_save_knowledge_graph(mock_path)
 
-    # Verify
-    mock_kg_handler.clear_knowledge_graph.assert_called_once()
-    mock_kg_class.assert_called_once_with(
-        service.max_ast_depth, service.chunk_size, service.chunk_overlap
-    )
-    mock_kg.build_graph.assert_called_once_with(mock_path, None, None)
-    mock_kg_handler.write_knowledge_graph.assert_called_once_with(mock_kg)
-    assert service.kg == mock_kg
+    # Act
+    root_id = 123
+    service.clear_kg(root_id)
 
-
-def test_clear_calls_handler_and_resets_kg(
-    mock_neo4j_service, mock_kg_handler, mock_knowledge_graph
-):
-    # Setup
-    mock_kg_handler.knowledge_graph_exists.return_value = True
-    mock_kg_handler.read_knowledge_graph.return_value = mock_knowledge_graph
-    mock_knowledge_graph.get_local_path.return_value = "/mock/path"
-
-    # Exercise
-    service = KnowledgeGraphService(
-        mock_neo4j_service,
-        neo4j_batch_size=100,
-        max_ast_depth=5,
-        chunk_size=1000,
-        chunk_overlap=100,
-    )
-    service.clear()
-
-    # Verify
-    mock_kg_handler.clear_knowledge_graph.assert_called_once()
-    assert service.kg is None
+    # Assert
+    mock_kg_handler.clear_knowledge_graph.assert_called_once_with(root_id)
