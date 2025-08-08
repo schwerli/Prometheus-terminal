@@ -20,6 +20,10 @@ class Repository(SQLModel, table=True):
         max_length=300,
         description="The playground path of the repository where the repository was cloned.",
     )
+    is_working: bool = Field(
+        default=False,
+        description="Indicates whether the repository is currently being used for processing or not.",
+    )
     user_id: int = Field(
         index=True, nullable=True, description="The ID of the user who upload this repository."
     )

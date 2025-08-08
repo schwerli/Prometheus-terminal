@@ -36,6 +36,13 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
                 message="workdir must be provided for user defined environment",
             )
 
+    if repository.is_working:
+        raise ServerException(
+            code=400,
+            message="The repository is currently being used. Please try again later.",
+        )
+    repository_service.update_repository_status(repository.id, is_working=True)
+
     knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
         "knowledge_graph_service"
     ]
@@ -73,6 +80,7 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
         test_commands=issue.test_commands,
         push_to_remote=issue.push_to_remote,
     )
+    repository_service.update_repository_status(repository.id, is_working=False)
     return Response(
         data=IssueResponse(
             patch=patch,
