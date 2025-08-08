@@ -77,7 +77,6 @@ app = FastAPI(
 if settings.ENABLE_AUTHENTICATION:
     app.add_middleware(
         JWTMiddleware,
-        base_url=settings.BASE_URL,
         login_required_routes=login_required_routes,
     )
 # Add CORS middleware

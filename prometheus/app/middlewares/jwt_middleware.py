@@ -10,13 +10,12 @@ from prometheus.utils.jwt_utils import JWTUtils
 
 
 class JWTMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: FastAPI, base_url: str, login_required_routes: Set[Tuple[str, str]]):
+    def __init__(self, app: FastAPI, login_required_routes: Set[Tuple[str, str]]):
         super().__init__(app)
         self.jwt_utils = JWTUtils()  # Initialize the JWT utility
         self.login_required_routes = (
             login_required_routes  # List of paths to exclude from JWT validation
         )
-        self.base_url = base_url
 
     async def dispatch(self, request: Request, call_next):
         # Allow OPTIONS requests to pass through without authentication (for CORS preflight)
@@ -25,7 +24,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
             return response
 
         # Check if the request path is in excluded paths
-        path = request.url.path.replace(self.base_url, "")
+        path = request.url.path
         if (request.method, path) not in self.login_required_routes:
             # Proceed to the next middleware or route handler if the path is excluded
             response = await call_next(request)
