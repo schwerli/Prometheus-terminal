@@ -4,6 +4,9 @@ from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.models.requests.issue import IssueRequest
 from prometheus.app.models.response.issue import IssueResponse
 from prometheus.app.models.response.response import Response
+from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
+from prometheus.app.services.repository_service import RepositoryService
+from prometheus.configuration.config import settings
 from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
@@ -19,11 +22,12 @@ router = APIRouter()
 )
 @requireLogin
 def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueResponse]:
-    if not request.app.state.service["knowledge_graph_service"].exists():
-        raise ServerException(
-            code=404,
-            message="A repository is not uploaded, use /repository/ endpoint to upload one",
-        )
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    repository = repository_service.get_repository_by_id(issue.repository_id)
+    if not repository:
+        raise ServerException(code=404, message="Repository not found")
+    if settings.ENABLE_AUTHENTICATION and repository.user_id != request.state.user_id:
+        raise ServerException(code=403, message="You do not have access to this repository")
 
     if issue.dockerfile_content or issue.image_name:
         if issue.workdir is None:
@@ -32,6 +36,17 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
                 message="workdir must be provided for user defined environment",
             )
 
+    knowledge_graph_service: KnowledgeGraphService = request.app.state.service[
+        "knowledge_graph_service"
+    ]
+
+    git_repository = repository_service.get_repository(repository.playground_path)
+    knowledge_graph = knowledge_graph_service.get_knowledge_graph(
+        repository.kg_root_node_id,
+        repository.kg_max_ast_depth,
+        repository.kg_chunk_size,
+        repository.kg_chunk_overlap,
+    )
     (
         remote_branch_name,
         patch,
@@ -40,6 +55,8 @@ def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueRespons
         passed_existing_test,
         issue_response,
     ) = request.app.state.service["issue_service"].answer_issue(
+        repository=git_repository,
+        knowledge_graph=knowledge_graph,
         issue_number=issue.issue_number,
         issue_title=issue.issue_title,
         issue_body=issue.issue_body,

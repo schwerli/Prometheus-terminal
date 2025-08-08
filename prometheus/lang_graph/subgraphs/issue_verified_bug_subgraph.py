@@ -74,6 +74,7 @@ class IssueVerifiedBugSubgraph:
         context_retrieval_subgraph_node = ContextRetrievalSubgraphNode(
             model=base_model,
             kg=kg,
+            local_path=git_repo.playground_path,
             neo4j_driver=neo4j_driver,
             max_token_per_neo4j_result=max_token_per_neo4j_result,
             query_key_name="bug_fix_query",
@@ -86,7 +87,7 @@ class IssueVerifiedBugSubgraph:
 
         # Phase 3: Generate code edits and optionally apply toolchains
         edit_message_node = EditMessageNode()
-        edit_node = EditNode(advanced_model, kg)
+        edit_node = EditNode(advanced_model, git_repo.playground_path)
         edit_tools = ToolNode(
             tools=edit_node.tools,
             name="edit_tools",

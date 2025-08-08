@@ -1,29 +1,13 @@
-from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from prometheus.app.services.issue_service import IssueService
-from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
-from prometheus.app.services.repository_service import RepositoryService
+from prometheus.git.git_repository import GitRepository
+from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueType
-
-
-@pytest.fixture
-def mock_kg_service():
-    service = create_autospec(KnowledgeGraphService, instance=True)
-    service.kg = Mock(name="mock_knowledge_graph")
-    service.kg.get_local_path.return_value = Path("/mock/path")
-    return service
-
-
-@pytest.fixture
-def mock_repository_service():
-    service = create_autospec(RepositoryService, instance=True)
-    service.git_repo = Mock(name="mock_git_repo")
-    return service
 
 
 @pytest.fixture
@@ -42,10 +26,8 @@ def mock_llm_service():
 
 
 @pytest.fixture
-def issue_service(mock_kg_service, mock_repository_service, mock_neo4j_service, mock_llm_service):
+def issue_service(mock_neo4j_service, mock_llm_service):
     return IssueService(
-        mock_kg_service,
-        mock_repository_service,
         mock_neo4j_service,
         mock_llm_service,
         max_token_per_neo4j_result=1000,
@@ -65,7 +47,12 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
         "prometheus.app.services.issue_service.GeneralContainer", mock_general_container_class
     )
 
-    # Mock output state for bug type
+    repository = Mock(spec=GitRepository)
+    repository.get_working_directory.return_value = "mock/working/directory"
+
+    knowledge_graph = Mock(spec=KnowledgeGraph)
+
+    # Mock output state for a bug type
     mock_output_state = {
         "issue_type": IssueType.BUG,
         "edit_patch": "test_patch",
@@ -78,6 +65,8 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
 
     # Exercise
     result = issue_service.answer_issue(
+        repository=repository,
+        knowledge_graph=knowledge_graph,
         issue_number=-1,
         issue_title="Test Issue",
         issue_body="Test Body",
@@ -90,14 +79,12 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
     )
 
     # Verify
-    mock_general_container_class.assert_called_once_with(
-        issue_service.kg_service.kg.get_local_path()
-    )
+    mock_general_container_class.assert_called_once_with(repository.get_working_directory())
     mock_issue_graph_class.assert_called_once_with(
         advanced_model=issue_service.llm_service.advanced_model,
         base_model=issue_service.llm_service.base_model,
-        kg=issue_service.kg_service.kg,
-        git_repo=issue_service.repository_service.git_repo,
+        kg=knowledge_graph,
+        git_repo=repository,
         neo4j_driver=issue_service.neo4j_service.neo4j_driver,
         max_token_per_neo4j_result=issue_service.max_token_per_neo4j_result,
         container=mock_container,
@@ -119,12 +106,19 @@ def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
         "prometheus.app.services.issue_service.UserDefinedContainer", mock_user_container_class
     )
 
-    # Mock output state for question type
+    repository = Mock(spec=GitRepository)
+    repository.get_working_directory.return_value = "mock/working/directory"
+
+    knowledge_graph = Mock(spec=KnowledgeGraph)
+
+    # Mock output state for a question type
     mock_output_state = {"issue_type": IssueType.QUESTION, "issue_response": "test_response"}
     mock_issue_graph.invoke.return_value = mock_output_state
 
     # Exercise
     result = issue_service.answer_issue(
+        repository=repository,
+        knowledge_graph=knowledge_graph,
         issue_number=-1,
         issue_title="Test Issue",
         issue_body="Test Body",
@@ -143,7 +137,7 @@ def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
 
     # Verify
     mock_user_container_class.assert_called_once_with(
-        issue_service.kg_service.kg.get_local_path(),
+        repository.get_working_directory(),
         "/app",
         ["pip install -r requirements.txt"],
         ["pytest"],
