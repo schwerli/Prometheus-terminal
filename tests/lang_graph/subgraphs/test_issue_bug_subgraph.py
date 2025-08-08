@@ -25,7 +25,9 @@ def mock_kg():
 
 @pytest.fixture
 def mock_git_repo():
-    return Mock(spec=GitRepository)
+    git_repo = Mock(spec=GitRepository)
+    git_repo.playground_path = "mock/playground/path"
+    return git_repo
 
 
 @pytest.fixture
