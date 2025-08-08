@@ -71,6 +71,9 @@ services:
 
       # Database settings
       - PROMETHEUS_DATABASE_URL=${PROMETHEUS_DATABASE_URL}
+
+      # JWT settings
+      - PROMETHEUS_JWT_SECRET_KEY=${PROMETHEUS_JWT_SECRET_KEY}
     networks:
       - prometheus_network
     volumes:
