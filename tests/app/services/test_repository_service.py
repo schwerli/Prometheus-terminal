@@ -48,7 +48,7 @@ def service(mock_kg_service, mock_database_service, monkeypatch):
     )
 
 
-def test_clone_new_github_repo(service, mock_git_repository, monkeypatch):
+async def test_clone_new_github_repo(service, mock_git_repository, monkeypatch):
     # Arrange
     test_url = "https://github.com/test/repo"
     test_commit = "abc123"
@@ -64,7 +64,7 @@ def test_clone_new_github_repo(service, mock_git_repository, monkeypatch):
         return_value=mock_git_repository,
     ) as mock_git_class:
         # Act
-        result_path = service.clone_github_repo(test_github_token, test_url, test_commit)
+        result_path = await service.clone_github_repo(test_github_token, test_url, test_commit)
 
         # Assert
 

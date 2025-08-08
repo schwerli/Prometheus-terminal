@@ -23,9 +23,9 @@ POSTGRES_DB = "postgres"
 
 
 @pytest.fixture(scope="session")
-def neo4j_container_with_kg_fixture():
+async def neo4j_container_with_kg_fixture():
     kg = KnowledgeGraph(1000, 100, 10, 0)
-    kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
+    await kg.build_graph(test_project_paths.TEST_PROJECT_PATH)
     container = (
         Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
         .with_env("NEO4J_PLUGINS", '["apoc"]')
@@ -38,7 +38,7 @@ def neo4j_container_with_kg_fixture():
         yield neo4j_container, kg
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def empty_neo4j_container_fixture():
     container = (
         Neo4jContainer(image=NEO4J_IMAGE, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
