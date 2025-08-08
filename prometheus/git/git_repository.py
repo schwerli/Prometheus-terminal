@@ -1,5 +1,6 @@
 """Git repository management module."""
 
+import asyncio
 import logging
 import shutil
 import tempfile
@@ -48,7 +49,7 @@ class GitRepository:
         except ValueError:
             self.default_branch = self.repo.active_branch.name
 
-    def from_clone_repository(
+    async def from_clone_repository(
         self, https_url: str, github_access_token: str, target_directory: Path
     ):
         """Clone a remote repository using HTTPS authentication.
@@ -67,7 +68,7 @@ class GitRepository:
         if local_path.exists():
             shutil.rmtree(local_path)
 
-        self.repo = Repo.clone_from(https_url, local_path)
+        self.repo = await asyncio.to_thread(Repo.clone_from, https_url, local_path)
         self.playground_path = local_path
         self._set_default_branch()
 

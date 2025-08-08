@@ -17,6 +17,7 @@ This knowledge graph will be persisted in a graph database (neo4j), where an AI 
 codebase to find the most relevant context for the user query.
 """
 
+import asyncio
 import itertools
 import logging
 from collections import defaultdict, deque
@@ -80,7 +81,15 @@ class KnowledgeGraph:
         self._file_graph_builder = FileGraphBuilder(max_ast_depth, chunk_size, chunk_overlap)
         self._logger = logging.getLogger("prometheus.graph.knowledge_graph")
 
-    def build_graph(self, root_dir: Path):
+    async def build_graph(self, root_dir: Path):
+        """Asynchronously builds knowledge graph for a codebase at a location.
+
+        Args:
+            root_dir: The codebase root directory.
+        """
+        await asyncio.to_thread(self._build_graph, root_dir)
+
+    def _build_graph(self, root_dir: Path):
         """Builds knowledge graph for a codebase at a location.
 
         Args:

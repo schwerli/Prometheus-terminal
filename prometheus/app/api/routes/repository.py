@@ -46,7 +46,9 @@ def get_github_token(request: Request, github_token: str) -> str:
     response_model=Response,
 )
 @requireLogin
-def upload_github_repository(upload_repository_request: UploadRepositoryRequest, request: Request):
+async def upload_github_repository(
+    upload_repository_request: UploadRepositoryRequest, request: Request
+):
     # Get the repository and knowledge graph services
     repository_service: RepositoryService = request.app.state.service["repository_service"]
     repository = repository_service.get_repository_by_url_and_commit_id(
@@ -71,7 +73,7 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
 
     try:
         # Clone the repository
-        saved_path = repository_service.clone_github_repo(
+        saved_path = await repository_service.clone_github_repo(
             github_token, upload_repository_request.https_url, upload_repository_request.commit_id
         )
     except git.exc.GitCommandError:
@@ -79,7 +81,7 @@ def upload_github_repository(upload_repository_request: UploadRepositoryRequest,
             code=400, message=f"Unable to clone {upload_repository_request.https_url}."
         )
     # Build and save the knowledge graph from the cloned repository
-    root_node_id = knowledge_graph_service.build_and_save_knowledge_graph(saved_path)
+    root_node_id = await knowledge_graph_service.build_and_save_knowledge_graph(saved_path)
     repository_id = repository_service.create_new_repository(
         url=upload_repository_request.https_url,
         commit_id=None,

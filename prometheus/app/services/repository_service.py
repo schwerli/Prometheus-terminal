@@ -56,7 +56,7 @@ class RepositoryService(BaseService):
         new_path.mkdir(parents=True)
         return new_path
 
-    def clone_github_repo(
+    async def clone_github_repo(
         self, github_token: str, https_url: str, commit_id: Optional[str] = None
     ) -> Path:
         """Clones a GitHub repository to the local workspace.
@@ -74,7 +74,9 @@ class RepositoryService(BaseService):
             Path to the local repository directory.
         """
         git_repo = GitRepository()
-        git_repo.from_clone_repository(https_url, github_token, self.get_new_playground_path())
+        await git_repo.from_clone_repository(
+            https_url, github_token, self.get_new_playground_path()
+        )
 
         if commit_id:
             git_repo.checkout_commit(commit_id)
