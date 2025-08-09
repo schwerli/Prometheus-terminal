@@ -3,7 +3,7 @@ from typing import Any, Iterator, Mapping, Optional, Sequence, Tuple
 import neo4j
 
 from prometheus.models.context import Context
-from prometheus.utils.str_util import pre_append_line_numbers, truncate_text
+from prometheus.utils.str_util import truncate_text
 
 EMPTY_DATA_MESSAGE = "Your query returned empty result, please try a different query!"
 
@@ -42,22 +42,19 @@ def neo4j_data_for_context_generator(
         if len(search_result_keys) == 1:
             continue
 
-        content = (
-            search_result.get("ASTNode", {}).get("text")
-            or search_result.get("TextNode", {}).get("text")
-            or search_result.get("preview", {}).get("text")
-            or search_result.get("SelectedLines", {}).get("text")
-        )
-        start_line_number = (
-            search_result.get("ASTNode", {}).get("start_line")
-            or search_result.get("SelectedLines", {}).get("start_line")
-            or search_result.get("preview", {}).get("start_line")
-        )
-
         context = Context(
             relative_path=search_result["FileNode"]["relative_path"],
-            content=pre_append_line_numbers(content, start_line=start_line_number),
-            start_line_number=start_line_number,
+            content=(
+                search_result.get("ASTNode", {}).get("text")
+                or search_result.get("TextNode", {}).get("text")
+                or search_result.get("preview", {}).get("text")
+                or search_result.get("SelectedLines", {}).get("text")
+            ),
+            start_line_number=(
+                search_result.get("ASTNode", {}).get("start_line")
+                or search_result.get("SelectedLines", {}).get("start_line")
+                or search_result.get("preview", {}).get("start_line")
+            ),
             end_line_number=search_result.get("ASTNode", {}).get("end_line")
             or search_result.get("SelectedLines", {}).get("end_line")
             or search_result.get("preview", {}).get("end_line"),
