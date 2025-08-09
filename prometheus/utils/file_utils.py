@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from prometheus.exceptions.file_operation_exception import FileOperationException
+from prometheus.utils.str_util import pre_append_line_numbers
 
 
 def read_file_with_line_numbers(
@@ -32,4 +33,6 @@ def read_file_with_line_numbers(
     with file_path.open() as f:
         lines = f.readlines()
 
-    return "".join(lines[zero_based_start_line:zero_based_end_line])
+    return pre_append_line_numbers(
+        "".join(lines[zero_based_start_line:zero_based_end_line]), zero_based_start_line
+    )
