@@ -5,6 +5,7 @@ import pytest
 from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
+from prometheus.app.services.repository_service import RepositoryService
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_state import IssueType
@@ -26,16 +27,24 @@ def mock_llm_service():
 
 
 @pytest.fixture
-def issue_service(mock_neo4j_service, mock_llm_service):
+def mock_repository_service():
+    service = create_autospec(RepositoryService, instance=True)
+    return service
+
+
+@pytest.fixture
+def issue_service(mock_neo4j_service, mock_llm_service, mock_repository_service):
     return IssueService(
-        mock_neo4j_service,
-        mock_llm_service,
+        neo4j_service=mock_neo4j_service,
+        llm_service=mock_llm_service,
+        repository_service=mock_repository_service,
         max_token_per_neo4j_result=1000,
         working_directory="/tmp/working_dir/",
     )
 
 
-def test_answer_issue_with_general_container(issue_service, monkeypatch):
+@pytest.mark.asyncio
+async def test_answer_issue_with_general_container(issue_service, monkeypatch):
     # Setup
     mock_issue_graph = Mock()
     mock_issue_graph_class = Mock(return_value=mock_issue_graph)
@@ -64,7 +73,8 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
     mock_issue_graph.invoke.return_value = mock_output_state
 
     # Exercise
-    result = issue_service.answer_issue(
+    result = await issue_service.answer_issue(
+        repository_id=1,
         repository=repository,
         knowledge_graph=knowledge_graph,
         issue_number=-1,
@@ -94,7 +104,8 @@ def test_answer_issue_with_general_container(issue_service, monkeypatch):
     assert result == (None, "test_patch", True, True, True, "test_response")
 
 
-def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
+@pytest.mark.asyncio
+async def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
     # Setup
     mock_issue_graph = Mock()
     mock_issue_graph_class = Mock(return_value=mock_issue_graph)
@@ -116,7 +127,8 @@ def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
     mock_issue_graph.invoke.return_value = mock_output_state
 
     # Exercise
-    result = issue_service.answer_issue(
+    result = await issue_service.answer_issue(
+        repository_id=1,
         repository=repository,
         knowledge_graph=knowledge_graph,
         issue_number=-1,

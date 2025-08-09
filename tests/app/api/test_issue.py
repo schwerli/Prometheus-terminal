@@ -36,17 +36,19 @@ def test_answer_issue(mock_service):
         kg_chunk_size=1000,
         kg_chunk_overlap=100,
     )
-    mock_service["issue_service"].answer_issue.return_value = (
-        "feature/fix-42",  # remote_branch_name
-        "test patch",  # patch
-        True,  # passed_reproducing_test
-        True,  # passed_build
-        True,  # passed_existing_test
-        "Issue fixed",  # issue_response
+    mock_service["issue_service"].answer_issue = mock.AsyncMock(
+        return_value=(
+            "feature/fix-42",  # remote_branch_name
+            "test patch",  # patch
+            True,  # passed_reproducing_test
+            True,  # passed_build
+            True,  # passed_existing_test
+            "Issue fixed",  # issue_response
+        )
     )
 
     response = client.post(
-        "/issue/answer",
+        "/issue/answer/",
         json={
             "repository_id": 1,
             "issue_number": 42,
@@ -74,7 +76,7 @@ def test_answer_issue_no_repository(mock_service):
     mock_service["repository_service"].get_repository_by_id.return_value = None
 
     response = client.post(
-        "/issue/answer",
+        "/issue/answer/",
         json={
             "repository_id": 1,
             "issue_number": 42,
@@ -100,7 +102,7 @@ def test_answer_issue_invalid_container_config(mock_service):
     )
 
     response = client.post(
-        "/issue/answer",
+        "/issue/answer/",
         json={
             "repository_id": 1,
             "issue_number": 42,
@@ -135,13 +137,15 @@ def test_answer_issue_with_container(mock_service):
 
     mock_service["repository_service"].get_repository.return_value = git_repo
 
-    mock_service["issue_service"].answer_issue.return_value = (
-        "feature/fix-42",
-        "test patch",
-        True,
-        True,
-        True,
-        "Issue fixed",
+    mock_service["issue_service"].answer_issue = mock.AsyncMock(
+        return_value=(
+            "feature/fix-42",
+            "test patch",
+            True,
+            True,
+            True,
+            "Issue fixed",
+        )
     )
 
     test_payload = {
@@ -156,10 +160,11 @@ def test_answer_issue_with_container(mock_service):
         "test_commands": ["pytest ."],
     }
 
-    response = client.post("/issue/answer", json=test_payload)
+    response = client.post("/issue/answer/", json=test_payload)
 
     assert response.status_code == 200
     mock_service["issue_service"].answer_issue.assert_called_once_with(
+        repository_id=1,
         repository=git_repo,
         knowledge_graph=knowledge_graph,
         issue_number=42,
