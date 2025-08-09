@@ -116,22 +116,20 @@ class ContextExtractionNode:
             except FileOperationException as e:
                 self._logger.error(e)
                 continue
-            if content:
-                final_context.append(
-                    Context(
-                        relative_path=context_.relative_path,
-                        start_line_number=context_.start_line,
-                        end_line_number=context_.end_line,
-                        content=content,
-                    )
+            if not content:
+                self._logger.warning(
+                    f"Skipping context with empty content for {context_.relative_path} "
+                    f"from line {context_.start_line} to {context_.end_line}"
                 )
-        # Filter out duplicate Context entries
-        seen = set()
-        unique_context = []
-        for ctx in final_context:
-            key = (ctx.relative_path, ctx.start_line_number, ctx.end_line_number)
-            if key not in seen:
-                seen.add(key)
-                unique_context.append(ctx)
-        self._logger.info(f"Context extraction complete, returning context {unique_context}")
-        return {"context": unique_context}
+                continue
+            context = Context(
+                relative_path=context_.relative_path,
+                start_line_number=context_.start_line,
+                end_line_number=context_.end_line,
+                content=content,
+            )
+            if context not in final_context:
+                final_context = final_context + [context]
+
+        self._logger.info(f"Context extraction complete, returning context {final_context}")
+        return {"context": final_context}
