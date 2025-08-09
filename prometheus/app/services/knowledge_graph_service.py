@@ -1,5 +1,6 @@
 """Service for managing and interacting with Knowledge Graphs in Neo4j."""
 
+import asyncio
 from pathlib import Path
 
 from prometheus.app.services.base_service import BaseService
@@ -39,6 +40,7 @@ class KnowledgeGraphService(BaseService):
         self.max_ast_depth = max_ast_depth
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
+        self.writing_lock = asyncio.Lock()
 
     async def build_and_save_knowledge_graph(self, path: Path) -> int:
         """Builds a new Knowledge Graph from source code and saves it to Neo4j.
@@ -52,11 +54,14 @@ class KnowledgeGraphService(BaseService):
         Returns:
             The root node ID of the newly created Knowledge Graph.
         """
-        root_node_id = self.kg_handler.get_new_knowledge_graph_root_node_id()
-        kg = KnowledgeGraph(self.max_ast_depth, self.chunk_size, self.chunk_overlap, root_node_id)
-        await kg.build_graph(path)
-        self.kg_handler.write_knowledge_graph(kg)
-        return kg.root_node_id
+        async with self.writing_lock:  # Ensure only one build operation at a time
+            root_node_id = self.kg_handler.get_new_knowledge_graph_root_node_id()
+            kg = KnowledgeGraph(
+                self.max_ast_depth, self.chunk_size, self.chunk_overlap, root_node_id
+            )
+            await kg.build_graph(path)
+            self.kg_handler.write_knowledge_graph(kg)
+            return kg.root_node_id
 
     def clear_kg(self, root_node_id: int):
         self.kg_handler.clear_knowledge_graph(root_node_id)
