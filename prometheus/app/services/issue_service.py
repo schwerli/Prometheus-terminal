@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import traceback
 import uuid
@@ -92,34 +93,36 @@ class IssueService(BaseService):
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
+        # Construct the working directory
+        if dockerfile_content or image_name:
+            container = UserDefinedContainer(
+                repository.get_working_directory(),
+                workdir,
+                build_commands,
+                test_commands,
+                dockerfile_content,
+                image_name,
+            )
+        else:
+            container = GeneralContainer(repository.get_working_directory())
+        # Initialize the issue graph with the necessary services and parameters
+        issue_graph = IssueGraph(
+            advanced_model=self.llm_service.advanced_model,
+            base_model=self.llm_service.base_model,
+            kg=knowledge_graph,
+            git_repo=repository,
+            neo4j_driver=self.neo4j_service.neo4j_driver,
+            max_token_per_neo4j_result=self.max_token_per_neo4j_result,
+            container=container,
+            build_commands=build_commands,
+            test_commands=test_commands,
+        )
+
         self.repository_service.update_repository_status(repository_id, is_working=True)
         try:
-            # Construct the working directory
-            if dockerfile_content or image_name:
-                container = UserDefinedContainer(
-                    repository.get_working_directory(),
-                    workdir,
-                    build_commands,
-                    test_commands,
-                    dockerfile_content,
-                    image_name,
-                )
-            else:
-                container = GeneralContainer(repository.get_working_directory())
-            # Initialize the issue graph with the necessary services and parameters
-            issue_graph = IssueGraph(
-                advanced_model=self.llm_service.advanced_model,
-                base_model=self.llm_service.base_model,
-                kg=knowledge_graph,
-                git_repo=repository,
-                neo4j_driver=self.neo4j_service.neo4j_driver,
-                max_token_per_neo4j_result=self.max_token_per_neo4j_result,
-                container=container,
-                build_commands=build_commands,
-                test_commands=test_commands,
-            )
             # Invoke the issue graph with the provided parameters
-            output_state = issue_graph.invoke(
+            output_state = await asyncio.to_thread(
+                issue_graph.invoke,
                 issue_title,
                 issue_body,
                 issue_comments,
