@@ -40,6 +40,7 @@ def issue_service(mock_neo4j_service, mock_llm_service, mock_repository_service)
         repository_service=mock_repository_service,
         max_token_per_neo4j_result=1000,
         working_directory="/tmp/working_dir/",
+        logging_level="DEBUG",
     )
 
 
@@ -123,7 +124,14 @@ async def test_answer_issue_with_user_defined_container(issue_service, monkeypat
     knowledge_graph = Mock(spec=KnowledgeGraph)
 
     # Mock output state for a question type
-    mock_output_state = {"issue_type": IssueType.QUESTION, "issue_response": "test_response"}
+    mock_output_state = {
+        "issue_type": IssueType.QUESTION,
+        "edit_patch": None,
+        "passed_reproducing_test": False,
+        "passed_build": False,
+        "passed_existing_test": False,
+        "issue_response": "test_response",
+    }
     mock_issue_graph.invoke.return_value = mock_output_state
 
     # Exercise

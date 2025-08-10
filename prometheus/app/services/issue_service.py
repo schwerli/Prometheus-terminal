@@ -12,6 +12,7 @@ from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.docker.user_defined_container import UserDefinedContainer
+from prometheus.exceptions.server_exception import ServerException
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_graph import IssueGraph
@@ -116,7 +117,15 @@ class IssueService(BaseService):
             image_name=image_name,
             workdir=workdir,
         )
-
+        if (
+            edit_patch,
+            passed_reproducing_test,
+            passed_build,
+            passed_existing_test,
+            issue_response,
+            issue_type,
+        ) == (None, False, False, False, None, None):
+            raise ServerException(500, "Failed to process the issue due to an internal error.")
         if issue_type == IssueType.BUG:
             # push to remote if requested
             remote_branch_name = None
@@ -164,7 +173,7 @@ class IssueService(BaseService):
         dockerfile_content: Optional[str] = None,
         image_name: Optional[str] = None,
         workdir: Optional[str] = None,
-    ) -> tuple[None, bool, bool, bool, None, IssueType] | tuple[str, bool, bool, bool, str, IssueType]:
+    ) -> tuple[None, bool, bool, bool, None, None] | tuple[str, bool, bool, bool, str, IssueType]:
         # Set up a dedicated logger for this thread
         logger = logging.getLogger(f"thread-{threading.get_ident()}.prometheus")
         logger.setLevel(getattr(logging, self.logging_level))
@@ -225,7 +234,7 @@ class IssueService(BaseService):
             )
         except Exception as e:
             logger.error(f"Error in answer_issue: {str(e)}\n{traceback.format_exc()}")
-            return None, False, False, False, None, issue_type
+            return None, False, False, False, None, None
         finally:
             self.repository_service.update_repository_status(repository_id, is_working=False)
             logger.removeHandler(file_handler)
