@@ -33,7 +33,7 @@ def get_github_token(request: Request, github_token: str) -> str:
     # If the token is still not available, raise an exception
     if not github_token:
         raise ServerException(
-            code=423, message="Either provide a GitHub token or set it in your user profile"
+            code=400, message="Either provide a GitHub token or set it in your user profile"
         )
     return github_token
 
