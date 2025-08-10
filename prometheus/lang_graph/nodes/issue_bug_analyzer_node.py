@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -43,7 +44,9 @@ rather than implementation details.
     def __init__(self, model: BaseChatModel):
         self.system_prompt = SystemMessage(self.SYS_PROMPT)
         self.model = model
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_analyzer_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_bug_analyzer_node"
+        )
 
     def __call__(self, state: Dict):
         message_history = [self.system_prompt] + state["issue_bug_analyzer_messages"]

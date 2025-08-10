@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict, Optional, Sequence
 
 import neo4j
@@ -29,7 +30,7 @@ class IssueVerifiedBugSubgraphNode:
         test_commands: Optional[Sequence[str]] = None,
     ):
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.issue_verified_bug_subgraph_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_verified_bug_subgraph_node"
         )
         self.git_repo = git_repo
         self.issue_reproduced_bug_subgraph = IssueVerifiedBugSubgraph(

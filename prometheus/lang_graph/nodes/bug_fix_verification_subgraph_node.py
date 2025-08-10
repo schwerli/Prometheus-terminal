@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
@@ -14,7 +15,7 @@ class BugFixVerificationSubgraphNode:
         container: BaseContainer,
     ):
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_fix_verification_subgraph_node"
         )
         self.subgraph = BugFixVerificationSubgraph(
             model=model,

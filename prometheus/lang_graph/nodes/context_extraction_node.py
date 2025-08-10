@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -107,7 +108,9 @@ class ContextExtractionNode:
         structured_llm = model.with_structured_output(ContextExtractionStructuredOutput)
         self.model = prompt | structured_llm
         self.root_path = root_path
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_extraction_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.context_extraction_node"
+        )
 
     def get_human_message(self, state: ContextRetrievalState) -> str:
         full_context_str = transform_tool_messages_to_str(

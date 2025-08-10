@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Optional, Sequence
 
 import neo4j
@@ -25,7 +26,7 @@ class BugReproductionSubgraphNode:
         test_commands: Optional[Sequence[str]],
     ):
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.bug_reproduction_subgraph_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_reproduction_subgraph_node"
         )
         self.git_repo = git_repo
         self.bug_reproduction_subgraph = BugReproductionSubgraph(

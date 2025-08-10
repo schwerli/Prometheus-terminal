@@ -7,6 +7,7 @@ with structured tools to systematically search and analyze the codebase Knowledg
 
 import functools
 import logging
+import threading
 from typing import Dict
 
 import neo4j
@@ -115,8 +116,9 @@ Available AST node types for code structure search: {ast_node_types}
         )
         self.tools = self._init_tools()
         self.model_with_tools = model.bind_tools(self.tools)
-
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.context_provider_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.context_provider_node"
+        )
 
     def _init_tools(self):
         """

@@ -61,6 +61,7 @@ def initialize_services() -> dict[str, BaseService]:
         llm_service,
         settings.MAX_TOKEN_PER_NEO4J_RESULT,
         settings.WORKING_DIRECTORY,
+        settings.LOGGING_LEVEL,
     )
 
     user_service = UserService(database_service)
