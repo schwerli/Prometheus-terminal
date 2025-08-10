@@ -177,39 +177,6 @@ Verify Neo4J at: [http://localhost:7474](http://localhost:7474)
 
 ---
 
-## ⚙️ Configuration
-
-Set the following variables in your `.env` file:
-
-### 🔹 Neo4j
-
-* `PROMETHEUS_NEO4J_URI`
-* `PROMETHEUS_NEO4J_USERNAME`
-* `PROMETHEUS_NEO4J_PASSWORD`
-
-### 🔹 LLM Models
-
-* `PROMETHEUS_ADVANCED_MODEL`
-* `PROMETHEUS_BASE_MODEL`
-* API Keys:
-
-    * `PROMETHEUS_OPENAI_FORMAT_API_KEY`
-    * `PROMETHEUS_ANTHROPIC_API_KEY`
-    * `PROMETHEUS_GEMINI_API_KEY`
-* Base URL for LLMs:
-
-    * `PROMETHEUS_OPENAI_FORMAT_BASE_URL`
-
-### 🔹 Other Settings
-
-* `PROMETHEUS_WORKING_DIRECTORY`
-* `PROMETHEUS_GITHUB_ACCESS_TOKEN`
-* `PROMETHEUS_KNOWLEDGE_GRAPH_MAX_AST_DEPTH`
-* `PROMETHEUS_NEO4J_BATCH_SIZE`
-* `PROMETHEUS_POSTGRES_URL`
-
----
-
 ## 🧪 Development
 
 ### Requirements
