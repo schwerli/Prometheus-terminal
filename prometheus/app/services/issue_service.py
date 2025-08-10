@@ -5,7 +5,7 @@ import traceback
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 from prometheus.app.services.base_service import BaseService
 from prometheus.app.services.llm_service import LLMService
@@ -89,19 +89,6 @@ class IssueService(BaseService):
                 - issue_response (str): Response generated for the issue.
         """
 
-        # Construct the working directory
-        if dockerfile_content or image_name:
-            container = UserDefinedContainer(
-                repository.get_working_directory(),
-                workdir,
-                build_commands,
-                test_commands,
-                dockerfile_content,
-                image_name,
-            )
-        else:
-            container = GeneralContainer(repository.get_working_directory())
-
         # Initialize the issue graph with the necessary services and parameters
         (
             edit_patch,
@@ -123,9 +110,11 @@ class IssueService(BaseService):
             number_of_candidate_patch=number_of_candidate_patch,
             knowledge_graph=knowledge_graph,
             repository=repository,
-            container=container,
             build_commands=build_commands,
             test_commands=test_commands,
+            dockerfile_content=dockerfile_content,
+            image_name=image_name,
+            workdir=workdir,
         )
 
         if issue_type == IssueType.BUG:
@@ -170,10 +159,12 @@ class IssueService(BaseService):
         run_existing_test: bool,
         run_reproduce_test: bool,
         number_of_candidate_patch: int,
-        container: GeneralContainer,
         build_commands: Optional[Sequence[str]],
         test_commands: Optional[Sequence[str]],
-    ) -> tuple[None, bool, bool, bool, None, None] | tuple[str, Any, Any, Any, str, IssueType]:
+        dockerfile_content: Optional[str] = None,
+        image_name: Optional[str] = None,
+        workdir: Optional[str] = None,
+    ) -> tuple[None, bool, bool, bool, None, IssueType] | tuple[str, bool, bool, bool, str, IssueType]:
         # Set up a dedicated logger for this thread
         logger = logging.getLogger(f"thread-{threading.get_ident()}.prometheus")
         logger.setLevel(getattr(logging, self.logging_level))
@@ -183,6 +174,19 @@ class IssueService(BaseService):
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
+
+        # Construct the working directory
+        if dockerfile_content or image_name:
+            container = UserDefinedContainer(
+                repository.get_working_directory(),
+                workdir,
+                build_commands,
+                test_commands,
+                dockerfile_content,
+                image_name,
+            )
+        else:
+            container = GeneralContainer(repository.get_working_directory())
 
         # Initialize the IssueGraph with the provided services and parameters
         issue_graph = IssueGraph(
@@ -221,7 +225,7 @@ class IssueService(BaseService):
             )
         except Exception as e:
             logger.error(f"Error in answer_issue: {str(e)}\n{traceback.format_exc()}")
-            return None, False, False, False, None, None
+            return None, False, False, False, None, issue_type
         finally:
             self.repository_service.update_repository_status(repository_id, is_working=False)
             logger.removeHandler(file_handler)
