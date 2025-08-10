@@ -7,6 +7,7 @@ from prometheus.app.models.response.response import Response
 from prometheus.app.services.issue_service import IssueService
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
+from prometheus.app.services.user_service import UserService
 from prometheus.configuration.config import settings
 from prometheus.exceptions.server_exception import ServerException
 
@@ -24,19 +25,35 @@ router = APIRouter()
 @requireLogin
 async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueResponse]:
     repository_service: RepositoryService = request.app.state.service["repository_service"]
+    # Fetch the repository by ID
     repository = repository_service.get_repository_by_id(issue.repository_id)
+    # Ensure the repository exists
     if not repository:
         raise ServerException(code=404, message="Repository not found")
+    # Ensure the user has access to the repository
     if settings.ENABLE_AUTHENTICATION and repository.user_id != request.state.user_id:
         raise ServerException(code=403, message="You do not have access to this repository")
 
+    # Deduct issue credit if authentication is enabled
+    user_service: UserService = request.app.state.service["user_service"]
+    if settings.ENABLE_AUTHENTICATION:
+        # Check and deduct issue credit
+        user_issue_credit = user_service.get_issue_credit(request.state.user_id)
+        if user_issue_credit <= 0:
+            raise ServerException(
+                code=403,
+                message="Insufficient issue credits. Please purchase more to continue.",
+            )
+        user_service.update_issue_credit(request.state.user_id, user_issue_credit - 1)
+
+    # Validate Dockerfile and workdir inputs
     if issue.dockerfile_content or issue.image_name:
         if issue.workdir is None:
             raise ServerException(
                 code=400,
                 message="workdir must be provided for user defined environment",
             )
-
+    # Ensure the repository is not currently being used
     if repository.is_working:
         raise ServerException(
             code=400,

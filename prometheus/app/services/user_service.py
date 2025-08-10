@@ -120,3 +120,33 @@ class UserService(BaseService):
         with Session(self.engine) as session:
             statement = select(User).where(User.id == user_id)
             return session.exec(statement).first()
+
+    def get_issue_credit(self, user_id: int) -> int:
+        """
+        Retrieve the issue credit of a user by their ID.
+
+        Args:
+            user_id (int): The ID of the user.
+
+        Returns:
+            int: The issue credit of the user.
+        """
+        with Session(self.engine) as session:
+            statement = select(User.issue_credit).where(User.id == user_id)
+            result = session.exec(statement).first()
+            return result
+
+    def update_issue_credit(self, user_id: int, new_issue_credit) -> None:
+        """
+        Update the issue credit of a user by their ID.
+
+        Args:
+            user_id (int): The ID of the user.
+            new_issue_credit (int): The new issue credit.
+        """
+        with Session(self.engine) as session:
+            statement = select(User).where(User.id == user_id)
+            user = session.exec(statement).first()
+            user.issue_credit = new_issue_credit
+            session.add(user)
+            session.commit()

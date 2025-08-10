@@ -23,7 +23,7 @@ def get_github_token(request: Request, github_token: str) -> str:
     if not settings.ENABLE_AUTHENTICATION:
         # If the user is not authenticated, raise an exception
         raise ServerException(
-            code=401, message="GitHub token is required, please provide it or log in"
+            code=400, message="GitHub token is required, please provide it or log in"
         )
     # If the user is authenticated, get the user service and fetch the token
     user_service: UserService = request.app.state.service["user_service"]
@@ -33,7 +33,7 @@ def get_github_token(request: Request, github_token: str) -> str:
     # If the token is still not available, raise an exception
     if not github_token:
         raise ServerException(
-            code=423, message="Either provide a GitHub token or set it in your user profile"
+            code=400, message="Either provide a GitHub token or set it in your user profile"
         )
     return github_token
 
