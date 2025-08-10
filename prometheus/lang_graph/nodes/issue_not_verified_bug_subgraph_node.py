@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict
 
 import neo4j
@@ -22,7 +23,7 @@ class IssueNotVerifiedBugSubgraphNode:
         max_token_per_neo4j_result: int,
     ):
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.issue_not_verified_bug_subgraph_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_not_verified_bug_subgraph_node"
         )
         self.issue_not_verified_bug_subgraph = IssueNotVerifiedBugSubgraph(
             advanced_model=advanced_model,

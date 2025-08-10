@@ -150,6 +150,21 @@ class RepositoryService(BaseService):
             )
             return session.exec(statement).first()
 
+    def update_repository_status(self, repository_id: int, is_working: bool):
+        """
+        Updates the working status of a repository.
+
+        Args:
+            repository_id: The ID of the repository to update.
+            is_working: The new working status to set for the repository.
+        """
+        with Session(self.engine) as session:
+            repository = session.get(Repository, repository_id)
+            if repository:
+                repository.is_working = is_working
+                session.add(repository)
+                session.commit()
+
     def clean_repository(self, repository: Repository):
         path = Path(repository.playground_path)
         if path.exists():

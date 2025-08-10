@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict
 
 from langchain_core.messages import HumanMessage
@@ -32,7 +33,9 @@ specific issues that caused the previous error.
 """
 
     def __init__(self):
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.edit_message_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.edit_message_node"
+        )
 
     def format_human_message(self, state: Dict):
         edit_error = ""

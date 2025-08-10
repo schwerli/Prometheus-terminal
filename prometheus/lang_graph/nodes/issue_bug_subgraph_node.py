@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Optional, Sequence
 
 import neo4j
@@ -29,7 +30,9 @@ class IssueBugSubgraphNode:
         build_commands: Optional[Sequence[str]] = None,
         test_commands: Optional[Sequence[str]] = None,
     ):
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.issue_bug_subgraph_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_bug_subgraph_node"
+        )
         self.container = container
         self.issue_bug_subgraph = IssueBugSubgraph(
             advanced_model=advanced_model,

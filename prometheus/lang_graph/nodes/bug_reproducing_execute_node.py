@@ -1,5 +1,6 @@
 import functools
 import logging
+import threading
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -55,7 +56,9 @@ User provided test commands:
         self.tools = self._init_tools(container)
         self.model_with_tools = model.bind_tools(self.tools)
         self.system_prompt = SystemMessage(self.SYS_PROMPT)
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_execute_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_reproducing_execute_node"
+        )
 
     def _init_tools(self, container: BaseContainer):
         tools = []

@@ -1,5 +1,6 @@
 import functools
 import logging
+import threading
 
 from langchain.tools import StructuredTool
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -40,7 +41,9 @@ Current project structure:
         self.tools = self._init_tools(local_path)
         self.model_with_tools = model.bind_tools(self.tools)
         self.system_prompt = SystemMessage(self.SYS_PROMPT)
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.bug_reproducing_file_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_reproducing_file_node"
+        )
 
     def _init_tools(self, root_path: str):
         """Initializes file operation tools with the given root path.

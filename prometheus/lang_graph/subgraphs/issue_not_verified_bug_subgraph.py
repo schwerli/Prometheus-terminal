@@ -115,7 +115,7 @@ class IssueNotVerifiedBugSubgraph:
         issue_body: str,
         issue_comments: Sequence[Mapping[str, str]],
         number_of_candidate_patch: int,
-        recursion_limit: int = 999,
+        recursion_limit: int = 300,
     ):
         config = {"recursion_limit": recursion_limit}
 

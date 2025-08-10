@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import threading
 import traceback
 import uuid
 from datetime import datetime
@@ -10,6 +12,7 @@ from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.docker.user_defined_container import UserDefinedContainer
+from prometheus.exceptions.server_exception import ServerException
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_graph import IssueGraph
@@ -20,19 +23,24 @@ class IssueService(BaseService):
     def __init__(
         self,
         neo4j_service: Neo4jService,
+        repository_service,
         llm_service: LLMService,
         max_token_per_neo4j_result: int,
         working_directory: str,
+        logging_level: str,
     ):
         self.neo4j_service = neo4j_service
+        self.repository_service = repository_service
         self.llm_service = llm_service
         self.max_token_per_neo4j_result = max_token_per_neo4j_result
         self.working_directory = working_directory
         self.answer_issue_log_dir = Path(self.working_directory) / "answer_issue_logs"
         self.answer_issue_log_dir.mkdir(parents=True, exist_ok=True)
+        self.logging_level = logging_level
 
-    def answer_issue(
+    async def answer_issue(
         self,
+        repository_id: int,
         repository: GitRepository,
         knowledge_graph: KnowledgeGraph,
         issue_number: int,
@@ -55,6 +63,7 @@ class IssueService(BaseService):
         Processes an issue, generates patches if needed, runs optional builds and tests, and returning the results.
 
         Args:
+            repository_id: The ID of the repository to update.
             repository (GitRepository): The Git repository instance.
             knowledge_graph (KnowledgeGraph): The knowledge graph instance.
             issue_number (int): The number of the issue.
@@ -80,39 +89,130 @@ class IssueService(BaseService):
                 - passed_existing_test (bool): Whether the existing tests passed.
                 - issue_response (str): Response generated for the issue.
         """
-        logger = logging.getLogger("prometheus")
+
+        # Initialize the issue graph with the necessary services and parameters
+        (
+            edit_patch,
+            passed_reproducing_test,
+            passed_build,
+            passed_existing_test,
+            issue_response,
+            issue_type,
+        ) = await asyncio.to_thread(
+            self.__answer,
+            repository_id=repository_id,
+            issue_title=issue_title,
+            issue_body=issue_body,
+            issue_comments=issue_comments,
+            issue_type=issue_type,
+            run_build=run_build,
+            run_existing_test=run_existing_test,
+            run_reproduce_test=run_reproduce_test,
+            number_of_candidate_patch=number_of_candidate_patch,
+            knowledge_graph=knowledge_graph,
+            repository=repository,
+            build_commands=build_commands,
+            test_commands=test_commands,
+            dockerfile_content=dockerfile_content,
+            image_name=image_name,
+            workdir=workdir,
+        )
+        if (
+            edit_patch,
+            passed_reproducing_test,
+            passed_build,
+            passed_existing_test,
+            issue_response,
+            issue_type,
+        ) == (None, False, False, False, None, None):
+            raise ServerException(500, "Failed to process the issue due to an internal error.")
+        if issue_type == IssueType.BUG:
+            # push to remote if requested
+            remote_branch_name = None
+            if edit_patch and push_to_remote:
+                remote_branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
+                await repository.create_and_push_branch(
+                    remote_branch_name, f"Fixes #{issue_number}", edit_patch
+                )
+
+            return (
+                remote_branch_name,
+                edit_patch,
+                passed_reproducing_test,
+                passed_build,
+                passed_existing_test,
+                issue_response,
+            )
+        elif issue_type == IssueType.QUESTION:
+            return (
+                None,
+                None,
+                False,
+                False,
+                False,
+                issue_response,
+            )
+        else:
+            raise ValueError(f"Unknown issue type: {issue_type}. Expected BUG or QUESTION.")
+
+    def __answer(
+        self,
+        knowledge_graph: KnowledgeGraph,
+        repository: GitRepository,
+        repository_id: int,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        issue_type: IssueType,
+        run_build: bool,
+        run_existing_test: bool,
+        run_reproduce_test: bool,
+        number_of_candidate_patch: int,
+        build_commands: Optional[Sequence[str]],
+        test_commands: Optional[Sequence[str]],
+        dockerfile_content: Optional[str] = None,
+        image_name: Optional[str] = None,
+        workdir: Optional[str] = None,
+    ) -> tuple[None, bool, bool, bool, None, None] | tuple[str, bool, bool, bool, str, IssueType]:
+        # Set up a dedicated logger for this thread
+        logger = logging.getLogger(f"thread-{threading.get_ident()}.prometheus")
+        logger.setLevel(getattr(logging, self.logging_level))
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_file = self.answer_issue_log_dir / f"{timestamp}.log"
+        log_file = self.answer_issue_log_dir / f"{timestamp}_{threading.get_ident()}.log"
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-        try:
-            # Construct the working directory
-            if dockerfile_content or image_name:
-                container = UserDefinedContainer(
-                    repository.get_working_directory(),
-                    workdir,
-                    build_commands,
-                    test_commands,
-                    dockerfile_content,
-                    image_name,
-                )
-            else:
-                container = GeneralContainer(repository.get_working_directory())
-            # Initialize the issue graph with the necessary services and parameters
-            issue_graph = IssueGraph(
-                advanced_model=self.llm_service.advanced_model,
-                base_model=self.llm_service.base_model,
-                kg=knowledge_graph,
-                git_repo=repository,
-                neo4j_driver=self.neo4j_service.neo4j_driver,
-                max_token_per_neo4j_result=self.max_token_per_neo4j_result,
-                container=container,
-                build_commands=build_commands,
-                test_commands=test_commands,
+        # Construct the working directory
+        if dockerfile_content or image_name:
+            container = UserDefinedContainer(
+                repository.get_working_directory(),
+                workdir,
+                build_commands,
+                test_commands,
+                dockerfile_content,
+                image_name,
             )
+        else:
+            container = GeneralContainer(repository.get_working_directory())
+
+        # Initialize the IssueGraph with the provided services and parameters
+        issue_graph = IssueGraph(
+            advanced_model=self.llm_service.advanced_model,
+            base_model=self.llm_service.base_model,
+            kg=knowledge_graph,
+            git_repo=repository,
+            neo4j_driver=self.neo4j_service.neo4j_driver,
+            max_token_per_neo4j_result=self.max_token_per_neo4j_result,
+            container=container,
+            build_commands=build_commands,
+            test_commands=test_commands,
+        )
+
+        # Update the repository status to working
+        self.repository_service.update_repository_status(repository_id, is_working=True)
+        try:
             # Invoke the issue graph with the provided parameters
             output_state = issue_graph.invoke(
                 issue_title,
@@ -124,40 +224,18 @@ class IssueService(BaseService):
                 run_reproduce_test,
                 number_of_candidate_patch,
             )
-
-            if output_state["issue_type"] == IssueType.BUG:
-                # push to remote if requested
-                remote_branch_name = None
-                if output_state["edit_patch"] and push_to_remote:
-                    remote_branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
-                    repository.create_and_push_branch(
-                        remote_branch_name, f"Fixes #{issue_number}", output_state["edit_patch"]
-                    )
-
-                return (
-                    remote_branch_name,
-                    output_state["edit_patch"],
-                    output_state["passed_reproducing_test"],
-                    output_state["passed_build"],
-                    output_state["passed_existing_test"],
-                    output_state["issue_response"],
-                )
-            elif output_state["issue_type"] == IssueType.QUESTION:
-                return (
-                    None,
-                    None,
-                    False,
-                    False,
-                    False,
-                    output_state["issue_response"],
-                )
-
-            raise ValueError(
-                f"Unknown issue type: {output_state['issue_type']}. Expected BUG or QUESTION."
+            return (
+                output_state["edit_patch"],
+                output_state["passed_reproducing_test"],
+                output_state["passed_build"],
+                output_state["passed_existing_test"],
+                output_state["issue_response"],
+                output_state["issue_type"],
             )
         except Exception as e:
             logger.error(f"Error in answer_issue: {str(e)}\n{traceback.format_exc()}")
-            return None, None, False, False, False, None
+            return None, False, False, False, None, None
         finally:
+            self.repository_service.update_repository_status(repository_id, is_working=False)
             logger.removeHandler(file_handler)
             file_handler.close()

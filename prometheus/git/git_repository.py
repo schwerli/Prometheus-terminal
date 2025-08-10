@@ -131,7 +131,7 @@ class GitRepository:
             shutil.rmtree(self.repo.working_dir)
             self.repo = None
 
-    def create_and_push_branch(self, branch_name: str, commit_message: str, patch: str):
+    async def create_and_push_branch(self, branch_name: str, commit_message: str, patch: str):
         """Create a new branch, commit changes, and push to remote.
 
         This method creates a new branch, switches to it, stages all changes,
@@ -155,6 +155,6 @@ class GitRepository:
             self.repo.git.apply(tmp_file.name)
             self.repo.git.add(A=True)
             self.repo.index.commit(commit_message)
-            self.repo.git.push("--set-upstream", "origin", branch_name)
+            await asyncio.to_thread(self.repo.git.push, "--set-upstream", "origin", branch_name)
             self.reset_repository()
             self.switch_branch(self.default_branch)

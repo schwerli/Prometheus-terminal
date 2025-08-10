@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict, Sequence
 
 import neo4j
@@ -21,7 +22,7 @@ class ContextRetrievalSubgraphNode:
         context_key_name: str,
     ):
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.context_retrieval_subgraph_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.context_retrieval_subgraph_node"
         )
         self.context_retrieval_subgraph = ContextRetrievalSubgraph(
             model=model,

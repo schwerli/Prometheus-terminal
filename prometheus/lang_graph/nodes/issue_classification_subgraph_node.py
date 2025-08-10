@@ -1,4 +1,5 @@
 import logging
+import threading
 
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -20,7 +21,7 @@ class IssueClassificationSubgraphNode:
         max_token_per_neo4j_result: int,
     ):
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.issue_classification_subgraph_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_classification_subgraph_node"
         )
         self.issue_classification_subgraph = IssueClassificationSubgraph(
             model=model,

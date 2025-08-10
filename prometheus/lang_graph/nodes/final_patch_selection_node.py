@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -126,7 +127,9 @@ I have generated the following patches, now please select the best patch among t
         )
         structured_llm = model.with_structured_output(FinalPatchSelectionStructuredOutput)
         self.model = prompt | structured_llm
-        self._logger = logging.getLogger("prometheus.lang_graph.nodes.final_patch_selection_node")
+        self._logger = logging.getLogger(
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.final_patch_selection_node"
+        )
 
     def format_human_message(self, state: Dict):
         patches = ""

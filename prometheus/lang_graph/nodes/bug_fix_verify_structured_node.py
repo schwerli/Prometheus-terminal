@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
@@ -91,7 +92,7 @@ Important:
         structured_llm = model.with_structured_output(BugFixVerifyStructureOutput)
         self.model = prompt | structured_llm
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.bug_fix_verify_structured_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_fix_verify_structured_node"
         )
 
     def __call__(self, state: BugFixVerficationState):

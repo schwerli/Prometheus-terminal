@@ -1,4 +1,5 @@
 import logging
+import threading
 from typing import Dict
 
 from langchain_core.messages import HumanMessage
@@ -65,7 +66,7 @@ Do NOT provide actual code snippets or diffs. Focus on describing what needs to 
 
     def __init__(self):
         self._logger = logging.getLogger(
-            "prometheus.lang_graph.nodes.issue_bug_analyzer_message_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_bug_analyzer_message_node"
         )
 
     def format_human_message(self, state: Dict):
