@@ -74,11 +74,10 @@ async def test_answer_issue_with_general_container(issue_service, monkeypatch):
     mock_issue_graph.invoke.return_value = mock_output_state
 
     # Exercise
-    result = await issue_service.answer_issue(
+    result = issue_service.answer_issue(
         repository_id=1,
         repository=repository,
         knowledge_graph=knowledge_graph,
-        issue_number=-1,
         issue_title="Test Issue",
         issue_body="Test Body",
         issue_comments=[],
@@ -87,6 +86,8 @@ async def test_answer_issue_with_general_container(issue_service, monkeypatch):
         run_existing_test=True,
         number_of_candidate_patch=1,
         run_reproduce_test=True,
+        build_commands=None,
+        test_commands=None,
     )
 
     # Verify
@@ -102,7 +103,7 @@ async def test_answer_issue_with_general_container(issue_service, monkeypatch):
         build_commands=None,
         test_commands=None,
     )
-    assert result == (None, "test_patch", True, True, True, "test_response")
+    assert result == ("test_patch", True, True, True, "test_response", IssueType.BUG)
 
 
 @pytest.mark.asyncio
@@ -135,11 +136,10 @@ async def test_answer_issue_with_user_defined_container(issue_service, monkeypat
     mock_issue_graph.invoke.return_value = mock_output_state
 
     # Exercise
-    result = await issue_service.answer_issue(
+    result = issue_service.answer_issue(
         repository_id=1,
         repository=repository,
         knowledge_graph=knowledge_graph,
-        issue_number=-1,
         issue_title="Test Issue",
         issue_body="Test Body",
         issue_comments=[],
@@ -164,4 +164,4 @@ async def test_answer_issue_with_user_defined_container(issue_service, monkeypat
         "FROM python:3.8",
         "test-image",
     )
-    assert result == (None, None, False, False, False, "test_response")
+    assert result == (None, False, False, False, "test_response", IssueType.QUESTION)
