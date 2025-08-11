@@ -62,7 +62,7 @@ class GitRepository:
         Returns:
             Repo: GitPython Repo object representing the cloned repository.
         """
-        https_url = https_url.replace("https://", f"https://{github_access_token}@")
+        https_url = https_url.replace("https://", f"https://x-access-token:{github_access_token}@")
         repo_name = https_url.split("/")[-1].split(".")[0]
         local_path = target_directory / repo_name
         if local_path.exists():
