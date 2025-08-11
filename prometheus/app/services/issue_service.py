@@ -1,8 +1,6 @@
-import asyncio
 import logging
 import threading
 import traceback
-import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
@@ -12,7 +10,6 @@ from prometheus.app.services.llm_service import LLMService
 from prometheus.app.services.neo4j_service import Neo4jService
 from prometheus.docker.general_container import GeneralContainer
 from prometheus.docker.user_defined_container import UserDefinedContainer
-from prometheus.exceptions.server_exception import ServerException
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.graphs.issue_graph import IssueGraph
@@ -38,124 +35,7 @@ class IssueService(BaseService):
         self.answer_issue_log_dir.mkdir(parents=True, exist_ok=True)
         self.logging_level = logging_level
 
-    async def answer_issue(
-        self,
-        repository_id: int,
-        repository: GitRepository,
-        knowledge_graph: KnowledgeGraph,
-        issue_number: int,
-        issue_title: str,
-        issue_body: str,
-        issue_comments: Sequence[Mapping[str, str]],
-        issue_type: IssueType,
-        run_build: bool,
-        run_existing_test: bool,
-        run_reproduce_test: bool,
-        number_of_candidate_patch: int,
-        dockerfile_content: Optional[str] = None,
-        image_name: Optional[str] = None,
-        workdir: Optional[str] = None,
-        build_commands: Optional[Sequence[str]] = None,
-        test_commands: Optional[Sequence[str]] = None,
-        push_to_remote: Optional[bool] = None,
-    ):
-        """
-        Processes an issue, generates patches if needed, runs optional builds and tests, and returning the results.
-
-        Args:
-            repository_id: The ID of the repository to update.
-            repository (GitRepository): The Git repository instance.
-            knowledge_graph (KnowledgeGraph): The knowledge graph instance.
-            issue_number (int): The number of the issue.
-            issue_title (str): The title of the issue.
-            issue_body (str): The body of the issue.
-            issue_comments (Sequence[Mapping[str, str]]): Comments on the issue.
-            issue_type (IssueType): The type of the issue (BUG or QUESTION).
-            run_build (bool): Whether to run the build commands.
-            run_existing_test (bool): Whether to run existing tests.
-            run_reproduce_test (bool): Whether to run reproduce tests.
-            number_of_candidate_patch (int): Number of candidate patches to generate.
-            dockerfile_content (Optional[str]): Content of the Dockerfile for user-defined environments.
-            image_name (Optional[str]): Name of the Docker image.
-            workdir (Optional[str]): Working directory for the container.
-            build_commands (Optional[Sequence[str]]): Commands to build the project.
-            test_commands (Optional[Sequence[str]]): Commands to test the project.
-            push_to_remote (Optional[bool]): Whether to push changes to a remote branch.
-        Returns:
-            Tuple containing:
-                - edit_patch (str): The generated patch for the issue.
-                - passed_reproducing_test (bool): Whether the reproducing test passed.
-                - passed_build (bool): Whether the build passed.
-                - passed_existing_test (bool): Whether the existing tests passed.
-                - issue_response (str): Response generated for the issue.
-        """
-
-        # Initialize the issue graph with the necessary services and parameters
-        (
-            edit_patch,
-            passed_reproducing_test,
-            passed_build,
-            passed_existing_test,
-            issue_response,
-            issue_type,
-        ) = await asyncio.to_thread(
-            self.__answer,
-            repository_id=repository_id,
-            issue_title=issue_title,
-            issue_body=issue_body,
-            issue_comments=issue_comments,
-            issue_type=issue_type,
-            run_build=run_build,
-            run_existing_test=run_existing_test,
-            run_reproduce_test=run_reproduce_test,
-            number_of_candidate_patch=number_of_candidate_patch,
-            knowledge_graph=knowledge_graph,
-            repository=repository,
-            build_commands=build_commands,
-            test_commands=test_commands,
-            dockerfile_content=dockerfile_content,
-            image_name=image_name,
-            workdir=workdir,
-        )
-        if (
-            edit_patch,
-            passed_reproducing_test,
-            passed_build,
-            passed_existing_test,
-            issue_response,
-            issue_type,
-        ) == (None, False, False, False, None, None):
-            raise ServerException(500, "Failed to process the issue due to an internal error.")
-        if issue_type == IssueType.BUG:
-            # push to remote if requested
-            remote_branch_name = None
-            if edit_patch and push_to_remote:
-                remote_branch_name = f"prometheus_fix_{uuid.uuid4().hex[:10]}"
-                await repository.create_and_push_branch(
-                    remote_branch_name, f"Fixes #{issue_number}", edit_patch
-                )
-
-            return (
-                remote_branch_name,
-                edit_patch,
-                passed_reproducing_test,
-                passed_build,
-                passed_existing_test,
-                issue_response,
-            )
-        elif issue_type == IssueType.QUESTION:
-            return (
-                None,
-                None,
-                False,
-                False,
-                False,
-                issue_response,
-            )
-        else:
-            raise ValueError(f"Unknown issue type: {issue_type}. Expected BUG or QUESTION.")
-
-    def __answer(
+    def answer_issue(
         self,
         knowledge_graph: KnowledgeGraph,
         repository: GitRepository,
@@ -174,6 +54,35 @@ class IssueService(BaseService):
         image_name: Optional[str] = None,
         workdir: Optional[str] = None,
     ) -> tuple[None, bool, bool, bool, None, None] | tuple[str, bool, bool, bool, str, IssueType]:
+        """
+        Processes an issue, generates patches if needed, runs optional builds and tests, and returning the results.
+
+        Args:
+            repository_id: The ID of the repository to update.
+            repository (GitRepository): The Git repository instance.
+            knowledge_graph (KnowledgeGraph): The knowledge graph instance.
+            issue_title (str): The title of the issue.
+            issue_body (str): The body of the issue.
+            issue_comments (Sequence[Mapping[str, str]]): Comments on the issue.
+            issue_type (IssueType): The type of the issue (BUG or QUESTION).
+            run_build (bool): Whether to run the build commands.
+            run_existing_test (bool): Whether to run existing tests.
+            run_reproduce_test (bool): Whether to run reproduce tests.
+            number_of_candidate_patch (int): Number of candidate patches to generate.
+            dockerfile_content (Optional[str]): Content of the Dockerfile for user-defined environments.
+            image_name (Optional[str]): Name of the Docker image.
+            workdir (Optional[str]): Working directory for the container.
+            build_commands (Optional[Sequence[str]]): Commands to build the project.
+            test_commands (Optional[Sequence[str]]): Commands to test the project.
+        Returns:
+            Tuple containing:
+                - edit_patch (str): The generated patch for the issue.
+                - passed_reproducing_test (bool): Whether the reproducing test passed.
+                - passed_build (bool): Whether the build passed.
+                - passed_existing_test (bool): Whether the existing tests passed.
+                - issue_response (str): Response generated for the issue.
+        """
+
         # Set up a dedicated logger for this thread
         logger = logging.getLogger(f"thread-{threading.get_ident()}.prometheus")
         logger.setLevel(getattr(logging, self.logging_level))

@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from prometheus.lang_graph.graphs.issue_state import IssueType
+
 
 class IssueResponse(BaseModel):
     patch: str | None = None
@@ -7,4 +9,4 @@ class IssueResponse(BaseModel):
     passed_build: bool
     passed_existing_test: bool
     issue_response: str | None = None
-    remote_branch_name: str | None = None
+    issue_type: IssueType | None = None
