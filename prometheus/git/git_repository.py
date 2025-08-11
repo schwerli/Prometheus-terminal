@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional, Sequence
 
-from git import Git, InvalidGitRepositoryError, Repo
+from git import Git, GitCommandError, InvalidGitRepositoryError, Repo
 
 
 class GitRepository:
@@ -145,16 +145,24 @@ class GitRepository:
         """
         if self.repo is None:
             raise InvalidGitRepositoryError("No repository is currently set.")
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".patch") as tmp_file:
-            tmp_file.write(patch)
-            tmp_file.flush()
 
-            new_branch = self.repo.create_head(branch_name)
-            new_branch.checkout()
+        # Get the current commit SHA to ensure we can reset later
+        start_commit_sha = self.repo.head.commit.hexsha
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".patch") as tmp_file:
+                tmp_file.write(patch)
+                tmp_file.flush()
 
-            self.repo.git.apply(tmp_file.name)
-            self.repo.git.add(A=True)
-            self.repo.index.commit(commit_message)
-            await asyncio.to_thread(self.repo.git.push, "--set-upstream", "origin", branch_name)
+                new_branch = self.repo.create_head(branch_name)
+                new_branch.checkout()
+
+                self.repo.git.apply(tmp_file.name)
+                self.repo.git.add(A=True)
+                self.repo.index.commit(commit_message)
+                await asyncio.to_thread(self.repo.git.push, "--set-upstream", "origin", branch_name)
+        except GitCommandError as e:
+            raise e
+        finally:
             self.reset_repository()
-            self.switch_branch(self.default_branch)
+            # Reset to the original commit
+            self.checkout_commit(start_commit_sha)
