@@ -182,7 +182,11 @@ class BugReproductionSubgraph:
         workflow.add_edge("bug_reproducing_file_tools", "bug_reproducing_file_node")
 
         # Proceed to execution after code is updated
-        workflow.add_edge("git_diff_node", "update_container_node")
+        workflow.add_conditional_edges(
+            "git_diff_node",
+            lambda state: bool(state["bug_reproducing_patch"]),
+            {True: "update_container_node", False: "bug_reproducing_write_message_node"},
+        )
         workflow.add_edge("update_container_node", "bug_reproducing_execute_node")
 
         # Handle command execution tool usage

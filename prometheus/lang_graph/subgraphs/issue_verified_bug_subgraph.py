@@ -150,7 +150,12 @@ class IssueVerifiedBugSubgraph:
         )
 
         workflow.add_edge("edit_tools", "edit_node")
-        workflow.add_edge("git_diff_node", "update_container_node")
+        # Apply the patch if available, otherwise do it again
+        workflow.add_conditional_edges(
+            "git_diff_node",
+            lambda state: bool(state["edit_patch"]),
+            {True: "update_container_node", False: "issue_bug_analyzer_message_node"},
+        )
         workflow.add_edge("update_container_node", "bug_fix_verification_subgraph_node")
 
         # If test still fails, loop back to reanalyze the bug
