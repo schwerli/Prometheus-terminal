@@ -44,7 +44,6 @@ def issue_service(mock_neo4j_service, mock_llm_service, mock_repository_service)
     )
 
 
-@pytest.mark.asyncio
 async def test_answer_issue_with_general_container(issue_service, monkeypatch):
     # Setup
     mock_issue_graph = Mock()
@@ -106,7 +105,6 @@ async def test_answer_issue_with_general_container(issue_service, monkeypatch):
     assert result == ("test_patch", True, True, True, "test_response", IssueType.BUG)
 
 
-@pytest.mark.asyncio
 async def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
     # Setup
     mock_issue_graph = Mock()

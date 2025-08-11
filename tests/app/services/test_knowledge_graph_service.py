@@ -41,7 +41,6 @@ def knowledge_graph_service(mock_neo4j_service, mock_kg_handler):
     return knowledge_graph_service
 
 
-@pytest.mark.asyncio
 async def test_build_and_save_knowledge_graph(knowledge_graph_service, mock_kg_handler):
     """Test the build_and_save_knowledge_graph method."""
     # Given

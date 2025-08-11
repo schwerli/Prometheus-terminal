@@ -74,9 +74,9 @@ test_project
 
 @pytest.mark.slow
 async def test_from_neo4j(neo4j_container_with_kg_fixture):  # noqa: F811
-    async for neo4j_container, kg in neo4j_container_with_kg_fixture:
-        driver = neo4j_container.get_driver()
-        handler = KnowledgeGraphHandler(driver, 100)
-        read_kg = handler.read_knowledge_graph(0, 1000, 100, 10)
+    neo4j_container, kg = neo4j_container_with_kg_fixture
+    driver = neo4j_container.get_driver()
+    handler = KnowledgeGraphHandler(driver, 100)
+    read_kg = handler.read_knowledge_graph(0, 1000, 100, 10)
 
-        assert read_kg == kg
+    assert read_kg == kg
