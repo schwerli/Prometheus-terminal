@@ -15,12 +15,3 @@ def register_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=exc.code, content={"code": exc.code, "message": exc.message, "data": None}
         )
-
-    @app.exception_handler(Exception)
-    async def global_exception_handler(_request: Request, _exc: Exception):
-        """
-        Global exception handler for all uncaught exceptions.
-        """
-        return JSONResponse(
-            status_code=500, content={"code": 500, "message": "Internal Server Error", "data": None}
-        )

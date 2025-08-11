@@ -76,3 +76,12 @@ def git_repo_fixture():
         yield repo
     finally:
         shutil.rmtree(temp_project_dir)
+
+
+@pytest.fixture
+def temp_test_dir(tmp_path):
+    """Create a temporary test directory."""
+    test_dir = tmp_path / "test_files"
+    test_dir.mkdir()
+    yield test_dir
+    # Cleanup happens automatically after tests due to tmp_path fixture

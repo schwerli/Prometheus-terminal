@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Request
 
 from prometheus.app.decorators.require_login import requireLogin
@@ -75,17 +77,17 @@ async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueR
     issue_service: IssueService = request.app.state.service["issue_service"]
 
     (
-        remote_branch_name,
         patch,
         passed_reproducing_test,
         passed_build,
         passed_existing_test,
         issue_response,
-    ) = await issue_service.answer_issue(
+        issue_type,
+    ) = await asyncio.to_thread(
+        issue_service.answer_issue,
         repository_id=repository.id,
         repository=git_repository,
         knowledge_graph=knowledge_graph,
-        issue_number=issue.issue_number,
         issue_title=issue.issue_title,
         issue_body=issue.issue_body,
         issue_comments=issue.issue_comments if issue.issue_comments else [],
@@ -99,9 +101,19 @@ async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueR
         workdir=issue.workdir,
         build_commands=issue.build_commands,
         test_commands=issue.test_commands,
-        push_to_remote=issue.push_to_remote,
     )
-    repository_service.update_repository_status(repository.id, is_working=False)
+    if (
+        patch,
+        passed_reproducing_test,
+        passed_build,
+        passed_existing_test,
+        issue_response,
+        issue_type,
+    ) == (None, False, False, False, None, None):
+        raise ServerException(
+            code=500,
+            message="Failed to process the issue. Please try again later.",
+        )
     return Response(
         data=IssueResponse(
             patch=patch,
@@ -109,6 +121,6 @@ async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueR
             passed_build=passed_build,
             passed_existing_test=passed_existing_test,
             issue_response=issue_response,
-            remote_branch_name=remote_branch_name,
+            issue_type=issue_type,
         )
     )

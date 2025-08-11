@@ -9,7 +9,6 @@ class IssueRequest(BaseModel):
     repository_id: int = Field(
         description="The ID of the repository this issue belongs to.", examples=[1]
     )
-    issue_number: int = Field(description="The number of the issue", examples=[42])
     issue_title: str = Field(
         description="The title of the issue", examples=["There is a memory leak"]
     )
@@ -81,9 +80,4 @@ class IssueRequest(BaseModel):
         description="If you specified dockerfile_content and run_test is True, "
         "you must also specify the test commands.",
         examples=[["pytest ."]],
-    )
-    push_to_remote: Optional[bool] = Field(
-        default=False,
-        description="When editing the code, whenever we should push the changes to a remote branch",
-        examples=[True],
     )

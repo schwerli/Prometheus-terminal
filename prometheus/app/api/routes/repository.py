@@ -2,7 +2,10 @@ import git
 from fastapi import APIRouter, Request
 
 from prometheus.app.decorators.require_login import requireLogin
-from prometheus.app.models.requests.repository import UploadRepositoryRequest
+from prometheus.app.models.requests.repository import (
+    CreateBranchAndPushRequest,
+    UploadRepositoryRequest,
+)
 from prometheus.app.models.response.response import Response
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
@@ -90,6 +93,40 @@ async def upload_github_repository(
         kg_root_node_id=root_node_id,
     )
     return Response(data={"repository_id": repository_id})
+
+
+@router.post(
+    "/create-branch-and-push/",
+    description="""
+    Create a new branch in the repository, commit changes, and push to remote.
+    """,
+    response_model=Response,
+)
+@requireLogin
+async def create_branch_and_push(
+    create_branch_and_push_request: CreateBranchAndPushRequest, request: Request
+):
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    repository = repository_service.get_repository_by_id(
+        create_branch_and_push_request.repository_id
+    )
+    if not repository:
+        raise ServerException(code=404, message="Repository not found")
+    # Check if the user has permission to modify the repository
+    if settings.ENABLE_AUTHENTICATION and repository.user_id != request.state.user_id:
+        raise ServerException(
+            code=403, message="You do not have permission to modify this repository"
+        )
+    git_repo = repository_service.get_repository(repository.playground_path)
+    try:
+        await git_repo.create_and_push_branch(
+            branch_name=create_branch_and_push_request.branch_name,
+            commit_message=create_branch_and_push_request.commit_message,
+            patch=create_branch_and_push_request.patch,
+        )
+    except git.exc.GitCommandError as e:
+        raise e
+    return Response()
 
 
 @router.delete(

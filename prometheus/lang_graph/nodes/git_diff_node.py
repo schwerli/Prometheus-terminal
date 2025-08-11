@@ -48,7 +48,7 @@ class GitDiffNode:
             project_path key specifying the Git repository location.
 
         Returns:
-          Dictionary that update the state containing:
+          Dictionary that updates the state containing:
           - patch: String containing the Git diff output showing all changes made to the project.
         """
         excluded_files = None
@@ -64,8 +64,11 @@ class GitDiffNode:
                 f"Excluding the following files when generating the patch: {excluded_files}"
             )
         patch = self.git_repo.get_diff(excluded_files)
-        self._logger.info(f"Generated patch:\n{patch}")
+        if patch:
+            self._logger.info(f"Generated patch:\n{patch}")
+            result = [patch] if self.return_list else patch
+        else:
+            self._logger.info("No changes detected, no patch generated.")
+            result = [] if self.return_list else ""
 
-        if self.return_list:
-            patch = [patch]
-        return {self.state_patch_name: patch}
+        return {self.state_patch_name: result}

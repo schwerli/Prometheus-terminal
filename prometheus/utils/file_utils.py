@@ -8,6 +8,11 @@ from prometheus.utils.str_util import pre_append_line_numbers
 def read_file_with_line_numbers(
     relative_path: str, root_path: str, start_line: int, end_line: int
 ) -> str:
+    """
+    Reads a file and returns its content with line numbers, starting from a specific line
+    to an end line (inclusive).
+    """
+
     if os.path.isabs(relative_path):
         raise FileOperationException(
             f"relative_path: {relative_path} is a absolute path, not relative path."
@@ -22,8 +27,7 @@ def read_file_with_line_numbers(
 
     if end_line < start_line:
         raise FileOperationException(
-            f"The end line number {end_line} must be greater than "
-            f"the start line number {start_line}."
+            "The end line number must be greater than the start line number."
         )
 
     zero_based_start_line = start_line - 1
@@ -34,5 +38,5 @@ def read_file_with_line_numbers(
         lines = f.readlines()
 
     return pre_append_line_numbers(
-        "".join(lines[zero_based_start_line:zero_based_end_line]), zero_based_start_line
+        "".join(lines[zero_based_start_line:zero_based_end_line]), start_line
     )

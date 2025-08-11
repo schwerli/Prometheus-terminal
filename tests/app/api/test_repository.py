@@ -1,4 +1,5 @@
 from unittest import mock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -43,6 +44,27 @@ def test_upload_repository_at_commit(mock_service):
             "commit_id": "0c554293648a8705769fa53ec896ae24da75f4fc",
         },
     )
+    assert response.status_code == 200
+
+
+def test_create_branch_and_push(mock_service):
+    # Mock git_repo
+    git_repo_mock = MagicMock()
+    git_repo_mock.create_and_push_branch = AsyncMock(return_value=None)
+
+    # Let repository_service.get_repository return the mocked git_repo
+    mock_service["repository_service"].get_repository.return_value = git_repo_mock
+
+    response = client.post(
+        "/repository/create-branch-and-push/",
+        json={
+            "repository_id": 1,
+            "branch_name": "new_branch",
+            "commit_message": "Initial commit on new branch",
+            "patch": "mock_patch_content",
+        },
+    )
+
     assert response.status_code == 200
 
 
