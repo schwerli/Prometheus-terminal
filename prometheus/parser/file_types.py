@@ -25,7 +25,7 @@ class FileType(enum.StrEnum):
     @classmethod
     def from_path(cls, path: Path):
         match path.suffix:
-            case ".sh":
+            case ".sh" | ".bash":
                 return cls.BASH
             case ".c":
                 return cls.C
