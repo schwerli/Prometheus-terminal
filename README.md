@@ -111,7 +111,7 @@ governed by a state machine to ensure code quality through automated reviews, bu
       ```
 
 5. #### Access Prometheus:
-    - Service: [http://localhost:9002](http://localhost:9002)
+    - Service: [http://localhost:9002/v1.2](http://localhost:9002/v1.2)
     - OpenAPI Docs: [http://localhost:9002/docs](http://localhost:9002/docs)
 
 6. #### Upload Your Codebase:
