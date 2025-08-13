@@ -7,7 +7,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from prometheus.docker.base_container import BaseContainer
-from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVerficationState
+from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVerificationState
 from prometheus.tools import container_command
 
 
@@ -72,7 +72,7 @@ Reproducing bug commands:
 
         return tools
 
-    def format_human_message(self, state: BugFixVerficationState) -> HumanMessage:
+    def format_human_message(self, state: BugFixVerificationState) -> HumanMessage:
         return HumanMessage(
             self.HUMAN_PROMPT.format(
                 reproduced_bug_file=state["reproduced_bug_file"],
@@ -80,7 +80,7 @@ Reproducing bug commands:
             )
         )
 
-    def __call__(self, state: BugFixVerficationState):
+    def __call__(self, state: BugFixVerificationState):
         human_message = self.format_human_message(state)
         message_history = [self.system_prompt, human_message] + state["bug_fix_verify_messages"]
 

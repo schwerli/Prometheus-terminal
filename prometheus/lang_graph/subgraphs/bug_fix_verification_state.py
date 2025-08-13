@@ -4,7 +4,7 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 
-class BugFixVerficationState(TypedDict):
+class BugFixVerificationState(TypedDict):
     reproduced_bug_file: str
     reproduced_bug_commands: Sequence[str]
 

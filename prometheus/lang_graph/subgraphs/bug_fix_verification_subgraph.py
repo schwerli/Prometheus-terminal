@@ -8,7 +8,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from prometheus.docker.base_container import BaseContainer
 from prometheus.lang_graph.nodes.bug_fix_verify_node import BugFixVerifyNode
 from prometheus.lang_graph.nodes.bug_fix_verify_structured_node import BugFixVerifyStructuredNode
-from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVerficationState
+from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVerificationState
 
 
 class BugFixVerificationSubgraph:
@@ -25,7 +25,7 @@ class BugFixVerificationSubgraph:
         )
         bug_fix_verify_structured_node = BugFixVerifyStructuredNode(model)
 
-        workflow = StateGraph(BugFixVerficationState)
+        workflow = StateGraph(BugFixVerificationState)
 
         workflow.add_node("bug_fix_verify_node", bug_fix_verify_node)
         workflow.add_node("bug_fix_verify_tools", bug_fix_verify_tools)
