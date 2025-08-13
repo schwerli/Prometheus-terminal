@@ -118,14 +118,8 @@ governed by a state machine to ensure code quality through automated reviews, bu
 
    You can upload a GitHub repository to Prometheus using the following API endpoint:
 
-   - **Endpoint:** `GET /repository/github/`
-   - **Query Parameter:** `https_url` (the HTTPS URL of your GitHub repository)
-
-   **Example using `curl`:**
-
-   ```bash
-   curl -X GET "http://localhost:9002/repository/github/?https_url=https://github.com/your/repo.git"
-   ```
+   - **Endpoint:** `POST /repository/upload/`
+     - **Request Body:** JSON object matching the `UploadRepositoryRequest` schema (see [API Documents](http://127.0.0.1:9002/docs#/repository/repository-upload_github_repository))
 
    This will clone the specified repository (defaulting to the latest commit on the main branch) into Prometheus.
 
