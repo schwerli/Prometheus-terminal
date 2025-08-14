@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from prometheus.parser import tree_sitter_parser
 from prometheus.utils import neo4j_util
+from prometheus.utils.neo4j_util import EMPTY_DATA_MESSAGE
 from prometheus.utils.str_util import pre_append_line_numbers
 
 MAX_RESULT = 30
@@ -309,6 +310,8 @@ def preview_file_content_with_basename(
         data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
     else:
         data = neo4j_util.run_neo4j_query_without_formatting(text_query, driver)
+    if not data:
+        return EMPTY_DATA_MESSAGE, data
     for result in data:
         if isinstance(result["preview"], dict):
             result["preview"]["text"] = pre_append_line_numbers(
@@ -361,6 +364,8 @@ def preview_file_content_with_relative_path(
         data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
     else:
         data = neo4j_util.run_neo4j_query_without_formatting(text_query, driver)
+    if not data:
+        return EMPTY_DATA_MESSAGE, data
     for result in data:
         if isinstance(result["preview"], dict):
             result["preview"]["text"] = pre_append_line_numbers(
@@ -417,6 +422,8 @@ def read_code_with_basename(
     ORDER BY f.node_id
   """
     data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
+    if not data:
+        return EMPTY_DATA_MESSAGE, data
     for result in data:
         result["SelectedLines"]["text"] = pre_append_line_numbers(
             result["SelectedLines"]["text"], result["SelectedLines"]["start_line"]
@@ -471,6 +478,8 @@ def read_code_with_relative_path(
     """
 
     data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
+    if not data:
+        return EMPTY_DATA_MESSAGE, data
     for result in data:
         result["SelectedLines"]["text"] = pre_append_line_numbers(
             result["SelectedLines"]["text"], result["SelectedLines"]["start_line"]
