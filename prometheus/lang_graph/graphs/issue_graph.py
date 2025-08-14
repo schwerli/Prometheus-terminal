@@ -126,7 +126,4 @@ class IssueGraph:
 
         output_state = self.graph.invoke(input_state, config)
 
-        # Reset the git repository to its original state
-        self.git_repo.reset_repository()
-
         return output_state
