@@ -10,11 +10,15 @@ from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.nodes.context_retrieval_subgraph_node import ContextRetrievalSubgraphNode
 from prometheus.lang_graph.nodes.git_reset_node import GitResetNode
-from prometheus.lang_graph.nodes.issue_bug_regression_check_result_node import IssueBugRegressionCheckResultNode
+from prometheus.lang_graph.nodes.issue_bug_regression_check_result_node import (
+    IssueBugRegressionCheckResultNode,
+)
 from prometheus.lang_graph.nodes.issue_bug_regression_context_message_node import (
     IssueBugRegressionContextMessageNode,
 )
-from prometheus.lang_graph.nodes.issue_bug_regression_patch_update_node import IssueBugRegressionPatchUpdateNode
+from prometheus.lang_graph.nodes.issue_bug_regression_patch_update_node import (
+    IssueBugRegressionPatchUpdateNode,
+)
 from prometheus.lang_graph.nodes.issue_bug_regression_tests_selection_node import (
     IssueBugRegressionTestsSelectionNode,
 )
@@ -32,14 +36,14 @@ class BugRegressionSubgraph:
     """
 
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
     ):
         """
         Initialize the run regression tests pipeline with all necessary parts.
@@ -78,7 +82,9 @@ class BugRegressionSubgraph:
             passed_regression_tests_key="before_passed_regression_tests",
         )
         # Step 5: Update the Git repository with the first untested patch and update the container
-        issue_bug_regression_patch_update_node = IssueBugRegressionPatchUpdateNode(git_repo=git_repo)
+        issue_bug_regression_patch_update_node = IssueBugRegressionPatchUpdateNode(
+            git_repo=git_repo
+        )
         update_container = UpdateContainerNode(container=container, git_repo=git_repo)
         # Step 6: Run the regression tests after applying the patch and store results
         after_run_regression_tests_subgraph_node = RunRegressionTestsSubgraphNode(
@@ -97,17 +103,26 @@ class BugRegressionSubgraph:
 
         # Add nodes to the state machine
         workflow.add_node(
-            "issue_bug_regression_context_message_node", issue_bug_regression_context_message_node,
+            "issue_bug_regression_context_message_node",
+            issue_bug_regression_context_message_node,
         )
         workflow.add_node("context_retrieval_subgraph_node", context_retrieval_subgraph_node)
         workflow.add_node(
             "issue_bug_regression_tests_selection_node", issue_bug_regression_tests_selection_node
         )
-        workflow.add_node("before_run_regression_tests_subgraph_node", before_run_regression_tests_subgraph_node)
-        workflow.add_node("issue_bug_regression_patch_update_node", issue_bug_regression_patch_update_node)
+        workflow.add_node(
+            "before_run_regression_tests_subgraph_node", before_run_regression_tests_subgraph_node
+        )
+        workflow.add_node(
+            "issue_bug_regression_patch_update_node", issue_bug_regression_patch_update_node
+        )
         workflow.add_node("update_container_node", update_container)
-        workflow.add_node("after_run_regression_tests_subgraph_node", after_run_regression_tests_subgraph_node)
-        workflow.add_node("issue_bug_regression_check_result_node", issue_bug_regression_check_result_node)
+        workflow.add_node(
+            "after_run_regression_tests_subgraph_node", after_run_regression_tests_subgraph_node
+        )
+        workflow.add_node(
+            "issue_bug_regression_check_result_node", issue_bug_regression_check_result_node
+        )
         workflow.add_node("git_reset_node", git_reset_node)
 
         # Define transitions between nodes
@@ -127,15 +142,11 @@ class BugRegressionSubgraph:
             {
                 True: "issue_bug_regression_patch_update_node",
                 False: "git_reset_node",
-            }
+            },
         )
         workflow.add_edge("git_reset_node", END)
-        workflow.add_edge(
-            "issue_bug_regression_patch_update_node", "update_container_node"
-        )
-        workflow.add_edge(
-            "update_container_node", "after_run_regression_tests_subgraph_node"
-        )
+        workflow.add_edge("issue_bug_regression_patch_update_node", "update_container_node")
+        workflow.add_edge("update_container_node", "after_run_regression_tests_subgraph_node")
         workflow.add_edge(
             "after_run_regression_tests_subgraph_node", "issue_bug_regression_check_result_node"
         )
@@ -145,20 +156,20 @@ class BugRegressionSubgraph:
             {
                 True: "issue_bug_regression_patch_update_node",
                 False: END,
-            }
+            },
         )
 
         # Compile the full LangGraph subgraph
         self.subgraph = workflow.compile()
 
     def invoke(
-            self,
-            issue_title: str,
-            issue_body: str,
-            issue_comments: Sequence[Mapping[str, str]],
-            patches: Sequence[str],
-            number_of_selected_regression_tests: int = 3,
-            recursion_limit: int = 120,
+        self,
+        issue_title: str,
+        issue_body: str,
+        issue_comments: Sequence[Mapping[str, str]],
+        patches: Sequence[str],
+        number_of_selected_regression_tests: int = 3,
+        recursion_limit: int = 120,
     ):
         """
         Run the bug regression subgraph.

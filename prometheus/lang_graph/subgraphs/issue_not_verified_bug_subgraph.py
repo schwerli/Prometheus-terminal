@@ -116,13 +116,23 @@ class IssueNotVerifiedBugSubgraph:
 
         workflow.add_conditional_edges(
             "git_diff_node",
-            lambda state: len(state["edit_patches"]) < state["number_of_candidate_patch"],
-            {True: "git_reset_node", False: "final_patch_selection_node"},
+            lambda state: "git_reset_node"
+            if len(state["edit_patches"]) < state["number_of_candidate_patch"]
+            else "bug_regression_subgraph_node"
+            if state["run_regression_test"]
+            else "final_patch_selection_node",
+            {
+                "git_reset_node": "git_reset_node",
+                "final_patch_selection_node": "final_patch_selection_node",
+                "bug_regression_subgraph_node": "bug_regression_subgraph_node",
+            },
         )
 
         workflow.add_edge("git_reset_node", "reset_issue_bug_analyzer_messages_node")
         workflow.add_edge("reset_issue_bug_analyzer_messages_node", "reset_edit_messages_node")
         workflow.add_edge("reset_edit_messages_node", "issue_bug_analyzer_message_node")
+
+        workflow.add_edge("bug_regression_subgraph_node", "final_patch_selection_node")
 
         workflow.add_edge("final_patch_selection_node", END)
 

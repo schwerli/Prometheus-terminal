@@ -1,5 +1,5 @@
 from operator import add
-from typing import Mapping, Sequence, TypedDict, Annotated
+from typing import Annotated, Mapping, Sequence, TypedDict
 
 from prometheus.models.context import Context
 

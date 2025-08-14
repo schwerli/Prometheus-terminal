@@ -13,16 +13,16 @@ from prometheus.lang_graph.subgraphs.bug_regression_subgraph import BugRegressio
 
 class BugRegressionSubgraphNode:
     def __init__(
-            self,
-            advanced_model: BaseChatModel,
-            base_model: BaseChatModel,
-            container: BaseContainer,
-            kg: KnowledgeGraph,
-            git_repo: GitRepository,
-            neo4j_driver: neo4j.Driver,
-            max_token_per_neo4j_result: int,
-            testing_patches_key: str,
-            is_testing_patch_list: bool = True,
+        self,
+        advanced_model: BaseChatModel,
+        base_model: BaseChatModel,
+        container: BaseContainer,
+        kg: KnowledgeGraph,
+        git_repo: GitRepository,
+        neo4j_driver: neo4j.Driver,
+        max_token_per_neo4j_result: int,
+        testing_patches_key: str,
+        is_testing_patch_list: bool = True,
     ):
         self._logger = logging.getLogger(
             f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_regression_subgraph_node"
@@ -47,19 +47,24 @@ class BugRegressionSubgraphNode:
             issue_title=state["issue_title"],
             issue_body=state["issue_body"],
             issue_comments=state["issue_comments"],
-            patches=state[self.testing_patches_key] if self.is_testing_patch_list else [
-                state[self.testing_patches_key]],
+            patches=state[self.testing_patches_key]
+            if self.is_testing_patch_list
+            else [state[self.testing_patches_key]],
         )
 
         self._logger.info(f"passed_patches: {output_state['passed_patches']}")
         if not self.is_testing_patch_list:
-            self._logger.debug(f"regression_test_fail_log: {output_state['regression_test_fail_log']}")
+            self._logger.debug(
+                f"regression_test_fail_log: {output_state['regression_test_fail_log']}"
+            )
             return {
-                "patch_passed": True if output_state["passed_patches"] else False,
+                "passed_regression_tests_patches": True
+                if output_state["passed_patches"]
+                else False,
                 "regression_test_fail_log": output_state["regression_test_fail_log"],
             }
         else:
             self._logger.debug(f"passed Patches: {output_state['passed_patches']}")
             return {
-                "passed_patches": output_state["passed_patches"],
+                "passed_regression_tests_patches": output_state["passed_patches"],
             }
