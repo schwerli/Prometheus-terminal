@@ -149,5 +149,6 @@ class IssueService(BaseService):
             return None, False, False, False, None, None
         finally:
             self.repository_service.update_repository_status(repository_id, is_working=False)
+            repository.reset_repository()
             logger.removeHandler(file_handler)
             file_handler.close()
