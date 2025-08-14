@@ -43,6 +43,8 @@ Example output:
     "refined_query": "Please provide the implementation details of the helper functions called within the main function, as well as any relevant documentation that explains the overall data processing workflow."
 }}
 ```
+
+PLEASE DO NOT INCLUDE ``` IN YOUR OUTPUT!
 """
 
     REFINE_PROMPT = """\
