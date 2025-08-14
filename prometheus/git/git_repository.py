@@ -131,6 +131,13 @@ class GitRepository:
             shutil.rmtree(self.repo.working_dir)
             self.repo = None
 
+    def apply_patch(self, patch: str):
+        """Apply a patch to the current repository."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".patch") as tmp_file:
+            tmp_file.write(patch)
+            tmp_file.flush()
+            self.repo.git.apply(tmp_file.name)
+
     async def create_and_push_branch(self, branch_name: str, commit_message: str, patch: str):
         """Create a new branch, commit changes, and push to remote.
 
@@ -149,17 +156,14 @@ class GitRepository:
         # Get the current commit SHA to ensure we can reset later
         start_commit_sha = self.repo.head.commit.hexsha
         try:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".patch") as tmp_file:
-                tmp_file.write(patch)
-                tmp_file.flush()
-
-                new_branch = self.repo.create_head(branch_name)
-                new_branch.checkout()
-
-                self.repo.git.apply(tmp_file.name)
-                self.repo.git.add(A=True)
-                self.repo.index.commit(commit_message)
-                await asyncio.to_thread(self.repo.git.push, "--set-upstream", "origin", branch_name)
+            # create and checkout new branch
+            new_branch = self.repo.create_head(branch_name)
+            new_branch.checkout()
+            # Apply the patch and commit changes
+            self.apply_patch(patch)
+            self.repo.git.add(A=True)
+            self.repo.index.commit(commit_message)
+            await asyncio.to_thread(self.repo.git.push, "--set-upstream", "origin", branch_name)
         except GitCommandError as e:
             raise e
         finally:
