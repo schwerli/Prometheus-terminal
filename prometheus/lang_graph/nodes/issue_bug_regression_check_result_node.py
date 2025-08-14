@@ -36,5 +36,5 @@ class IssueBugRegressionCheckResultNode:
         self._logger.debug(current_patch_passed)
 
         return {
-            "passed_patches": state["current_patch"] if current_patch_passed else [],
+            "passed_patches": [state["current_patch"]] if current_patch_passed else [],
         }

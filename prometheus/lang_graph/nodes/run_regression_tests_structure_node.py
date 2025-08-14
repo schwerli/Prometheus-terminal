@@ -15,7 +15,7 @@ class RunRegressionTestsStructureOutput(BaseModel):
         description="List of test identifier of regression tests that passed (e.g., class name and method name)"
     )
     regression_test_fail_log: str = Field(
-        description="If the test failed, contains the complete test failure log. Otherwise empty string"
+        description="If the test failed, contains the complete test FAILURE log. Otherwise empty string"
     )
 
 
@@ -62,13 +62,14 @@ Example 1 Output:
         "test_file_operation.py::test_edit_file",
         "test_file_operation.py::test_create_file_already_exists"
     ],
-    "reproducing_test_fail_log": ""
+    "reproducing_test_fail_log": "" # ONLY output the log exact and complete test FAILURE log when test failure. Otherwise empty string
 }}
 
 Important:
 - Only look at test pass/fail status
 - A single failing test means the test is not passing
 - Include complete test output in failure log
+- Do Not output any log when where is no test executed. ONLY output the log exact and complete test FAILURE log when test failure!
 """
 
     def __init__(self, model: BaseChatModel):
