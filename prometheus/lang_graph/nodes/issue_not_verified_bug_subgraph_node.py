@@ -5,6 +5,7 @@ from typing import Dict
 import neo4j
 from langchain_core.language_models.chat_models import BaseChatModel
 
+from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
 from prometheus.lang_graph.subgraphs.issue_not_verified_bug_subgraph import (
@@ -19,6 +20,7 @@ class IssueNotVerifiedBugSubgraphNode:
         base_model: BaseChatModel,
         kg: KnowledgeGraph,
         git_repo: GitRepository,
+        container: BaseContainer,
         neo4j_driver: neo4j.Driver,
         max_token_per_neo4j_result: int,
     ):
@@ -30,6 +32,7 @@ class IssueNotVerifiedBugSubgraphNode:
             base_model=base_model,
             kg=kg,
             git_repo=git_repo,
+            container=container,
             neo4j_driver=neo4j_driver,
             max_token_per_neo4j_result=max_token_per_neo4j_result,
         )
@@ -42,6 +45,7 @@ class IssueNotVerifiedBugSubgraphNode:
             issue_body=state["issue_body"],
             issue_comments=state["issue_comments"],
             number_of_candidate_patch=state["number_of_candidate_patch"],
+            run_regression_test=state["run_regression_test"],
         )
 
         self._logger.info(f"final_patch:\n{output_state['final_patch']}")

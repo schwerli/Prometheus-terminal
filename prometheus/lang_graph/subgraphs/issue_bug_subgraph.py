@@ -60,6 +60,7 @@ class IssueBugSubgraph:
             base_model=base_model,
             kg=kg,
             git_repo=git_repo,
+            container=container,
             neo4j_driver=neo4j_driver,
             max_token_per_neo4j_result=max_token_per_neo4j_result,
         )
@@ -118,6 +119,7 @@ class IssueBugSubgraph:
         issue_comments: Sequence[Mapping[str, str]],
         run_build: bool,
         run_existing_test: bool,
+        run_regression_test: bool,
         run_reproduce_test: bool,
         number_of_candidate_patch: int,
         recursion_limit: int = 30,
@@ -130,6 +132,7 @@ class IssueBugSubgraph:
             "issue_comments": issue_comments,
             "run_build": run_build,
             "run_existing_test": run_existing_test,
+            "run_regression_test": run_regression_test,
             "run_reproduce_test": run_reproduce_test,
             "number_of_candidate_patch": number_of_candidate_patch,
         }

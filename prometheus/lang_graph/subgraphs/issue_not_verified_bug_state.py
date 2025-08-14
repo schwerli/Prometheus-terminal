@@ -24,3 +24,5 @@ class IssueNotVerifiedBugState(TypedDict):
     edit_patches: Annotated[Sequence[str], add]
 
     final_patch: str
+
+    run_regression_test: bool

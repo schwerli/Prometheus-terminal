@@ -6,8 +6,10 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
+from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.lang_graph.nodes.bug_regression_subgraph_node import BugRegressionSubgraphNode
 from prometheus.lang_graph.nodes.context_retrieval_subgraph_node import ContextRetrievalSubgraphNode
 from prometheus.lang_graph.nodes.edit_message_node import EditMessageNode
 from prometheus.lang_graph.nodes.edit_node import EditNode
@@ -28,6 +30,7 @@ class IssueNotVerifiedBugSubgraph:
         base_model: BaseChatModel,
         kg: KnowledgeGraph,
         git_repo: GitRepository,
+        container: BaseContainer,
         neo4j_driver: neo4j.Driver,
         max_token_per_neo4j_result: int,
     ):
@@ -58,6 +61,20 @@ class IssueNotVerifiedBugSubgraph:
         reset_issue_bug_analyzer_messages_node = ResetMessagesNode("issue_bug_analyzer_messages")
         reset_edit_messages_node = ResetMessagesNode("edit_messages")
 
+        # Run Regression Tests Node
+        bug_regression_subgraph_node = BugRegressionSubgraphNode(
+            advanced_model=advanced_model,
+            base_model=base_model,
+            container=container,
+            kg=kg,
+            git_repo=git_repo,
+            neo4j_driver=neo4j_driver,
+            max_token_per_neo4j_result=max_token_per_neo4j_result,
+            testing_patches_key="edit_patches",
+            is_testing_patch_list=True,
+        )
+
+        # Final patch selection node
         final_patch_selection_node = FinalPatchSelectionNode(advanced_model)
 
         workflow = StateGraph(IssueNotVerifiedBugState)
@@ -78,6 +95,8 @@ class IssueNotVerifiedBugSubgraph:
             "reset_issue_bug_analyzer_messages_node", reset_issue_bug_analyzer_messages_node
         )
         workflow.add_node("reset_edit_messages_node", reset_edit_messages_node)
+
+        workflow.add_node("bug_regression_subgraph_node", bug_regression_subgraph_node)
 
         workflow.add_node("final_patch_selection_node", final_patch_selection_node)
 
@@ -115,6 +134,7 @@ class IssueNotVerifiedBugSubgraph:
         issue_body: str,
         issue_comments: Sequence[Mapping[str, str]],
         number_of_candidate_patch: int,
+        run_regression_test: bool,
         recursion_limit: int = 300,
     ):
         config = {"recursion_limit": recursion_limit}
@@ -125,6 +145,7 @@ class IssueNotVerifiedBugSubgraph:
             "issue_comments": issue_comments,
             "number_of_candidate_patch": number_of_candidate_patch,
             "max_refined_query_loop": 5,
+            "run_regression_test": run_regression_test,
         }
 
         output_state = self.subgraph.invoke(input_state, config)

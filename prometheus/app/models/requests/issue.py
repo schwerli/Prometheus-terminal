@@ -43,6 +43,11 @@ class IssueRequest(BaseModel):
         description="When editing the code, whenever we should run the existing test to verify the fix",
         examples=[False],
     )
+    run_regression_test: Optional[bool] = Field(
+        default=True,
+        description="When editing the code, whenever we should run regression tests to verify the fix",
+        examples=[True],
+    )
     run_reproduce_test: Optional[bool] = Field(
         default=True,
         description="When editing the code, whenever we should run the reproduce test to verify the fix",
