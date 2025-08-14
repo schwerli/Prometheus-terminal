@@ -138,7 +138,7 @@ class BugRegressionSubgraph:
         )
         workflow.add_conditional_edges(
             "before_run_regression_tests_subgraph_node",
-            lambda state: state["untested_patches"] > 0,
+            lambda state: len(state["untested_patches"]) > 0,
             {
                 True: "issue_bug_regression_patch_update_node",
                 False: "git_reset_node",
