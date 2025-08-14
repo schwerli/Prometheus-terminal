@@ -11,7 +11,7 @@ from prometheus.utils.issue_util import format_issue_info
 
 class RegressionTestStructuredOutPut(BaseModel):
     reasoning: str = Field(description="Your step-by-step reasoning why this test is selected")
-    test_identifier: int = Field(
+    test_identifier: str = Field(
         description="The test identifier that you select (e.g., class name and method name)"
     )
 
