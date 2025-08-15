@@ -125,7 +125,7 @@ class ContextExtractionNode:
     def __call__(self, state: ContextRetrievalState):
         """
         Extract relevant code contexts from the codebase based on the user query and existing context.
-        The final contexts are without line numbers.
+        The final contexts are with line numbers.
         """
         self._logger.info("Starting context extraction process")
         # Get Context List with existing context
