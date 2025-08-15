@@ -72,9 +72,7 @@ def read_file_with_line_numbers(
     if not final_content:
         return f"No content found between lines {start_line} and {end_line} in {relative_path}!"
 
-    return pre_append_line_numbers(
-        final_content, start_line
-    )
+    return pre_append_line_numbers(final_content, start_line)
 
 
 class CreateFileInput(BaseModel):
