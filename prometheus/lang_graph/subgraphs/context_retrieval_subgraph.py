@@ -118,7 +118,7 @@ class ContextRetrievalSubgraph:
         self.subgraph = workflow.compile()
 
     def invoke(
-        self, query: str, max_refined_query_loop: int, recursion_limit: int = 120
+        self, query: str, max_refined_query_loop: int
     ) -> Dict[str, Sequence[Context]]:
         """
         Executes the context retrieval subgraph given an initial query.
@@ -126,13 +126,13 @@ class ContextRetrievalSubgraph:
         Args:
             query (str): The natural language query representing the information need.
             max_refined_query_loop (int): Maximum number of times the system can refine and retry the query.
-            recursion_limit (int, optional): Global recursion limit for LangGraph. Default is 999.
 
         Returns:
             Dict with a single key:
                 - "context" (Sequence[Context]): A list of selected context snippets relevant to the query.
         """
-        config = {"recursion_limit": recursion_limit}
+        # Set the recursion limit based on the maximum number of refined query loops
+        config = {"recursion_limit": max_refined_query_loop * 40}
 
         input_state = {
             "query": query,
