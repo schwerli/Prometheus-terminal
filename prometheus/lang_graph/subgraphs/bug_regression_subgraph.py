@@ -168,7 +168,7 @@ class BugRegressionSubgraph:
         issue_body: str,
         issue_comments: Sequence[Mapping[str, str]],
         patches: Sequence[str],
-        number_of_selected_regression_tests: int = 3,
+        number_of_selected_regression_tests: int = 5,
         recursion_limit: int = 120,
     ):
         """
