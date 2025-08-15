@@ -133,7 +133,7 @@ I have generated the following patches, now please select the best patch among t
 
     def format_human_message(self, state: Dict):
         if state["run_regression_test"]:
-            patches = state["passed_regression_tests_patches"]
+            patches = [result.patch for result in state["tested_patch_result"] if result.passed]
         else:
             patches = state["edit_patches"]
 
@@ -141,7 +141,10 @@ I have generated the following patches, now please select the best patch among t
         for index, patch in enumerate(patches):
             patches_str += f"Patch at index {index}:\n"
             patches_str += f"{patch}\n\n"
-        patches_str += f"You must select a patch with index from 0 to {len(state['edit_patches']) - 1}, and provide your reasoning."
+        patches_str += (
+            f"You must select a patch with index from 0 to {len(state['edit_patches']) - 1},"
+            f" and provide your reasoning."
+        )
 
         return self.HUMAN_PROMPT.format(
             issue_info=format_issue_info(

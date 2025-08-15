@@ -5,6 +5,7 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 from prometheus.models.context import Context
+from prometheus.models.test_patch_result import TestedPatchResult
 
 
 class IssueNotVerifiedBugState(TypedDict):
@@ -28,3 +29,5 @@ class IssueNotVerifiedBugState(TypedDict):
     final_patch: str
 
     run_regression_test: bool
+
+    tested_patch_result: Sequence[TestedPatchResult]

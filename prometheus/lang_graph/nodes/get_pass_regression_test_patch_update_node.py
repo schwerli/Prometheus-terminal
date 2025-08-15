@@ -2,10 +2,12 @@ import logging
 import threading
 
 from prometheus.git.git_repository import GitRepository
-from prometheus.lang_graph.subgraphs.bug_regression_state import BugRegressionState
+from prometheus.lang_graph.subgraphs.get_pass_regression_test_patch_state import (
+    GetPassRegressionTestPatchState,
+)
 
 
-class IssueBugRegressionPatchUpdateNode:
+class GetPassRegressionTestPatchUpdateNode:
     """
     Reset the Git repository and apply the first untested patch to the Git repository.
     """
@@ -16,10 +18,10 @@ class IssueBugRegressionPatchUpdateNode:
     ):
         self.git_repo = git_repo
         self._logger = logging.getLogger(
-            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_bug_regression_patch_update_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.get_pass_regression_test_patch_update_node"
         )
 
-    def __call__(self, state: BugRegressionState):
+    def __call__(self, state: GetPassRegressionTestPatchState):
         """
         Reset the Git repository and apply the first untested patch to the Git repository.
 
