@@ -132,18 +132,23 @@ I have generated the following patches, now please select the best patch among t
         )
 
     def format_human_message(self, state: Dict):
-        patches = ""
-        for index, patch in enumerate(state["edit_patches"]):
-            patches += f"Patch at index {index}:\n"
-            patches += f"{patch}\n\n"
-        patches += f"You must select a patch with index from 0 to {len(state['edit_patches']) - 1}, and provide your reasoning."
+        if state["run_regression_test"]:
+            patches = state["passed_regression_tests_patches"]
+        else:
+            patches = state["edit_patches"]
+
+        patches_str = ""
+        for index, patch in enumerate(patches):
+            patches_str += f"Patch at index {index}:\n"
+            patches_str += f"{patch}\n\n"
+        patches_str += f"You must select a patch with index from 0 to {len(state['edit_patches']) - 1}, and provide your reasoning."
 
         return self.HUMAN_PROMPT.format(
             issue_info=format_issue_info(
                 state["issue_title"], state["issue_body"], state["issue_comments"]
             ),
             bug_fix_context="\n\n".join([str(context) for context in state["bug_fix_context"]]),
-            patches=patches,
+            patches=patches_str,
         )
 
     def __call__(self, state: Dict):
