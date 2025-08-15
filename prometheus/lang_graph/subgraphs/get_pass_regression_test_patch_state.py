@@ -14,6 +14,6 @@ class GetPassRegressionTestPatchState(TypedDict):
     # Current patch
     current_patch: str
     # Current patch regression test failure log
-    current_regression_test_failure_log: str
+    regression_test_fail_log: str
     # Current passed tests
     current_passed_tests: Sequence[str]

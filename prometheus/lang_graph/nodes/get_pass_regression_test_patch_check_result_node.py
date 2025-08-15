@@ -37,7 +37,7 @@ class GetPassRegressionTestPatchCheckResultNode:
         test_patch_result = TestedPatchResult(
             patch=state["current_patch"],
             passed=current_patch_passed,
-            regression_test_failure_log=state["current_regression_test_failure_log"],
+            regression_test_failure_log=state["regression_test_fail_log"],
         )
 
         return {
