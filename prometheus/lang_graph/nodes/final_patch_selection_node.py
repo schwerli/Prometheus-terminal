@@ -1,11 +1,11 @@
 import logging
 import threading
-from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
+from prometheus.lang_graph.subgraphs.issue_not_verified_bug_state import IssueNotVerifiedBugState
 from prometheus.utils.issue_util import format_issue_info
 
 
@@ -131,7 +131,7 @@ I have generated the following patches, now please select the best patch among t
             f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.final_patch_selection_node"
         )
 
-    def format_human_message(self, state: Dict):
+    def format_human_message(self, state: IssueNotVerifiedBugState):
         if state["run_regression_test"]:
             patches = [result.patch for result in state["tested_patch_result"] if result.passed]
         else:
@@ -154,7 +154,7 @@ I have generated the following patches, now please select the best patch among t
             patches=patches_str,
         )
 
-    def __call__(self, state: Dict):
+    def __call__(self, state: IssueNotVerifiedBugState):
         human_prompt = self.format_human_message(state)
         for try_index in range(self.max_retries):
             response = self.model.invoke({"human_prompt": human_prompt})

@@ -1,7 +1,7 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
 
-class TestedPatchResult(TypedDict):
+class TestedPatchResult(BaseModel):
     # patch that was tested
     patch: str
     # whether the patch passed the regression tests
