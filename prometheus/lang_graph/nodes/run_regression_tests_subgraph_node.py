@@ -1,10 +1,10 @@
 import logging
 import threading
+from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from prometheus.docker.base_container import BaseContainer
-from prometheus.lang_graph.subgraphs.bug_regression_state import BugRegressionState
 from prometheus.lang_graph.subgraphs.run_regression_tests_subgraph import RunRegressionTestsSubgraph
 
 
@@ -21,7 +21,7 @@ class RunRegressionTestsSubgraphNode:
         )
         self.passed_regression_tests_key = passed_regression_tests_key
 
-    def __call__(self, state: BugRegressionState):
+    def __call__(self, state: Dict):
         self._logger.info("Enter run_regression_tests_subgraph_node")
         self._logger.debug(f"selected_regression_tests: {state['selected_regression_tests']}")
 

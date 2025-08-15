@@ -1,11 +1,13 @@
 import logging
 import threading
-from typing import Dict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
+from prometheus.lang_graph.subgraphs.bug_get_regression_tests_state import (
+    BugGetRegressionTestsState,
+)
 from prometheus.utils.issue_util import format_issue_info
 
 
@@ -22,7 +24,7 @@ class RegressionTestsStructuredOutPut(BaseModel):
     )
 
 
-class IssueBugRegressionTestsSelectionNode:
+class BugGetRegressionTestsSelectionNode:
     SYS_PROMPT = """\
 You are an expert programming assistant specialized in evaluating and selecting regression tests for a given issue among multiple candidate test cases.
 
@@ -90,10 +92,10 @@ You MUST select {number_of_selected_regression_tests} regression tests that are 
         structured_llm = model.with_structured_output(RegressionTestsStructuredOutPut)
         self.model = prompt | structured_llm
         self._logger = logging.getLogger(
-            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_bug_regression_tests_selection_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_get_regression_tests_selection_node"
         )
 
-    def format_human_message(self, state: Dict):
+    def format_human_message(self, state: BugGetRegressionTestsState):
         return self.HUMAN_PROMPT.format(
             issue_info=format_issue_info(
                 state["issue_title"], state["issue_body"], state["issue_comments"]
@@ -104,7 +106,7 @@ You MUST select {number_of_selected_regression_tests} regression tests that are 
             number_of_selected_regression_tests=state["number_of_selected_regression_tests"],
         )
 
-    def __call__(self, state: Dict):
+    def __call__(self, state: BugGetRegressionTestsState):
         human_prompt = self.format_human_message(state)
         response = self.model.invoke({"human_prompt": human_prompt})
         self._logger.debug(f"Model response: {response}")

@@ -1,11 +1,13 @@
 import logging
 import threading
 
-from prometheus.lang_graph.subgraphs.bug_regression_state import BugRegressionState
+from prometheus.lang_graph.subgraphs.bug_get_regression_tests_state import (
+    BugGetRegressionTestsState,
+)
 from prometheus.utils.issue_util import format_issue_info
 
 
-class IssueBugRegressionContextMessageNode:
+class BugGetRegressionContextMessageNode:
     SELECT_REGRESSION_QUERY = """\
 We are currently solving the following issue within our repository. Here is the issue text:
 
@@ -85,10 +87,10 @@ def test_offset_preserved(self):
 
     def __init__(self):
         self._logger = logging.getLogger(
-            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.issue_bug_regression_context_message_node"
+            f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_get_regression_context_message_node"
         )
 
-    def __call__(self, state: BugRegressionState):
+    def __call__(self, state: BugGetRegressionTestsState):
         select_regression_query = self.SELECT_REGRESSION_QUERY.format(
             issue_info=format_issue_info(
                 state["issue_title"], state["issue_body"], state["issue_comments"]

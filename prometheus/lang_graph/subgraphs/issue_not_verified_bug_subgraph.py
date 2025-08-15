@@ -9,7 +9,6 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
-from prometheus.lang_graph.nodes.bug_regression_subgraph_node import BugRegressionSubgraphNode
 from prometheus.lang_graph.nodes.context_retrieval_subgraph_node import ContextRetrievalSubgraphNode
 from prometheus.lang_graph.nodes.edit_message_node import EditMessageNode
 from prometheus.lang_graph.nodes.edit_node import EditNode
@@ -61,19 +60,6 @@ class IssueNotVerifiedBugSubgraph:
         reset_issue_bug_analyzer_messages_node = ResetMessagesNode("issue_bug_analyzer_messages")
         reset_edit_messages_node = ResetMessagesNode("edit_messages")
 
-        # Run Regression Tests Node
-        bug_regression_subgraph_node = BugRegressionSubgraphNode(
-            advanced_model=advanced_model,
-            base_model=base_model,
-            container=container,
-            kg=kg,
-            git_repo=git_repo,
-            neo4j_driver=neo4j_driver,
-            max_token_per_neo4j_result=max_token_per_neo4j_result,
-            testing_patches_key="edit_patches",
-            is_testing_patch_list=True,
-        )
-
         # Final patch selection node
         final_patch_selection_node = FinalPatchSelectionNode(advanced_model)
 
@@ -96,8 +82,6 @@ class IssueNotVerifiedBugSubgraph:
         )
         workflow.add_node("reset_edit_messages_node", reset_edit_messages_node)
 
-        workflow.add_node("bug_regression_subgraph_node", bug_regression_subgraph_node)
-
         workflow.add_node("final_patch_selection_node", final_patch_selection_node)
 
         workflow.set_entry_point("issue_bug_context_message_node")
@@ -116,23 +100,16 @@ class IssueNotVerifiedBugSubgraph:
 
         workflow.add_conditional_edges(
             "git_diff_node",
-            lambda state: "git_reset_node"
-            if len(state["edit_patches"]) < state["number_of_candidate_patch"]
-            else "bug_regression_subgraph_node"
-            if state["run_regression_test"]
-            else "final_patch_selection_node",
+            lambda state: len(state["edit_patches"]) < state["number_of_candidate_patch"],
             {
-                "git_reset_node": "git_reset_node",
-                "final_patch_selection_node": "final_patch_selection_node",
-                "bug_regression_subgraph_node": "bug_regression_subgraph_node",
+                True: "git_reset_node",
+                False: "final_patch_selection_node",
             },
         )
 
         workflow.add_edge("git_reset_node", "reset_issue_bug_analyzer_messages_node")
         workflow.add_edge("reset_issue_bug_analyzer_messages_node", "reset_edit_messages_node")
         workflow.add_edge("reset_edit_messages_node", "issue_bug_analyzer_message_node")
-
-        workflow.add_edge("bug_regression_subgraph_node", "final_patch_selection_node")
 
         workflow.add_edge("final_patch_selection_node", END)
 

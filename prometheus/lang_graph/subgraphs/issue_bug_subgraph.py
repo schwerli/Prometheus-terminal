@@ -7,6 +7,9 @@ from langgraph.graph import END, StateGraph
 from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.lang_graph.nodes.bug_get_regression_tests_subgraph_node import (
+    BugGetRegressionTestsSubgraphNode,
+)
 from prometheus.lang_graph.nodes.bug_reproduction_subgraph_node import BugReproductionSubgraphNode
 from prometheus.lang_graph.nodes.issue_bug_responder_node import IssueBugResponderNode
 from prometheus.lang_graph.nodes.issue_not_verified_bug_subgraph_node import (
@@ -42,6 +45,17 @@ class IssueBugSubgraph:
             max_token_per_neo4j_result=max_token_per_neo4j_result,
             test_commands=test_commands,
         )
+        # Construct bug regression tests subgraph node
+        bug_get_regression_tests_subgraph_node = BugGetRegressionTestsSubgraphNode(
+            advanced_model=advanced_model,
+            base_model=base_model,
+            container=container,
+            kg=kg,
+            git_repo=git_repo,
+            neo4j_driver=neo4j_driver,
+            max_token_per_neo4j_result=max_token_per_neo4j_result,
+        )
+
         # Construct issue bug verified subgraph nodes
         issue_verified_bug_subgraph_node = IssueVerifiedBugSubgraphNode(
             advanced_model=advanced_model,
@@ -71,6 +85,9 @@ class IssueBugSubgraph:
         workflow = StateGraph(IssueBugState)
         # Add nodes to the workflow
         workflow.add_node("bug_reproduction_subgraph_node", bug_reproduction_subgraph_node)
+        workflow.add_node(
+            "bug_get_regression_tests_subgraph_node", bug_get_regression_tests_subgraph_node
+        )
 
         workflow.add_node("issue_verified_bug_subgraph_node", issue_verified_bug_subgraph_node)
         workflow.add_node(
@@ -79,14 +96,26 @@ class IssueBugSubgraph:
 
         workflow.add_node("issue_bug_responder_node", issue_bug_responder_node)
 
-        # Start with bug reproduction subgraph if reproducing bug is required,
-        # otherwise start with not verified bug subgraph
+        # Start with bug_get_regression_tests_subgraph_node if regression tests are to be run,
+        # otherwise start with bug_reproduction_subgraph_node if reproduce tests are to be run,
+        # otherwise start with issue_not_verified_bug_subgraph_node
         workflow.set_conditional_entry_point(
-            lambda state: state["run_reproduce_test"],
+            lambda state: "bug_get_regression_tests_subgraph_node"
+            if state["run_regression_test"]
+            else "bug_reproduction_subgraph_node"
+            if state["run_reproduce_test"]
+            else "issue_not_verified_bug_subgraph_node",
             {
-                True: "bug_reproduction_subgraph_node",
-                False: "issue_not_verified_bug_subgraph_node",
+                "bug_get_regression_tests_subgraph_node": "bug_get_regression_tests_subgraph_node",
+                "bug_reproduction_subgraph_node": "bug_reproduction_subgraph_node",
+                "issue_not_verified_bug_subgraph_node": "issue_not_verified_bug_subgraph_node",
             },
+        )
+        # Add edges for the bug_get_regression_tests_subgraph_node
+        workflow.add_conditional_edges(
+            "bug_get_regression_tests_subgraph_node",
+            lambda state: state["run_reproduce_test"],
+            {True: "bug_reproduction_subgraph_node", False: "issue_not_verified_bug_subgraph_node"},
         )
 
         # Go to verified bug subgraph if the bug is verified, otherwise go to not verified bug subgraph

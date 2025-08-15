@@ -15,6 +15,8 @@ class IssueBugState(TypedDict):
     reproduced_bug_file: str
     reproduced_bug_commands: Sequence[str]
 
+    regression_tests: Sequence[str]
+
     edit_patch: str
 
     passed_reproducing_test: bool
