@@ -87,6 +87,7 @@ Important:
         run_regression_tests_message = get_last_message_content(
             state["run_regression_tests_messages"]
         )
+        self._logger.debug(f"run_regression_tests_message:{run_regression_tests_message}")
         response = self.model.invoke({"run_regression_tests_logs": run_regression_tests_message})
         # Log the full response for debugging
         self._logger.debug(response)
