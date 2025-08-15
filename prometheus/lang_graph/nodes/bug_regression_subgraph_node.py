@@ -64,7 +64,6 @@ class BugRegressionSubgraphNode:
                 "regression_test_fail_log": output_state["regression_test_fail_log"],
             }
         else:
-            self._logger.debug(f"passed Patches: {output_state['passed_patches']}")
             return {
                 "passed_regression_tests_patches": output_state["passed_patches"],
             }
