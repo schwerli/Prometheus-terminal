@@ -54,10 +54,10 @@ class IssueRequest(BaseModel):
         examples=[False],
     )
     number_of_candidate_patch: Optional[int] = Field(
-        default=4,
+        default=5,
         description="When the patch is not verified (through build or test), "
         "number of candidate patches we generate to select the best one",
-        examples=[4],
+        examples=[5],
     )
     dockerfile_content: Optional[str] = Field(
         default=None,
