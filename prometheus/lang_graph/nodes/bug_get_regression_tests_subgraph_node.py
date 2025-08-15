@@ -48,4 +48,4 @@ class BugGetRegressionTestsSubgraphNode:
         self._logger.debug(
             f"Selected {len(output_state['regression_tests'])} regression tests: {output_state['regression_tests']}"
         )
-        return {"regression_tests": output_state["regression_tests"]}
+        return {"selected_regression_tests": output_state["regression_tests"]}

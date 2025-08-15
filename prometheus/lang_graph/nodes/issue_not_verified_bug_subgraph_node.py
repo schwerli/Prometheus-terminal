@@ -46,6 +46,7 @@ class IssueNotVerifiedBugSubgraphNode:
             issue_comments=state["issue_comments"],
             number_of_candidate_patch=state["number_of_candidate_patch"],
             run_regression_test=state["run_regression_test"],
+            selected_regression_tests=state["selected_regression_tests"],
         )
 
         self._logger.info(f"final_patch:\n{output_state['final_patch']}")

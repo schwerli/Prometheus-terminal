@@ -154,6 +154,7 @@ class IssueNotVerifiedBugSubgraph:
         issue_comments: Sequence[Mapping[str, str]],
         number_of_candidate_patch: int,
         run_regression_test: bool,
+        selected_regression_tests: Sequence[str],
         recursion_limit: int = 300,
     ):
         config = {"recursion_limit": recursion_limit}
@@ -165,6 +166,7 @@ class IssueNotVerifiedBugSubgraph:
             "number_of_candidate_patch": number_of_candidate_patch,
             "max_refined_query_loop": 5,
             "run_regression_test": run_regression_test,
+            "selected_regression_tests": selected_regression_tests,
         }
 
         output_state = self.subgraph.invoke(input_state, config)
