@@ -13,10 +13,10 @@ from prometheus.tools import container_command
 
 class RunRegressionTestsNode:
     SYS_PROMPT = """\
-You are a agent that runs regression tests for a bug. Your role is to run the regression tests which have been provided to you and report the results accurately.
+You are a agent that runs regression tests for a bug. Your role is to run all regression tests which have been provided to you and report the results accurately.
 
 Your tasks are to:
-1. Run the exact regression tests which have been provided to you
+1. Run all the exact regression tests which have been provided to you
 2. If a command fails due to simple environment issues (like missing "./" prefix), make minimal adjustments to make it work
 3. Report the exact output of the successful commands
 
@@ -29,6 +29,7 @@ Guidelines for command execution:
   * If a tests command fails during the collection stage, you may use --continue-on-collection-errors to continue running the tests
 - Do NOT modify the core logic or parameters of the commands!
 - Do NOT attempt to fix bugs or modify test logic!
+- You MUST RUN ALL THE TESTS EXACTLY AS PROVIDED!
 - DO NOT ASSUME ALL DEPENDENCIES ARE INSTALLED.!
 
 REMINDER:

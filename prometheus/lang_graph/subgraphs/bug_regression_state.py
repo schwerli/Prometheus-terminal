@@ -23,6 +23,7 @@ class BugRegressionState(TypedDict):
     before_passed_regression_tests: Sequence[str]
     after_passed_regression_tests: Sequence[str]
 
+    # Log of regression test failures of the last run
     regression_test_fail_log: str
 
     # List of patches generated to fix the issue

@@ -108,6 +108,7 @@ You MUST select {number_of_selected_regression_tests} regression tests that are 
         human_prompt = self.format_human_message(state)
         response = self.model.invoke({"human_prompt": human_prompt})
         self._logger.debug(f"Model response: {response}")
+        self._logger.debug(f"{len(response.selected_tests)} tests selected as regression tests")
         # Return only the identifiers of the selected regression tests
         return {
             "selected_regression_tests": [test.test_identifier for test in response.selected_tests]
