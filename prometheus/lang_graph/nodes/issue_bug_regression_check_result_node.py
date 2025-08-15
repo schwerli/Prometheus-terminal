@@ -30,7 +30,7 @@ class IssueBugRegressionCheckResultNode:
             f"after passed regression tests: {state['after_passed_regression_tests']}"
         )
         current_patch_passed = Counter(state["before_passed_regression_tests"]) == Counter(
-            state["before_passed_regression_tests"]
+            state["after_passed_regression_tests"]
         )
         # If the before_passed_regression_tests is equal to the after_passed_regression_tests,
         self._logger.debug(current_patch_passed)
