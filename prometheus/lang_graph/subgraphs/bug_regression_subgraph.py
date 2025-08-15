@@ -199,5 +199,5 @@ class BugRegressionSubgraph:
         # return the regression failure log for debugging
         return {
             "passed_patches": output_state["passed_patches"],
-            "regression_failure_log": output_state["regression_failure_log"],
+            "regression_test_fail_log": output_state["regression_test_fail_log"],
         }
