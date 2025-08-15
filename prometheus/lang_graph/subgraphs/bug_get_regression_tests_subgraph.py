@@ -8,9 +8,13 @@ from langgraph.graph import StateGraph
 from prometheus.docker.base_container import BaseContainer
 from prometheus.git.git_repository import GitRepository
 from prometheus.graph.knowledge_graph import KnowledgeGraph
+from prometheus.lang_graph.nodes.bug_get_regression_context_message_node import (
+    BugGetRegressionContextMessageNode,
+)
+from prometheus.lang_graph.nodes.bug_get_regression_tests_selection_node import (
+    BugGetRegressionTestsSelectionNode,
+)
 from prometheus.lang_graph.nodes.context_retrieval_subgraph_node import ContextRetrievalSubgraphNode
-from prometheus.lang_graph.nodes.bug_get_regression_context_message_node import BugGetRegressionContextMessageNode
-from prometheus.lang_graph.nodes.bug_get_regression_tests_selection_node import BugGetRegressionTestsSelectionNode
 from prometheus.lang_graph.nodes.run_regression_tests_subgraph_node import (
     RunRegressionTestsSubgraphNode,
 )

@@ -23,6 +23,13 @@ class RunRegressionTestsSubgraphNode:
 
     def __call__(self, state: Dict):
         self._logger.info("Enter run_regression_tests_subgraph_node")
+        if not state["selected_regression_tests"]:
+            self._logger.info("No regression tests selected, skipping regression tests subgraph.")
+            return {
+                self.passed_regression_tests_key: [],
+                "regression_test_fail_log": "",
+            }
+
         self._logger.debug(f"selected_regression_tests: {state['selected_regression_tests']}")
 
         output_state = self.subgraph.invoke(
