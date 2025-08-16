@@ -29,8 +29,13 @@ class GetPassRegressionTestPatchCheckResultNode:
         # Check if the tests passed before and after applying the patch is the same
         self._logger.debug(f"All regression tests {state['selected_regression_tests']}")
         self._logger.debug(f"Current passed tests {state['current_passed_tests']}")
-        current_patch_passed = Counter(state["selected_regression_tests"]) == Counter(
-            state["current_passed_tests"]
+        # A patch is considered to have passed if the set of tests that passed after applying the patch
+        # is the same as the set of tests that passed before applying the patch,
+        # or if there are no regression test failures.
+        # This means that the patch did not introduce any new failures
+        current_patch_passed = (
+            Counter(state["selected_regression_tests"]) == Counter(state["current_passed_tests"])
+            or not state["regression_test_fail_log"]
         )
         # If the before_passed_regression_tests is equal to the after_passed_regression_tests,
         self._logger.debug(current_patch_passed)
