@@ -98,7 +98,7 @@ class IssueVerifiedBugSubgraph:
         )
 
         # Phase 4: Apply patch, diff changes, and update the container
-        git_diff_node = GitDiffNode(git_repo, "edit_patch", "reproduced_bug_file")
+        git_diff_node = GitDiffNode(git_repo, "edit_patch")
 
         noop_node = NoopNode()
 
@@ -114,8 +114,7 @@ class IssueVerifiedBugSubgraph:
         # Phase 6: Update the container and Re-run test case that reproduces the bug
         update_container_node = UpdateContainerNode(container, git_repo)
         bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(
-            base_model,
-            container,
+            base_model, container, git_repo
         )
 
         # Phase 7: Optionally run full build and test after fix
