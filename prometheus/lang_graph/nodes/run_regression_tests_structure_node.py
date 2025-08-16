@@ -71,10 +71,23 @@ Important:
 - Include complete test output in failure log
 - Do Not output any log when where is no test executed. ONLY output the log exact and complete test FAILURE log when test failure!
 """
+    HUMAN_PROMPT = """
+We have run the selected regression tests on the codebase.
+The following regression tests were selected to run:
+--- BEGIN SELECTED REGRESSION TESTS ---
+{selected_regression_tests}
+--- END SELECTED REGRESSION TESTS ---
+Run Regression Tests Logs:
+--- BEGIN LOG ---
+{run_regression_tests_messages}
+--- END LOG ---
+Please analyze the logs and determine which regression tests passed!. You should return the exact test identifier 
+that we give to you.
+"""
 
     def __init__(self, model: BaseChatModel):
         prompt = ChatPromptTemplate.from_messages(
-            [("system", self.SYS_PROMPT), ("human", "{run_regression_tests_logs}")]
+            [("system", self.SYS_PROMPT), ("human", "{human_message}")]
         )
         structured_llm = model.with_structured_output(RunRegressionTestsStructureOutput)
         self.model = prompt | structured_llm
@@ -82,13 +95,20 @@ Important:
             f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.run_regression_tests_structure_node"
         )
 
-    def __call__(self, state: RunRegressionTestsState):
-        # Retrieve the last message content from the run_regression_tests_messages as log
-        run_regression_tests_message = get_last_message_content(
-            state["run_regression_tests_messages"]
+    def get_human_message(self, state: RunRegressionTestsState) -> str:
+        # Format the human message using the state
+        return self.HUMAN_PROMPT.format(
+            selected_regression_tests="\n".join(state["selected_regression_tests"]),
+            run_regression_tests_messages=get_last_message_content(
+                state["run_regression_tests_messages"]
+            ),
         )
-        self._logger.debug(f"run_regression_tests_message:{run_regression_tests_message}")
-        response = self.model.invoke({"run_regression_tests_logs": run_regression_tests_message})
+
+    def __call__(self, state: RunRegressionTestsState):
+        # Get human message from the state
+        human_message = self.get_human_message(state)
+        self._logger.debug(f"Human Message: {human_message}")
+        response = self.model.invoke({"human_message": human_message})
         # Log the full response for debugging
         self._logger.debug(response)
         return {
