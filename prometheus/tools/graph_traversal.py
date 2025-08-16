@@ -41,14 +41,15 @@ attributes related to the file/dir."""
 
 
 def find_file_node_with_basename(
-    basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    basename: str, driver: GraphDatabase.driver, max_token_per_result: int, root_node_id: int
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""
-      MATCH (f:FileNode {{ basename: '{basename}' }})
-      RETURN f AS FileNode
-      ORDER BY f.node_id
-      LIMIT {MAX_RESULT}
-  """
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode {{ basename: '{basename}' }})
+    WHERE root.node_id = {root_node_id}
+    RETURN f AS FileNode
+    ORDER BY f.node_id
+    LIMIT {MAX_RESULT}
+    """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
@@ -66,10 +67,11 @@ attributes related to the file/dir."""
 
 
 def find_file_node_with_relative_path(
-    relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int, root_node_id: int
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-    MATCH (f:FileNode {{ relative_path: '{relative_path}' }})
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode {{ relative_path: '{relative_path}' }})
+    WHERE root.node_id = {root_node_id}
     RETURN f AS FileNode
     ORDER BY f.node_id
     LIMIT {MAX_RESULT}
@@ -97,15 +99,19 @@ use unique text segments of at least several words. The basename can be either a
 
 
 def find_ast_node_with_text_in_file_with_basename(
-    text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str,
+    basename: str,
+    driver: GraphDatabase.driver,
+    max_token_per_result: int,
+    root_node_id: int,
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-    MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
-    WHERE f.basename = '{basename}' AND a.text CONTAINS '{text}'
-    RETURN c as FileNode, a AS ASTNode
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+    WHERE root.node_id = {root_node_id} AND f.basename = '{basename}' AND a.text CONTAINS '{text}'
+    RETURN f AS FileNode, a AS ASTNode
     ORDER BY SIZE(a.text)
     LIMIT {MAX_RESULT}
-  """
+    """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
@@ -124,14 +130,18 @@ be exact as well. The relative path should be the path from the root of codebase
 
 
 def find_ast_node_with_text_in_file_with_relative_path(
-    text: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str,
+    relative_path: str,
+    driver: GraphDatabase.driver,
+    max_token_per_result: int,
+    root_node_id: int,
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-        MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
-        WHERE f.relative_path = '{relative_path}' AND a.text CONTAINS '{text}'
-        RETURN c as FileNode, a AS ASTNode
-        ORDER BY SIZE(a.text)
-        LIMIT {MAX_RESULT}
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+    WHERE root.node_id = {root_node_id} AND f.relative_path = '{relative_path}' AND a.text CONTAINS '{text}'
+    RETURN f AS FileNode, a AS ASTNode
+    ORDER BY SIZE(a.text)
+    LIMIT {MAX_RESULT}
     """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
@@ -149,15 +159,19 @@ under a file/directory. The basename can be either a file (like 'bar.py',
 
 
 def find_ast_node_with_type_in_file_with_basename(
-    type: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    type: str,
+    basename: str,
+    driver: GraphDatabase.driver,
+    max_token_per_result: int,
+    root_node_id: int,
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-    MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
-    WHERE f.basename = '{basename}' AND a.type = '{type}'
-    RETURN c as FileNode, a AS ASTNode
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+    WHERE root.node_id = {root_node_id} AND f.basename = '{basename}' AND a.type = '{type}'
+    RETURN f AS FileNode, a AS ASTNode
     ORDER BY SIZE(a.text)
     LIMIT {MAX_RESULT}
-  """
+    """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
@@ -174,15 +188,19 @@ of codebase (like 'src/core/parser.py' or 'test/unit')."""
 
 
 def find_ast_node_with_type_in_file_with_relative_path(
-    type: str, relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    type: str,
+    relative_path: str,
+    driver: GraphDatabase.driver,
+    max_token_per_result: int,
+    root_node_id: int,
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-        MATCH (f:FileNode) -[:HAS_FILE*0..]-> (c:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*0..]-> (a:ASTNode)
-        WHERE f.relative_path = '{relative_path}' AND a.type = '{type}'
-        RETURN c as FileNode, a AS ASTNode
+        MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (:ASTNode) -[:PARENT_OF*]-> (a:ASTNode)
+        WHERE root.node_id = {root_node_id} AND f.relative_path = '{relative_path}' AND a.type = '{type}'
+        RETURN f AS FileNode, a AS ASTNode
         ORDER BY SIZE(a.text)
         LIMIT {MAX_RESULT}
-    """
+        """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
@@ -204,15 +222,15 @@ You can use this tool to find all text/documentation in codebase that contains t
 
 
 def find_text_node_with_text(
-    text: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str, driver: GraphDatabase.driver, max_token_per_result: int, root_node_id: int
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-    MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
-    WHERE t.text CONTAINS '{text}'
-    RETURN f as FileNode, t AS TextNode
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
+    WHERE root.node_id = {root_node_id} AND t.text CONTAINS '{text}'
+    RETURN f AS FileNode, t AS TextNode
     ORDER BY t.node_id
     LIMIT {MAX_RESULT}
-  """
+    """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
@@ -232,15 +250,19 @@ You can use this tool to find text/documentation in a specific file that contain
 
 
 def find_text_node_with_text_in_file(
-    text: str, basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    text: str,
+    basename: str,
+    driver: GraphDatabase.driver,
+    max_token_per_result: int,
+    root_node_id: int,
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-    MATCH (f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
-    WHERE f.basename = '{basename}' AND t.text CONTAINS '{text}'
-    RETURN f as FileNode, t AS TextNode
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
+    WHERE root.node_id = {root_node_id} AND f.basename = '{basename}' AND t.text CONTAINS '{text}'
+    RETURN f AS FileNode, t AS TextNode
     ORDER BY t.node_id
     LIMIT {MAX_RESULT}
-  """
+    """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
@@ -255,12 +277,13 @@ You can use this tool to read the next section of text that you are interested i
 
 
 def get_next_text_node_with_node_id(
-    node_id: int, driver: GraphDatabase.driver, max_token_per_result: int
+    node_id: int, driver: GraphDatabase.driver, max_token_per_result: int, root_node_id: int
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     query = f"""\
-    MATCH (f:FileNode) -[:HAS_TEXT]-> (a:TextNode {{ node_id: {node_id} }}) -[:NEXT_CHUNK]-> (b:TextNode)
-    RETURN f as FileNode, b AS TextNode
-  """
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_TEXT]-> (a:TextNode {{ node_id: {node_id} }}) -[:NEXT_CHUNK]-> (b:TextNode)
+    WHERE root.node_id = {root_node_id}
+    RETURN f AS FileNode, b AS TextNode
+    """
     return neo4j_util.run_neo4j_query(query, driver, max_token_per_result)
 
 
@@ -284,27 +307,29 @@ to look at the file."""
 
 
 def preview_file_content_with_basename(
-    basename: str, driver: GraphDatabase.driver, max_token_per_result: int
+    basename: str, driver: GraphDatabase.driver, max_token_per_result: int, root_node_id: int
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     source_code_query = f"""\
-    MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (a:ASTNode)
+    WHERE root.node_id = {root_node_id} AND f.basename = '{basename}'
     WITH f, apoc.text.split(a.text, '\\R') AS lines
     RETURN
-      f AS FileNode,
-      {{
-        text: apoc.text.join(lines[0..1000], '\\n'),
-        start_line: 1,
-        end_line: 1000
-      }} AS preview
+        f AS FileNode,
+        {{
+            text: apoc.text.join(lines[0..1000], '\\n'),
+            start_line: 1,
+            end_line: 1000
+        }} AS preview
     ORDER BY f.node_id
-  """
+      """
 
     text_query = f"""\
-    MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_TEXT]-> (t:TextNode)
-    WHERE NOT EXISTS((:TextNode) -[:NEXT_CHUNK]-> (t))
-    RETURN f as FileNode, t.text AS preview
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
+    WHERE root.node_id = {root_node_id} AND f.basename = '{basename}' 
+      AND NOT EXISTS((:TextNode) -[:NEXT_CHUNK]-> (t))
+    RETURN f AS FileNode, t.text AS preview
     ORDER BY f.node_id
-  """
+    """
 
     if tree_sitter_parser.supports_file(Path(basename)):
         data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
@@ -338,27 +363,29 @@ to look at the file."""
 
 
 def preview_file_content_with_relative_path(
-    relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int
+    relative_path: str, driver: GraphDatabase.driver, max_token_per_result: int, root_node_id: int
 ) -> tuple[str, Sequence[Mapping[str, Any]]]:
     source_code_query = f"""\
-      MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_AST]-> (a:ASTNode)
-      WITH f, apoc.text.split(a.text, '\\R') AS lines
-      RETURN 
-        f as FileNode,
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (a:ASTNode)
+    WHERE root.node_id = {root_node_id} AND f.relative_path = '{relative_path}'
+    WITH f, apoc.text.split(a.text, '\\R') AS lines
+    RETURN
+        f AS FileNode,
         {{
-          text: apoc.text.join(lines[0..1000], '\\n'),
-          start_line: 1,
-          end_line: 1000
+            text: apoc.text.join(lines[0..1000], '\\n'),
+            start_line: 1,
+            end_line: 1000
         }} AS preview
-      ORDER BY f.node_id
-  """
+    ORDER BY f.node_id
+    """
 
     text_query = f"""\
-      MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_TEXT]-> (t:TextNode)
-      WHERE NOT EXISTS((:TextNode) -[:NEXT_CHUNK]-> (t))
-      RETURN f as FileNode, t.text AS preview
-      ORDER BY f.node_id
-  """
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
+    WHERE root.node_id = {root_node_id} AND f.relative_path = '{relative_path}' 
+      AND NOT EXISTS((:TextNode) -[:NEXT_CHUNK]-> (t))
+    RETURN f AS FileNode, t.text AS preview
+    ORDER BY f.node_id
+    """
 
     if tree_sitter_parser.supports_file(Path(relative_path)):
         data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
@@ -405,22 +432,24 @@ def read_code_with_basename(
     end_line: int,
     driver: GraphDatabase.driver,
     max_token_per_result: int,
+    root_node_id: int,
 ) -> tuple[str, Union[Sequence[Mapping[str, Any]], None]]:
     if end_line < start_line:
         return f"end_line {end_line} must be greater than start_line {start_line}", None
 
     source_code_query = f"""\
-    MATCH (f:FileNode {{ basename: '{basename}' }}) -[:HAS_AST]-> (a:ASTNode)
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (a:ASTNode)
+    WHERE root.node_id = {root_node_id} AND f.basename = '{basename}'
     WITH f, apoc.text.split(a.text, '\\R') AS lines
     RETURN
-      f as FileNode,
-      {{
-        text: apoc.text.join(lines[{start_line - 1}..{end_line - 1}], '\\n'),
-        start_line: {start_line},
-        end_line: {end_line}
-      }} AS SelectedLines
+        f as FileNode,
+        {{
+            text: apoc.text.join(lines[{start_line - 1}..{end_line - 1}], '\\n'),
+            start_line: {start_line},
+            end_line: {end_line}
+        }} AS SelectedLines
     ORDER BY f.node_id
-  """
+    """
     data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
     if not data:
         return EMPTY_DATA_MESSAGE, data
@@ -460,21 +489,23 @@ def read_code_with_relative_path(
     end_line: int,
     driver: GraphDatabase.driver,
     max_token_per_result: int,
+    root_node_id: int,
 ) -> tuple[str, Union[Sequence[Mapping[str, Any]], None]]:
     if end_line < start_line:
         return f"end_line {end_line} must be greater than start_line {start_line}", None
 
     source_code_query = f"""\
-        MATCH (f:FileNode {{ relative_path: '{relative_path}' }}) -[:HAS_AST]-> (a:ASTNode)
-        WITH f, apoc.text.split(a.text, '\\R') AS lines
-        RETURN
-          f as FileNode,
-          {{
+    MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_AST]-> (a:ASTNode)
+    WHERE root.node_id = {root_node_id} AND f.relative_path = '{relative_path}'
+    WITH f, apoc.text.split(a.text, '\\R') AS lines
+    RETURN
+        f as FileNode,
+        {{
             text: apoc.text.join(lines[{start_line - 1}..{end_line - 1}], '\\n'),
             start_line: {start_line},
             end_line: {end_line}
-          }} AS SelectedLines
-        ORDER BY f.node_id
+        }} AS SelectedLines
+    ORDER BY f.node_id
     """
 
     data = neo4j_util.run_neo4j_query_without_formatting(source_code_query, driver)
