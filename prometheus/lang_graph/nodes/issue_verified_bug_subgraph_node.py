@@ -58,6 +58,7 @@ class IssueVerifiedBugSubgraphNode:
                 run_existing_test=state["run_existing_test"],
                 reproduced_bug_file=state["reproduced_bug_file"],
                 reproduced_bug_commands=state["reproduced_bug_commands"],
+                reproduced_bug_patch=state["reproduced_bug_patch"],
                 selected_regression_tests=state["selected_regression_tests"],
             )
         except GraphRecursionError:

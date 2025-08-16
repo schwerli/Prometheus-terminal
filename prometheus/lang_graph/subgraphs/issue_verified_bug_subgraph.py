@@ -230,6 +230,7 @@ class IssueVerifiedBugSubgraph:
         run_existing_test: bool,
         reproduced_bug_file: str,
         reproduced_bug_commands: Sequence[str],
+        reproduced_bug_patch: str,
         selected_regression_tests: Sequence[str],
         recursion_limit: int = 120,
     ):
@@ -244,6 +245,7 @@ class IssueVerifiedBugSubgraph:
             "run_existing_test": run_existing_test,
             "reproduced_bug_file": reproduced_bug_file,
             "reproduced_bug_commands": reproduced_bug_commands,
+            "reproduced_bug_patch": reproduced_bug_patch,
             "selected_regression_tests": selected_regression_tests,
             "max_refined_query_loop": 5,
         }
