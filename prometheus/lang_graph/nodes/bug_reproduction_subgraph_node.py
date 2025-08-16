@@ -51,8 +51,9 @@ class BugReproductionSubgraphNode:
             )
         except GraphRecursionError:
             self._logger.info("Recursion limit reached, returning reproduced_bug=False")
-            self.git_repo.reset_repository()
             return {"reproduced_bug": False}
+        finally:
+            self.git_repo.reset_repository()
 
         self._logger.info(f"reproduced_bug: {output_state['reproduced_bug']}")
         self._logger.info(f"reproduced_bug_file: {output_state['reproduced_bug_file']}")
