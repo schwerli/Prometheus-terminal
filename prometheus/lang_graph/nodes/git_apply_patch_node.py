@@ -27,7 +27,5 @@ class GitApplyPatchNode:
             self._logger.info(f"Applying patch: {patch}")
             self.git_repo.apply_patch(patch)
             self._logger.info("Patch applied successfully.")
-            return {}
         else:
             self._logger.warning(f"No patch applied for key: {self.state_patch_name}")
-            return {}

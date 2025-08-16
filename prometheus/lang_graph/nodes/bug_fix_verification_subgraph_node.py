@@ -31,6 +31,7 @@ class BugFixVerificationSubgraphNode:
         self._logger.info("Enter bug_fix_verification_subgraph_node")
         self._logger.debug(f"reproduced_bug_file: {state['reproduced_bug_file']}")
         self._logger.debug(f"reproduced_bug_commands: {state['reproduced_bug_commands']}")
+        self._logger.debug(f"reproduced_bug_patch: {state['reproduced_bug_patch']}")
         try:
             output_state = self.subgraph.invoke(
                 reproduced_bug_file=state["reproduced_bug_file"],
