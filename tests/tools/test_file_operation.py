@@ -81,7 +81,7 @@ def test_edit_file(temp_test_dir):  # noqa: F811
 
     # Test case 2: Absolute path error
     result = edit_file("/edit_test.txt", str(temp_test_dir), "line 2", "new line 2")
-    assert result == "relative_path: /edit_test.txt is a abolsute path, not relative path."
+    assert result == "relative_path: /edit_test.txt is a absolute path, not relative path."
 
     # Test case 3: File doesn't exist
     result = edit_file("nonexistent.txt", str(temp_test_dir), "line 2", "new line 2")
