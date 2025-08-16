@@ -58,8 +58,10 @@ class BugReproductionSubgraphNode:
         self._logger.info(f"reproduced_bug: {output_state['reproduced_bug']}")
         self._logger.info(f"reproduced_bug_file: {output_state['reproduced_bug_file']}")
         self._logger.info(f"reproduced_bug_commands: {output_state['reproduced_bug_commands']}")
+        self._logger.info(f"reproduced_bug_patch: {output_state['reproduced_bug_patch']}")
         return {
             "reproduced_bug": output_state["reproduced_bug"],
             "reproduced_bug_file": output_state["reproduced_bug_file"],
             "reproduced_bug_commands": output_state["reproduced_bug_commands"],
+            "reproduced_bug_patch": output_state["reproduced_bug_patch"],
         }
