@@ -63,7 +63,7 @@ class RunRegressionTestsSubgraph:
     def invoke(
         self,
         selected_regression_tests: Sequence[str],
-        recursion_limit: int = 40,
+        recursion_limit: int = 50,
     ):
         """
         Run the bug regression subgraph.

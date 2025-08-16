@@ -97,7 +97,6 @@ class GetPassRegressionTestPatchSubgraph:
         self,
         selected_regression_tests: Sequence[str],
         patches: Sequence[str],
-        recursion_limit: int = 40,
     ):
         """
         Run the bug regression subgraph.
@@ -105,11 +104,10 @@ class GetPassRegressionTestPatchSubgraph:
         Args:
             selected_regression_tests: List of selected regression tests to run.
             patches: List of patches to run.
-            recursion_limit: Max steps before triggering recovery fallback.
         Returns:
             The result of the bug regression process
         """
-        config = {"recursion_limit": recursion_limit}
+        config = {"recursion_limit": len(patches) * 15}
 
         input_state = {
             "selected_regression_tests": selected_regression_tests,
