@@ -4,6 +4,7 @@ from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 from prometheus.models.context import Context
+from prometheus.models.test_patch_result import TestedPatchResult
 
 
 class IssueVerifiedBugState(TypedDict):
@@ -37,3 +38,9 @@ class IssueVerifiedBugState(TypedDict):
 
     max_refined_query_loop: int
     refined_query: str
+
+    run_regression_test: bool
+
+    selected_regression_tests: Sequence[str]
+
+    tested_patch_result: Sequence[TestedPatchResult]

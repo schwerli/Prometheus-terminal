@@ -80,6 +80,7 @@ async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueR
         patch,
         passed_reproducing_test,
         passed_build,
+        passed_regression_test,
         passed_existing_test,
         issue_response,
         issue_type,
@@ -107,10 +108,11 @@ async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueR
         patch,
         passed_reproducing_test,
         passed_build,
+        passed_regression_test,
         passed_existing_test,
         issue_response,
         issue_type,
-    ) == (None, False, False, False, None, None):
+    ) == (None, False, False, False, False, None, None):
         raise ServerException(
             code=500,
             message="Failed to process the issue. Please try again later.",
@@ -120,6 +122,7 @@ async def answer_issue(issue: IssueRequest, request: Request) -> Response[IssueR
             patch=patch,
             passed_reproducing_test=passed_reproducing_test,
             passed_build=passed_build,
+            passed_regression_test=passed_regression_test,
             passed_existing_test=passed_existing_test,
             issue_response=issue_response,
             issue_type=issue_type,

@@ -24,6 +24,7 @@ class IssueState(TypedDict):
 
     edit_patch: str
 
+    passed_regression_test: bool
     passed_reproducing_test: bool
     passed_build: bool
     passed_existing_test: bool

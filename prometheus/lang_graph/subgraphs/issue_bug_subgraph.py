@@ -172,5 +172,7 @@ class IssueBugSubgraph:
             "passed_reproducing_test": output_state["passed_reproducing_test"],
             "passed_build": output_state["passed_build"],
             "passed_existing_test": output_state["passed_existing_test"],
+            "passed_regression_test": bool(output_state.get("selected_regression_tests", []))
+            and output_state["edit_patch"],
             "issue_response": output_state["issue_response"],
         }

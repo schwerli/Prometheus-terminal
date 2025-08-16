@@ -16,6 +16,9 @@ from prometheus.lang_graph.nodes.build_and_test_subgraph_node import BuildAndTes
 from prometheus.lang_graph.nodes.context_retrieval_subgraph_node import ContextRetrievalSubgraphNode
 from prometheus.lang_graph.nodes.edit_message_node import EditMessageNode
 from prometheus.lang_graph.nodes.edit_node import EditNode
+from prometheus.lang_graph.nodes.get_pass_regression_test_patch_subgraph_node import (
+    GetPassRegressionTestPatchSubgraphNode,
+)
 from prometheus.lang_graph.nodes.git_diff_node import GitDiffNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_message_node import IssueBugAnalyzerMessageNode
 from prometheus.lang_graph.nodes.issue_bug_analyzer_node import IssueBugAnalyzerNode
@@ -96,15 +99,26 @@ class IssueVerifiedBugSubgraph:
 
         # Phase 4: Apply patch, diff changes, and update the container
         git_diff_node = GitDiffNode(git_repo, "edit_patch", "reproduced_bug_file")
-        update_container_node = UpdateContainerNode(container, git_repo)
 
-        # Phase 5: Re-run test case that reproduces the bug
+        noop_node = NoopNode()
+
+        # Phase 5: Run Regression Tests if available
+        get_pass_regression_test_patch_subgraph_node = GetPassRegressionTestPatchSubgraphNode(
+            model=base_model,
+            container=container,
+            git_repo=git_repo,
+            testing_patch_key="edit_patch",
+            is_testing_patch_list=False,
+        )
+
+        # Phase 6: Update the container and Re-run test case that reproduces the bug
+        update_container_node = UpdateContainerNode(container, git_repo)
         bug_fix_verification_subgraph_node = BugFixVerificationSubgraphNode(
             base_model,
             container,
         )
 
-        # Phase 6: Optionally run full build and test after fix
+        # Phase 7: Optionally run full build and test after fix
         build_or_test_branch_node = NoopNode()
         build_and_test_subgraph_node = BuildAndTestSubgraphNode(
             container,
@@ -128,8 +142,14 @@ class IssueVerifiedBugSubgraph:
         workflow.add_node("edit_node", edit_node)
         workflow.add_node("edit_tools", edit_tools)
         workflow.add_node("git_diff_node", git_diff_node)
-        workflow.add_node("update_container_node", update_container_node)
+        workflow.add_node("noop_node", noop_node)
 
+        workflow.add_node(
+            "get_pass_regression_test_patch_subgraph_node",
+            get_pass_regression_test_patch_subgraph_node,
+        )
+
+        workflow.add_node("update_container_node", update_container_node)
         workflow.add_node("bug_fix_verification_subgraph_node", bug_fix_verification_subgraph_node)
         workflow.add_node("build_or_test_branch_node", build_or_test_branch_node)
         workflow.add_node("build_and_test_subgraph_node", build_and_test_subgraph_node)
@@ -154,8 +174,26 @@ class IssueVerifiedBugSubgraph:
         workflow.add_conditional_edges(
             "git_diff_node",
             lambda state: bool(state["edit_patch"]),
-            {True: "update_container_node", False: "issue_bug_analyzer_message_node"},
+            {True: "noop_node", False: "issue_bug_analyzer_message_node"},
         )
+
+        workflow.add_conditional_edges(
+            "noop_node",
+            lambda state: state["run_regression_test"],
+            {
+                True: "get_pass_regression_test_patch_subgraph_node",
+                False: "update_container_node",
+            },
+        )
+        workflow.add_conditional_edges(
+            "get_pass_regression_test_patch_subgraph_node",
+            lambda state: state["tested_patch_result"][0].passed,
+            {
+                True: "bug_fix_verification_subgraph_node",
+                False: "issue_bug_analyzer_message_node",
+            },
+        )
+
         workflow.add_edge("update_container_node", "bug_fix_verification_subgraph_node")
 
         # If test still fails, loop back to reanalyze the bug
@@ -188,9 +226,11 @@ class IssueVerifiedBugSubgraph:
         issue_body: str,
         issue_comments: Sequence[Mapping[str, str]],
         run_build: bool,
+        run_regression_test: bool,
         run_existing_test: bool,
         reproduced_bug_file: str,
         reproduced_bug_commands: Sequence[str],
+        selected_regression_tests: Sequence[str],
         recursion_limit: int = 120,
     ):
         config = {"recursion_limit": recursion_limit}
@@ -200,9 +240,11 @@ class IssueVerifiedBugSubgraph:
             "issue_body": issue_body,
             "issue_comments": issue_comments,
             "run_build": run_build,
+            "run_regression_test": run_regression_test,
             "run_existing_test": run_existing_test,
             "reproduced_bug_file": reproduced_bug_file,
             "reproduced_bug_commands": reproduced_bug_commands,
+            "selected_regression_tests": selected_regression_tests,
             "max_refined_query_loop": 5,
         }
 

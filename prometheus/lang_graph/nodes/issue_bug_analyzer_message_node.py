@@ -71,7 +71,13 @@ Do NOT provide actual code snippets or diffs. Focus on describing what needs to 
 
     def format_human_message(self, state: Dict):
         edit_error = ""
-        if "reproducing_test_fail_log" in state and state["reproducing_test_fail_log"]:
+        if (
+            "tested_patch_result" in state
+            and state["tested_patch_result"]
+            and not state["tested_patch_result"][0].passed
+        ):
+            edit_error = f"The patch failed to pass the regression tests:\n{state['tested_patch_result'][0].tested_patch_result}"
+        elif "reproducing_test_fail_log" in state and state["reproducing_test_fail_log"]:
             edit_error = f"The patch failed to pass the bug exposing test cases:\n{state['reproducing_test_fail_log']}"
         elif "build_fail_log" in state and state["build_fail_log"]:
             edit_error = f"The patch failed to pass the build:\n{state['build_fail_log']}"
