@@ -114,10 +114,17 @@ class KnowledgeGraph:
         while file_stack:
             file, kg_file_path_node = file_stack.pop()
 
-            # If the file is a directory, we create FileNode for all children files.
+            # If the file is a directory, we create FileNode for all supported children files.
             if file.is_dir():
                 self._logger.info(f"Processing directory {file}")
                 for child_file in sorted(file.iterdir()):
+                    # Skip if the child is not a file or it is not supported by the file graph builder.
+                    if child_file.is_file() and not self._file_graph_builder.supports_file(
+                        child_file
+                    ):
+                        self._logger.info(f"Skip parsing {child_file} because it is not supported")
+                        continue
+
                     if gitignore_parser.match(child_file):
                         self._logger.info(f"Skipping {child_file} because it is ignored")
                         continue
@@ -138,10 +145,8 @@ class KnowledgeGraph:
                     )
 
                     file_stack.append((child_file, kg_child_file_node))
-
-            # else if the file is a file that file_graph_builder supports, it means that we can
-            # build a knowledge graph over it.
-            elif self._file_graph_builder.supports_file(file):
+            # Process the file otherwise.
+            else:
                 self._logger.info(f"Processing file {file}")
                 try:
                     next_node_id, kg_nodes, kg_edges = self._file_graph_builder.build_file_graph(
@@ -153,9 +158,6 @@ class KnowledgeGraph:
                 self._next_node_id = next_node_id
                 self._knowledge_graph_nodes.extend(kg_nodes)
                 self._knowledge_graph_edges.extend(kg_edges)
-            else:
-                # This can only happen for files that are not supported by file_graph_builder.
-                self._logger.info(f"Skip parsing {file} because it is not supported")
 
     @classmethod
     def from_neo4j(
