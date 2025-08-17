@@ -158,7 +158,7 @@ async def test_find_text_node_with_text_in_file(neo4j_container_with_kg_fixture)
 
 @pytest.mark.slow
 async def test_get_next_text_node_with_node_id(neo4j_container_with_kg_fixture):  # noqa: F811
-    node_id = 36
+    node_id = 34
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.get_next_text_node_with_node_id(node_id, driver, 1000, 0)
