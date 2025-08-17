@@ -103,6 +103,7 @@ class IssueGraph:
         issue_type: IssueType,
         run_build: bool,
         run_existing_test: bool,
+        run_regression_test: bool,
         run_reproduce_test: bool,
         number_of_candidate_patch: int,
     ):
@@ -118,13 +119,11 @@ class IssueGraph:
             "issue_type": issue_type,
             "run_build": run_build,
             "run_existing_test": run_existing_test,
+            "run_regression_test": run_regression_test,
             "run_reproduce_test": run_reproduce_test,
             "number_of_candidate_patch": number_of_candidate_patch,
         }
 
         output_state = self.graph.invoke(input_state, config)
-
-        # Reset the git repository to its original state
-        self.git_repo.reset_repository()
 
         return output_state

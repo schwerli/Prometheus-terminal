@@ -67,6 +67,7 @@ async def test_answer_issue_with_general_container(issue_service, monkeypatch):
         "edit_patch": "test_patch",
         "passed_reproducing_test": True,
         "passed_build": True,
+        "passed_regression_test": True,
         "passed_existing_test": True,
         "issue_response": "test_response",
     }
@@ -82,9 +83,10 @@ async def test_answer_issue_with_general_container(issue_service, monkeypatch):
         issue_comments=[],
         issue_type=IssueType.BUG,
         run_build=True,
+        run_regression_test=True,
         run_existing_test=True,
-        number_of_candidate_patch=1,
         run_reproduce_test=True,
+        number_of_candidate_patch=1,
         build_commands=None,
         test_commands=None,
     )
@@ -102,7 +104,7 @@ async def test_answer_issue_with_general_container(issue_service, monkeypatch):
         build_commands=None,
         test_commands=None,
     )
-    assert result == ("test_patch", True, True, True, "test_response", IssueType.BUG)
+    assert result == ("test_patch", True, True, True, True, "test_response", IssueType.BUG)
 
 
 async def test_answer_issue_with_user_defined_container(issue_service, monkeypatch):
@@ -128,6 +130,7 @@ async def test_answer_issue_with_user_defined_container(issue_service, monkeypat
         "edit_patch": None,
         "passed_reproducing_test": False,
         "passed_build": False,
+        "passed_regression_test": False,
         "passed_existing_test": False,
         "issue_response": "test_response",
     }
@@ -143,14 +146,15 @@ async def test_answer_issue_with_user_defined_container(issue_service, monkeypat
         issue_comments=[],
         issue_type=IssueType.QUESTION,
         run_build=True,
+        run_regression_test=True,
         run_existing_test=True,
+        run_reproduce_test=True,
         number_of_candidate_patch=1,
         dockerfile_content="FROM python:3.8",
         image_name="test-image",
         workdir="/app",
         build_commands=["pip install -r requirements.txt"],
         test_commands=["pytest"],
-        run_reproduce_test=True,
     )
 
     # Verify
@@ -162,4 +166,4 @@ async def test_answer_issue_with_user_defined_container(issue_service, monkeypat
         "FROM python:3.8",
         "test-image",
     )
-    assert result == (None, False, False, False, "test_response", IssueType.QUESTION)
+    assert result == (None, False, False, False, False, "test_response", IssueType.QUESTION)

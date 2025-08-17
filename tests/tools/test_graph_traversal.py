@@ -10,7 +10,7 @@ async def test_find_file_node_with_basename(neo4j_container_with_kg_fixture):  #
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.find_file_node_with_basename(
-            test_project_paths.PYTHON_FILE.name, driver, 1000
+            test_project_paths.PYTHON_FILE.name, driver, 1000, 0
         )
 
         basename = test_project_paths.PYTHON_FILE.name
@@ -34,7 +34,7 @@ async def test_find_file_node_with_relative_path(neo4j_container_with_kg_fixture
     )
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.find_file_node_with_relative_path(relative_path, driver, 1000)
+        result = graph_traversal.find_file_node_with_relative_path(relative_path, driver, 1000, 0)
 
         basename = test_project_paths.MD_FILE.name
 
@@ -51,7 +51,7 @@ async def test_find_ast_node_with_text_in_file_with_basename(neo4j_container_wit
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.find_ast_node_with_text_in_file_with_basename(
-            "Hello world!", basename, driver, 1000
+            "Hello world!", basename, driver, 1000, 0
         )
 
         result_data = result[1]
@@ -71,7 +71,7 @@ async def test_find_ast_node_with_text_in_file_with_relative_path(neo4j_containe
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.find_ast_node_with_text_in_file_with_relative_path(
-            "Hello world!", relative_path, driver, 1000
+            "Hello world!", relative_path, driver, 1000, 0
         )
 
         result_data = result[1]
@@ -90,7 +90,7 @@ async def test_find_ast_node_with_type_in_file_with_basename(neo4j_container_wit
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.find_ast_node_with_type_in_file_with_basename(
-            node_type, basename, driver, 1000
+            node_type, basename, driver, 1000, 0
         )
 
         result_data = result[1]
@@ -111,7 +111,7 @@ async def test_find_ast_node_with_type_in_file_with_relative_path(neo4j_containe
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.find_ast_node_with_type_in_file_with_relative_path(
-            node_type, relative_path, driver, 1000
+            node_type, relative_path, driver, 1000, 0
         )
 
         result_data = result[1]
@@ -128,7 +128,7 @@ async def test_find_text_node_with_text(neo4j_container_with_kg_fixture):  # noq
     text = "Text under header C"
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.find_text_node_with_text(text, driver, 1000)
+        result = graph_traversal.find_text_node_with_text(text, driver, 1000, 0)
 
         result_data = result[1]
         assert len(result_data) > 0
@@ -145,7 +145,7 @@ async def test_find_text_node_with_text_in_file(neo4j_container_with_kg_fixture)
     text = "Text under header B"
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.find_text_node_with_text_in_file(text, basename, driver, 1000)
+        result = graph_traversal.find_text_node_with_text_in_file(text, basename, driver, 1000, 0)
 
         result_data = result[1]
         assert len(result_data) > 0
@@ -158,10 +158,10 @@ async def test_find_text_node_with_text_in_file(neo4j_container_with_kg_fixture)
 
 @pytest.mark.slow
 async def test_get_next_text_node_with_node_id(neo4j_container_with_kg_fixture):  # noqa: F811
-    node_id = 36
+    node_id = 34
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.get_next_text_node_with_node_id(node_id, driver, 1000)
+        result = graph_traversal.get_next_text_node_with_node_id(node_id, driver, 1000, 0)
 
         result_data = result[1]
         assert len(result_data) > 0
@@ -177,7 +177,7 @@ async def test_preview_file_content_with_basename(neo4j_container_with_kg_fixtur
     basename = test_project_paths.PYTHON_FILE.name
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.preview_file_content_with_basename(basename, driver, 1000)
+        result = graph_traversal.preview_file_content_with_basename(basename, driver, 1000, 0)
 
         result_data = result[1]
         assert len(result_data) > 0
@@ -189,7 +189,7 @@ async def test_preview_file_content_with_basename(neo4j_container_with_kg_fixtur
 
     basename = test_project_paths.MD_FILE.name
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.preview_file_content_with_basename(basename, driver, 1000)
+        result = graph_traversal.preview_file_content_with_basename(basename, driver, 1000, 0)
 
         result_data = result[1]
         assert len(result_data) > 0
@@ -208,7 +208,7 @@ async def test_preview_file_content_with_relative_path(neo4j_container_with_kg_f
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.preview_file_content_with_relative_path(
-            relative_path, driver, 1000
+            relative_path, driver, 1000, 0
         )
 
         result_data = result[1]
@@ -224,7 +224,7 @@ async def test_preview_file_content_with_relative_path(neo4j_container_with_kg_f
     )
     with neo4j_container.get_driver() as driver:
         result = graph_traversal.preview_file_content_with_relative_path(
-            relative_path, driver, 1000
+            relative_path, driver, 1000, 0
         )
 
         result_data = result[1]
@@ -241,7 +241,7 @@ async def test_read_code_with_basename(neo4j_container_with_kg_fixture):  # noqa
     basename = test_project_paths.JAVA_FILE.name
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.read_code_with_basename(basename, 2, 3, driver, 1000)
+        result = graph_traversal.read_code_with_basename(basename, 2, 3, driver, 1000, 0)
 
         result_data = result[1]
         assert len(result_data) > 0
@@ -261,7 +261,7 @@ async def test_read_code_with_relative_path(neo4j_container_with_kg_fixture):  #
     )
     neo4j_container, kg = neo4j_container_with_kg_fixture
     with neo4j_container.get_driver() as driver:
-        result = graph_traversal.read_code_with_relative_path(relative_path, 5, 6, driver, 1000)
+        result = graph_traversal.read_code_with_relative_path(relative_path, 5, 6, driver, 1000, 0)
 
         result_data = result[1]
         assert len(result_data) > 0

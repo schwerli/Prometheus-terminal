@@ -81,6 +81,8 @@ The file tree of the codebase:
 {file_tree}
 
 Available AST node types for code structure search: {ast_node_types}
+
+PLEASE CALL THE MINIMUM NUMBER OF TOOLS NEEDED TO ANSWER THE QUERY!
 """
 
     def __init__(
@@ -108,6 +110,7 @@ Available AST node types for code structure search: {ast_node_types}
           max_token_per_result: Maximum number of tokens per retrieved Neo4j result.
         """
         self.neo4j_driver = neo4j_driver
+        self.root_node_id = kg.root_node_id
         self.max_token_per_result = max_token_per_result
 
         ast_node_types_str = ", ".join(kg.get_all_ast_node_types())
@@ -137,6 +140,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_file_node_with_basename,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_file_node_with_basename_tool = StructuredTool.from_function(
             func=find_file_node_with_basename_fn,
@@ -153,6 +157,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_file_node_with_relative_path,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_file_node_with_relative_path_tool = StructuredTool.from_function(
             func=find_file_node_with_relative_path_fn,
@@ -171,6 +176,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_ast_node_with_text_in_file_with_basename,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_ast_node_with_text_in_file_with_basename_tool = StructuredTool.from_function(
             func=find_ast_node_with_text_in_file_with_basename_fn,
@@ -186,6 +192,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_ast_node_with_text_in_file_with_relative_path,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_ast_node_with_text_in_file_with_relative_path_tool = StructuredTool.from_function(
             func=find_ast_node_with_text_in_file_with_relative_path_fn,
@@ -202,6 +209,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_ast_node_with_type_in_file_with_basename,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_ast_node_with_type_in_file_with_basename_tool = StructuredTool.from_function(
             func=find_ast_node_with_type_in_file_with_basename_fn,
@@ -217,6 +225,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_ast_node_with_type_in_file_with_relative_path,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_ast_node_with_type_in_file_with_relative_path_tool = StructuredTool.from_function(
             func=find_ast_node_with_type_in_file_with_relative_path_fn,
@@ -234,6 +243,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_text_node_with_text,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_text_node_with_text_tool = StructuredTool.from_function(
             func=find_text_node_with_text_fn,
@@ -249,6 +259,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.find_text_node_with_text_in_file,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         find_text_node_with_text_in_file_tool = StructuredTool.from_function(
             func=find_text_node_with_text_in_file_fn,
@@ -264,6 +275,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.get_next_text_node_with_node_id,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         get_next_text_node_with_node_id_tool = StructuredTool.from_function(
             func=get_next_text_node_with_node_id_fn,
@@ -281,6 +293,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.preview_file_content_with_basename,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         preview_file_content_with_basename_tool = StructuredTool.from_function(
             func=preview_file_content_with_basename_fn,
@@ -296,6 +309,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.preview_file_content_with_relative_path,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         preview_file_content_with_relative_path_tool = StructuredTool.from_function(
             func=preview_file_content_with_relative_path_fn,
@@ -311,6 +325,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.read_code_with_basename,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         read_code_with_basename_tool = StructuredTool.from_function(
             func=read_code_with_basename_fn,
@@ -326,6 +341,7 @@ Available AST node types for code structure search: {ast_node_types}
             graph_traversal.read_code_with_relative_path,
             driver=self.neo4j_driver,
             max_token_per_result=self.max_token_per_result,
+            root_node_id=self.root_node_id,
         )
         read_code_with_relative_path_tool = StructuredTool.from_function(
             func=read_code_with_relative_path_fn,

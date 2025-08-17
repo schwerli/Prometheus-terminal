@@ -5,7 +5,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVerficationState
+from prometheus.lang_graph.subgraphs.bug_fix_verification_state import BugFixVerificationState
 from prometheus.utils.lang_graph_util import get_last_message_content
 
 
@@ -95,7 +95,7 @@ Important:
             f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.bug_fix_verify_structured_node"
         )
 
-    def __call__(self, state: BugFixVerficationState):
+    def __call__(self, state: BugFixVerificationState):
         bug_fix_verify_message = get_last_message_content(state["bug_fix_verify_messages"])
         response = self.model.invoke({"bug_reproducing_logs": bug_fix_verify_message})
 

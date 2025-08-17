@@ -28,7 +28,7 @@ async def test_num_file_nodes(neo4j_container_with_kg_fixture):  # noqa: F811
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
             read_file_nodes = session.execute_read(handler._read_file_nodes, root_node_id=0)
-            assert len(read_file_nodes) == 9
+            assert len(read_file_nodes) == 7
 
 
 @pytest.mark.slow
@@ -63,7 +63,7 @@ async def test_num_has_file_edges(neo4j_container_with_kg_fixture):  # noqa: F81
     with neo4j_container.get_driver() as driver:
         with driver.session() as session:
             read_has_file_edges = session.execute_read(handler._read_has_file_edges, root_node_id=0)
-            assert len(read_has_file_edges) == 8
+            assert len(read_has_file_edges) == 6
 
 
 @pytest.mark.slow

@@ -46,6 +46,7 @@ class IssueService(BaseService):
         issue_type: IssueType,
         run_build: bool,
         run_existing_test: bool,
+        run_regression_test: bool,
         run_reproduce_test: bool,
         number_of_candidate_patch: int,
         build_commands: Optional[Sequence[str]],
@@ -53,7 +54,10 @@ class IssueService(BaseService):
         dockerfile_content: Optional[str] = None,
         image_name: Optional[str] = None,
         workdir: Optional[str] = None,
-    ) -> tuple[None, bool, bool, bool, None, None] | tuple[str, bool, bool, bool, str, IssueType]:
+    ) -> (
+        tuple[None, bool, bool, bool, bool, None, None]
+        | tuple[str, bool, bool, bool, bool, str, IssueType]
+    ):
         """
         Processes an issue, generates patches if needed, runs optional builds and tests, and returning the results.
 
@@ -67,6 +71,7 @@ class IssueService(BaseService):
             issue_type (IssueType): The type of the issue (BUG or QUESTION).
             run_build (bool): Whether to run the build commands.
             run_existing_test (bool): Whether to run existing tests.
+            run_regression_test (bool): Whether to run regression tests.
             run_reproduce_test (bool): Whether to run reproduce tests.
             number_of_candidate_patch (int): Number of candidate patches to generate.
             dockerfile_content (Optional[str]): Content of the Dockerfile for user-defined environments.
@@ -130,6 +135,7 @@ class IssueService(BaseService):
                 issue_type,
                 run_build,
                 run_existing_test,
+                run_regression_test,
                 run_reproduce_test,
                 number_of_candidate_patch,
             )
@@ -137,14 +143,16 @@ class IssueService(BaseService):
                 output_state["edit_patch"],
                 output_state["passed_reproducing_test"],
                 output_state["passed_build"],
+                output_state["passed_regression_test"],
                 output_state["passed_existing_test"],
                 output_state["issue_response"],
                 output_state["issue_type"],
             )
         except Exception as e:
             logger.error(f"Error in answer_issue: {str(e)}\n{traceback.format_exc()}")
-            return None, False, False, False, None, None
+            return None, False, False, False, False, None, None
         finally:
             self.repository_service.update_repository_status(repository_id, is_working=False)
+            repository.reset_repository()
             logger.removeHandler(file_handler)
             file_handler.close()

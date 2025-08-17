@@ -251,4 +251,5 @@ class BugReproductionSubgraph:
             "reproduced_bug": output_state["reproduced_bug"],
             "reproduced_bug_file": output_state["reproduced_bug_file"],
             "reproduced_bug_commands": output_state["reproduced_bug_commands"],
+            "reproduced_bug_patch": output_state["bug_reproducing_patch"],
         }

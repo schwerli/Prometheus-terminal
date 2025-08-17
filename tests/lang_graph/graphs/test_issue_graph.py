@@ -24,6 +24,7 @@ def mock_base_model():
 def mock_kg():
     kg = Mock(spec=KnowledgeGraph)
     kg.get_all_ast_node_types.return_value = ["FunctionDef", "ClassDef", "Module", "Import", "Call"]
+    kg.root_node_id = 0
     return kg
 
 

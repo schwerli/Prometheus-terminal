@@ -46,7 +46,7 @@ class FileGraphBuilder:
         return tree_sitter_parser.supports_file(file)
 
     def support_text_file(self, file: Path) -> bool:
-        return file.suffix in [".md", ".txt", ".rst"]
+        return file.suffix in [".markdown", ".md", ".txt", ".rst"]
 
     def supports_file(self, file: Path) -> bool:
         """Checks if we support building knowledge graph for this file."""

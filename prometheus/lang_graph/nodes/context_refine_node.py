@@ -43,17 +43,25 @@ Example output:
     "refined_query": "Please provide the implementation details of the helper functions called within the main function, as well as any relevant documentation that explains the overall data processing workflow."
 }}
 ```
+
+PLEASE DO NOT INCLUDE ``` IN YOUR OUTPUT!
 """
 
     REFINE_PROMPT = """\
 This is the codebase structure:
+--- BEGIN FILE TREE ---
 {file_tree}
+--- END FILE TREE ---
     
 This is the original user query:
+--- BEGIN ORIGINAL QUERY ---
 {original_query}
+--- END ORIGINAL QUERY ---
 
 All aggregated context for the queries:
+--- BEGIN AGGREGATED CONTEXT ---
 {context}
+--- END AGGREGATED CONTEXT ---
 
 Analyze if the current context is sufficient to complete the user query by considering:
 1. Do you understand the full scope and requirements of the user query?

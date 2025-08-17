@@ -38,6 +38,7 @@ def test_answer_issue(mock_service):
         "test patch",  # patch
         True,  # passed_reproducing_test
         True,  # passed_build
+        True,  # passed_regression_test
         True,  # passed_existing_test
         "Issue fixed",  # issue_response
         IssueType.BUG,  # issue_type
@@ -60,6 +61,7 @@ def test_answer_issue(mock_service):
             "patch": "test patch",
             "passed_reproducing_test": True,
             "passed_build": True,
+            "passed_regression_test": True,
             "passed_existing_test": True,
             "issue_response": "Issue fixed",
             "issue_type": "bug",
@@ -127,6 +129,7 @@ def test_answer_issue_with_container(mock_service):
         True,
         True,
         True,
+        True,
         "Issue fixed",
         IssueType.BUG,
     )
@@ -152,6 +155,7 @@ def test_answer_issue_with_container(mock_service):
             "patch": "test patch",
             "passed_reproducing_test": True,
             "passed_build": True,
+            "passed_regression_test": True,
             "passed_existing_test": True,
             "issue_response": "Issue fixed",
             "issue_type": "bug",
