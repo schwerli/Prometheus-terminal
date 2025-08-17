@@ -63,7 +63,7 @@ class BugFixVerificationSubgraph:
         reproduced_bug_file: str,
         reproduced_bug_commands: Sequence[str],
         reproduced_bug_patch: str,
-        recursion_limit: int = 40,
+        recursion_limit: int = 50,
     ):
         config = {
             "recursion_limit": recursion_limit,

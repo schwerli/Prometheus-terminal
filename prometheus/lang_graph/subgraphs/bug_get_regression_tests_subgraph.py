@@ -112,7 +112,7 @@ class BugGetRegressionTestsSubgraph:
         issue_body: str,
         issue_comments: Sequence[Mapping[str, str]],
         number_of_selected_regression_tests: int = 5,
-        recursion_limit: int = 120,
+        recursion_limit: int = 150,
     ):
         """
         Run the bug regression subgraph.

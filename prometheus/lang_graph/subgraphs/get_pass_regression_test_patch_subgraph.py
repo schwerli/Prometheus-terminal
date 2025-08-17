@@ -107,7 +107,7 @@ class GetPassRegressionTestPatchSubgraph:
         Returns:
             The result of the bug regression process
         """
-        config = {"recursion_limit": len(patches) * 15}
+        config = {"recursion_limit": len(patches) * 20}
 
         input_state = {
             "selected_regression_tests": selected_regression_tests,
