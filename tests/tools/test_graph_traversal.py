@@ -195,7 +195,7 @@ async def test_preview_file_content_with_basename(neo4j_container_with_kg_fixtur
         assert len(result_data) > 0
         for result_row in result_data:
             assert "preview" in result_row
-            assert "Text under header A" in result_row["preview"]
+            assert "Text under header A" in result_row["preview"].get("text", "")
             assert "FileNode" in result_row
             assert result_row["FileNode"].get("basename", "") == basename
 
@@ -231,7 +231,7 @@ async def test_preview_file_content_with_relative_path(neo4j_container_with_kg_f
         assert len(result_data) > 0
         for result_row in result_data:
             assert "preview" in result_row
-            assert "Text under header A" in result_row["preview"]
+            assert "Text under header A" in result_row["preview"].get("text", "")
             assert "FileNode" in result_row
             assert result_row["FileNode"].get("relative_path", "") == relative_path
 

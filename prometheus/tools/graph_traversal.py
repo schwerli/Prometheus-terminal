@@ -327,7 +327,13 @@ def preview_file_content_with_basename(
     MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
     WHERE root.node_id = {root_node_id} AND f.basename = '{basename}' 
       AND NOT EXISTS((:TextNode) -[:NEXT_CHUNK]-> (t))
-    RETURN f AS FileNode, t.text AS preview
+    RETURN
+        f AS FileNode,
+        {{
+            text: t.text,
+            start_line: 1,
+            end_line: 1000
+        }} AS preview
     ORDER BY f.node_id
     """
 
@@ -383,7 +389,13 @@ def preview_file_content_with_relative_path(
     MATCH (root:FileNode)-[:HAS_FILE*]->(f:FileNode) -[:HAS_TEXT]-> (t:TextNode)
     WHERE root.node_id = {root_node_id} AND f.relative_path = '{relative_path}' 
       AND NOT EXISTS((:TextNode) -[:NEXT_CHUNK]-> (t))
-    RETURN f AS FileNode, t.text AS preview
+    RETURN
+        f AS FileNode,
+        {{
+            text: t.text,
+            start_line: 1,
+            end_line: 1000
+        }} AS preview
     ORDER BY f.node_id
     """
 
