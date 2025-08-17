@@ -12,3 +12,5 @@ class RunRegressionTestsState(TypedDict):
     run_regression_tests_messages: Annotated[Sequence[BaseMessage], add_messages]
 
     regression_test_fail_log: str
+
+    total_tests_run: int

@@ -17,6 +17,9 @@ class RunRegressionTestsStructureOutput(BaseModel):
     regression_test_fail_log: str = Field(
         description="If the test failed, contains the complete test FAILURE log. Otherwise empty string"
     )
+    total_tests_run: int = Field(
+        description="Total number of tests run, including both passed and failed tests"
+    )
 
 
 class RunRegressionTestsStructuredNode:
@@ -29,10 +32,12 @@ Your task is to:
    - Warning is ok
    - No "FAILURES" section
 2. If a test fails, capture the complete failure output
+3. Return the exact test identifiers that passed
 
 Return:
 - passed_regression_tests: List of test identifier of regression tests that passed (e.g., class name and method name)
 - regression_test_fail_log: empty string if all tests pass, exact complete test output if a test fails
+- total_tests_run: Total number of tests run, including both passed and failed tests
 
 Example 1:
 ```
@@ -62,7 +67,8 @@ Example 1 Output:
         "test_file_operation.py::test_edit_file",
         "test_file_operation.py::test_create_file_already_exists"
     ],
-    "reproducing_test_fail_log": "" # ONLY output the log exact and complete test FAILURE log when test failure. Otherwise empty string
+    "reproducing_test_fail_log": "" # ONLY output the log exact and complete test FAILURE log when test failure. Otherwise empty string,
+    "total_tests_run": 7
 }}
 
 Important:
@@ -114,4 +120,5 @@ that we give to you.
         return {
             "regression_test_fail_log": response.regression_test_fail_log,
             "passed_regression_tests": response.passed_regression_tests,
+            "total_tests_run": response.total_tests_run,
         }

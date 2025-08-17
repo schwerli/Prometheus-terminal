@@ -32,11 +32,13 @@ class BugFixVerificationSubgraphNode:
         self._logger.debug(f"reproduced_bug_file: {state['reproduced_bug_file']}")
         self._logger.debug(f"reproduced_bug_commands: {state['reproduced_bug_commands']}")
         self._logger.debug(f"reproduced_bug_patch: {state['reproduced_bug_patch']}")
+        self._logger.debug(f"edit_patch: {state['edit_patch']}")
         try:
             output_state = self.subgraph.invoke(
                 reproduced_bug_file=state["reproduced_bug_file"],
                 reproduced_bug_commands=state["reproduced_bug_commands"],
                 reproduced_bug_patch=state["reproduced_bug_patch"],
+                edit_patch=state["edit_patch"],
             )
         except GraphRecursionError:
             self._logger.info("Recursion limit reached, returning empty output state")

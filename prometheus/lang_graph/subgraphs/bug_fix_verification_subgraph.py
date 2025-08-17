@@ -21,7 +21,8 @@ class BugFixVerificationSubgraph:
         container: BaseContainer,
         git_repo: GitRepository,
     ):
-        git_apply_patch_node = GitApplyPatchNode(
+        edit_patch_apply_node = GitApplyPatchNode(git_repo=git_repo, state_patch_name="edit_patch")
+        reproduce_bug_patch_apply_node = GitApplyPatchNode(
             git_repo=git_repo, state_patch_name="reproduced_bug_patch"
         )
         update_container_node = UpdateContainerNode(container=container, git_repo=git_repo)
@@ -36,14 +37,16 @@ class BugFixVerificationSubgraph:
 
         workflow = StateGraph(BugFixVerificationState)
 
-        workflow.add_node("git_apply_patch_node", git_apply_patch_node)
+        workflow.add_node("edit_patch_apply_node", edit_patch_apply_node)
+        workflow.add_node("reproduce_bug_patch_apply_node", reproduce_bug_patch_apply_node)
         workflow.add_node("update_container_node", update_container_node)
         workflow.add_node("bug_fix_verify_node", bug_fix_verify_node)
         workflow.add_node("bug_fix_verify_tools", bug_fix_verify_tools)
         workflow.add_node("bug_fix_verify_structured_node", bug_fix_verify_structured_node)
 
-        workflow.set_entry_point("git_apply_patch_node")
-        workflow.add_edge("git_apply_patch_node", "update_container_node")
+        workflow.set_entry_point("edit_patch_apply_node")
+        workflow.add_edge("edit_patch_apply_node", "reproduce_bug_patch_apply_node")
+        workflow.add_edge("reproduce_bug_patch_apply_node", "update_container_node")
         workflow.add_edge("update_container_node", "bug_fix_verify_node")
         workflow.add_conditional_edges(
             "bug_fix_verify_node",
@@ -63,6 +66,7 @@ class BugFixVerificationSubgraph:
         reproduced_bug_file: str,
         reproduced_bug_commands: Sequence[str],
         reproduced_bug_patch: str,
+        edit_patch: str,
         recursion_limit: int = 50,
     ):
         config = {
@@ -73,6 +77,7 @@ class BugFixVerificationSubgraph:
             "reproduced_bug_file": reproduced_bug_file,
             "reproduced_bug_commands": reproduced_bug_commands,
             "reproduced_bug_patch": reproduced_bug_patch,
+            "edit_patch": edit_patch,
         }
 
         output_state = self.subgraph.invoke(input_state, config)

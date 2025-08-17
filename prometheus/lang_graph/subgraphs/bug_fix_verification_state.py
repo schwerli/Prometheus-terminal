@@ -12,3 +12,5 @@ class BugFixVerificationState(TypedDict):
     bug_fix_verify_messages: Annotated[Sequence[BaseMessage], add_messages]
 
     reproducing_test_fail_log: str
+
+    edit_patch: str

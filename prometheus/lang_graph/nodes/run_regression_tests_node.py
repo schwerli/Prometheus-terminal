@@ -30,6 +30,7 @@ Guidelines for command execution:
 - Do NOT modify the core logic or parameters of the commands!
 - Do NOT attempt to fix bugs or modify test logic!
 - You MUST RUN ALL THE TESTS EXACTLY AS PROVIDED!
+- Do NOT stop util all tests are run!
 - DO NOT ASSUME ALL DEPENDENCIES ARE INSTALLED.!
 
 REMINDER:

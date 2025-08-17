@@ -56,7 +56,14 @@ class RunRegressionTestsSubgraph:
             },
         )
         workflow.add_edge("run_regression_tests_tools", "run_regression_tests_node")
-        workflow.add_edge("run_regression_tests_structured_node", END)
+        workflow.add_conditional_edges(
+            "run_regression_tests_structured_node",
+            lambda state: state["total_tests_run"] < len(state["selected_regression_tests"]),
+            {
+                True: "run_regression_tests_node",
+                False: END,
+            },
+        )
         # Compile the full LangGraph subgraph
         self.subgraph = workflow.compile()
 
