@@ -55,7 +55,7 @@ class IssueNotVerifiedBugSubgraphNode:
             self._logger.debug("GraphRecursionError encountered, returning empty patch")
             self.git_repo.reset_repository()
             return {
-                "edit_patch": "",
+                "edit_patch": None,
                 "passed_reproducing_test": False,
                 "passed_build": False,
                 "passed_existing_test": False,
