@@ -143,8 +143,14 @@ def delete(repository_id: int, request: Request):
     ]
     repository_service: RepositoryService = request.app.state.service["repository_service"]
     repository = repository_service.get_repository_by_id(repository_id)
+    # Check if the repository exists
     if not repository:
         raise ServerException(code=404, message="Repository not found")
+    # Check if the repository is being processed
+    if repository.is_working:
+        raise ServerException(
+            code=400, message="Repository is currently being processed, please try again later"
+        )
     # Check if the user has permission to delete the repository
     if settings.ENABLE_AUTHENTICATION and repository.user_id != request.state.user_id:
         raise ServerException(
