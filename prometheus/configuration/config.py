@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -37,15 +37,19 @@ class Settings(BaseSettings):
     BASE_MODEL: str
 
     # API Keys
-    ANTHROPIC_API_KEY: str
-    GEMINI_API_KEY: str
-    OPENAI_FORMAT_BASE_URL: str
-    OPENAI_FORMAT_API_KEY: str
+    ANTHROPIC_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_FORMAT_BASE_URL: Optional[str] = None
+    OPENAI_FORMAT_API_KEY: Optional[str] = None
 
     # Model parameters
-    MAX_INPUT_TOKENS: int
-    TEMPERATURE: float
-    MAX_OUTPUT_TOKENS: int
+    ADVANCED_MODEL_MAX_INPUT_TOKENS: int
+    ADVANCED_MODEL_TEMPERATURE: Optional[float] = None
+    ADVANCED_MODEL_MAX_OUTPUT_TOKENS: Optional[int] = None
+
+    BASE_MODEL_MAX_INPUT_TOKENS: int
+    BASE_MODEL_TEMPERATURE: Optional[float] = None
+    BASE_MODEL_MAX_OUTPUT_TOKENS: Optional[int] = None
 
     # Database
     DATABASE_URL: str

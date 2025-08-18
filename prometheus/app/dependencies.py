@@ -38,12 +38,16 @@ def initialize_services() -> dict[str, BaseService]:
     llm_service = LLMService(
         settings.ADVANCED_MODEL,
         settings.BASE_MODEL,
-        getattr(settings, "OPENAI_FORMAT_API_KEY", None),
-        getattr(settings, "OPENAI_FORMAT_BASE_URL", None),
-        getattr(settings, "ANTHROPIC_API_KEY", None),
-        getattr(settings, "GEMINI_API_KEY", None),
-        getattr(settings, "TEMPERATURE", None),
-        getattr(settings, "MAX_OUTPUT_TOKENS", None),
+        settings.ADVANCED_MODEL_MAX_INPUT_TOKENS,
+        settings.ADVANCED_MODEL_MAX_OUTPUT_TOKENS,
+        settings.ADVANCED_MODEL_TEMPERATURE,
+        settings.BASE_MODEL_MAX_INPUT_TOKENS,
+        settings.BASE_MODEL_MAX_OUTPUT_TOKENS,
+        settings.BASE_MODEL_TEMPERATURE,
+        settings.OPENAI_FORMAT_API_KEY,
+        settings.OPENAI_FORMAT_BASE_URL,
+        settings.ANTHROPIC_API_KEY,
+        settings.GEMINI_API_KEY,
     )
     knowledge_graph_service = KnowledgeGraphService(
         neo4j_service,
