@@ -49,7 +49,7 @@ class IssueNotVerifiedBugSubgraphNode:
                 issue_comments=state["issue_comments"],
                 number_of_candidate_patch=state["number_of_candidate_patch"],
                 run_regression_test=state["run_regression_test"],
-                selected_regression_tests=state["selected_regression_tests"],
+                selected_regression_tests=state["selected_regression_tests"] if state["run_regression_test"] else None,
             )
         except GraphRecursionError:
             self._logger.debug("GraphRecursionError encountered, returning empty patch")

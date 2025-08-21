@@ -59,7 +59,7 @@ class IssueVerifiedBugSubgraphNode:
                 reproduced_bug_file=state["reproduced_bug_file"],
                 reproduced_bug_commands=state["reproduced_bug_commands"],
                 reproduced_bug_patch=state["reproduced_bug_patch"],
-                selected_regression_tests=state["selected_regression_tests"],
+                selected_regression_tests=state["selected_regression_tests"] if state["run_regression_test"] else None,
             )
         except GraphRecursionError:
             self._logger.info("Recursion limit reached")
