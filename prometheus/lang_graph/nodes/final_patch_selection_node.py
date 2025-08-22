@@ -161,7 +161,8 @@ I have generated the following patches, now please select the best patch among t
         for turn in range(self.majority_voting_times):
             response = self.model.invoke({"human_prompt": human_prompt})
             self._logger.info(
-                f"FinalPatchSelectionNode response at {turn + 1} try:\n{self.majority_voting_times}"
+                f"FinalPatchSelectionNode response at {turn + 1}/{self.majority_voting_times} try:"
+                f"Selected patch index: {response.patch_index}, "
             )
 
             if 0 <= response.patch_index < len(state["edit_patches"]):
