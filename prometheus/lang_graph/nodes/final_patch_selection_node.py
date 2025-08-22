@@ -130,6 +130,7 @@ I have generated the following patches, now please select the best patch among t
         self._logger = logging.getLogger(
             f"thread-{threading.get_ident()}.prometheus.lang_graph.nodes.final_patch_selection_node"
         )
+        self.majority_voting_times = 10
 
     def format_human_message(self, state: IssueNotVerifiedBugState):
         if state["run_regression_test"]:
@@ -156,16 +157,27 @@ I have generated the following patches, now please select the best patch among t
 
     def __call__(self, state: IssueNotVerifiedBugState):
         human_prompt = self.format_human_message(state)
-        for try_index in range(self.max_retries):
+        result = [0 for _ in range(len(state["edit_patches"]))]
+        for turn in range(self.majority_voting_times):
             response = self.model.invoke({"human_prompt": human_prompt})
             self._logger.info(
-                f"FinalPatchSelectionNode response at {try_index + 1} try:\n{response}"
+                f"FinalPatchSelectionNode response at {turn + 1}/{self.majority_voting_times} try:"
+                f"Selected patch index: {response.patch_index}, "
             )
 
             if 0 <= response.patch_index < len(state["edit_patches"]):
-                return {"final_patch": state["edit_patches"][response.patch_index]}
-
+                result[response.patch_index] += 1
+            if max(result) > self.majority_voting_times // 2:
+                selected_patch_index = result.index(max(result))
+                self._logger.info(
+                    f"FinalPatchSelectionNode early stopping at turn {turn + 1} with result: {result},"
+                    f"selected patch index: {selected_patch_index}"
+                )
+                return {"final_patch": state["edit_patches"][selected_patch_index]}
+        # Select the maximum voted patch index
+        selected_patch_index = result.index(max(result))
         self._logger.info(
-            "FinalPatchSelectionNode failed to select a patch with correct index, defaulting to 0"
+            f"FinalPatchSelectionNode voting results: {result}, "
+            f"selected patch index: {selected_patch_index}"
         )
-        return {"final_patch": state["edit_patches"][0]}
+        return {"final_patch": state["edit_patches"][selected_patch_index]}
