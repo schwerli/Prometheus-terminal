@@ -1,5 +1,6 @@
 import logging
 import threading
+from typing import Sequence
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
@@ -132,18 +133,13 @@ I have generated the following patches, now please select the best patch among t
         )
         self.majority_voting_times = 10
 
-    def format_human_message(self, state: IssueNotVerifiedBugState):
-        if state["run_regression_test"]:
-            patches = [result.patch for result in state["tested_patch_result"] if result.passed]
-        else:
-            patches = state["edit_patches"]
-
+    def format_human_message(self, patches: Sequence[str], state: IssueNotVerifiedBugState):
         patches_str = ""
         for index, patch in enumerate(patches):
             patches_str += f"Patch at index {index}:\n"
             patches_str += f"{patch}\n\n"
         patches_str += (
-            f"You must select a patch with index from 0 to {len(state['edit_patches']) - 1},"
+            f"You must select a patch with index from 0 to {len(patches) - 1},"
             f" and provide your reasoning."
         )
 
@@ -156,28 +152,42 @@ I have generated the following patches, now please select the best patch among t
         )
 
     def __call__(self, state: IssueNotVerifiedBugState):
-        human_prompt = self.format_human_message(state)
-        result = [0 for _ in range(len(state["edit_patches"]))]
+        # Determine candidate patches
+        if state["run_regression_test"]:
+            patches = [result.patch for result in state["tested_patch_result"] if result.passed]
+        else:
+            patches = state["deduplicated_patches"]
+
+        # Formalize Human Message
+        human_prompt = self.format_human_message(patches, state)
+
+        # Majority voting
+        result = [0 for _ in range(len(patches))]
         for turn in range(self.majority_voting_times):
+            # Call the model
             response = self.model.invoke({"human_prompt": human_prompt})
             self._logger.info(
                 f"FinalPatchSelectionNode response at {turn + 1}/{self.majority_voting_times} try:"
                 f"Selected patch index: {response.patch_index}, "
             )
 
-            if 0 <= response.patch_index < len(state["edit_patches"]):
+            # Tally the vote if the index is valid
+            if 0 <= response.patch_index < len(patches):
                 result[response.patch_index] += 1
+
+            # Early stopping if a patch has already secured majority
             if max(result) > self.majority_voting_times // 2:
                 selected_patch_index = result.index(max(result))
                 self._logger.info(
                     f"FinalPatchSelectionNode early stopping at turn {turn + 1} with result: {result},"
                     f"selected patch index: {selected_patch_index}"
                 )
-                return {"final_patch": state["edit_patches"][selected_patch_index]}
+                return {"final_patch": patches[selected_patch_index]}
+
         # Select the maximum voted patch index
         selected_patch_index = result.index(max(result))
         self._logger.info(
             f"FinalPatchSelectionNode voting results: {result}, "
             f"selected patch index: {selected_patch_index}"
         )
-        return {"final_patch": state["edit_patches"][selected_patch_index]}
+        return {"final_patch": patches[selected_patch_index]}

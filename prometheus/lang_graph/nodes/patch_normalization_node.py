@@ -9,7 +9,9 @@ import re
 import threading
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Sequence
+
+from prometheus.lang_graph.subgraphs.issue_not_verified_bug_state import IssueNotVerifiedBugState
 
 
 @dataclass
@@ -93,7 +95,7 @@ class PatchNormalizationNode:
         """Calculate basic metrics for a patch"""
         return PatchMetrics()
 
-    def deduplicate_patches(self, patches: List[str]) -> List[NormalizedPatch]:
+    def deduplicate_patches(self, patches: Sequence[str]) -> List[NormalizedPatch]:
         """Deduplicate patches using normalization
 
         Returns list of unique normalized patches with occurrence counts.
@@ -136,20 +138,17 @@ class PatchNormalizationNode:
 
         return deduplicated
 
-    def __call__(self, state: Dict) -> Dict:
+    def __call__(self, state: IssueNotVerifiedBugState) -> Dict:
         """Node call interface
 
-        Process edit_patches in state, return normalized, deduplicated patches and selected best patch
+        Process edit_patches in state, return normalized, deduplicated patches
         """
         patches = state.get("edit_patches", [])
 
         if not patches:
             self._logger.warning("No patches found to process")
             return {
-                "normalized_patches": [],
-                "final_patch": "",
-                "original_patch_count": 0,
-                "unique_patch_count": 0,
+                "deduplicated_patches": [],
             }
 
         self._logger.info(f"Starting to process {len(patches)} patches")
@@ -161,12 +160,9 @@ class PatchNormalizationNode:
         deduplicated_patches = [patch.original_content for patch in normalized_patches]
 
         self._logger.info(
-            f"Patch processing complete, deduplicated to {len(normalized_patches)} unique patches"
+            f"Patch processing complete, deduplicated to {len(deduplicated_patches)} unique patches"
         )
 
         return {
-            "normalized_patches": normalized_patches,
-            "edit_patches": deduplicated_patches,  # Return deduplicated patches for selection
-            "original_patch_count": len(patches),
-            "unique_patch_count": len(normalized_patches),
+            "deduplicated_patches": deduplicated_patches,
         }
