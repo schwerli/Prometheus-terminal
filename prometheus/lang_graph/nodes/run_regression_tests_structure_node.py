@@ -33,6 +33,7 @@ Your task is to:
    - No "FAILURES" section
 2. If a test fails, capture the complete failure output
 3. Return the exact test identifiers that passed
+4. Count the total number of tests run
 
 Return:
 - passed_regression_tests: List of test identifier of regression tests that passed (e.g., class name and method name)
@@ -67,7 +68,7 @@ Example 1 Output:
         "test_file_operation.py::test_edit_file",
         "test_file_operation.py::test_create_file_already_exists"
     ],
-    "reproducing_test_fail_log": "" # ONLY output the log exact and complete test FAILURE log when test failure. Otherwise empty string,
+    "reproducing_test_fail_log": "", # ONLY output the log exact and complete test FAILURE log when test failure. Otherwise empty string
     "total_tests_run": 7
 }}
 
@@ -89,6 +90,7 @@ Run Regression Tests Logs:
 --- END LOG ---
 Please analyze the logs and determine which regression tests passed!. You should return the exact test identifier 
 that we give to you.
+Don't forget to return the total number of tests run!
 """
 
     def __init__(self, model: BaseChatModel):
