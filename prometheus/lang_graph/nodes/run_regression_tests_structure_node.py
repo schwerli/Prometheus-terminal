@@ -18,7 +18,8 @@ class RunRegressionTestsStructureOutput(BaseModel):
         description="If the test failed, contains the complete test FAILURE log. Otherwise empty string"
     )
     total_tests_run: int = Field(
-        description="Total number of tests run, including both passed and failed tests, or 0 if no tests were run"
+        description="Total number of tests run, including both passed and failed tests, or 0 if no tests were run",
+        default=0,
     )
 
 
