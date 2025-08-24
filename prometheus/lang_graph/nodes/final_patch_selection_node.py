@@ -153,11 +153,7 @@ I have generated the following patches, now please select the best patch among t
 
     def __call__(self, state: IssueNotVerifiedBugState):
         # Determine candidate patches
-        if (
-            state["run_regression_test"]
-            and "tested_patch_result" in state
-            and state["tested_patch_result"]
-        ):
+        if "tested_patch_result" in state and state["tested_patch_result"]:
             patches = [result.patch for result in state["tested_patch_result"] if result.passed]
         else:
             patches = state["deduplicated_patches"]
