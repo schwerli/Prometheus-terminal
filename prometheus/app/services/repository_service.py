@@ -188,3 +188,19 @@ class RepositoryService(BaseService):
         git_repo = GitRepository()
         git_repo.from_local_repository(Path(local_path))
         return git_repo
+
+    def get_repositories_by_user_id(self, user_id):
+        """
+        Retrieves all repositories associated with a specific user ID.
+        """
+        with Session(self.engine) as session:
+            statement = select(Repository).where(Repository.user_id == user_id)
+            return session.exec(statement).all()
+
+    def get_all_repositories(self):
+        """
+        Retrieves all repositories in the database.
+        """
+        with Session(self.engine) as session:
+            statement = select(Repository)
+            return session.exec(statement).all()

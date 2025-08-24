@@ -90,3 +90,37 @@ def test_delete(mock_service):
         },
     )
     assert response.status_code == 200
+
+
+def test_list(mock_service):
+    mock_service["repository_service"].get_all_repositories.return_value = [
+        Repository(
+            id=1,
+            url="https://github.com/fake/repo.git",
+            commit_id=None,
+            playground_path="/path/to/playground",
+            kg_root_node_id=0,
+            user_id=None,
+            kg_max_ast_depth=100,
+            kg_chunk_size=1000,
+            kg_chunk_overlap=100,
+        )
+    ]
+    response = client.get("repository/list/")
+    assert response.status_code == 200
+    assert response.json() == {
+        "code": 200,
+        "message": "success",
+        "data": [
+            {
+                "id": 1,
+                "url": "https://github.com/fake/repo.git",
+                "commit_id": None,
+                "is_working": False,
+                "user_id": None,
+                "kg_max_ast_depth": 100,
+                "kg_chunk_size": 1000,
+                "kg_chunk_overlap": 100,
+            }
+        ],
+    }

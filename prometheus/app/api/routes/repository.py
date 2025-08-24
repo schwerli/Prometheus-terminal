@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import git
 from fastapi import APIRouter, Request
 
@@ -6,6 +8,7 @@ from prometheus.app.models.requests.repository import (
     CreateBranchAndPushRequest,
     UploadRepositoryRequest,
 )
+from prometheus.app.models.response.repository import RepositoryResponse
 from prometheus.app.models.response.response import Response
 from prometheus.app.services.knowledge_graph_service import KnowledgeGraphService
 from prometheus.app.services.repository_service import RepositoryService
@@ -127,6 +130,23 @@ async def create_branch_and_push(
     except git.exc.GitCommandError as e:
         raise e
     return Response()
+
+
+@router.get(
+    "/list/",
+    description="""
+    List all repositories uploaded to Prometheus by the authenticated user.
+    """,
+    response_model=Response[Sequence[RepositoryResponse]],
+)
+@requireLogin
+def list_repositories(request: Request):
+    repository_service: RepositoryService = request.app.state.service["repository_service"]
+    if settings.ENABLE_AUTHENTICATION:
+        repositories = repository_service.get_repositories_by_user_id(request.state.user_id)
+    else:
+        repositories = repository_service.get_all_repositories()
+    return Response(data=[RepositoryResponse.model_validate(repo) for repo in repositories])
 
 
 @router.delete(
