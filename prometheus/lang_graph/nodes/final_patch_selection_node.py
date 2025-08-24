@@ -158,6 +158,11 @@ I have generated the following patches, now please select the best patch among t
         else:
             patches = state["deduplicated_patches"]
 
+        # Handle the case with no candidate patches
+        if not patches:
+            self._logger.warning("No candidate patches available for selection.")
+            return {"final_patch": ""}
+
         # Formalize Human Message
         human_prompt = self.format_human_message(patches, state)
 
