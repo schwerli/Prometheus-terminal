@@ -1,9 +1,9 @@
 import pytest
-from sqlmodel import SQLModel, Session
+from sqlmodel import Session, SQLModel
 
-from prometheus.app.services.invitation_code_service import InvitationCodeService
-from prometheus.app.services.database_service import DatabaseService
 from prometheus.app.entity.invitation_code import InvitationCode
+from prometheus.app.services.database_service import DatabaseService
+from prometheus.app.services.invitation_code_service import InvitationCodeService
 from tests.test_utils.fixtures import postgres_container_fixture  # noqa: F401
 
 

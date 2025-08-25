@@ -42,7 +42,7 @@ def test_create_invitation_code(mock_service):
             "code": "testcode",
             "is_used": False,
             "expiration_time": "2025-01-01T00:00:00",
-        }
+        },
     }
 
 
