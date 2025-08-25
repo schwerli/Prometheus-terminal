@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from prometheus.app.api.routes import auth, invitation_code, issue, repository
+from prometheus.app.api.routes import auth, invitation_code, issue, repository, user
 from prometheus.configuration.config import settings
 
 api_router = APIRouter()
@@ -12,3 +12,4 @@ if settings.ENABLE_AUTHENTICATION:
     api_router.include_router(
         invitation_code.router, prefix="/invitation-code", tags=["invitation_code"]
     )
+    api_router.include_router(user.router, prefix="/user", tags=["user"])

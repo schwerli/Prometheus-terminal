@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Sequence
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -159,3 +159,12 @@ class UserService(BaseService):
             statement = select(User).where(User.id == user_id)
             user = session.exec(statement).first()
             return user.is_superuser if user else False
+
+    def list_users(self) -> Sequence[User]:
+        """
+        List all users in the database.
+        """
+        with Session(self.engine) as session:
+            statement = select(User)
+            users = session.exec(statement).all()
+            return users
