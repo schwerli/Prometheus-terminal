@@ -1,3 +1,4 @@
+import datetime
 import logging
 import uuid
 from typing import Sequence
@@ -41,3 +42,30 @@ class InvitationCodeService(BaseService):
         with Session(self.engine) as session:
             statement = select(InvitationCode)
             return session.exec(statement).all()
+
+    def check_invitation_code(self, code: str) -> bool:
+        """
+        Check if an invitation code is valid (exists, not used and not expired).
+        """
+        with Session(self.engine) as session:
+            statement = select(InvitationCode).where(InvitationCode.code == code)
+            invitation_code = session.exec(statement).first()
+            if not invitation_code:
+                return False
+            if invitation_code.used:
+                return False
+            if invitation_code.expiration_time < datetime.datetime.now(datetime.timezone.utc):
+                return False
+            return True
+
+    def mark_code_as_used(self, code: str) -> None:
+        """
+        Mark an invitation code as used.
+        """
+        with Session(self.engine) as session:
+            statement = select(InvitationCode).where(InvitationCode.code == code)
+            invitation_code = session.exec(statement).first()
+            if invitation_code:
+                invitation_code.used = True
+                session.add(invitation_code)
+                session.commit()
