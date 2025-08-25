@@ -36,7 +36,7 @@ def test_list(mock_service):
     ]
 
     # Test the list endpoint
-    response = client.get("invitation-code/list/")
+    response = client.get("user/list/")
     assert response.status_code == 200
     assert response.json() == {
         "code": 200,
