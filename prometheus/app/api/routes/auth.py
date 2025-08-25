@@ -53,13 +53,14 @@ def register(request: Request, create_user_request: CreateUserRequest) -> Respon
     if not invitation_code_service.check_invitation_code(create_user_request.invitation_code):
         raise ServerException(code=400, message="Invalid or expired invitation code")
 
-    # Mark the invitation code as used
-    invitation_code_service.mark_code_as_used(create_user_request.invitation_code)
-
     # Create the user
     user_service.create_user(
         username=create_user_request.username,
         email=create_user_request.email,
         password=create_user_request.password,
     )
+
+    # Mark the invitation code as used
+    invitation_code_service.mark_code_as_used(create_user_request.invitation_code)
+
     return Response(message="User registered successfully")

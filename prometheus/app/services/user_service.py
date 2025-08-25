@@ -45,10 +45,10 @@ class UserService(BaseService):
         with Session(self.engine) as session:
             statement = select(User).where(User.username == username)
             if session.exec(statement).first():
-                raise ValueError(f"Username '{username}' already exists")
+                raise ServerException(400, f"Username '{username}' already exists")
             statement = select(User).where(User.email == email)
             if session.exec(statement).first():
-                raise ValueError(f"Email '{email}' already exists")
+                raise ServerException(400, f"Email '{email}' already exists")
 
             hashed_password = self.ph.hash(password)
 
