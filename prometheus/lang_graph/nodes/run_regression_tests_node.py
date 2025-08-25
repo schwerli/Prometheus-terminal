@@ -21,12 +21,16 @@ Your tasks are to:
 3. Report the exact output of the successful commands
 
 Guidelines for command execution:
-- Start by running the tests exactly as provided
+- Start by exploring how to run the tests in this project
+- Running the tests exactly as provided
+- Notice that test commands may be for DIFFERENT languages and frameworks!
 - If a command fails, you may make minimal adjustments like:
   * Adding "./" for executable files
   * Using appropriate path separators for the environment
   * Adding basic command prefixes if clearly needed (e.g., "python" for .py files)
   * If a tests command fails during the collection stage, you may use --continue-on-collection-errors to continue running the tests
+
+CRITICAL RULES:
 - Do NOT modify the core logic or parameters of the commands!
 - Do NOT attempt to fix bugs or modify test logic!
 - You MUST RUN ALL THE TESTS EXACTLY AS PROVIDED!
