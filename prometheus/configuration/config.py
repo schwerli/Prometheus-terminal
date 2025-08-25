@@ -61,5 +61,11 @@ class Settings(BaseSettings):
     # Invitation Code Expire Time
     INVITATION_CODE_EXPIRE_TIME: int = 14  # days
 
+    # Default normal user issue credit
+    DEFAULT_USER_ISSUE_CREDIT: int = 20
+
+    # Default normal user repository number
+    DEFAULT_USER_REPOSITORY_LIMIT: int = 5
+
 
 settings = Settings()

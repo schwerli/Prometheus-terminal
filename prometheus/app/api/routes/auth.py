@@ -5,6 +5,7 @@ from prometheus.app.models.response.auth import LoginResponse
 from prometheus.app.models.response.response import Response
 from prometheus.app.services.invitation_code_service import InvitationCodeService
 from prometheus.app.services.user_service import UserService
+from prometheus.configuration.config import settings
 from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
@@ -58,6 +59,7 @@ def register(request: Request, create_user_request: CreateUserRequest) -> Respon
         username=create_user_request.username,
         email=create_user_request.email,
         password=create_user_request.password,
+        issue_credit=settings.DEFAULT_USER_ISSUE_CREDIT,
     )
 
     # Mark the invitation code as used
