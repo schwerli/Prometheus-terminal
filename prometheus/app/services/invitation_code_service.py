@@ -52,9 +52,14 @@ class InvitationCodeService(BaseService):
             invitation_code = session.exec(statement).first()
             if not invitation_code:
                 return False
-            if invitation_code.used:
+            if invitation_code.is_used:
                 return False
-            if invitation_code.expiration_time < datetime.datetime.now(datetime.timezone.utc):
+
+            exp = invitation_code.expiration_time
+            # If our database returned a naive datetime, assume it's UTC
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=datetime.timezone.utc)
+            if exp < datetime.datetime.now(datetime.timezone.utc):
                 return False
             return True
 
@@ -66,6 +71,6 @@ class InvitationCodeService(BaseService):
             statement = select(InvitationCode).where(InvitationCode.code == code)
             invitation_code = session.exec(statement).first()
             if invitation_code:
-                invitation_code.used = True
+                invitation_code.is_used = True
                 session.add(invitation_code)
                 session.commit()
