@@ -150,3 +150,12 @@ class UserService(BaseService):
             user.issue_credit = new_issue_credit
             session.add(user)
             session.commit()
+
+    def is_admin(self, user_id):
+        """
+        Check if a user is an admin (superuser) by their ID.
+        """
+        with Session(self.engine) as session:
+            statement = select(User).where(User.id == user_id)
+            user = session.exec(statement).first()
+            return user.is_superuser if user else False
