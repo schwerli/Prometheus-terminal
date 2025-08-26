@@ -2,7 +2,7 @@ import datetime
 from unittest import mock
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from prometheus.app.api.routes import invitation_code
@@ -12,6 +12,15 @@ from prometheus.app.exception_handler import register_exception_handlers
 app = FastAPI()
 register_exception_handlers(app)
 app.include_router(invitation_code.router, prefix="/invitation-code", tags=["invitation_code"])
+
+
+@app.middleware("mock_jwt_middleware")
+async def add_user_id(request: Request, call_next):
+    request.state.user_id = 1  # Set user_id to 1 for testing purposes
+    response = await call_next(request)
+    return response
+
+
 client = TestClient(app)
 
 
@@ -30,6 +39,7 @@ def test_create_invitation_code(mock_service):
         is_used=False,
         expiration_time=datetime.datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0),
     )
+    mock_service["user_service"].is_admin.return_value = True
 
     # Test the creation endpoint
     response = client.post("invitation-code/create/")
@@ -58,6 +68,7 @@ def test_list(mock_service):
             ),
         )
     ]
+    mock_service["user_service"].is_admin.return_value = True
 
     # Test the list endpoint
     response = client.get("invitation-code/list/")

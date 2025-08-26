@@ -6,7 +6,6 @@ from prometheus.app.decorators.require_login import requireLogin
 from prometheus.app.entity.invitation_code import InvitationCode
 from prometheus.app.models.response.response import Response
 from prometheus.app.services.user_service import UserService
-from prometheus.configuration.config import settings
 from prometheus.exceptions.server_exception import ServerException
 
 router = APIRouter()
@@ -26,7 +25,7 @@ def create_invitation_code(request: Request) -> Response[InvitationCode]:
     """
     # Check if the user is an admin
     user_service: UserService = request.app.state.service["user_service"]
-    if settings.ENABLE_AUTHENTICATION and not user_service.is_admin(request.state.user_id):
+    if not user_service.is_admin(request.state.user_id):
         raise ServerException(code=403, message="Only admins can create invitation codes")
 
     # Create a new invitation code
@@ -49,7 +48,7 @@ def list_invitation_codes(request: Request) -> Response[Sequence[InvitationCode]
     """
     # Check if the user is an admin
     user_service: UserService = request.app.state.service["user_service"]
-    if settings.ENABLE_AUTHENTICATION and not user_service.is_admin(request.state.user_id):
+    if not user_service.is_admin(request.state.user_id):
         raise ServerException(code=403, message="Only admins can list invitation codes")
 
     # List all invitation codes
