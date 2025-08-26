@@ -25,3 +25,12 @@ def test_login(mock_database_service):
     access_token = service.login("testuser", "test@gmail.com", "password123")
     # Verify
     assert access_token is not None
+
+
+def test_set_github_token(mock_database_service):
+    # Exercise
+    service = UserService(mock_database_service)
+    service.set_github_token(1, "new_gh_token")
+    # Verify
+    user = service.get_user_by_id(1)
+    assert user.github_token == "new_gh_token"
