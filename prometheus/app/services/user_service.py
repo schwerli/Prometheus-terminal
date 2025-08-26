@@ -168,3 +168,16 @@ class UserService(BaseService):
             statement = select(User)
             users = session.exec(statement).all()
             return users
+
+    def set_github_token(self, user_id: int, github_token: str):
+        """
+        Set GitHub token for a user by their ID.
+        """
+        with Session(self.engine) as session:
+            statement = select(User).where(User.id == user_id)
+            user = session.exec(statement).first()
+            if user:
+                user.github_token = github_token
+                session.add(user)
+                session.commit()
+                session.refresh(user)
